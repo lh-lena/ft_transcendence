@@ -17,13 +17,13 @@ ft_transcendence is a full-stack web application featuring:
 
 ## 👥 Team Structure & Responsibilities
 
-| Role | Team Member | Modules | Points |
-|------|-------------|---------|---------|
-| **Frontend Developer** | Alec | Core Pong (25pts) + Tailwind UI (5pts) + Game Customization (5pts) | 35 |
-| **Backend Developer** | Moritz | Fastify Framework (10pts) + SQLite Database (5pts) + Live Chat (10pts) | 25 |
-| **Realtime/AI Developer** | Olena | Remote Players (10pts) + AI Opponent (10pts) + Server-Side Pong (10pts) | 30 |
-| **Security/Auth Developer** | Elmira | User Management (10pts) + Google OAuth (10pts) + 2FA & JWT (10pts) | 30 |
-| **DevOps Engineer** | Görkem | Docker Setup + HTTPS/WSS + Monitoring with Prometheus/Grafana (5pts) | 5+ |
+| Role | Team Member | Modules |
+|------|-------------|---------|
+| **Frontend Developer** | Alec | Core Pong + Tailwind UI + Game Customization |
+| **Backend Developer** | Moritz | Fastify Framework + SQLite Database + Live Chat  |
+| **Realtime/AI Developer** | Olena | Remote Players + AI Opponent + Server-Side Pong |
+| **Security/Auth Developer** | Elmira | User Management + Google OAuth (10pts) + 2FA & JWT |
+| **DevOps Engineer** | Görkem | Docker Setup + HTTPS/WSS + Monitoring with Prometheus/Grafana |
 
 ## 🏗️ System Architecture
 
