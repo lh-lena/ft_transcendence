@@ -1,6 +1,4 @@
-# ft_transcendence
 
-```markdown
 # 🏓 ft_transcendence
 
 A real-time multiplayer Pong game web application built as part of the 42 School curriculum.
