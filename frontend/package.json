@@ -1,0 +1,16 @@
+{
+  "name": "ft_transcendence_frontend",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.2.2",
+    "vite": "^4.5.0",
+    "tailwindcss": "^3.3.5",
+    "autoprefixer": "^10.4.16",
+    "postcss": "^8.4.31"
+  }
+}

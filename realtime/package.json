@@ -1,0 +1,16 @@
+{
+  "name": "ft_transcendence_realtime",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "tsx watch src/server.ts"
+  },
+  "dependencies": {
+    "ws": "^8.14.2"
+  },
+  "devDependencies": {
+    "@types/ws": "^8.5.9",
+    "@types/node": "^20.0.0",
+    "tsx": "^3.14.0",
+    "typescript": "^5.2.2"
+  }
+}
