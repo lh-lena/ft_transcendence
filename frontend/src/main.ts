@@ -12,7 +12,7 @@ document.getElementById('app')!.innerHTML = `
 `;
 
 // Simple connectivity test
-fetch('/api/health')
+fetch('http://localhost:8080/api/health')
   .then(res => res.json())
   .then(data => {
     document.getElementById('status')!.innerHTML = '✅ Backend connected';
