@@ -1,5 +1,5 @@
-/* frontend/src/style.css */
+@import '@sakun/system.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
