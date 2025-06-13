@@ -1,27 +1,47 @@
+
 // backend/src/server.ts
 import Fastify from 'fastify';
-import cors from '@fastify/cors';
+import cors from '@fastify/cors'
+import config from './config';
+import healthRoute from './routes/healthCheck';
 
-const server = Fastify({ logger: true });
+//build server
+async function buildServer() {
 
-server.register(cors, { origin: true });
+	//build fastify instance
+	const server = Fastify({ logger: true });
 
-// Basic health check endpoint
-server.get('/api/health', async (request, reply) => {
-  return { 
-    status: 'ok', 
-    service: 'backend',
-    message: 'Fastify server running on port 8080'
-  };
-});
+	//makes env variables avliable 
+	server.decorate('config', config);
 
-const start = async () => {
-  try {
-    await server.listen({ port: 8080, host: '0.0.0.0' });
-  } catch (err) {
-    server.log.error(err);
-    process.exit(1);
-  }
-};
+	//parse allowed origins
+	const allowedOrigins = config.ALLOWED_ORIGINS ?
+		config.ALLOWED_ORIGINS.split(',').map(origin => origin.trim()) : [];
+
+
+	//register routers
+	await server.register(cors, { 
+		origin: allowedOrigins.length > 0 ? allowedOrigins: true, credentials: true,
+	});
+
+	await server.register(healthRoute);
+
+	return server;
+}
+
+//start server
+async function start() {
+	
+	try{
+		const server = await buildServer();
+		const PORT = parseInt(server.config.PORT);
+
+		//start listening with the instance
+		await server.listen({ port: PORT, host: server.config.HOST });
+	  } catch (err) {
+	    console.error(err);
+	    process.exit(1);
+	  }
+}
 
 start();

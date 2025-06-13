@@ -1,7 +1,6 @@
 FROM node:20-alpine
 WORKDIR /app
-RUN apk add --no-cache sqlite
 COPY package*.json ./
-RUN npm install
+RUN npm install dotenv env-schema @fastify/cors
 COPY . .
 CMD ["npm", "run", "dev"]
