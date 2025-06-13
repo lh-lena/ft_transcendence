@@ -10,4 +10,4 @@ setTimeout(() => {
     loading.hide();
     const app = new App();
     app.mount(document.body);
-}, 10);
+}, 1500);

@@ -3,3 +3,25 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+:root {
+  --star-color: #0400FF;
+}
+
+.star_8 {
+  background: var(--star-color);
+  width: 20px;
+  height: 20px;
+  position: relative;
+  transform: rotate(20deg);
+}
+.star_8:before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 20px;
+  width: 20px;
+  background: var(--star-color);
+  transform: rotate(135deg);
+}

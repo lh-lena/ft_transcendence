@@ -1,34 +1,49 @@
-import { GameStatus } from './types/game'
-import { Menu } from './components/Menu'
+import { Router } from './router/Router';
+import { HomePage } from './pages/home'
+import { ProfilePage } from './pages/profile'
 
 export class App {
-    private element: HTMLElement;
-    private gameState: GameStatus = GameStatus.MENU;
+    private router: Router;
+    private container: HTMLElement;
+    private currentPage: HomePage | ProfilePage | null = null;
 
     constructor() {
-        this.element = document.createElement('div');
-        this.element.id = 'app';
-        this.element.className = 'sys-window w-full h-full';
-        this.initializeApp();
+        this.container = document.createElement('div');
+        this.container.className = 'w-full h-screen';
+        this.router = new Router();
+        
+        // Define routes
+        this.router.add('/', () => this.showHome());
+        this.router.add('/game', () => this.showGame());
+        this.router.add('/profile', () => this.showProfile());
+
+        // Initialize router
+        this.router.init();
     }
 
-    private initializeApp(): void {
-        // create header component and import it here tbh
-        // const header = document.createElement('header');
-        // header.className = 'p-4 flex flex-row';
-        // header.textContent = 'ft_transcendence';
-
-        const main = document.createElement('main');
-        main.className = 'p-4 sys-app h-full';
-
-        const menu = new Menu();
-        menu.mount(main);
-
-        // this.element.appendChild(header);
-        this.element.appendChild(main);
+    public mount(parent: HTMLElement): void {
+        parent.appendChild(this.container);
     }
 
-    mount(parent: HTMLElement): void {
-        parent.appendChild(this.element);
+    private showHome(): void {
+        if (this.currentPage) {
+            this.currentPage.unmount();
+        }
+
+        this.currentPage = new HomePage(this.router);
+        this.currentPage.mount(this.container);
+    }
+
+    private showGame(): void {
+        this.container.innerHTML = '<h1>Game Page</h1>';
+    }
+
+    private showProfile(): void {
+        if (this.currentPage) {
+            this.currentPage.unmount();
+        }
+
+        this.currentPage = new ProfilePage();
+        this.currentPage.mount(this.container);
     }
 }
