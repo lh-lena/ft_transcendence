@@ -43,7 +43,7 @@ export class App {
             this.currentPage.unmount();
         }
 
-        this.currentPage = new ProfilePage();
+        this.currentPage = new ProfilePage(this.router);
         this.currentPage.mount(this.container);
     }
 }
