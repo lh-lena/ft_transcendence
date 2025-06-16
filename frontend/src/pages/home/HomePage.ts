@@ -7,7 +7,7 @@ export class HomePage {
 
     constructor(private router: Router) {
         this.element = document.createElement('div');
-        this.element.className = 'flex w-full min-h-full justify-center items-center';
+        this.element.className = 'flex w-full min-h-full justify-center items-center bg-[#0400FF]';
         this.menu = new Menu(this.router);
     }
 

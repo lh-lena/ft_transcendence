@@ -12,6 +12,7 @@ export class Menu {
     private createMenuContent(): void {
         const star = document.createElement('div');
         star.className = 'animate-spin-slow star_8 w-4 mb-4';
+        star.style.setProperty('--star-color', '#FFFFFF')
 
         const startButton = document.createElement('button');
         startButton.className = 'btn w-36';

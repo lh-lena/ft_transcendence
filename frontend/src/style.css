@@ -25,3 +25,11 @@
   background: var(--star-color);
   transform: rotate(135deg);
 }
+
+@layer utilities {
+  .bg-noise {
+    background-image: url('../assets/images/noise.svg');
+    background-repeat: repeat;
+  }
+}
+
