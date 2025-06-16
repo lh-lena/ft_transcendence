@@ -18,8 +18,9 @@ export class ProfilePage {
         this.container.appendChild(backButton);
     }
 
+    // navigates to home
     private handleBackClick(): void {
-        this.router.navigate('/');
+        this.router.navigateBack();
     }
 
     public mount(parent: HTMLElement): void {

@@ -33,8 +33,7 @@ export class Menu {
     }
 
     private handleStartGame(): void {
-        // We'll implement this when we create the game component
-        console.log('Starting game...');
+        this.router.navigate('/game');
     }
 
     mount(parent: HTMLElement): void {

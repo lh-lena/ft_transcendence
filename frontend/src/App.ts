@@ -1,11 +1,12 @@
 import { Router } from './router/Router';
 import { HomePage } from './pages/home'
 import { ProfilePage } from './pages/profile'
+import { GamePage } from './pages/game'
 
 export class App {
     private router: Router;
     private container: HTMLElement;
-    private currentPage: HomePage | ProfilePage | null = null;
+    private currentPage: HomePage | ProfilePage | GamePage | null = null;
 
     constructor() {
         this.container = document.createElement('div');
@@ -29,20 +30,22 @@ export class App {
         if (this.currentPage) {
             this.currentPage.unmount();
         }
-
         this.currentPage = new HomePage(this.router);
         this.currentPage.mount(this.container);
     }
 
     private showGame(): void {
-        this.container.innerHTML = '<h1>Game Page</h1>';
+        if (this.currentPage) {
+            this.currentPage.unmount();
+        }
+        this.currentPage = new GamePage(this.router);
+        this.currentPage.mount(this.container);
     }
 
     private showProfile(): void {
         if (this.currentPage) {
             this.currentPage.unmount();
         }
-
         this.currentPage = new ProfilePage(this.router);
         this.currentPage.mount(this.container);
     }

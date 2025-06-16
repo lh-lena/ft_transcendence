@@ -19,6 +19,10 @@ export class Router {
         this.handleRoute(path);
     }
 
+    public navigateBack(): void {
+        window.history.back();
+    }
+
     private handleRoute(path: string): void {
         const callback = this.routes.get(path);
         if (callback) {
