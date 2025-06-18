@@ -1,0 +1,34 @@
+import fp from 'fastify-plugin';
+import Database from 'better-sqlite3';
+import fd from 'fs';
+import path from 'path';
+
+async function dbConnector(fastify, options){
+
+	//start database
+	const dbFile = fastify.dbFile;
+	const db = new Database(dbFile, { verbose: console.log });
+
+	//apply schema files
+	const migrationDir = path.join(__dirname, '..', 'migarations');
+	const migrationFiles = 
+		fs.readdirSync(migrationDir).filter(file => file.endswith('.sql')).sort();
+
+	for (const file of migartionFiles ){
+		const filePath = path.join(migationDir, file);
+		const schema = fs.readFileSync(filePath, 'utf8' );
+		db.exec(schema);
+	}
+
+	
+	fastify.decorate('db', db);
+	
+	//close database on closing fastyify instance
+	fastify.addHook('onClose', (fastify, done) => {
+		db.close();
+		done();
+	});
+	 
+}
+
+export default fp(dbConnector);

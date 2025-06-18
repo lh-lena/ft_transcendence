@@ -1,16 +1,16 @@
 
 services:
-  frontend:
-    build: ./frontend
-    container_name: ft_transcendence_frontend
-    ports:
-      - "3000:3000"
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
-    networks:
-      - pong-network
-
+#  frontend:
+#    build: ./frontend
+#    container_name: ft_transcendence_frontend
+#    ports:
+#      - "3000:3000"
+#    volumes:
+#      - ./frontend:/app
+#      - /app/node_modules
+#    networks:
+#      - pong-network
+#
   backend:
     build: ./backend
     container_name: ft_transcendence_backend
@@ -23,27 +23,27 @@ services:
     networks:
       - pong-network
 
-  realtime:
-    build: ./realtime
-    container_name: ft_transcendence_realtime
-    ports:
-      - "8081:8081"
-    volumes:
-      - ./realtime:/app
-      - /app/node_modules
-    networks:
-      - pong-network
-
-  auth-service:
-    build: ./auth-service
-    container_name: ft_transcendence_auth
-    ports:
-      - "8082:8082"
-    volumes:
-      - ./auth-service:/app
-      - /app/node_modules
-    networks:
-      - pong-network
+#  realtime:
+#    build: ./realtime
+#    container_name: ft_transcendence_realtime
+#    ports:
+#      - "8081:8081"
+#    volumes:
+#      - ./realtime:/app
+#      - /app/node_modules
+#    networks:
+#      - pong-network
+#
+#  auth-service:
+#    build: ./auth-service
+#    container_name: ft_transcendence_auth
+#    ports:
+#      - "8082:8082"
+#    volumes:
+#      - ./auth-service:/app
+#      - /app/node_modules
+#    networks:
+#      - pong-network
 
 networks:
   pong-network:

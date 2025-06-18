@@ -2,8 +2,10 @@
 // backend/src/server.ts
 import Fastify from 'fastify';
 import cors from '@fastify/cors'
-import config from './config';
+import config from './config/config';
+import dbConnector from './config/db';
 import healthRoute from './routes/healthCheck';
+import testRoute from './routes/testDb';
 
 //build server
 async function buildServer() {
@@ -15,18 +17,29 @@ async function buildServer() {
 	server.decorate('config', config);
 
 	//parse allowed origins
-	const allowedOrigins = config.ALLOWED_ORIGINS ?
+	const allowedOrigins = config.ALLOWED_ORIGINS ? 
 		config.ALLOWED_ORIGINS.split(',').map(origin => origin.trim()) : [];
+	const allowedMethods = config.ALLOWED_METHODS ? 
+		config.ALLOWED_METHODS.split(',').map(method => method.trim()).join(',') 
+			: [];
 
+			//register cors, healthcheck, db, etc.
+			await server.register(cors, { 
+				origin: (origin , cb) => {
+					if(!origin) return cb(null, true);
+					if(allowedOrigins.includes(origin)) cb(null, true);
+					//TODO:: add logging of cors violations??
+					cb(new Error("Not allowed with CORS"), false);
+				},
+				methods: allowedMethods,
+				credentials: true,
+			});
 
-	//register routers
-	await server.register(cors, { 
-		origin: allowedOrigins.length > 0 ? allowedOrigins: true, credentials: true,
-	});
+			await server.register(healthRoute);
+			await server.register(dbConnector);
+			await server.register(testRoute);
 
-	await server.register(healthRoute);
-
-	return server;
+			return server;
 }
 
 //start server
@@ -43,5 +56,6 @@ async function start() {
 	    process.exit(1);
 	  }
 }
+
 
 start();
