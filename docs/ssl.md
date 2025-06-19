@@ -13,7 +13,7 @@ We use self-signed certificates to enable HTTPS locally.
      -keyout nginx/ssl/selfsigned.key \
      -out nginx/ssl/selfsigned.crt \
      -subj "/C=DE/ST=Berlin/L=Berlin/O=42School/CN=localhost"
-````
+   ```
 
 2. NGINX is configured to:
 
@@ -32,5 +32,3 @@ We use self-signed certificates to enable HTTPS locally.
 ## Production Notes
 
 In production, self-signed certificates should be replaced with real certificates from a trusted authority like Let's Encrypt. Paths in the NGINX config must be updated to point to those certificate files.
-
-```
