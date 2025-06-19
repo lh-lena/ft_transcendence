@@ -1,5 +1,20 @@
 
 services:
+  nginx:
+    build: ./nginx
+    container_name: ft_transcendence_nginx
+    ports:
+      - "443:443"
+    depends_on:
+      - frontend
+      - backend
+      - realtime
+      - auth-service
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+    networks:
+      - pong-network
   frontend:
     build: ./frontend
     container_name: ft_transcendence_frontend
