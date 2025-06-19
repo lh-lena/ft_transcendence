@@ -1,4 +1,3 @@
-````md
 # SSL Setup
 
 This project uses HTTPS and WSS for secure communication in development.
