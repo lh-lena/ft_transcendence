@@ -5,7 +5,10 @@
     "dev": "tsx watch src/server.ts"
   },
   "dependencies": {
-    "fastify": "^4.24.3"
+    "argon2": "^0.30.4",
+    "jsonwebtoken": "^9.0.2",
+    "fastify": "^4.24.3",
+    "better-sqlite3": "^9.1.1"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
