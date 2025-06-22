@@ -2,19 +2,20 @@ import Fastify from 'fastify';
 import Database from 'better-sqlite3';
 import { hashPassword, verifyPassword } from './passwords';
 import { generateJWT } from './jwt';
+import { authMiddleware } from './authMiddleware';
 
 const server = Fastify({ logger: true });
 const db = new Database('users.db');
 
 type User = {
-  id: number;
-  email: string;
-  username: string;
-  password_hash: string;
-  is_2fa_enabled: number;
-  twofa_secret?: string | null;
-  created_at: string;
-  updated_at: string;
+	id: number;
+	email: string;
+	username: string;
+	password_hash: string;
+	is_2fa_enabled: number;
+	twofa_secret?: string | null;
+	created_at: string;
+	updated_at: string;
 };
 
 // Health check endpoint
@@ -95,6 +96,17 @@ server.post('/api/auth/login', async (request, reply) => {
 	});
 
 	return reply.send({ token });
+});
+
+// Logout endpoint
+server.post('/api/auth/logout', async (request, reply) => {
+	return reply.send({ message: 'Logged out. Please delete your token on the client.' });
+});
+
+// Get user info endpoint (who am I?)
+// This endpoint is protected by the authMiddleware
+server.get('/api/auth/me', { preHandler: authMiddleware }, async (request, reply) => {
+  return { user: (request as any).user };
 });
 
 const start = async () => {
