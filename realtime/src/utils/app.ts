@@ -12,8 +12,7 @@ export const buildServer = () => {
   server.get('/health', async (request, reply) => {
   return {
     status: 'ok',
-    timestamp: new Date().toISOString(),
-    connections: server.connectionService.getConnections.size,
+    timestamp: new Date().toISOString()
   }});
 
   return server;
