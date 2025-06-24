@@ -39,6 +39,8 @@ async function buildServer() {
 			await server.register(dbConnector);
 			await server.register(testRoute);
 
+			server.register( import('./routes/users'), { prefix: '/api' } );
+
 			return server;
 }
 

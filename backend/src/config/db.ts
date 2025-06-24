@@ -9,6 +9,9 @@ async function dbConnector(fastify, options){
 	const dbFile = fastify.dbFile;
 	const db = new Database(dbFile, { verbose: console.log });
 
+	//enable foreign keys
+	db.pragma( 'foreign_keys = ON' );
+
 	//apply schema files
 	const migrationDir = path.join(__dirname, '..', 'migrations');
 	const migrationFiles = fs

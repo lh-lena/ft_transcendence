@@ -1,0 +1,9 @@
+CREATE TABLE IF NOT EXISTS lobbies(
+	id INTEGER PRIMARY KEY AUTOINCREMENT,
+	max_players INTEGER DEFAULT 2,
+	started_at DATETIME,
+	finished_at DATETIME,
+	created_at DATETIME DEFAULT CURRENT_TIMESTAMP, 
+	updated_at DATETIME,
+	status TEXT DEFAULT 'waiting'
+);

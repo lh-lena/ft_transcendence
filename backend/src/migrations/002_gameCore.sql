@@ -1,0 +1,13 @@
+CREATE TABLE IF NOT EXISTS gameCore( 
+	id INTEGER PRIMARY KEY AUTOINCREMENT,
+	player1_id INTEGER NOT NULL,
+	player2_id INTEGER NOT NULL,
+	winner_id INTEGER,
+	score_pl1 INTEGER,
+	score_pl2 INTEGER,
+	start_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+	end_time DATETIME,
+	FOREIGN KEY (player1_id) REFERENCES users(id),
+	FOREIGN KEY (player2_id) REFERENCES users(id),
+	FOREIGN KEY (winner_id) REFERENCES users(id)
+);
