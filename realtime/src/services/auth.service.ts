@@ -2,7 +2,7 @@ import { FastifyInstance, VarifyClientInfo } from 'fastify';
 import { parse } from 'url';
 import cookie from 'cookie';
 import { IncomingMessage } from 'http';
-import { User } from '../pong-core/pong.types.js';
+import { User } from '../types/pong.types.js';
 
 export default function authService(app: FastifyInstance) {
   let i = 0;
