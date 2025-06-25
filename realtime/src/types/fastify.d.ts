@@ -1,9 +1,6 @@
 import 'fastify';
 import type { WebSocketServer, WebSocket } from 'ws';
 import type { IncomingMessage } from 'http';
-import type { EnvironmentConfig } from '../config/server.config';
-import type { User } from './pong.types';
-import type { NETWORK_GUALITY } from './network.types';
 
 declare module 'fastify' {
   interface FastifyInstance {
@@ -11,9 +8,10 @@ declare module 'fastify' {
     connectionService: ReturnType<typeof import('../services/connection.service').connectionService>;
     reconnectionService: ReturnType<typeof import('../services/reconnection.service').reconnectionService>;
     networkService: ReturnType<typeof import('../services/network.service').networkMonitorService>;
+    gameService: ReturnType<typeof import('../services/game.service').createGameService>;
     auth: ReturnType<typeof import('../services/auth.service').authService>;
     wss: WebSocketServer;
-    config: EnvironmentConfig;
+    config: import('../config/server.config').EnvironmentConfig;
   }
 
   type WSConnection = WebSocket & {
@@ -25,7 +23,7 @@ declare module 'fastify' {
     lastPong: number;
     authenticated: boolean;
     isReconnecting: boolean;
-    networkQuality: NETWORK_GUALITY;
+    networkQuality: import('./network.types.js').NETWORK_GUALITY;
     latency: number;
     missedPings: number;
     heartbeatTimeout?: NodeJS.Timeout;

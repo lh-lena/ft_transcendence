@@ -22,8 +22,17 @@ export default function createWSService(app: FastifyInstance) {
     userIds.forEach((id) => sendToConnection(id, message));
   }
 
+  function broadcastToGame(gameId: string, message: Record<string, unknown>, excludeConnections: number[] = []): void {
+    for (const conn of app.connectionService.getAllConnections()) {
+      if (conn.gameId === gameId && !excludeConnections.includes(conn.userId)) {
+        sendToConnection(conn.userId, message);
+      }
+    }
+  }
+
   return {
     sendToConnection,
-    sendToConnections
+    sendToConnections,
+    broadcastToGame
   }
 }
