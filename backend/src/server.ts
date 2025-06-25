@@ -1,11 +1,11 @@
-
-// backend/src/server.ts
 import Fastify from 'fastify';
 import cors from '@fastify/cors'
-import config from './config/config';
-import dbConnector from './config/db';
-import healthRoute from './routes/healthCheck';
-import testRoute from './routes/testDb';
+
+import configCreate from './config/config';
+import dbCreate from './config/db';
+import registerRoutes from './routes/index';
+
+import { createContext, ServerContext } from './server.context';
 
 //build server
 async function buildServer() {
@@ -14,13 +14,19 @@ async function buildServer() {
 	const server = Fastify({ logger: true });
 
 	//makes env variables avliable 
-	server.decorate('config', config);
+	await configCreate( server );
+	await dbCreate( server );
+
+	const context = createContext( server, server.db, server.config );
+
+	await registerRoutes( context );
 
 	//parse allowed origins
-	const allowedOrigins = config.ALLOWED_ORIGINS ? 
-		config.ALLOWED_ORIGINS.split(',').map(origin => origin.trim()) : [];
-	const allowedMethods = config.ALLOWED_METHODS ? 
-		config.ALLOWED_METHODS.split(',').map(method => method.trim()).join(',') 
+	const allowedOrigins = context.config.ALLOWED_ORIGINS ? 
+		context.config.ALLOWED_ORIGINS.split(',').map(origin => origin.trim()) : [];
+
+	const allowedMethods = context.config.ALLOWED_METHODS ? 
+		context.config.ALLOWED_METHODS.split(',').map(method => method.trim()).join(',') 
 			: [];
 
 			//register cors, healthcheck, db, etc.
@@ -34,14 +40,9 @@ async function buildServer() {
 				methods: allowedMethods,
 				credentials: true,
 			});
+			
 
-			await server.register(healthRoute);
-			await server.register(dbConnector);
-			await server.register(testRoute);
-
-			server.register( import('./routes/users'), { prefix: '/api' } );
-
-			return server;
+	return server;
 }
 
 //start server

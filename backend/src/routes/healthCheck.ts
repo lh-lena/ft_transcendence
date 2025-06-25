@@ -1,17 +1,32 @@
 //src/routes/healtCheck.ts
-
 import { FastifyInstance } from 'fastify';
+import { ServerContext } from '../context';
 
-export default async function healthRoute( server: FastifyInstance ) {
-	server.get( '/health', async ( request, reply ) => {
-		const healthStatus = {
-			service: 'backend',
-			message: 'OK',
-			uptime: process.uptime(),
-			timestamp: Date.now(),
-			db: 'TODO:: add dynamic check for database'
-		};
+export function healthRoute( context: ServerContext ) {
+	return async function ( server: FastifyInstance ) {
 
-		reply.code(200).send(healthStatus);
-	});
+	const db = context.db;
+
+		server.get( '/health', async ( request, reply ) => {
+
+			let dbStatus = 'unknown';
+			try {
+				const stmt = db.prepare( 'SELECT 1' );
+				stmt.get();
+
+				dbStatus = 'ok';
+			} catch( err ){
+				dbStatus = 'unreachable';
+			}
+
+			const healthStatus = {
+				service: 'backend',
+				message: 'OK',
+				uptime: process.uptime(),
+				timestamp: Date.now(),
+				db: dbStatus		};
+
+				reply.code( dbStatus == 'ok' ? 200 : 500 ).send( healthStatus );
+		});
+};
 }
