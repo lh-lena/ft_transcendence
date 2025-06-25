@@ -13,7 +13,8 @@ export default function networkMonitorService(app: FastifyInstance) {
 
       conn.lastPing = pingTime;
 
-      if (pingTime - conn.lastPong > 60000) {
+      const timeout = app.config.websocket.connectionTimeout || 60000;
+      if (pingTime - conn.lastPong > timeout) {
         conn.missedPings++;
         if (conn.missedPings >= 3) {
           handleConnectionLoss(id);
@@ -37,6 +38,7 @@ export default function networkMonitorService(app: FastifyInstance) {
   }
 
   function handleConnectionLoss(id: number): void {
+    app.log.info('[network-service] Handling lost connection ', id);
     const conn = app.connectionService.getConnection(id) as WSConnection | null;
     if (!conn) return;
 
@@ -44,7 +46,7 @@ export default function networkMonitorService(app: FastifyInstance) {
 
     const { currentGameId } = conn;
     if (currentGameId) {
-      handlePlayerDisconnect(id, currentGameId);
+      app.reconnectionService.handleDisconnect(id, currentGameId);
     }
 
     try {
@@ -54,15 +56,9 @@ export default function networkMonitorService(app: FastifyInstance) {
     }
   }
 
-  function handlePlayerDisconnect(id: number, gameId: string): void {
-    return;
-  }
-
-
   return {
     sendPing,
     handlePong,
-    handleConnectionLoss,
-    handlePlayerDisconnect
+    handleConnectionLoss
   }
 }

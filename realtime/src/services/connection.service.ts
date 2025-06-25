@@ -18,16 +18,16 @@ export default function connectionService(app: FastifyInstance) {
     const { userId } = conn;
     userConnections.set(userId, conn);
     startHeartbeat(userId);
-    app.log.info(`[${userId}] New connection added to service`);
+    app.log.info(`[connection-service]  New connection ${userId} added to service`);
   }
 
   function removeConnection(conn: WSConnection): void {
     if (!conn) return;
-    if (conn.heartbeatTimeout) clearTimeout(conn.heartbeatTimeout);
-    if (conn.reconnectTimer) clearTimeout(conn.reconnectTimer);
+    // if (conn.heartbeatTimeout) clearTimeout(conn.heartbeatTimeout);
+    // if (conn.reconnectTimer) clearTimeout(conn.reconnectTimer);
 
     userConnections.delete(conn.userId);
-    app.log.info(`[${conn.userId}] Connection removed`);
+    app.log.info(`[connection-service] Connection ${conn.userId} removed`);
   }
 
   function getConnection(userId: number): WSConnection | null {
@@ -53,7 +53,7 @@ export default function connectionService(app: FastifyInstance) {
       conn.heartbeatTimer = timer;
     }
 
-    (`Heartbeat started: every ${config.heartbeatInterval / 1000}s, timeout ${conn.heartbeatTimeout / 1000}s`);
+    app.log.info(`[connection-service] Heartbeat started: every ${config.heartbeatInterval / 1000}s`);
   }
 
   async function shutdown(): Promise<void> {

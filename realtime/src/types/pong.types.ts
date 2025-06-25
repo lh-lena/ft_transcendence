@@ -1,5 +1,3 @@
-
-// representation of events and payloads
 export interface WsClientMessage {
     'game-start': { gameId: string };
     'game-leave': { gameId: string };
@@ -56,6 +54,10 @@ export enum AIDifficulty {
     HARD = 'hard', // 90% accuracy, fast reaction 50ms delay
 }
 
+export enum PlayerState {
+    CONNECTED = 'connected',
+    DISCONNECTED = 'diconnected'
+}
 
 export interface GameState {
     gameId: string;
@@ -87,10 +89,10 @@ export interface ChatMessage {
 }
 
 export interface NotificationPayload {
-    tournamentId: number;
+    tournamentId?: number;
     gameId?: string;
     message: string;
-    timestamp: string;
+    timestamp: number;
 }
 
 export interface User {
