@@ -17,9 +17,11 @@ async function buildServer() {
 	await configCreate( server );
 	await dbCreate( server );
 
+
 	const context = createContext( server, server.db, server.config );
 
 	await registerRoutes( context );
+
 
 	//parse allowed origins
 	const allowedOrigins = context.config.ALLOWED_ORIGINS ? 
