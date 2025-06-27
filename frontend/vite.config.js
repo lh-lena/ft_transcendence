@@ -6,5 +6,8 @@ export default defineConfig({
     port: 3000,
     strictPort: true
   },
-  assetsInclude: ['**/*.webp']
+  assetsInclude: ['**/*.webp'],
+  css: {
+    devSourcemap: true, // Enable source maps for CSS
+  },
 });

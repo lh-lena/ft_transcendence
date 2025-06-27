@@ -10,12 +10,12 @@ export class Loading {
         // heading.className = 'animate-pulse text-xl sys-text';
         // heading.textContent = 'loading';
 
-        const star = document.createElement('div');
-        star.className = 'animate-spin-slow star_8 w-4';
-        star.style.setProperty('--star-color', '#FFFFFF')
+        const title = document.createElement('h1');
+        title.className = 'title text-white text-3xl animate-pulse';
+        title.textContent = 'pong';
         
         // this.element.appendChild(heading);
-        this.element.appendChild(star);
+        this.element.appendChild(title);
     }
 
     mount(parent: HTMLElement): void {

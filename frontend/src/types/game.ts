@@ -8,9 +8,6 @@ export enum GameStatus {
 export interface Ball {
     x: number;
     y: number;
-    dx: number;
-    dy: number;
-    radius: number;
 }
 
 export interface Paddle {

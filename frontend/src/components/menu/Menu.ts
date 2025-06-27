@@ -5,14 +5,14 @@ export class Menu {
 
     constructor(private router: Router) {
         this.element = document.createElement('div');
-        this.element.className = 'sys-window flex flex-col items-center justify-center w-full h-full gap-3';
+        this.element.className = 'sys-window flex flex-col items-center justify-center w-full h-full gap-5';
         this.createMenuContent();
     }
 
     private createMenuContent(): void {
-        const star = document.createElement('div');
-        star.className = 'animate-spin-slow star_8 w-4 mb-4';
-        star.style.setProperty('--star-color', '#FFFFFF')
+        const title = document.createElement('h1');
+        title.className = 'title text-white text-3xl';
+        title.textContent = 'pong';
 
         const startButton = document.createElement('button');
         startButton.className = 'btn w-36';
@@ -24,7 +24,7 @@ export class Menu {
         settingsButton.textContent = 'profile';
         settingsButton.onclick = () => this.handleProfileClick();
 
-        this.element.appendChild(star);
+        this.element.appendChild(title);
         this.element.appendChild(startButton);
         this.element.appendChild(settingsButton);
     }
