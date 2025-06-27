@@ -2,7 +2,7 @@ import { FastifyInstance } from 'fastify';
 import { ServerContext } from '../server.context';
 
 import { healthRoute } from './healthCheck';
-import { userRoutes } from './users';
+import { userRoutes } from './user';
 import { AppError } from '../utils/error';
 
 export default async function registerRoutes( context: ServerContext ) {
