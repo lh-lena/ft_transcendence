@@ -4,11 +4,14 @@ import { Paddle } from '../types/game';
 export class PongGame {
     private canvas: HTMLCanvasElement;
     private ctx: CanvasRenderingContext2D;
+
     private ball: Ball;
     private paddleA: Paddle;
     private paddleB: Paddle;
+
+    private keys: { [key: string]: boolean } = {};
+
     private animationFrameId: number | null = null;
-    private ballColor: string = '#0400FF'; // Match CSS variable
     private windowElement: HTMLDivElement;
     
     constructor() {        
@@ -56,23 +59,36 @@ export class PongGame {
         // init paddleA
         this.paddleA = {
             width: 10,
-            height: 50,
+            height: 80,
             x: 5,
             y: this.ball.y - 25,
-            score: 0
+            score: 0,
+            speed: 20
         };
 
         // init paddleB
         this.paddleB = {
             width: 10,
-            height: 50,
+            height: 80,
             x: this.canvas.width - ( this.paddleA.x + this.paddleA.width ),
             y: this.ball.y - ( this.paddleA.height / 2 ),
-            score: 0
+            score: 0,
+            speed: 20
         };
 
         this.renderGame();
+        this.startGameLoop();
+        this.attachKeyboardListeners();
+    }
 
+    private attachKeyboardListeners(): void {
+        window.addEventListener('keydown', (event: KeyboardEvent) => {
+        this.keys[event.key] = true; // Mark the key as pressed
+        });
+
+        window.addEventListener('keyup', (event: KeyboardEvent) => {
+        this.keys[event.key] = false; // Mark the key as released
+        });
     }
 
     private drawBall(): void {
@@ -105,8 +121,21 @@ export class PongGame {
     }
 
     private updateGameState(): void {
-        // Update game logic here (e.g., move ball, check collisions)
-        // Example: Move the ball, check for paddle collisions, etc.
+        if (this.keys['w']) {
+            this.paddleA.y -= this.paddleA.speed;
+        }
+        if (this.keys['s']) {
+            this.paddleA.y += this.paddleA.speed;
+        }
+        if (this.keys['ArrowUp']) {
+            this.paddleB.y -= this.paddleB.speed;
+        }
+        if (this.keys['ArrowDown']) {
+            this.paddleB.y += this.paddleB.speed;
+        }
+
+        this.paddleA.y = Math.max(0, Math.min(this.paddleA.y, (this.canvas.height - this.paddleA.height - 5)));
+        this.paddleB.y = Math.max(0, Math.min(this.paddleB.y, (this.canvas.height - this.paddleB.height - 5)));
     }
 
 
@@ -127,6 +156,7 @@ export class PongGame {
             cancelAnimationFrame(this.animationFrameId);
             this.animationFrameId = null;
         }
+        this.stopGameLoop();
         this.windowElement.remove();
     }
 }

@@ -16,6 +16,7 @@ export interface Paddle {
     width: number;
     height: number;
     score: number;
+    speed: number;
 }
 
 export interface GameState {

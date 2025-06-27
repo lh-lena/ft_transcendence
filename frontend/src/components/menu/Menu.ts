@@ -1,43 +1,32 @@
-import { Router } from '../../router'
+import { Router } from '../../router';
+
+type MenuItem = {
+  name: string; // Button text
+  link: string; // URL link
+};
 
 export class Menu {
-    private element: HTMLElement;
+  private element: HTMLElement;
 
-    constructor(private router: Router) {
-        this.element = document.createElement('div');
-        this.element.className = 'sys-window flex flex-col items-center justify-center w-full h-full gap-5';
-        this.createMenuContent();
-    }
+  constructor(private router: Router, private menuItems: MenuItem[]) {
+    this.element = document.createElement('div');
+    this.element.className = 'sys-window flex flex-col items-center justify-center w-full h-full gap-5';
+    this.createMenuContent();
+  }
 
-    private createMenuContent(): void {
-        const title = document.createElement('h1');
-        title.className = 'title text-white text-3xl';
-        title.textContent = 'pong';
+  private createMenuContent(): void {
 
-        const startButton = document.createElement('button');
-        startButton.className = 'btn w-36';
-        startButton.textContent = 'start game';
-        startButton.onclick = () => this.handleStartGame();
+    // Dynamically create buttons based on menuItems
+    this.menuItems.forEach((item) => {
+      const button = document.createElement('button');
+      button.className = 'btn w-36';
+      button.textContent = item.name;
+      button.onclick = () => this.router.navigate(item.link);
+      this.element.appendChild(button);
+    });
+  }
 
-        const settingsButton = document.createElement('button');
-        settingsButton.className = 'btn w-36';
-        settingsButton.textContent = 'profile';
-        settingsButton.onclick = () => this.handleProfileClick();
-
-        this.element.appendChild(title);
-        this.element.appendChild(startButton);
-        this.element.appendChild(settingsButton);
-    }
-
-    private handleProfileClick(): void {
-        this.router.navigate('/profile');
-    }
-
-    private handleStartGame(): void {
-        this.router.navigate('/game');
-    }
-
-    mount(parent: HTMLElement): void {
-        parent.appendChild(this.element);
-    }
+  mount(parent: HTMLElement): void {
+    parent.appendChild(this.element);
+  }
 }

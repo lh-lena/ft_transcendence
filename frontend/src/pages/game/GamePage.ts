@@ -7,7 +7,7 @@ export class GamePage {
 
     constructor(private router: Router) {
         this.element = document.createElement('div');
-        this.element.className = 'sys-window flex flex-col gap-5 w-full min-h-full items-center justify-center bg-[#0400FF]';
+        this.element.className = 'sys-window flex flex-col gap-1 w-full min-h-full items-center justify-center bg-[#0400FF]';
         
         const gameContainer = document.createElement('div');
         gameContainer.className = 'w-3/4 h-3/4 flex items-center justify-center';
@@ -16,7 +16,7 @@ export class GamePage {
         
         const backButton = document.createElement('button');
         backButton.className = 'btn w-36';
-        backButton.textContent = 'back';
+        backButton.textContent = 'quit';
         backButton.onclick = () => this.handleBackClick();
 
         this.element.appendChild(gameContainer);
