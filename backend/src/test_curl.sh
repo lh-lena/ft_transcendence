@@ -3,7 +3,7 @@
 curl -X POST http://[::1]:8080/api/user \
   -H "Content-Type: application/json" \
   -d '{
-    "email": "john@example.com",
+    "email": "john4@example.com",
     "password_hash": "hashed_password",
     "first_name": "Johnson",
     "display_name": "Johnny",

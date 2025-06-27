@@ -61,6 +61,6 @@ export async function deleteTEMPLATE(
 	req: FastifyRequest,
 	reply: FastifyReply
 ) {
-	const TEMPLATE = await TEMPLATEService.deleteTEMPLATE( context, number( req.params.id ) );
+	const TEMPLATE = await TEMPLATEService.deleteTEMPLATE( context, Number( req.params.id ) );
 	return reply.status( 200 ).send( TEMPLATE );
 }
