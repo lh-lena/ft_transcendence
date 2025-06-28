@@ -3,18 +3,19 @@ import WebSocket from 'ws';
 
 export default function createWSService(app: FastifyInstance) {
   function sendToConnection(userId: number, message: Record<string, unknown>): void {
-    const { connectionService } = app.connectionService;
-
-    const conn = connectionService.get(userId) as WSConnection | null;
+    const conn = app.connectionService.getConnection(userId) as WSConnection | null;
     if (!conn || conn.readyState !== WebSocket.OPEN) {
+      app.log.debug(`[ws-service] Cannot send to user ${userId} - connection not found`);
       return;
     }
 
     try {
-      conn.send(JSON.stringify(message));
-    } catch (err) {
-      app.log.error(`[${userId}] Send failed:`, err);
-      connectionService.removeConnection(conn);
+      const messageStr = JSON.stringify(message);
+      conn.send(messageStr);
+      app.log.debug(`[ws-service] Sent to user ${userId}: ${message.event}`);
+    } catch (err: any) {
+      app.log.error(`[ws-service] Failed to send to user ${userId}: ${err.message}`);
+      app.connectionService.removeConnection(conn);
     }
   }
 
@@ -23,11 +24,18 @@ export default function createWSService(app: FastifyInstance) {
   }
 
   function broadcastToGame(gameId: string, message: Record<string, unknown>, excludeConnections: number[] = []): void {
-    for (const conn of app.connectionService.getAllConnections()) {
-      if (conn.gameId === gameId && !excludeConnections.includes(conn.userId)) {
-        sendToConnection(conn.userId, message);
-      }
+    const game = app.gameService.getGameSession(gameId);
+    if (!game) {
+      app.log.warn(`[ws-service] Cannot broadcast to game ${gameId} - game not found`);
+      return;
     }
+
+    const userIds = game.players
+      .map(p => p.userId)
+      .filter(id => id !== -1 && !excludeConnections.includes(id));
+
+    app.log.debug(`[ws-service] Broadcasting ${message.event} to game ${gameId} (${userIds.length} recipients, excluding: [${excludeConnections.join(', ')}])`);
+    sendToConnections(userIds, message);
   }
 
   return {
