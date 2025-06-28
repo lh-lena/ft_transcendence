@@ -29,7 +29,7 @@ echo "id INTEGER PRIMARY KEY AUTOINCREMENT," >> "${SCHEMAPATH}"
 echo "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP," >> "${SCHEMAPATH}"
 
 while true; do
-	echo "\e[43mAdd another column (y)?\e[0m"
+	echo -e "\e[43mAdd another column (y)?\e[0m"
 	read add;
 
 	if [[ "${add}" != 'y' ]]; then
@@ -67,7 +67,7 @@ while true; do
 	fi
 
 	echo "${column_name} ${column_type} ${constraints[*]},"
-	echo "\e[43madd column? (y)?\e[0m"
+	echo -e "\e[43madd column? (y)?\e[0m"
 
 	read add_column;
 	if [[ "${add_column}" == "y" ]]; then
@@ -81,7 +81,7 @@ cat "${SCHEMAPATH}"
 
 while true; do
 
-	echo "\e[43madd a foreign key? (y)?\e[0m"
+	echo -e "\e[43madd a foreign key? (y)?\e[0m"
 	read foreign_key;
 	
 	if [[ "${foreign_key}" != "y" ]]; then
