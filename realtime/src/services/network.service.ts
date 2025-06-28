@@ -1,5 +1,5 @@
 import { FastifyInstance, WSConnection } from 'fastify';
-import { NETWORK_GUALITY } from '../types/network.types.js';
+import { NETWORK_QUALITY } from '../types/network.types.js';
 
 export default function networkMonitorService(app: FastifyInstance) {
   function sendPing(id: number): void {
@@ -41,6 +41,15 @@ export default function networkMonitorService(app: FastifyInstance) {
 
     conn.lastPong = now;
     conn.missedPings = 0;
+    conn.latency = latency;
+
+    if (latency < 50) {
+      conn.networkQuality = NETWORK_QUALITY.GOOD;
+    } else if (latency < 150) {
+      conn.networkQuality = NETWORK_QUALITY.FAIR;
+    } else {
+      conn.networkQuality = NETWORK_QUALITY.POOR;
+    }
 
     app.log.debug(`[network-service] Pong received from client ${id} - Latency: ${latency}ms, Quality: ${conn.networkQuality}`);
   }
@@ -53,7 +62,7 @@ export default function networkMonitorService(app: FastifyInstance) {
       return;
     }
 
-    conn.networkQuality = NETWORK_GUALITY.DISCONNECTED;
+    conn.networkQuality = NETWORK_QUALITY.DISCONNECTED;
     try {
       app.log.info(`[network-service] Closing connection for client ${id}`);
       conn.close(1001, 'Connection lost');
