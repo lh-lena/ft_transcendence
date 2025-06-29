@@ -54,7 +54,7 @@ export enum AIDifficulty {
     HARD = 'hard', // 90% accuracy, fast reaction 50ms delay
 }
 
-export enum PlayerState {
+export enum ConnectionState {
     CONNECTED = 'connected',
     DISCONNECTED = 'diconnected'
 }
