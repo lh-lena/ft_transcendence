@@ -36,7 +36,7 @@ const config: Config = {
     port: 8081,
     host: '0.0.0.0',
     logger: {
-      level: 'info',
+      level: 'debug',
       transport: {
         target: 'pino-pretty',
         options: {
