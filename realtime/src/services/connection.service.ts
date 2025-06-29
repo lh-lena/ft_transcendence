@@ -11,59 +11,85 @@ export default function connectionService(app: FastifyInstance) {
   function addConnection(conn: WSConnection): void {
     const existingConn = userConnections.get(conn.userId);
     if (existingConn) {
-      app.log.info('[connection-service] replacing connection for user ', existingConn.userId);
-      removeConnection(existingConn);
+      app.log.info(`[connection-service] Replacing existing connection for user ${existingConn.userId}`);
+      if (existingConn?.heartbeatTimer) {
+        clearInterval(existingConn.heartbeatTimer);
+      }
       existingConn.close(1000, 'Replaced by new connection');
     }
     const { userId } = conn;
     userConnections.set(userId, conn);
-    startHeartbeat(userId);
-    app.log.info(`[connection-service]  New connection ${userId} added to service`);
+    startHeartbeat(userId, config.heartbeatInterval);
+    app.log.info(`[connection-service] New connection ${userId} added to service. Total connections: ${userConnections.size}`);
   }
 
   function removeConnection(conn: WSConnection): void {
-    if (!conn) return;
-    // if (conn.heartbeatTimeout) clearTimeout(conn.heartbeatTimeout);
-    // if (conn.reconnectTimer) clearTimeout(conn.reconnectTimer);
-
-    userConnections.delete(conn.userId);
-    app.log.info(`[connection-service] Connection ${conn.userId} removed`);
-  }
-
-  function getConnection(userId: number): WSConnection | null {
-    const conn = userConnections.get(userId);
-    if (conn) {
-      return conn;
+    if (!conn) {
+      app.log.warn(`[connection-service] Attempted to remove null connection`);
+      return;
     }
-    return null;
+
+    if (conn?.heartbeatTimer) {
+      clearInterval(conn.heartbeatTimer);
+    }
+    if (!conn.gameId) {
+      app.log.info(`[connection-service] User ${conn.userId} disconnected and not in a game`);
+    } else {
+      app.reconnectionService.handleDisconnect(conn.userId, conn.gameId, conn.username);
+      app.gameService.pauseGame(conn.gameId, `${conn.username} disconnected`);
+    }
+    userConnections.delete(conn.userId);
+    app.log.info(`[connection-service] Connection removed for user ${conn.userId} (remaining connections: ${userConnections.size})`);
   }
 
-  function getAllConnections(): WSConnection[] {
-    return Array.from(userConnections.values());
+  function getConnection(userId: number): WSConnection | undefined {
+    return userConnections.get(userId);
   }
 
-  function startHeartbeat(userId: number): void {
+  function getAllConnections(): Map<number, WSConnection> {
+    return userConnections;
+  }
 
+  function updateUserGame(userId: number, gameId: string): void {
+    const conn = userConnections.get(userId);
+    if (!conn) {
+      app.log.warn(`[connection-service] Cannot update game for user ${userId} - connection not found`);
+      return;
+    }
+    
+    app.log.info(`[connection-service] User ${userId} assigned to game ${gameId}`);
+    conn.gameId = gameId;
+  }
+
+  function startHeartbeat(userId: number, heartbeatInterval: number): void {
+    const conn = app.connectionService.getConnection(userId);
+    if (!conn) {
+      app.log.warn(`[connection-service] Cannot start heartbeat for user ${userId} - connection not found`);
+      return;
+    }
+
+    if (conn?.heartbeatTimer) {
+      clearInterval(conn.heartbeatTimer);
+    }
     const timer = setInterval(() => {
       app.networkService.sendPing(userId);
-    }, config.heartbeatInterval);
-    
-    const conn = app.connectionService.getConnection(userId);
-    if (conn) {
-      conn.heartbeatTimer = timer;
-    }
-
+    }, heartbeatInterval);
+    conn.heartbeatTimer = timer;
+    conn.missedPings = 0;
+    conn.lastPong = Date.now();
     app.log.info(`[connection-service] Heartbeat started: every ${config.heartbeatInterval / 1000}s`);
   }
 
   async function shutdown(): Promise<void> {
-    const closingPromises = Array.from(userConnections).map(conn => {
+    app.log.info(`[connection-service] Shutting down - closing ${userConnections.size} connections`);
+    const closingPromises = Array.from(userConnections).map(([userId, conn]) => {
       return new Promise<void>(resolve => {
-        conn[1].once('close', () => resolve());
-        conn[1].removeAllListeners();
-        conn[1].close(1000, 'Server shutting down');
+        app.log.info(`[connection-service] Closing connection for user ${userId}`);
+        conn.once('close', () => resolve());
+        conn.removeAllListeners();
+        conn.close(1000, 'Server shutting down');
         if (conn) {
-          removeConnection(conn[1]);
+          removeConnection(conn);
         }
       });
     });
@@ -76,6 +102,7 @@ export default function connectionService(app: FastifyInstance) {
     removeConnection,
     getConnection,
     getAllConnections,
+    updateUserGame,
     shutdown,
     startHeartbeat
   }
