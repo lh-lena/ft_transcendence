@@ -18,19 +18,20 @@ declare module 'fastify' {
     userId: number;
     username: string;
     userAlias: string;
-    currentGameId?: string;
+    state: import('./pong.types.js').ConnectionState;
+    gameId?: string | null;
     lastPing: number;
     lastPong: number;
     authenticated: boolean;
     isReconnecting: boolean;
-    networkQuality: import('./network.types.js').NETWORK_GUALITY;
+    networkQuality: import('./network.types.js').NETWORK_QUALITY;
     latency: number;
     missedPings: number;
-    heartbeatTimeout?: NodeJS.Timeout;
+    heartbeatTimer?: NodeJS.Timeout;
     reconnectTimer?: NodeJS.Timeout;
   }
 
-  interface VarifyClientInfo {
+  interface VerifyClientInfo {
     origin: string;
     secure: boolean;
     req: IncomingMessage;
