@@ -2,6 +2,7 @@ import { FastifyInstance } from 'fastify';
 import { authPlugin } from './auth.plugin.js';
 import { websocketPlugin } from './ws.plugin.js';
 import { configPlugin } from './config.plugin.js';
+import { gamePlugin } from './game.plugin.js';
 
 export const registerPlugins = async (app: FastifyInstance) => {
   try {
@@ -11,6 +12,8 @@ export const registerPlugins = async (app: FastifyInstance) => {
     await app.register(authPlugin);
 
     await app.register(websocketPlugin);
+
+    app.register(gamePlugin);
     
     app.log.debug('All plugins registered successfully');
   } catch (err) {
