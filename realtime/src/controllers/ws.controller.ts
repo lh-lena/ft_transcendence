@@ -36,6 +36,7 @@ export const handleWSConnection = (
     const gameId = app.reconnectionService.attemptReconnection(userId);
     if (gameId) {
       app.log.info(`[websocket-service] User ${userId} successfully reconnected to game ${gameId}`);
+      app.connectionService.updateUserGame(ws.userId, gameId);
     } else {
       app.log.warn(`[websocket-service] User ${userId} reconnection failed`);
     }
