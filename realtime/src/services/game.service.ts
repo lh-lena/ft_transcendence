@@ -28,12 +28,11 @@ export function createGameService(app: FastifyInstance) {
       return false;
     }
 
-    const userIds: number[] = [game.players[0].userId, game.players[1].userId];
-    const player1 = app.connectionService.getConnection(userIds[0]);
+    const player1 = app.connectionService.getConnection(game.players[0].userId);
 
     if (game.gameMode !== GameMode.PVP_REMOTE && player1) {
       return true;
-    } else if (player1 && userIds[1] && app.connectionService.getConnection(userIds[1])) {
+    } else if (player1 && game.players[1] && app.connectionService.getConnection(game.players[1].userId)) {
       return true;
     }
     return false;
