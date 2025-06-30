@@ -1,19 +1,22 @@
 export interface WsClientMessage {
-    'game-start': { gameId: string };
-    'game-leave': { gameId: string };
-    'game-update': PlayerInput;
-    'game-pause': {};
-    'game-resume': {};
-    'chat-message': ChatMessage;
+    'game_start': { gameId: string };
+    'game_leave': { gameId: string };
+    'game_update': PlayerInput;
+    'game_pause': { gameId: string };
+    'game_resume': { gameId: string };
+    'chat_message': ChatMessage;
     'notification': NotificationPayload;
 }
 
 export interface WsServerBroadcast {
-    'game_started': { gameId: string; message: string; status: GameSessionStatus; };
-    'game_update': GameState;
-    'game_ended': { gameId: string; message: string; status: GameSessionStatus; };
-    'chat-message': ChatMessage;
+    'game_started': { gameId: string; status: GameSessionStatus; };
+    'game_state_sync': GameState;
+    'game_ended': GameResult;
+    'game_pause': { gameId: string };
+    'game_resume': { gameId: string };
+    'chat_message': ChatMessage;
     'notification': NotificationPayload;
+    'error': {error: string};
 }
 
 export interface incomingMessage<T extends keyof WsClientMessage> {
@@ -65,15 +68,13 @@ export interface GameState {
     paddle1: { y: number; height: number; width: number; score: number; };
     paddle2: { y: number; height: number; width: number; score: number; };
     status: GameSessionStatus;
-    maxScore: number;
-    aiDifficulty?: AIDifficulty;
+    maxScore: number; // do i need this here?
+    aiDifficulty?: AIDifficulty; // do i need this here?
 }
 
-
 export enum PlayerInputType {
-    MOVE_UP = 'move_up',
-    MOVE_DOWN = 'move_down',
-    STOP_MOVE = 'stop_move',
+    MOVE_UP = 'up',
+    MOVE_DOWN = 'down',
 }
 
 export interface PlayerInput {

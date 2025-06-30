@@ -28,7 +28,7 @@ All messages follow this base structure:
 ### Game Messages
 
 ### Server endpoint: new WebSocket(`${WS_SERVER_URL}/ws`);</br>
-tocket wxtract from the cookies
+
   #### Representation of events and payloads:
   ```markdown
     export interface WsClientMessage {
@@ -42,9 +42,11 @@ tocket wxtract from the cookies
     }
 
     export interface WsServerBroadcast {
-        'game_started': { gameId: string; message: string; status: GameSessionStatus; };
-        'game_update': GameState;
-        'game_ended': { gameId: string; message: string; status: GameSessionStatus; };
+        'game_started': { gameId: string; status: GameSessionStatus; };
+        'game_state_sync': GameState;
+        'game_ended': GameResult;
+        'game_pause': { gameId: string };
+        'game_resume': { gameId: string };
         'chat_message': ChatMessage;
         'notification': NotificationPayload;
         'error': {error: string};
@@ -54,9 +56,8 @@ tocket wxtract from the cookies
   #### Related types:
   ```markdown
     export enum PlayerInputType {
-        MOVE_UP = 'move_up',
-        MOVE_DOWN = 'move_down',
-        STOP_MOVE = 'stop_move', // on keyup //??
+        MOVE_UP = 'up',
+        MOVE_DOWN = 'down',
     }
 
     export interface GameState {
@@ -65,12 +66,10 @@ tocket wxtract from the cookies
       paddle1: { y: number; height: number; width: number; score: number; };
       paddle2: { y: number; height: number; width: number; score: number; };
       status: GameSessionStatus;
-      maxScore: number;
-      aiDifficulty?: AIDifficulty;
     }
 
     export interface PlayerInput {
-        inputType: PlayerInputType;
+        direction: PlayerInputType;
     }
 
     export interface ChatMessage {
@@ -82,12 +81,26 @@ tocket wxtract from the cookies
     }
 
     export interface NotificationPayload {
-        tournamentId: number;
+        tournamentId?: number;
         gameId?: string;
         message: string;
-        timestamp: string;
+        timestamp: number;
     }
   ```
+
+  ### Constant related to Pong game
+  export const GAME_CONFIG = {
+    BOARD_WIDTH: 800,
+    BOARD_HEIGHT: 400,
+    PADDLE_WIDTH: 10,
+    PADDLE_HEIGHT: 80,
+    BALL_RADIUS: 8,
+    PADDLE_SPEED: 5,
+    INITIAL_BALL_SPEED_X: 5,
+    INITIAL_BALL_SPEED_Y: 3,
+    FPS: 60,
+    MAX_SCORE: 11
+};
 
 ### `TODO`: define API endpoints
 
@@ -172,6 +185,4 @@ If authentication fails, terminate the WebSocket connection
 #### User Joins Game Flow: Client connects -> ws-server authenticates -> Client sends `game_start` -> ws-server fetches game session from Backend -> ws-server broadcasts `game_started`
 
 #### Player Moves Paddle Flow: Client sends `game_update` -> ws-server updates internal state -> ws-server calculates new `GameState` -> ws-server broadcasts `game_update`.
-
-#### User validation: on `connection`, on `chat_message`, on `start_game`
 

@@ -1,4 +1,4 @@
-import { ConnectionState } from './pong.types';
+import { ConnectionState, User } from './pong.types';
 
 export enum NETWORK_QUALITY {
     GOOD = 'good',
@@ -15,22 +15,8 @@ export interface DisconnectInfo {
 }
 
 export interface PausedGameState {
+    gameId: string;
     reason: string;
     pausedAt: number;
-    playerStates: Map<number, ConnectionState>
+    players: Array<User>;
 }
-
-// export interface WSConnection extends WebSocket {
-//     userId: number;
-//     username: string;
-//     userAlias: string; // If applicable
-//     currentGameId?: string | null; // Make it explicitly nullable/optional
-//     lastPing: number;
-//     lastPong: number;
-//     authenticated: boolean;
-//     isReconnecting: boolean;
-//     networkQuality: NETWORK_QUALITY; // Custom property
-//     latency: number;                  // Custom property
-//     missedPings: number;              // Custom property
-//     // Add any other custom properties you assign to 'ws'
-// }
