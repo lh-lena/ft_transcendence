@@ -1,5 +1,5 @@
 import { FastifyInstance } from 'fastify';
-import { GameInstance, GameMode, StartGame, AIDifficulty, GameState, GameSessionStatus } from '../types/pong.types.js';
+import { GameInstance, GameMode, StartGame, GameState, GameSessionStatus, User } from '../types/pong.types.js';
 import { initializeGameState } from '../pong-core/pong.service.js'
 import { PausedGameState } from 'types/network.types.js';
 
@@ -57,7 +57,7 @@ export function createGameService(app: FastifyInstance) {
     }
     app.log.debug(`[game-service] Initializing game session ${gameId}`);
 
-    let data: StartGame;
+    let data: StartGame | null;
     if (startGameData) {
       data = startGameData;
       app.log.debug(`[game-service] Using provided game data for ${gameId}`);
@@ -99,12 +99,13 @@ export function createGameService(app: FastifyInstance) {
     };
 
     gameSessions.set(gameId, newGame);
-    app.connectionService.updateUserGame(newGame.players[0].userId, data.gameId);
+    app.connectionService.updateUserGame(newGame.players[0].userId, gameId);
     playerInGame.set(newGame.players[0].userId, gameId);
-    if (data.players[1] && data.players[1].userId !== -1) {
+    if (data.gameMode === GameMode.PVP_REMOTE && data.players[1] && data.players[1].userId !== -1) {
       playerInGame.set(data.players[1].userId, gameId);
+      app.connectionService.updateUserGame(newGame.players[1].userId, gameId);
     }
-    app.log.info(`[game-service] Game session initialized: ${gameId}, mode: ${newGame.gameMode}, players: ${newGame.players.length}`);
+    app.log.debug(`[game-service] Game session initialized: ${gameId} for players: ${newGame.players.map(p => p.userAlias).join(' vs ')} in mode ${newGame.gameMode}`);
     return newGame;
   }
 
@@ -123,7 +124,7 @@ export function createGameService(app: FastifyInstance) {
     return isPlayersConnected(gameId);
   }
 
-  function startGame(gameId: string): void {
+  async function startGame(gameId: string): Promise<void> {
     app.log.info(`[game-service] Starting the game ${gameId}`);
     const game = gameSessions.get(gameId);
     if (!game || game.status === GameSessionStatus.ACTIVE) return;
@@ -131,8 +132,7 @@ export function createGameService(app: FastifyInstance) {
     game.status = GameSessionStatus.ACTIVE;
     game.lastUpdate = Date.now();
     // TODO: gameLoop
-    
-    app.log.info(`[game-service] Game started ${gameId} for ${game.players[0].userAlias} against ${game.players[1].userAlias} in mode ${game.gameMode}`);
+    app.log.info(`[game-service] Game started ${gameId} for ${game.players.map(p => p.userAlias).join(' vs ')} in mode ${game.gameMode}`);
 
     const { gameState } = game;
     const event: string = 'game_update';
@@ -140,7 +140,7 @@ export function createGameService(app: FastifyInstance) {
       ...gameState
     };
     const usersId = game.players.map(p => p.userId).filter(id => id !== -1);
-    app.wsService.sendToConnections(usersId, { 
+    app.wsService.sendToConnections(usersId, {
       event: 'game_started',
       payload: { gameId, status: game.status }
     });
@@ -161,9 +161,17 @@ export function createGameService(app: FastifyInstance) {
     }
 
     game.status = GameSessionStatus.PAUSED;
+    const pausedInfo: PausedGameState = {
+      gameId,
+      reason,
+      pausedAt: Date.now(),
+      players: game.players
+    }
+    pausedGames.set(game.gameId, pausedInfo);
     const event = 'game_pause';
     const payload = {
-      gameId
+      gameId,
+      reason
     };
     app.wsService.broadcastToGame(gameId, {event, payload});
   }
