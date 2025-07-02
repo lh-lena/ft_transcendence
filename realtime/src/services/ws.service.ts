@@ -34,7 +34,7 @@ export default function createWSService(app: FastifyInstance) {
       .map(p => p.userId)
       .filter(id => id !== -1 && !excludeConnections.includes(id));
 
-    app.log.debug(`[ws-service] Broadcasting ${message.event} to game ${gameId} (${userIds.length} recipients, excluding: [${excludeConnections.join(', ')}])`);
+    app.log.debug(`[ws-service] Broadcasting '${message.event}' to game ${gameId} (${userIds.length} recipients, excluding: [${excludeConnections.join(', ')}])`);
     sendToConnections(userIds, message);
   }
 

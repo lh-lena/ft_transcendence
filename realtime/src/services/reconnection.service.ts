@@ -1,6 +1,6 @@
 import { FastifyInstance, WSConnection } from 'fastify';
 import { DisconnectInfo } from '../types/network.types.js';
-import { GameSessionStatus, NotificationPayload } from '../types/pong.types.js';
+import { GAME_CONFIG, GameSessionStatus, NotificationPayload } from '../types/pong.types.js';
 
 export default function reconnectionService(app: FastifyInstance) {
   const disconnectedPlayers: Map<number, DisconnectInfo> = new Map();
@@ -69,22 +69,23 @@ export default function reconnectionService(app: FastifyInstance) {
   };
 
   function attemptReconnection(userId: number): string | null {
-    app.log.debug(`[reconnection-service] Attempting reconnection for user ${userId}`);
     const info = disconnectedPlayers.get(userId);
     if (!info || !info.gameId) {
-      app.log.info(`[reconnection-service] No disconnect info found for user ${userId}, game ${info?.gameId}`);
+      app.log.debug(`[reconnection-service] No disconnect info found for user ${userId}, game ${info?.gameId}`);
       return null;
     }
+    app.log.debug({info},`[reconnection-service] Attempting reconnection for user ${userId}`);
 
     const newConn = app.connectionService.getConnection(userId) as WSConnection | undefined;
     if (!newConn) {
       app.log.info(`[reconnection-service] Connection for user ${userId} not found`);
+      cleanup(userId);
       return null;
     }
 
     const { gameId } = info;
     const gameSession = app.gameService.getGameSession(gameId);
-    if (!gameSession || (gameSession.status !== GameSessionStatus.PAUSED && gameSession.status !== GameSessionStatus.PENDING)) {
+    if (!gameSession || gameSession.status !== GameSessionStatus.PAUSED) {
       app.log.info(`[reconnection-service] Game ${info.gameId} no longer exists`);
       cleanup(userId);
       return null;
@@ -92,31 +93,21 @@ export default function reconnectionService(app: FastifyInstance) {
     app.log.info(`[reconnection-service] Successfully reconnecting user ${userId} (${info.username}) to game ${gameId}`);
 
     newConn.isReconnecting = true;
-    const timer = reconnectionTimers.get(userId);
-    if (timer) {
-      clearTimeout(timer);
-      reconnectionTimers.delete(userId);
-      app.log.debug(`[reconnection-service] Cleared reconnection timer for user ${userId}`);
-    }
+    cleanup(userId);
 
     const msg : NotificationPayload = {
       gameId,
-      message: `Player ${newConn.username} reconnected`,
+      message: `Player ${newConn.userAlias} reconnected`,
       timestamp: Date.now()
     }
     app.wsService.broadcastToGame(gameId, {"event": "notification", msg}, [userId]);
 
-    if (app.gameService.canStartGame(gameId)) {
-      if (gameSession.status === GameSessionStatus.PENDING) {
-        app.gameService.startGame(gameId);
-      } else if (gameSession.status === GameSessionStatus.PAUSED) {
+    if (app.gameService.canStartGame(gameId) && gameSession.status === GameSessionStatus.PAUSED ) {
         app.gameService.resumeGame(gameId);
-      }
     } else {
       app.log.debug(`[reconnection-service] Game ${gameId} cannot be resumed. Players connected: ${app.gameService.isPlayersConnected(gameId)})`);
     }
 
-    cleanup(userId);
     return gameId;
   }
 
@@ -128,7 +119,10 @@ export default function reconnectionService(app: FastifyInstance) {
     app.log.info(`[reconnection-service] User ${userId} (${info.username}) failed to reconnect within timeout period`);
     app.log.info(`[reconnection-service] Ending game ${info.gameId} due to timeout`);
 
-    app.gameService.endGame(info.gameId, `Player ${info.username} failed to reconnect`);
+    const game = app.gameService.getGameSession(info.gameId);
+    if (game && (game.status !== GameSessionStatus.FINISHED && game.status !== GameSessionStatus.CANCELLED)) {
+      app.gameService.endGame(info.gameId, GameSessionStatus.CANCELLED,`Player ${info.username} failed to reconnect`);
+    }
     const payload: NotificationPayload = {
       gameId: info.gameId,
       message: `Game ended: ${info.username} failed to reconnect`,
@@ -138,16 +132,24 @@ export default function reconnectionService(app: FastifyInstance) {
     cleanup(userId);
   }
 
-  function cleanup(userId: number) {
-    app.log.debug(`[reconnection-service] Cleaning up reconnection data for user ${userId}`);
-    const timer = reconnectionTimers.get(userId);
-    if (timer) {
-      clearTimeout(timer);
-      reconnectionTimers.delete(userId);
-      app.log.debug(`[reconnection-service] Cleared timer for user ${userId}`);
+  function cleanup(userId?: number) {
+    if (userId) {
+      app.log.debug(`[reconnection-service] Cleaning up reconnection data for user ${userId}`);
+      const timer = reconnectionTimers.get(userId);
+      if (timer) {
+        clearTimeout(timer);
+        reconnectionTimers.delete(userId);
+        app.log.debug(`[reconnection-service] Cleared timer for user ${userId}`);
+      }
+      disconnectedPlayers.delete(userId);
     }
-    disconnectedPlayers.delete(userId);
   }
+
+  app.addHook('onClose', async () => {
+    reconnectionTimers.forEach(timer => clearTimeout(timer));
+    reconnectionTimers.clear();
+    disconnectedPlayers.clear();
+  });
 
   return {
     handleDisconnect,
