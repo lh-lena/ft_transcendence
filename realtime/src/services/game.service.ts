@@ -1,23 +1,16 @@
 import { FastifyInstance } from 'fastify';
-import { GameInstance, GameMode, StartGame, GameState, GameSessionStatus, User } from '../types/pong.types.js';
+import { GameInstance, GameMode, StartGame, GameState, GameSessionStatus, GameResult, User } from '../types/pong.types.js';
 import { initializeGameState } from '../pong-core/pong.service.js'
 import { PausedGameState } from 'types/network.types.js';
 
 export function createGameService(app: FastifyInstance) {
   const gameSessions: Map<string, GameInstance> = new Map();
-  const playerInGame: Map<number, string> = new Map();
   const pausedGames: Map<string, PausedGameState> = new Map();
 
   function getGameSession(gameId: string) : GameInstance | undefined {
     const session = gameSessions.get(gameId);
     app.log.debug(`[game-service] Getting game session ${gameId}: ${session ? 'found' : 'not found'}`);
     return session;
-  }
-
-  function getActiveGameId(userId: number): string | undefined {
-    const gameId = playerInGame.get(userId);
-    app.log.debug(`[game-service] Getting active game for user ${userId}: ${gameId || 'none'}`);
-    return gameId;
   }
 
   function isPlayersConnected(gameId: string) : boolean {
@@ -38,12 +31,12 @@ export function createGameService(app: FastifyInstance) {
     return false;
   }
 
-  async function fetchStartGameData(gameId: string): Promise<any> {
+  async function fetchStartGameData(gameId: string): Promise<StartGame | null> {
     app.log.debug(`[game-service] Fetching game data for ${gameId} from backend`);
     const BACKEND_URL = app.config.websocket.backendUrl;
     const res = await fetch(`${BACKEND_URL}/api/game/:${gameId}`);
 
-    if (!res.ok) return {};
+    if (!res.ok) return null;
 
     const data = await res.json();
     app.log.debug(`[game-service] Fetched game data for ${gameId}:`, data);
@@ -52,28 +45,37 @@ export function createGameService(app: FastifyInstance) {
 
   async function initializeGameSession(gameId: string, startGameData?: StartGame): Promise<GameInstance | undefined> {
     if (gameSessions.has(gameId)) {
-      app.log.warn(`[game-service] Game session ${gameId} already exists`);
-      return gameSessions.get(gameId);
+      const existing = gameSessions.get(gameId);
+      app.log.debug(`[game-service] Game session ${gameId} already exists, using existing instance`);
+      return existing;
     }
     app.log.debug(`[game-service] Initializing game session ${gameId}`);
 
-    let data: StartGame | null;
+    let data: StartGame | null = null;;
     if (startGameData) {
       data = startGameData;
       app.log.debug(`[game-service] Using provided game data for ${gameId}`);
     } else {
       try {
         data = await fetchStartGameData(gameId);
+        if (!data) {
+          app.log.warn(`[game-service] No game data fetched for ${gameId}`);
+          app.wsService.broadcastToGame(gameId, {
+            event: 'error',
+            payload: { 'error': `Game not found or invalid: ${gameId}` }
+          });
+          return undefined;
+        }
       } catch (error) {
         app.log.error(`[game-service] Failed to fetch game data for ${gameId}:`, error);
         app.wsService.broadcastToGame(gameId, {
           event: 'error',
           payload: {
-            'error': `Failed to fetch game data for gameId: ${gameId}`
+            'error': `Failed to fetch game data for game: ${gameId}`
           }
         });
+        return undefined;
       }
-      return undefined;
     }
 
     if (data.gameId !== gameId) {
@@ -81,7 +83,7 @@ export function createGameService(app: FastifyInstance) {
       app.wsService.broadcastToGame(gameId, {
         event: 'error',
         payload: {
-          'error': `Invalid game data for gameId: ${gameId}`
+          'error': `Invalid game data for game: ${gameId}`
         }
       });
       return undefined;
@@ -94,15 +96,13 @@ export function createGameService(app: FastifyInstance) {
       status: GameSessionStatus.PENDING,
       gameLoopInterval: undefined,
       lastUpdate: Date.now(),
-      startedAt: Date.now().toString(),
+      startedAt: null,
       finishedAt: null,
     };
 
     gameSessions.set(gameId, newGame);
     app.connectionService.updateUserGame(newGame.players[0].userId, gameId);
-    playerInGame.set(newGame.players[0].userId, gameId);
     if (data.gameMode === GameMode.PVP_REMOTE && data.players[1] && data.players[1].userId !== -1) {
-      playerInGame.set(data.players[1].userId, gameId);
       app.connectionService.updateUserGame(newGame.players[1].userId, gameId);
     }
     app.log.debug(`[game-service] Game session initialized: ${gameId} for players: ${newGame.players.map(p => p.userAlias).join(' vs ')} in mode ${newGame.gameMode}`);
@@ -118,6 +118,11 @@ export function createGameService(app: FastifyInstance) {
 
     if (game.status === GameSessionStatus.ACTIVE) {
       app.log.debug(`[game-service] Game ${gameId} already active`);
+      return false;
+    }
+
+    if (game.gameMode === GameMode.PVP_REMOTE && game.players.length !== 2) {
+      app.log.warn(`[game-service] Cannot start PVP_REMOTE game ${gameId} - not enough players (${game.players.length}/2)`);
       return false;
     }
 
@@ -145,20 +150,17 @@ export function createGameService(app: FastifyInstance) {
       return;
     }
 
+    const { gameState } = game;
+    const usersId = game.players.map(p => p.userId).filter(id => id !== -1);
+    const now = Date.now();
+
+    game.lastUpdate = now;
+    game.startedAt = now.toString();
     game.status = GameSessionStatus.ACTIVE;
-    game.lastUpdate = Date.now();
+    gameState.status = GameSessionStatus.ACTIVE;
 
     // TODO: gameLoop
     // game.gameLoopInterval = setInterval(() => updateGameLoop(gameId), 1000 / GAME_CONFIG.FPS);
-
-    const { gameState } = game;
-
-    const usersId = game.players.map(p => p.userId).filter(id => id !== -1);
-
-    app.wsService.sendToConnections(usersId, {
-      event: 'game_started',
-      payload: { gameId, status: game.status }
-    });
 
     app.wsService.sendToConnections(usersId, {
       event: 'game_update',
@@ -175,8 +177,8 @@ export function createGameService(app: FastifyInstance) {
       return;
     }
 
-    if (game.status === GameSessionStatus.PAUSED) {
-      app.log.debug(`[game-service] Game ${gameId} already paused`);
+    if (game.status !== GameSessionStatus.ACTIVE) {
+      app.log.debug(`[game-service] Game ${gameId} is not active. Game status: ${game.status}`);
       return;
     }
 
@@ -202,7 +204,7 @@ export function createGameService(app: FastifyInstance) {
   function resumeGame(gameId: string): void {
     const game = gameSessions.get(gameId);
     const pausedState = pausedGames.get(gameId);
-
+    
     if (!game) {
       app.log.error(`[game-service] Cannot resume - game ${gameId} not found`);
       return;
@@ -218,18 +220,20 @@ export function createGameService(app: FastifyInstance) {
       return;
     }
 
-    app.log.info(`[game-service] Resuming game ${gameId}`);
+    app.log.debug(`[game-service] Resuming game ${gameId}`);
     game.status = GameSessionStatus.ACTIVE;
-
-    // or just game_update event setting countdown
-    const event = 'game_resume';
-    const payload = { gameId };
-    app.wsService.broadcastToGame(gameId, { event, payload });
+    const {gameState } = game;
+    // TODO: Restart game loop
+    // game.gameLoopInterval = setInterval(() => updateGameLoop(gameId), 1000 / GAME_CONFIG.FPS);
+    app.wsService.broadcastToGame(gameId, {
+      event: 'game_update',
+      payload: {gameState }
+    });
   }
 
-  function endGame(gameId: string, reason: string) : void {
+  function endGame(gameId: string, status: GameSessionStatus.CANCELLED | GameSessionStatus.FINISHED, reason: string) : void {
     if (!gameId) return;
-    app.log.info(`[game-service] Ending game ${gameId} - Reason: ${reason}`);
+    app.log.debug(`[game-service] Ending game ${gameId}. Reason: ${reason}`);
   }
 
   function cleanup(gameId: string) : void {
@@ -239,22 +243,23 @@ export function createGameService(app: FastifyInstance) {
       app.log.info(`[game-service] Cleaning up game ${gameId}`);
       gameSessions.delete(gameId);
       pausedGames.delete(gameId);
-      app.log.debug(`[game-service] Game ${gameId} removed from memory`);
+      app.log.debug(`[game-service] Game ${gameId} removed from sessions`);
     }, app.config.websocket.connectionTimeout);
   }
 
 
   return {
     getGameSession,
-    getActiveGameId,
     canStartGame,
     initializeGameSession,
+    handleCreateGame,
     fetchStartGameData,
     isPlayersConnected,
     startGame,
     pauseGame,
     resumeGame,
     endGame,
+    handleJoinGame,
     cleanup
   };
 }
