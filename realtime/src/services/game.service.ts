@@ -239,9 +239,63 @@ export function createGameService(app: FastifyInstance) {
   }
 
   function endGame(gameId: string, status: GameSessionStatus.CANCELLED | GameSessionStatus.FINISHED, reason: string) : void {
-    if (!gameId) return;
     app.log.debug(`[game-service] Ending game ${gameId}. Reason: ${reason}`);
 
+    const game = gameSessions.get(gameId);
+    if (!game) {
+      app.log.warn(`[game-service] Cannot end - game ${gameId} not found`);
+      return;
+    }
+
+    if (game.gameLoopInterval) {
+      clearInterval(game.gameLoopInterval);
+      game.gameLoopInterval = undefined;
+    }
+
+    game.finishedAt = Date.now().toString();
+    game.status = status;
+    game.gameState.status = status;
+
+    const result : GameResult = {
+      gameId,
+      scorePlayer1: game.gameState.paddle1.score,
+      scorePlayer2: game.gameState.paddle2.score,
+      player1Username: game.players[0].userAlias,
+      player2Username: game.players[1].userAlias,
+      winnerId: game.gameState.paddle1.score > game.gameState.paddle2.score ? game.players[0].userId : game.players[1].userId,
+      loserId: game.gameState.paddle1.score > game.gameState.paddle2.score ? game.players[1].userId : game.players[0].userId,
+      status: game.status,
+      startedAt: game.startedAt!,
+      finishedAt: game.finishedAt
+    };
+
+    game.players.forEach(player => {
+      if (player.userId !== -1) {
+        playerGameMap.delete(player.userId);
+        app.connectionService.updateUserGame(player.userId, null);
+      }
+    });
+
+    const BACKEND_URL = app.config.websocket.backendUrl;
+    fetch(`${BACKEND_URL}/api/games/result`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(result),
+    }).then(res => {
+        if (!res.ok) app.log.error(`[game-service] Failed to send game result to backend: ${res.statusText}`);
+        else {
+          app.log.debug(`[game-service] Game ${gameId} result sent to backend`);
+        }
+    }).catch(error => {
+        app.log.error(`[game-service] Error sending game result to backend:`, error);
+    });
+
+    app.wsService.broadcastToGame(gameId, {
+      event: 'game_ended',
+      payload: result
+    });
+    cleanup(gameId);
+    app.log.debug(`[game-service] Game ended ${gameId}`)
   }
 
   async function handleCreateGame(gameId: string, user: User) : Promise<void> {
