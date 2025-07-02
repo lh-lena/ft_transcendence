@@ -239,6 +239,11 @@ export default function createGameService(app: FastifyInstance) {
       return false;
     }
 
+    if (game.gameLoopInterval) {
+      clearInterval(game.gameLoopInterval);
+      game.gameLoopInterval = undefined;
+    }
+
     return true;
   }
 
