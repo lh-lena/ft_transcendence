@@ -115,7 +115,7 @@ export function createGameService(app: FastifyInstance) {
       app.log.warn(`[game-service] Cannot check start conditions - game ${gameId} not found`);
       return false;
     }
-    
+
     if (game.status === GameSessionStatus.ACTIVE) {
       app.log.debug(`[game-service] Game ${gameId} already active`);
       return false;
@@ -126,25 +126,45 @@ export function createGameService(app: FastifyInstance) {
 
   async function startGame(gameId: string): Promise<void> {
     app.log.info(`[game-service] Starting the game ${gameId}`);
-    const game = gameSessions.get(gameId);
-    if (!game || game.status === GameSessionStatus.ACTIVE) return;
+    const game = await initializeGameSession(gameId, undefined);
+    if (!game) {
+      app.log.error(`[game-service] Failed to initialize game ${gameId}`);
+      return;
+    }
+    if (game.status === GameSessionStatus.ACTIVE) {
+      app.log.debug(`[game-service] Game ${gameId} is already active`);
+      return;
+    }
+
+    if (!canStartGame(gameId)) {
+      app.log.warn(`[game-service] Cannot start game ${gameId} - players not ready`);
+      app.wsService.broadcastToGame(gameId, {
+        event: 'error',
+        payload: { error: 'All players must be connected to start the game' }
+      });
+      return;
+    }
 
     game.status = GameSessionStatus.ACTIVE;
     game.lastUpdate = Date.now();
+
     // TODO: gameLoop
-    app.log.info(`[game-service] Game started ${gameId} for ${game.players.map(p => p.userAlias).join(' vs ')} in mode ${game.gameMode}`);
+    // game.gameLoopInterval = setInterval(() => updateGameLoop(gameId), 1000 / GAME_CONFIG.FPS);
 
     const { gameState } = game;
-    const event: string = 'game_update';
-    const payload: GameState = {
-      ...gameState
-    };
+
     const usersId = game.players.map(p => p.userId).filter(id => id !== -1);
+
     app.wsService.sendToConnections(usersId, {
       event: 'game_started',
       payload: { gameId, status: game.status }
     });
-    app.wsService.sendToConnections(usersId, {event, payload});
+
+    app.wsService.sendToConnections(usersId, {
+      event: 'game_update',
+      payload: gameState
+    });
+    app.log.info(`[game-service] Game started ${gameId} for ${game.players.map(p => p.userAlias).join(' vs ')} in mode ${game.gameMode}`);
   }
 
   function pauseGame(gameId: string, reason: string): void {
@@ -160,6 +180,11 @@ export function createGameService(app: FastifyInstance) {
       return;
     }
 
+    if (game.gameLoopInterval) {
+      clearInterval(game.gameLoopInterval);
+      game.gameLoopInterval = undefined;
+    }
+
     game.status = GameSessionStatus.PAUSED;
     const pausedInfo: PausedGameState = {
       gameId,
@@ -168,12 +193,10 @@ export function createGameService(app: FastifyInstance) {
       players: game.players
     }
     pausedGames.set(game.gameId, pausedInfo);
-    const event = 'game_pause';
-    const payload = {
-      gameId,
-      reason
-    };
-    app.wsService.broadcastToGame(gameId, {event, payload});
+    app.wsService.broadcastToGame(gameId, {
+      event: 'game_pause',
+      payload: { gameId, reason }
+    });
   }
 
   function resumeGame(gameId: string): void {

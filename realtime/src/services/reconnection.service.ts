@@ -6,6 +6,11 @@ export default function reconnectionService(app: FastifyInstance) {
   const disconnectedPlayers: Map<number, DisconnectInfo> = new Map();
   const reconnectionTimers: Map<number, NodeJS.Timeout> = new Map();
 
+  const config = {
+    reconnectionTimeout: app.config.websocket.connectionTimeout || 60000,
+    cleanupInterval: 300000 // 5 minutes
+  };
+
   function getDiconnectionData(userId: number) : DisconnectInfo | undefined {
     const info = disconnectedPlayers.get(userId);
     app.log.debug(`[reconnection-service] Getting disconnect info for user ${userId}: ${info ? 'found' : 'not found'}`);
@@ -14,20 +19,22 @@ export default function reconnectionService(app: FastifyInstance) {
 
   function handleDisconnect(userId: number, gameId: string, username: string): void {
     app.log.info(`[reconnection-service] Handling disconnect for user ${userId} (${username}) in game ${gameId}`);
-
-    if (!gameId) {
-      app.log.warn(`[reconnection-service] No gameId provided for user ${userId}`);
+    const game = app.gameService.getGameSession(gameId);
+    if (!game) {
+      app.log.warn({
+        userId,
+        gameId
+      }, 'Cannot handle disconnection - game not found');
       return;
     }
 
-    if (disconnectedPlayers.has(userId)) {
-      app.log.warn(`[reconnection-service] User ${userId} already in disconnected players list`);
+    if (disconnectedPlayers.has(userId) || 
+    game.gameState.status === GameSessionStatus.FINISHED ||
+    game.gameState.status === GameSessionStatus.CANCELLED) {
       return;
     }
 
-    const connTimeout = app.config.websocket.connectionTimeout || 60000;
-    app.log.debug(`[reconnection-service] Setting ${connTimeout}ms timeout for user ${userId} to reconnect`);
-
+    const connTimeout = config.reconnectionTimeout;
     const info: DisconnectInfo = {
       userId,
       username,
@@ -47,12 +54,18 @@ export default function reconnectionService(app: FastifyInstance) {
     app.wsService.broadcastToGame(gameId, {event, payload}, [userId]);
 
     const timeout = setTimeout(() => {
-      app.log.info(`[reconnection-service] Timeout expired for user ${userId}`);
+      app.log.debug(`[reconnection-service] Timeout expired for user ${userId}`);
       handleReconnectionTimeout(userId);
     }, connTimeout);
 
     reconnectionTimers.set(userId, timeout);
-    app.log.info(`[reconnection-service] Reconnection timer set for user ${userId} (${connTimeout}ms)`);
+    app.gameService.pauseGame(gameId, `${username} disconnected`);
+    app.log.info({
+      userId,
+      gameId,
+      username,
+      timeoutMs: config.reconnectionTimeout
+    }, 'User disconnected, waiting for reconnection');
   };
 
   function attemptReconnection(userId: number): string | null {
