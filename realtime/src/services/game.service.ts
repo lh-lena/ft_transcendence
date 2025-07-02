@@ -6,6 +6,7 @@ import { PausedGameState } from 'types/network.types.js';
 export function createGameService(app: FastifyInstance) {
   const gameSessions: Map<string, GameInstance> = new Map();
   const pausedGames: Map<string, PausedGameState> = new Map();
+  const playerGameMap: Map<number, string> = new Map();
 
   function getGameSession(gameId: string) : GameInstance | undefined {
     const session = gameSessions.get(gameId);
@@ -31,16 +32,21 @@ export function createGameService(app: FastifyInstance) {
     return false;
   }
 
-  async function fetchStartGameData(gameId: string): Promise<StartGame | null> {
+  async function fetchInitialGameData(gameId: string): Promise<StartGame | null> {
     app.log.debug(`[game-service] Fetching game data for ${gameId} from backend`);
-    const BACKEND_URL = app.config.websocket.backendUrl;
-    const res = await fetch(`${BACKEND_URL}/api/game/:${gameId}`);
+    try {
+      const BACKEND_URL = app.config.websocket.backendUrl;
+      const res = await fetch(`${BACKEND_URL}/api/game/:${gameId}`);
 
-    if (!res.ok) return null;
+      if (!res.ok) return null;
 
-    const data = await res.json();
-    app.log.debug(`[game-service] Fetched game data for ${gameId}:`, data);
-    return data;
+      const data = await res.json();
+      app.log.debug(`[game-service] Fetched game data for ${gameId}:`, data);
+      return data;
+    } catch (error) {
+      app.log.error({ gameId, error }, 'Error fetching initial game data from backend');
+      return null;
+    }
   }
 
   async function initializeGameSession(gameId: string, startGameData?: StartGame): Promise<GameInstance | undefined> {
@@ -57,7 +63,7 @@ export function createGameService(app: FastifyInstance) {
       app.log.debug(`[game-service] Using provided game data for ${gameId}`);
     } else {
       try {
-        data = await fetchStartGameData(gameId);
+        data = await fetchInitialGameData(gameId);
         if (!data) {
           app.log.warn(`[game-service] No game data fetched for ${gameId}`);
           app.wsService.broadcastToGame(gameId, {
@@ -89,10 +95,9 @@ export function createGameService(app: FastifyInstance) {
       return undefined;
     }
 
-    const initGameState: GameState = initializeGameState(gameId);
     const newGame: GameInstance = {
       ...data,
-      gameState: initGameState,
+      gameState: initializeGameState(gameId),
       status: GameSessionStatus.PENDING,
       gameLoopInterval: undefined,
       lastUpdate: Date.now(),
@@ -100,7 +105,6 @@ export function createGameService(app: FastifyInstance) {
       finishedAt: null,
     };
 
-    gameSessions.set(gameId, newGame);
     app.connectionService.updateUserGame(newGame.players[0].userId, gameId);
     if (data.gameMode === GameMode.PVP_REMOTE && data.players[1] && data.players[1].userId !== -1) {
       app.connectionService.updateUserGame(newGame.players[1].userId, gameId);
@@ -131,7 +135,7 @@ export function createGameService(app: FastifyInstance) {
 
   async function startGame(gameId: string): Promise<void> {
     app.log.info(`[game-service] Starting the game ${gameId}`);
-    const game = await initializeGameSession(gameId, undefined);
+    const game = gameSessions.get(gameId);
     if (!game) {
       app.log.error(`[game-service] Failed to initialize game ${gameId}`);
       return;
@@ -148,7 +152,7 @@ export function createGameService(app: FastifyInstance) {
         payload: { error: 'All players must be connected to start the game' }
       });
       return;
-    }
+      }
 
     const { gameState } = game;
     const usersId = game.players.map(p => p.userId).filter(id => id !== -1);
@@ -182,6 +186,7 @@ export function createGameService(app: FastifyInstance) {
       return;
     }
 
+    // Stop game loop
     if (game.gameLoopInterval) {
       clearInterval(game.gameLoopInterval);
       game.gameLoopInterval = undefined;
@@ -199,6 +204,7 @@ export function createGameService(app: FastifyInstance) {
       event: 'game_pause',
       payload: { gameId, reason }
     });
+    app.log.info(`[game-service] Game paused ${gameId} - Reason: ${reason}`);
   }
 
   function resumeGame(gameId: string): void {
@@ -220,20 +226,63 @@ export function createGameService(app: FastifyInstance) {
       return;
     }
 
-    app.log.debug(`[game-service] Resuming game ${gameId}`);
     game.status = GameSessionStatus.ACTIVE;
     const {gameState } = game;
     // TODO: Restart game loop
     // game.gameLoopInterval = setInterval(() => updateGameLoop(gameId), 1000 / GAME_CONFIG.FPS);
+    // set countdown to 3
     app.wsService.broadcastToGame(gameId, {
       event: 'game_update',
-      payload: {gameState }
+      payload: { gameState }
     });
+    app.log.debug(`[game-service] Game resumed ${gameId}`);
   }
 
   function endGame(gameId: string, status: GameSessionStatus.CANCELLED | GameSessionStatus.FINISHED, reason: string) : void {
     if (!gameId) return;
     app.log.debug(`[game-service] Ending game ${gameId}. Reason: ${reason}`);
+
+  }
+
+  async function handleCreateGame(gameId: string, user: User) : Promise<void> {
+    const gameData: StartGame = {
+      gameId,
+      gameMode: GameMode.PVP_REMOTE,
+      players: [user]
+    } // tmp
+
+    const game = await initializeGameSession(gameId, gameData);
+    if (!game) {
+      app.log.error(`[game-service] Failed to initialize game ${gameId}`);
+      return;
+    }
+    gameSessions.set(game.gameId, game);
+    playerGameMap.set(user.userId, gameId);
+    app.connectionService.updateUserGame(user.userId, gameId);
+    if (canStartGame(gameId)) {
+      await startGame(gameId);
+    }
+  }
+
+  async function handleJoinGame(gameId: string, user: User) : Promise<void> {
+    const game = gameSessions.get(gameId);
+    if (!game) {
+      app.log.debug(`[game-service] Cannot check start conditions - game ${gameId} not found`);
+      try {
+        await handleCreateGame(gameId, user);
+        return;
+      } catch (error) {
+          app.log.error(`Failed to initialize game ${gameId} for joining user ${user.userId}:`, error);
+          return;
+      }
+    }
+
+    gameSessions.set(game.gameId, game);
+    playerGameMap.set(user.userId, gameId);
+    app.connectionService.updateUserGame(user.userId, gameId);
+    if (canStartGame(gameId)) {
+      await startGame(gameId);
+    }
   }
 
   function cleanup(gameId: string) : void {
@@ -253,7 +302,7 @@ export function createGameService(app: FastifyInstance) {
     canStartGame,
     initializeGameSession,
     handleCreateGame,
-    fetchStartGameData,
+    fetchInitialGameData,
     isPlayersConnected,
     startGame,
     pauseGame,
