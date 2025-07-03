@@ -18,7 +18,7 @@ export function TEMPLATERoutes( context: ServerContext ) {
 			await TEMPLATEController.updateTEMPLATE( context, request, reply ) } );
 
 		server.delete( '/TEMPLATE/:id', async( request, reply ) => {
-			await TEMPLATEController.removeEMPLATE( context, request, reply ) } );
+			await TEMPLATEController.removeTEMPLATE( context, request, reply ) } );
 
 	};
 }

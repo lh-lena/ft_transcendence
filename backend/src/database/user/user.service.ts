@@ -5,30 +5,28 @@ import { AppError, NotFoundError, ConflictError } from '../../utils/error';
 
 export async function checkuser(
 	context: ServerContext,
-	id: number
+	id: string
 ) {
-	const userId = parseInt( id as any, 10 );
-
 	const stmt = context.db.prepare( 'SELECT * FROM user WHERE id = ?' );
 	const user = stmt.get( userId );
 	
 	return user;
 }
 
-export async function getAllorFiltered(
+export async function getAllorFiltereduser(
 	context: ServerContext,
 	filters: Record<string, any>
 ) {
 	if( Object.keys( filters ).length === 0 ) {
 		return userModel.findAll( context );
 	} else {
-		return UserModel.findFiltered( context, filters );
+		return userModel.findFiltered( context, filters );
 	}
 }
 
 export async function getuserById(
 	context: ServerContext,
-	id: number
+	id: string
 ) {
 	const user = await checkuser( context, id );
 	if( !user )
@@ -54,7 +52,7 @@ export async function createuser(
 
 export async function updateuser( 
 	context: ServerContext,
-	id: number,
+	id: string,
 	data: patchuserInput
 ) {
 	const user = await checkuser( context, id );
@@ -70,7 +68,7 @@ export async function updateuser(
 
 export async function removeuser(
 	context: ServerContext,
-	id: number
+	id: string
 ) {
 	const user = await checkuser( context, id );
 	if( !user )

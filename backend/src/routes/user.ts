@@ -18,7 +18,7 @@ export function userRoutes( context: ServerContext ) {
 			await userController.updateuser( context, request, reply ) } );
 
 		server.delete( '/user/:id', async( request, reply ) => {
-			await userController.removeEMPLATE( context, request, reply ) } );
+			await userController.removeuser( context, request, reply ) } );
 
 	};
 }

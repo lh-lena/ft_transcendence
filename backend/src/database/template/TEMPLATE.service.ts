@@ -5,30 +5,28 @@ import { AppError, NotFoundError, ConflictError } from '../../utils/error';
 
 export async function checkTEMPLATE(
 	context: ServerContext,
-	id: number
+	id: string
 ) {
-	const TEMPLATEId = parseInt( id as any, 10 );
-
 	const stmt = context.db.prepare( 'SELECT * FROM TEMPLATE WHERE id = ?' );
 	const TEMPLATE = stmt.get( TEMPLATEId );
 	
 	return TEMPLATE;
 }
 
-export async function getAllorFiltered(
+export async function getAllorFilteredTEMPLATE(
 	context: ServerContext,
 	filters: Record<string, any>
 ) {
 	if( Object.keys( filters ).length === 0 ) {
 		return TEMPLATEModel.findAll( context );
 	} else {
-		return UserModel.findFiltered( context, filters );
+		return TEMPLATEModel.findFiltered( context, filters );
 	}
 }
 
 export async function getTEMPLATEById(
 	context: ServerContext,
-	id: number
+	id: string
 ) {
 	const TEMPLATE = await checkTEMPLATE( context, id );
 	if( !TEMPLATE )
@@ -54,7 +52,7 @@ export async function createTEMPLATE(
 
 export async function updateTEMPLATE( 
 	context: ServerContext,
-	id: number,
+	id: string,
 	data: patchTEMPLATEInput
 ) {
 	const TEMPLATE = await checkTEMPLATE( context, id );
@@ -70,7 +68,7 @@ export async function updateTEMPLATE(
 
 export async function removeTEMPLATE(
 	context: ServerContext,
-	id: number
+	id: string
 ) {
 	const TEMPLATE = await checkTEMPLATE( context, id );
 	if( !TEMPLATE )

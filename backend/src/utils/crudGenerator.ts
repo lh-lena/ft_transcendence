@@ -1,17 +1,18 @@
 import { Context } from '..context';
+import { v4 as uuidv4 } from 'uuid';
 
 export function createCrud( tableName: string, context: Context ) {
 
 	return {
-		findAll: () => {
+		findAll: ( context: Context ) => {
 			const stmt = context.db.prepare( `SELECT * FROM ${tableName}` );
 			return stmt.all();
 		},
-		findById: ( id: string | number ) => {
+		findById: ( context: Context, id: string | number ) => {
 			const stmt = context.db.prepare( `SELECT * FROM ${tableName} WHERE id = ?` );
 			return stmt.get( id );	
 		},
-		findBy: ( filters: Record<string, any> ) => {
+		findBy: ( context: Context, filters: Record<string, any> ) => {
 			const keys = Object.keys( filters );
 
 			const whereClause = keys.map( key => `${key} = ?` ).join( ' AND ' );
@@ -20,8 +21,9 @@ export function createCrud( tableName: string, context: Context ) {
 			const stmt = context.db.prepare( sql );
 			return stmt.all( ...Object.values( filters ) );
 		},
-		insert: ( data: Record<string, any> ) => {
+		insert: ( context: Context, data: Record<string, any> ) => {
 
+			data.id = uuidv4();
 			const keys = Object.keys( data );
 
 			const setKeys = keys.join( ', ' );
@@ -34,8 +36,6 @@ export function createCrud( tableName: string, context: Context ) {
 			try {
 				result = stmt.run( ...Object.values( data ) );
 
-				const getId = result.lastInsertRowid ?? data.id;
-
 				const sqlId = `SELECT * FROM ${tableName} WHERE id = ?`;
 				const getStmt = context.db.prepare( sqlId );
 
@@ -45,7 +45,7 @@ export function createCrud( tableName: string, context: Context ) {
 				throw error;
 			}
 		},
-		patch: ( id: string | number, data: Record<string, any> ) => {
+		patch: ( context: Context, id: string | number, data: Record<string, any> ) => {
 
 			const keys = Object.keys( data );
 
@@ -61,7 +61,7 @@ export function createCrud( tableName: string, context: Context ) {
 				throw error;
 			}
 		},
-		remove: ( id: string | number ) => {
+		remove: ( context: Context, id: string | number ) => {
 			const stmt = context.db.prepare( `DELETE FROM ${tableName} WHERE id = ?` );
 			return stmt.run( id );
 		}

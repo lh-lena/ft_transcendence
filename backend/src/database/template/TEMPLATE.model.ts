@@ -11,16 +11,16 @@ export function findAll(
 	return TEMPLATEModel.findAll( context );
 }
 
-export function findBy(
+export function findFiltered(
 	context: ServerContext,
 	filters: Record<string, any>
 ) {
-	return TEMPLATEModel.findById( context, id );
+	return TEMPLATEModel.findBy( context, filters );
 }
 
 export function findById(
 	context: ServerContext,
-	id: number
+	id: string
 ) {
 	return TEMPLATEModel.findById( context, id );
 }
@@ -35,7 +35,7 @@ export function insert(
 
 export function patch( 
       context: ServerContext,
-      id: number,
+      id: string,
       data: PatchTEMPLATEInput
 ) {
 	return TEMPLATEModel.patch( context, id, data );
@@ -43,7 +43,7 @@ export function patch(
 
 export function remove(
         context: ServerContext,
-        id: number
+        id: string
 ) {
 	return TEMPLATEModel.remove( context, id );
 }
