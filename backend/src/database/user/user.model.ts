@@ -3,47 +3,47 @@ import { ServerContext } from '../../context';
 import { createCrud } from '../../utils/crudGenerator';
 import { ConflictError } from '../../utils/error';
 
-export const TEMPLATEModel = createCrud( 'TEMPLATE', );
+export const userModel = createCrud( 'user', );
 
 export function findAll(
 	context: ServerContext,
 ) {
-	return TEMPLATEModel.findAll( context );
+	return userModel.findAll( context );
 }
 
 export function findBy(
 	context: ServerContext,
 	filters: Record<string, any>
 ) {
-	return TEMPLATEModel.findById( context, id );
+	return userModel.findById( context, id );
 }
 
 export function findById(
 	context: ServerContext,
 	id: number
 ) {
-	return TEMPLATEModel.findById( context, id );
+	return userModel.findById( context, id );
 }
 
 export function insert(
 	context: ServerContext,
-	data: CreateTEMPLATEInput
+	data: CreateuserInput
 ) {
 
-       return TEMPLATEModel.insert( context, data );
+       return userModel.insert( context, data );
 }
 
 export function patch( 
       context: ServerContext,
       id: number,
-      data: PatchTEMPLATEInput
+      data: PatchuserInput
 ) {
-	return TEMPLATEModel.patch( context, id, data );
+	return userModel.patch( context, id, data );
 }
 
 export function remove(
         context: ServerContext,
         id: number
 ) {
-	return TEMPLATEModel.remove( context, id );
+	return userModel.remove( context, id );
 }

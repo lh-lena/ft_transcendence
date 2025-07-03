@@ -6,7 +6,7 @@ export function userRoutes( context: ServerContext ) {
 	return async function( server: FastifyInstance ) {
 
 		server.get( '/user', async ( request, reply ) => {
-			await userController.getAlluser( context, request, reply ) } );
+			await userController.getAllorFiltereduser( context, request, reply ) } );
 
 		server.get( '/user/:id', async ( request, reply ) => {          
 			await userController.getuserById( context, request, reply ) } );
@@ -18,7 +18,7 @@ export function userRoutes( context: ServerContext ) {
 			await userController.updateuser( context, request, reply ) } );
 
 		server.delete( '/user/:id', async( request, reply ) => {
-			await userController.deleteuser( context, request, reply ) } );
+			await userController.removeEMPLATE( context, request, reply ) } );
 
 	};
 }

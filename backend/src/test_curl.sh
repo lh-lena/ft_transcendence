@@ -5,22 +5,19 @@ curl -X POST http://[::1]:8080/api/user \
   -d '{
     "email": "john4@example.com",
     "password_hash": "hashed_password",
-    "first_name": "Johnson",
-    "display_name": "Johnny",
-    "avatar_url": "https://example.com/avatar.jpg"
+    "username": "Johnson"
   }'
 
 curl -X POST http://[::1]:8080/api/user \
   -H "Content-Type: application/json" \
   -d '{
     "email": "jane@example.com",
-    "first_name": "Janesen",
-    "display_name": "Janey",
-    "avatar_url": "https://example.com/avatar2.jpg"
+    "password_hash": "hashed_password",
+    "username": "Janesen"
   }'
 
 curl -X PATCH http://localhost:8080/api/user/1 \
   -H "Content-Type: application/json" \
-  -d '{"first_name":"alice", "email":"alice_new@example.com"}'
+  -d '{"username":"alice", "email":"alice_new@example.com"}'
 
 curl -X DELETE http://localhost:8080/api/user/1

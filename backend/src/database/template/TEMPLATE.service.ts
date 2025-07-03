@@ -15,10 +15,15 @@ export async function checkTEMPLATE(
 	return TEMPLATE;
 }
 
-export async function getAllTEMPLATE(
+export async function getAllorFiltered(
 	context: ServerContext,
+	filters: Record<string, any>
 ) {
-	return TEMPLATEModel.findAll( context );
+	if( Object.keys( filters ).length === 0 ) {
+		return TEMPLATEModel.findAll( context );
+	} else {
+		return UserModel.findFiltered( context, filters );
+	}
 }
 
 export async function getTEMPLATEById(
@@ -63,7 +68,7 @@ export async function updateTEMPLATE(
 	}
 }
 
-export async function deleteTEMPLATE(
+export async function removeTEMPLATE(
 	context: ServerContext,
 	id: number
 ) {
@@ -71,6 +76,6 @@ export async function deleteTEMPLATE(
 	if( !TEMPLATE )
 		throw new NotFoundError( `TEMPLATE with ${id} not found` );
 
-	TEMPLATEModel.del( context, id );
+	TEMPLATEModel.remove( context, id );
 	return { message: `TEMPLATE ${id} deleted successfulyy` };
 }

@@ -6,12 +6,13 @@ import { CreateTEMPLATESchema, UpdateTEMPLATESchema } from './TEMPLATE.schema';
 import * as TEMPLATEService from './TEMPLATE.service';
 
 //controller for TEMPLATE get All or by Id
-export async function getAllTEMPLATE(
+export async function getAllorFilteredTEMPLATE(
 	context: ServerContext,
 	req: FastifyRequest,
 	reply: FastifyReply 
 ) {
-	const TEMPLATE = await TEMPLATEService.getAllTEMPLATE( context );
+	const filters = req.query as Record<string, any >;
+	const TEMPLATE = await TEMPLATEService.getAllorFilteredTEMPLATE( context, filters );
 	reply.status( 200 ).send( TEMPLATE );
 }
 
@@ -56,11 +57,11 @@ export async function updateTEMPLATE(
 }
 
 //delete TEMPLATE
-export async function deleteTEMPLATE(
+export async function removeTEMPLATE(
 	context: ServerContext,
 	req: FastifyRequest,
 	reply: FastifyReply
 ) {
-	const TEMPLATE = await TEMPLATEService.deleteTEMPLATE( context, Number( req.params.id ) );
+	const TEMPLATE = await TEMPLATEService.removeTEMPLATE( context, Number( req.params.id ) );
 	return reply.status( 200 ).send( TEMPLATE );
 }

@@ -3,55 +3,65 @@ import { Context } from '..context';
 export function createCrud( tableName: string, context: Context ) {
 
 	return {
-		findAll: ( context: Context ) => {
+		findAll: () => {
 			const stmt = context.db.prepare( `SELECT * FROM ${tableName}` );
 			return stmt.all();
 		},
-		findById: ( context: Context, id: number ) => {
+		findById: ( id: string | number ) => {
 			const stmt = context.db.prepare( `SELECT * FROM ${tableName} WHERE id = ?` );
 			return stmt.get( id );	
 		},
-		insert: ( context: Context, data: Record<string, any> ) => {
+		findBy: ( filters: Record<string, any> ) => {
+			const keys = Object.keys( filters );
+
+			const whereClause = keys.map( key => `${key} = ?` ).join( ' AND ' );
+			const sql = `SELECT * FROM ${tableName} WHERE ${whereClause}`;	
+
+			const stmt = context.db.prepare( sql );
+			return stmt.all( ...Object.values( filters ) );
+		},
+		insert: ( data: Record<string, any> ) => {
 
 			const keys = Object.keys( data );
 
 			const setKeys = keys.join( ', ' );
 			const ph = keys.map( () => '?' ).join( ', ' );
 			const sql = `INSERT INTO ${tableName} (${setKeys}) VALUES (${ph})`;
-			console.log( `\n\n${sql}\n\n` )
 
 			const stmt = context.db.prepare( sql );
 			let result;
+
 			try {
 				result = stmt.run( ...Object.values( data ) );
+
+				const getId = result.lastInsertRowid ?? data.id;
 
 				const sqlId = `SELECT * FROM ${tableName} WHERE id = ?`;
 				const getStmt = context.db.prepare( sqlId );
 
-				return getStmt.get( result.lastInsertRowid );
+				return getStmt.get( getId );
 			} catch ( error ) {
 				console.error( `Error inserting into ${tableName}:`, error );
 				throw error;
 			}
 		},
-		patch: ( context: Context, id: number, data: Record<string, any> ) => {
+		patch: ( id: string | number, data: Record<string, any> ) => {
 
 			const keys = Object.keys( data );
 
 			const setKeys = keys.map( key => `${key} = ?` ).join( ', ' );
 			const sql = `UPDATE ${tableName} SET ${setKeys} WHERE id = ?`;
 
-			console.log( `\n\n${sql}\n\n` )
 			const stmt = context.db.prepare( sql );
+
 			try {
-				console.log( `${Object.values( data )}\n\n` );
 				return stmt.run( ...Object.values( data ), id );
 			} catch ( error ) {
 				console.error( `Error updating ${tableName} with id ${id}:`, error );
 				throw error;
 			}
 		},
-		del: ( context: Context, id: number ) => {
+		remove: ( id: string | number ) => {
 			const stmt = context.db.prepare( `DELETE FROM ${tableName} WHERE id = ?` );
 			return stmt.run( id );
 		}
