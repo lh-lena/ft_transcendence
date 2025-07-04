@@ -1,9 +1,14 @@
 import fp from 'fastify-plugin';
 import { FastifyPluginAsync, FastifyInstance, WSConnection } from 'fastify';
-import { createGameService } from '../services/game.service.js';
+import createGameService from '../services/game.service.js';
+import createGameSessionService from '../services/game-session.service.js';
+
 
 const plugin: FastifyPluginAsync = async (app: FastifyInstance) => {
-    const gameService = createGameService(app);
+  const gameSessionService = createGameSessionService(app);
+  const gameService = createGameService(app);
+  app.decorate('gameSessionService', gameSessionService);
+
     app.decorate('gameService', gameService);
 }
 
