@@ -1,4 +1,5 @@
 import { FastifyInstance, WSConnection } from 'fastify';
+import { GameInstance } from 'types/pong.types';
 import WebSocket from 'ws';
 
 export default function createWSService(app: FastifyInstance) {
@@ -13,8 +14,8 @@ export default function createWSService(app: FastifyInstance) {
       const messageStr = JSON.stringify(message);
       conn.send(messageStr);
       app.log.debug(`[ws-service] Sent to user ${userId}: ${message.event}`);
-    } catch (err: any) {
-      app.log.error(`[ws-service] Failed to send to user ${userId}: ${err.message}`);
+    } catch (error) {
+      app.log.error(`[ws-service] Failed to send to user ${userId}. Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
       app.connectionService.removeConnection(conn);
     }
   }
@@ -24,7 +25,7 @@ export default function createWSService(app: FastifyInstance) {
   }
 
   function broadcastToGame(gameId: string, message: Record<string, unknown>, excludeConnections: number[] = []): void {
-    const game = app.gameService.getGameSession(gameId);
+    const game = app.gameService.getGameSession(gameId) as GameInstance;
     if (!game) {
       app.log.warn(`[ws-service] Cannot broadcast to game ${gameId} - game not found`);
       return;
