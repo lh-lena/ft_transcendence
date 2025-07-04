@@ -1,9 +1,9 @@
 export class Router {
     private routes: Map<string, () => void>;
-    
+
     constructor() {
         this.routes = new Map();
-        
+
         // Handle browser back/forward buttons
         window.addEventListener('popstate', () => {
             this.handleRoute(window.location.pathname);

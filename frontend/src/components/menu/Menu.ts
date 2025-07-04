@@ -15,7 +15,6 @@ export class Menu {
   }
 
   private createMenuContent(): void {
-
     // Dynamically create buttons based on menuItems
     this.menuItems.forEach((item) => {
       const button = document.createElement('button');
