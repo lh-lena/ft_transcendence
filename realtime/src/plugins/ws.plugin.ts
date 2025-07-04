@@ -1,5 +1,5 @@
 import fp from 'fastify-plugin';
-import { FastifyInstance, FastifyPluginAsync } from 'fastify';
+import { FastifyInstance, FastifyPluginAsync, VerifyClientInfo } from 'fastify';
 import { WebSocketServer } from 'ws';
 import { IncomingMessage } from 'http';
 import { handleWSConnection } from '../controllers/ws.controller.js';
@@ -10,25 +10,7 @@ import reconnectionService from '../services/reconnection.service.js';
 
 const wsPlugin: FastifyPluginAsync = async (app: FastifyInstance) => {
 
-  const wss = new WebSocketServer({
-    server: app.server,
-    path: '/ws',
-    verifyClient: (info, done) => {
-      app.auth.verifyClient(info)
-      .then((isVerified: boolean) => {
-        if (!isVerified) {
-          done(false, 401, 'Unauthorized');
-        } else {
-          done(true);
-        }
-      })
-      .catch((error: Error) => {
-        app.log.error(`[verifyClient]: Error during verification: ${error.message}`);
-        done(false, 500, 'Internal Server Error');
-      });
-    }
-  });
-
+  const wss = createWebSocketServer(app);
   const wsService = createWSService(app);
   const connService = connectionService(app);
   const networkService = networkMonitorService(app);
@@ -40,10 +22,57 @@ const wsPlugin: FastifyPluginAsync = async (app: FastifyInstance) => {
   app.decorate('connectionService', connService);
   app.decorate('reconnectionService', reconnService);
 
-  wss.on('connection', (ws, req: IncomingMessage ) => {
-    handleWSConnection(ws, req, app);
-  });
+  setupWebSocketHandlers(wss, app);
+  setupGracefulShutdown(app, connService);
+}
 
+function createWebSocketServer(app: FastifyInstance): WebSocketServer {
+  return new WebSocketServer({
+    server: app.server,
+    path: '/ws',
+    verifyClient: (info, done) => verifyWebSocketClient(info, done, app)
+  });
+}
+
+function verifyWebSocketClient(
+  info: VerifyClientInfo,
+  done: (result: boolean, code?: number, message?: string) => void,
+  app: FastifyInstance
+): void {
+  app.log.debug(`Starting WebSocket client verification. Origin: ${info.origin}. Secure: ${info.secure}`);
+
+  app.auth.verifyClient(info)
+  .then((isVerified: boolean) => {
+    if (isVerified) {
+      app.log.info(`Client verification successful. Origin: ${info.origin }`);
+      done(true);
+    } else {
+      app.log.warn(`Client verification failed. Origin: ${info.origin}.`);
+      done(false, 401, 'Unauthorized');
+    }
+  })
+  .catch((error: Error) => {
+    app.log.error('Client verification error', {
+      error: error.message,
+      origin: info.origin
+    });
+    done(false, 500, 'Internal Server Error');
+  });
+}
+
+function setupWebSocketHandlers(wss: WebSocketServer, app: FastifyInstance): void {
+  wss.on('connection', (ws, req: IncomingMessage) => {
+    try {
+      handleWSConnection(ws, req, app);
+    } catch (error) {
+      app.log.error(`Error handling WebSocket connection. Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      ws.close(1011, 'Server error');
+    }
+  });
+}
+
+function setupGracefulShutdown(app: FastifyInstance, connService: any): void {
+  
   app.addHook('onClose', async () => {
     app.log.info('Shutting down WebSocket server...');
     await connService.shutdown();
@@ -52,7 +81,7 @@ const wsPlugin: FastifyPluginAsync = async (app: FastifyInstance) => {
   });
 
   const gracefulShutdown = async (signal: string) => {
-    app.log.info(`${signal} received - initiating graceful shutdown...`);
+    app.log.info(` ${signal} received - initiating graceful shutdown...`);
 
     try {
       await connService.shutdown();
@@ -60,7 +89,7 @@ const wsPlugin: FastifyPluginAsync = async (app: FastifyInstance) => {
       app.log.info('HTTP server closed');
       process.exit(0);
     } catch (error) {
-      app.log.error(`Error during shutdown: ${error}`);
+      app.log.error(`Error during shutdown: ${error instanceof Error ? error.message : 'Unknown error'}`);
       process.exit(1);
     }
   };
