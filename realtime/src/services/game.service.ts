@@ -281,3 +281,5 @@ export default function createGameService(app: FastifyInstance) {
     getValidGameCheckPlayer,
   }
 }
+
+export default createGameService;
