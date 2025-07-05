@@ -10,6 +10,7 @@ declare module 'fastify' {
     networkService: ReturnType<typeof import('../services/network.service').networkMonitorService>;
     gameService: ReturnType<typeof import('../services/game.service').createGameService>;
     gameSessionService: ReturnType<typeof import('../services/game-session.service').createGameSessionService>;
+    gameDataService: ReturnType<typeof import('../services/game-session.service').createGameDataService>;
     auth: ReturnType<typeof import('../services/auth.service').authService>;
     wss: WebSocketServer;
     config: import('../config/server.config').EnvironmentConfig;

@@ -147,7 +147,7 @@ function createGameService(app: FastifyInstance) {
     app.log.debug(`[game-service] Game resumed ${gameId}`);
   }
 
-  function endGame(gameId: string, status: GameSessionStatus.CANCELLED | GameSessionStatus.FINISHED, reason: string) : void {
+  async function endGame(gameId: string, status: GameSessionStatus.CANCELLED | GameSessionStatus.FINISHED, reason: string) : Promise<void> {
     app.log.debug(`[game-service] Ending game ${gameId}. Reason: ${reason}`);
 
     const game = app.gameSessionService.getGameSession(gameId) as GameInstance;
@@ -185,19 +185,7 @@ function createGameService(app: FastifyInstance) {
       }
     });
 
-    const BACKEND_URL = app.config.websocket.backendUrl;
-    fetch(`${BACKEND_URL}/api/games/result`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(result),
-    }).then(res => {
-        if (!res.ok) app.log.error(`[game-service] Failed to send game result to backend: ${res.statusText}`);
-        else {
-          app.log.debug(`[game-service] Game ${gameId} result sent to backend`);
-        }
-    }).catch(error => {
-        app.log.error(`[game-service] Error sending game result to backend:`, error);
-    });
+    await app.gameDataService.sendGameResult(result);
 
     app.wsService.broadcastToGame(gameId, {
       event: 'game_ended',
@@ -209,12 +197,7 @@ function createGameService(app: FastifyInstance) {
 
   async function handleCreateGame(gameId: string, user: User) : Promise<void> {
     try {
-      // const gameData = await fetchGameData(gameId);
-      const gameData: StartGame = {
-        gameId,
-        gameMode: GameMode.PVP_REMOTE,
-        players: [user]
-      }
+      const gameData = await app.gameDataService.fetchGameData(gameId) as StartGame;
       const gameSession = await app.gameSessionService.createGameSession(gameId, gameData);
 
       if (!isExpectedPlayer(gameData.players, user.userId)) {
@@ -295,12 +278,7 @@ function createGameService(app: FastifyInstance) {
       throw new Error(` Game ${gameId} is already full`);
     }
 
-    // const gameData = await fetchGameData(gameId);
-    const gameData: StartGame = {
-      gameId,
-      gameMode: GameMode.PVP_REMOTE,
-      players: [user]
-    }
+    const gameData = await app.gameDataService.fetchGameData(gameId) as StartGame;
 
     if (!isExpectedPlayer(gameData.players, user.userId)) {
       throw new Error(` User ${user.userId} is not an expected player for game ${gameId}`);
@@ -365,21 +343,6 @@ function createGameService(app: FastifyInstance) {
     // double check player in game session
     // update player input in struct
     // apply updates in game engine
-  }
-
-  async function fetchGameData(gameId: string): Promise<StartGame> {
-    app.log.debug(`[game-service] Fetching game data for ${gameId} from backend`);
-    
-    const BACKEND_URL = app.config.websocket.backendUrl;
-    const res = await fetch(`${BACKEND_URL}/api/game/:${gameId}`);
-
-    if (!res.ok) {
-      throw new Error(`HTTP error! status: ${res.status}`);
-    }
-
-    const data = await res.json();
-    app.log.debug(data, `[game-service] Fetched game data for ${gameId}:`);
-    return data;
   }
 
   function isExpectedPlayer(players: User[], userId: number) : boolean {
