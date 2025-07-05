@@ -25,7 +25,7 @@ export default function createWSService(app: FastifyInstance) {
   }
 
   function broadcastToGame(gameId: string, message: Record<string, unknown>, excludeConnections: number[] = []): void {
-    const game = app.gameService.getGameSession(gameId) as GameInstance;
+    const game = app.gameSessionService.getGameSession(gameId) as GameInstance;
     if (!game) {
       app.log.warn(`[ws-service] Cannot broadcast to game ${gameId} - game not found`);
       return;
