@@ -1,23 +1,24 @@
 import { Menu } from '../../components/menu';
 import { Router } from '../../router'
+import { PongButton } from '../../components/pongButton'
 
 export class HomePage {
     private main: HTMLElement;
     private menu: Menu;
+    private pongButton: PongButton;
 
     constructor(private router: Router) {
         this.main = document.createElement('div');
         this.main.className = 'flex flex-col gap-5 w-full min-h-full justify-center items-center bg-[#0400FF]';
 
-        const title = document.createElement('h1');
-        title.className = 'title text-white text-3xl';
-        title.textContent = 'pong';
-        this.main.appendChild(title);
+        this.pongButton = new PongButton();
+        this.pongButton.mount(this.main);
 
         // menu for when user is not logged in
         const notLoggedInMenu = [
-            // obv will be changing this to /login for logins
+            // obv will be changing this to /loginAuth for logins
             { name: 'log in', link: '/login' },
+            { name: 'register', link: '/register' }
         ];
         this.menu = new Menu(this.router, notLoggedInMenu);
     }

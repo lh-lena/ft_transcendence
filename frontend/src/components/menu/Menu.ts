@@ -20,7 +20,11 @@ export class Menu {
       const button = document.createElement('button');
       button.className = 'btn w-36';
       button.textContent = item.name;
-      button.onclick = () => this.router.navigate(item.link);
+      // have a quick and easy way to call for back -> previous page
+      if (item.link == '//back')
+        button.onclick = () => this.router.navigateBack();
+      else
+        button.onclick = () => this.router.navigate(item.link);
       this.element.appendChild(button);
     });
   }
