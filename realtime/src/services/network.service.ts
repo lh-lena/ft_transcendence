@@ -26,7 +26,6 @@ export default function networkMonitorService(app: FastifyInstance) {
       app.log.error(`[network-service] Error sending ping to ${id}: ${error.message}`);
       handleConnectionLoss(id);
     }
-    app.log.info(`[network-service] Sending ping to client ${id}`);
   }
 
   function handlePong(id: number): void {
@@ -50,8 +49,6 @@ export default function networkMonitorService(app: FastifyInstance) {
     } else {
       conn.networkQuality = NETWORK_QUALITY.POOR;
     }
-
-    app.log.debug(`[network-service] Pong received from client ${id} - Latency: ${latency}ms, Quality: ${conn.networkQuality}`);
   }
 
   function handleConnectionLoss(id: number): void {
