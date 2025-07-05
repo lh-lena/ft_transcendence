@@ -28,14 +28,14 @@ export const handleWSConnection = (
   ws.missedPings = 0;
 
   const remoteIp = req.socket.remoteAddress || 'unknown';
-  app.log.info(`[websocket-service] User ${userId} connected from ${remoteIp}`);
+  app.log.debug(`[websocket-service] User ${userId} connected from ${remoteIp}`);
 
   app.connectionService.addConnection(ws);
   const disconnectedInfo = app.reconnectionService.getDiconnectionData(userId);
   if (disconnectedInfo) {
     const gameId = app.reconnectionService.attemptReconnection(userId);
     if (gameId) {
-      app.log.info(`[websocket-service] User ${userId} successfully reconnected to game ${gameId}`);
+      app.log.debug(`[websocket-service] User ${userId} successfully reconnected to game ${gameId}`);
       app.connectionService.updateUserGame(ws.userId, gameId);
     } else {
       app.log.warn(`[websocket-service] User ${userId} reconnection failed`);
@@ -53,7 +53,23 @@ export const handleWSConnection = (
       if (connInfo) {
         connInfo.lastActivity = Date.now();
       }
-      ws.send(`Echo from server: ${message}`); // rm
+      app.log.debug(`[event-handling] recieved ${event} on connection ${userId}`);
+      switch (event) {
+        case 'game_create':
+          await app.gameService.handleCreateGame(payload.gameId, user);
+          break;
+
+        case 'game_join':
+          app.gameService.handleJoinGame(payload.gameId, user);
+          break;
+
+        default:
+          app.log.warn(`[websocket-service] Unknown event from user ${userId}: ${event}`);
+          ws.send(JSON.stringify({
+            event: 'error',
+            payload: { error: `Unknown event: ${event}` }
+          }));
+      }
     } catch (error: any) {
       app.log.error(`[websocket-service] On connection ${ws.userId} failed to parse WebSocket message: ${error.message}, Message: '${message}'`);
       ws.send(JSON.stringify({
