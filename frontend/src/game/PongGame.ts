@@ -19,7 +19,7 @@ export class PongGame {
     constructor(onScoreUpdate?: (scoreA: number, scoreB: number) => void) {
         if (onScoreUpdate) {
             this.onScoreUpdate = onScoreUpdate;
-        }       
+        }
         // Create window structure
         this.windowElement = document.createElement('div');
         this.windowElement.className = 'window';
@@ -55,14 +55,7 @@ export class PongGame {
         this.canvas.width = 900;  // Default width
         this.canvas.height = 550; // Default height
 
-        this.setInitialGameState();
-        this.renderGame();
-        this.startGameLoop();
-        this.attachKeyboardListeners();
-    }
-
-    private setInitialGameState(): void {
-         // Initialize ball
+        // Initialize ball
         this.ball = {
             x: this.canvas.width / 2,
             y: this.canvas.height / 2,
@@ -90,6 +83,23 @@ export class PongGame {
             score: 0,
             speed: 10
         };
+        this.renderGame();
+        this.startGameLoop();
+        this.attachKeyboardListeners();
+    }
+
+    private setInitialGameLayout(): void {
+        this.ball.x = this.canvas.width / 2;
+        this.ball.y = this.canvas.height / 2;
+        this.ball.dx =  Math.random() < 0.5 ? 6 : -6;
+        this.ball.dy =  Math.random() < 0.5 ? 1 : -1;
+        this.ball.v = 1.2;
+
+        this.paddleA.x = 5;
+        this.paddleA.y = this.ball.y - 25,
+
+        this.paddleB.x = this.canvas.width - ( this.paddleA.x + this.paddleA.width );
+        this.paddleB.y = this.ball.y - ( this.paddleA.height / 2 )
     }
 
     private notifyScoreUpdate(): void {
@@ -164,22 +174,23 @@ export class PongGame {
             this.ball.dy *= -1; // Reverse vertical direction
         }
 
-        // Ball collision with side walls (score update logic)
+        // ball collision with side walls (score update logic)
         if (this.ball.x <= 0) {
             this.paddleB.score += 1; // Player B scores
             this.notifyScoreUpdate(); // Notify parent about score change
-            this.setInitialGameState();
+            this.setInitialGameLayout();
             return;
         }
 
         if (this.ball.x >= this.canvas.width - 10) {
             this.paddleA.score += 1; // Player A scores
             this.notifyScoreUpdate(); // Notify parent about score change
-            this.setInitialGameState();
+            this.setInitialGameLayout();
             return;
         }
 
         // ball collision with paddles
+        // paddle A
         if (
             this.ball.x <= this.paddleA.x + this.paddleA.width && // Ball is at paddle A's x range
             this.ball.y >= this.paddleA.y && // Ball is within paddle A's top boundary
@@ -187,29 +198,25 @@ export class PongGame {
         ) {
             this.ball.dx *= -1; // Reverse horizontal direction
             // y reverse in random direction
-            this.ball.dy *= Math.random() < 0.5 ? 1 : -1;
+            this.ball.dy *= Math.random() < 0.5 ? 1 : -1; // reverse Y dir
+            this.ball.dy += Math.random() < 0.5 ? 0.1 : -0.1; // random little bit extra on Y dir
             this.ball.x = this.paddleA.x + this.paddleA.width; // Prevent sticking
-            if (this.ball.v < 2)
-                this.ball.v += 0.13;
-            else
+            if (this.ball.v < 2.5)
                 this.ball.v += 0.05;
         }
-
+        // paddle B
         if (
             this.ball.x >= this.paddleB.x - 10 && // Ball is at paddle B's x range
             this.ball.y >= this.paddleB.y && // Ball is within paddle B's top boundary
             this.ball.y <= this.paddleB.y + this.paddleB.height // Ball is within paddle B's bottom boundary
         ) {
             this.ball.dx *= -1; // Reverse horizontal direction
-            this.ball.dy *= Math.random() < 0.5 ? 1 : -1;
+            this.ball.dy *= Math.random() < 0.5 ? 1 : -1; // reverse Y dir
+            this.ball.dy += Math.random() < 0.5 ? 0.1 : -0.1; // random little bit extra on Y dir
             this.ball.x = this.paddleB.x - 10; // Prevent sticking
-            if (this.ball.v < 2)
-                this.ball.v += 0.13;
-            else
+            if (this.ball.v < 2.5)
                 this.ball.v += 0.05;
         }
-        
-        console.log(this.ball.v);
     }
 
     // game loop logic

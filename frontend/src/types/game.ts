@@ -26,3 +26,9 @@ export interface Player {
     username: string;
     score: number;
 }
+
+export interface GameState {
+    status: GameStatus;
+    playerA: Player;
+    playerB: Player;
+}
