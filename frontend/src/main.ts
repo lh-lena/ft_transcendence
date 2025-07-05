@@ -1,6 +1,6 @@
 // frontend/src/main.ts
 import './style.css';
-import { Loading } from './components/Loading'
+import { Loading } from './components/loading'
 import { App } from './App'
 
 const loading = new Loading();
@@ -10,4 +10,4 @@ setTimeout(() => {
     loading.hide();
     const app = new App();
     app.mount(document.body);
-}, 1500);
+}, 1000);

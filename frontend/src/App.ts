@@ -3,11 +3,12 @@ import { HomePage } from './pages/home'
 import { ProfilePage } from './pages/profile'
 import { GamePage } from './pages/game'
 import { LoginPage } from './pages/login'
+import { RegisterPage } from './pages/register'
 
 export class App {
     private router: Router;
     private container: HTMLElement;
-    private currentPage: HomePage | ProfilePage | GamePage | LoginPage | null = null;
+    private currentPage: HomePage | ProfilePage | GamePage | LoginPage | RegisterPage | null = null;
 
     constructor() {
         this.container = document.createElement('div');
@@ -19,6 +20,7 @@ export class App {
         this.router.add('/game', () => this.showGame());
         this.router.add('/profile', () => this.showProfile());
         this.router.add('/login', () => this.showLogin());
+        this.router.add('/register', () => this.showRegister());
 
         // Initialize router
         this.router.init();
@@ -41,6 +43,14 @@ export class App {
             this.currentPage.unmount();
         }
         this.currentPage = new LoginPage(this.router);
+        this.currentPage.mount(this.container);
+    }
+
+    private showRegister(): void {
+        if (this.currentPage) { 
+            this.currentPage.unmount();
+        }
+        this.currentPage = new RegisterPage(this.router);
         this.currentPage.mount(this.container);
     }
 

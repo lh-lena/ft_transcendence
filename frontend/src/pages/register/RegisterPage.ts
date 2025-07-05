@@ -2,7 +2,7 @@ import { Router } from '../../router'
 import { Menu } from '../../components/menu';
 import { PongButton } from '../../components/pongButton'
 
-export class LoginPage {
+export class RegisterPage {
     private main: HTMLElement;
     private menu: Menu;
     private pongButton: PongButton;
@@ -18,6 +18,13 @@ export class LoginPage {
         form.className = 'flex flex-col gap-3 w-64';
         this.main.appendChild(form);
 
+        // name input
+        const inputName = document.createElement('input');
+        inputName.type = 'text';
+        inputName.id = 'text_username';
+        inputName.placeholder = 'username';
+        form.appendChild(inputName);
+
         // email input
         const inputEmail = document.createElement('input');
         inputEmail.type = 'email';
@@ -32,9 +39,16 @@ export class LoginPage {
         inputPassword.placeholder = 'password';
         form.appendChild(inputPassword);
 
+        // password input
+        const inputPasswordConfirm = document.createElement('input');
+        inputPasswordConfirm.type = 'password';
+        inputPasswordConfirm.id = 'text_password_confirm';
+        inputPasswordConfirm.placeholder = 'confirm password';
+        form.appendChild(inputPasswordConfirm);
+
         const loginMenu = [
             // obv will be changing this to /loginAuth for logins
-            { name: 'log in', link: '/profile' }
+            { name: 'register', link: '/profile' }
             // slash slash back is a quick and sweet little previous page match in menu
             // { name: 'back', link: '//back' }
         ];
@@ -45,7 +59,6 @@ export class LoginPage {
     public mount(parent: HTMLElement): void {
         parent.appendChild(this.main);
     }
-
 
     public unmount(): void {
         this.main.remove();
