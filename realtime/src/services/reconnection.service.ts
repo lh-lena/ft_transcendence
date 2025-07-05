@@ -19,7 +19,7 @@ export default function reconnectionService(app: FastifyInstance) {
 
   function handleDisconnect(userId: number, gameId: string, username: string): void {
     app.log.info(`[reconnection-service] Handling disconnect for user ${userId} (${username}) in game ${gameId}`);
-    const game = app.gameService.getGameSession(gameId);
+    const game = app.gameSessionService.getGameSession(gameId);
     if (!game) {
       app.log.warn({
         userId,
@@ -84,7 +84,7 @@ export default function reconnectionService(app: FastifyInstance) {
     }
 
     const { gameId } = info;
-    const gameSession = app.gameService.getGameSession(gameId);
+    const gameSession = app.gameSessionService.getGameSession(gameId);
     if (!gameSession || gameSession.status !== GameSessionStatus.PAUSED) {
       app.log.info(`[reconnection-service] Game ${info.gameId} no longer exists`);
       cleanup(userId);
@@ -119,7 +119,7 @@ export default function reconnectionService(app: FastifyInstance) {
     app.log.info(`[reconnection-service] User ${userId} (${info.username}) failed to reconnect within timeout period`);
     app.log.info(`[reconnection-service] Ending game ${info.gameId} due to timeout`);
 
-    const game = app.gameService.getGameSession(info.gameId);
+    const game = app.gameSessionService.getGameSession(info.gameId);
     if (game && (game.status !== GameSessionStatus.FINISHED && game.status !== GameSessionStatus.CANCELLED)) {
       app.gameService.endGame(info.gameId, GameSessionStatus.CANCELLED,`Player ${info.username} failed to reconnect`);
     }
@@ -142,10 +142,40 @@ export default function reconnectionService(app: FastifyInstance) {
         app.log.debug(`[reconnection-service] Cleared timer for user ${userId}`);
       }
       disconnectedPlayers.delete(userId);
+    } else { // editional clean up
+      const now = Date.now();
+      const expired: number[] = [];
+      
+      disconnectedPlayers.forEach((info, id) => {
+        if (now - info.disconnectTime > config.reconnectionTimeout + config.reconnectionTimeout) {
+          expired.push(id);
+        }
+      });
+
+      expired.forEach(id => {
+        disconnectedPlayers.delete(id);
+        const timer = reconnectionTimers.get(id);
+        if (timer) {
+          clearTimeout(timer);
+          reconnectionTimers.delete(id);
+        }
+      });
+      
+      if (expired.length > 0) {
+        app.log.debug({
+          cleaned: expired.length
+        }, 'Cleaned up expired disconnection entries');
+      }
     }
   }
 
+  const cleanupInterval = setInterval(
+    () => cleanup(),
+    config.cleanupInterval
+  );
+
   app.addHook('onClose', async () => {
+    clearInterval(cleanupInterval);
     reconnectionTimers.forEach(timer => clearTimeout(timer));
     reconnectionTimers.clear();
     disconnectedPlayers.clear();

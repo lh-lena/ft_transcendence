@@ -1,7 +1,7 @@
 import { FastifyInstance, WSConnection } from 'fastify';
 
 export default function connectionService(app: FastifyInstance) {
-  const userConnections = new Map<number, WSConnection>();
+  const userConnections: Map<number, WSConnection> = new Map();
 
   const config = app.config?.websocket || {
     connectionTimeout: 60_000,
@@ -33,13 +33,13 @@ export default function connectionService(app: FastifyInstance) {
       clearInterval(conn.heartbeatTimer);
     }
     if (!conn.gameId) {
-      app.log.info(`[connection-service] User ${conn.userId} disconnected and not in a game`);
+      app.log.debug(`[connection-service] User ${conn.userId} disconnected and not in a game`);
     } else {
       app.reconnectionService.handleDisconnect(conn.userId, conn.gameId, conn.username);
-      app.gameService.pauseGame(conn.gameId, `${conn.username} disconnected`);
+      
     }
     userConnections.delete(conn.userId);
-    app.log.info(`[connection-service] Connection removed for user ${conn.userId} (remaining connections: ${userConnections.size})`);
+    app.log.debug(`[connection-service] Connection removed for user ${conn.userId} (remaining connections: ${userConnections.size})`);
   }
 
   function getConnection(userId: number): WSConnection | undefined {
@@ -62,7 +62,7 @@ export default function connectionService(app: FastifyInstance) {
   }
 
   function startHeartbeat(userId: number, heartbeatInterval: number): void {
-    const conn = app.connectionService.getConnection(userId);
+    const conn = userConnections.get(userId);
     if (!conn) {
       app.log.warn(`[connection-service] Cannot start heartbeat for user ${userId} - connection not found`);
       return;
