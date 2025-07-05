@@ -173,6 +173,11 @@ export default function createGameService(app: FastifyInstance) {
         respond.notificationToGame(gameId, NotificationType.INFO, ` ${user.userAlias} left the game`);
         gameStateService.endGame(game, GameSessionStatus.CANCELLED, user.userId);
       }
+      app.log.debug(`[game-service] Handling join game`);
+      await joinPlayerToGame(gameId, user, gameSession);
+      if (canStartGame(gameId)) {
+        await startGame(gameId);
+      }
     } catch (error) {
       if (error instanceof GameError) {
         log.debug(`[game-service] User ID ${userId}. Game ID ${gameId}. Error: ${error.message}`);
