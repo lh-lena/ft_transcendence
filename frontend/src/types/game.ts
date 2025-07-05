@@ -8,6 +8,9 @@ export enum GameStatus {
 export interface Ball {
     x: number;
     y: number;
+    dx: number;
+    dy: number;
+    v: number;
 }
 
 export interface Paddle {
@@ -19,10 +22,7 @@ export interface Paddle {
     speed: number;
 }
 
-export interface GameState {
-    ball: Ball;
-    paddles: {
-        left: Paddle;
-        right: Paddle;
-    };
+export interface Player {
+    username: string;
+    score: number;
 }

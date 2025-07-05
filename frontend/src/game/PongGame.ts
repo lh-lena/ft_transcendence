@@ -1,20 +1,25 @@
-import { Ball } from '../types/game';
-import { Paddle } from '../types/game';
+import { Ball } from '../types';
+import { Paddle } from '../types';
 
 export class PongGame {
     private canvas: HTMLCanvasElement;
     private ctx: CanvasRenderingContext2D;
+    private onScoreUpdate: ((scoreA: number, scoreB: number) => void) | null = null;
 
-    private ball: Ball;
-    private paddleA: Paddle;
-    private paddleB: Paddle;
+    // added ! so they dont need to be initialized directly in the constructor
+    private ball!: Ball;
+    private paddleA!: Paddle;
+    private paddleB!: Paddle;
 
     private keys: { [key: string]: boolean } = {};
 
     private animationFrameId: number | null = null;
     private windowElement: HTMLDivElement;
-    
-    constructor() {        
+
+    constructor(onScoreUpdate?: (scoreA: number, scoreB: number) => void) {
+        if (onScoreUpdate) {
+            this.onScoreUpdate = onScoreUpdate;
+        }       
         // Create window structure
         this.windowElement = document.createElement('div');
         this.windowElement.className = 'window';
@@ -50,10 +55,20 @@ export class PongGame {
         this.canvas.width = 900;  // Default width
         this.canvas.height = 550; // Default height
 
-        // Initialize ball
+        this.setInitialGameState();
+        this.renderGame();
+        this.startGameLoop();
+        this.attachKeyboardListeners();
+    }
+
+    private setInitialGameState(): void {
+         // Initialize ball
         this.ball = {
             x: this.canvas.width / 2,
-            y: this.canvas.height / 2
+            y: this.canvas.height / 2,
+            dx: Math.random() < 0.5 ? 6 : -6,
+            dy: Math.random() < 0.5 ? 1 : -1,
+            v: 1.2
         };
 
         // init paddleA
@@ -63,7 +78,7 @@ export class PongGame {
             x: 5,
             y: this.ball.y - 25,
             score: 0,
-            speed: 20
+            speed: 10
         };
 
         // init paddleB
@@ -73,12 +88,14 @@ export class PongGame {
             x: this.canvas.width - ( this.paddleA.x + this.paddleA.width ),
             y: this.ball.y - ( this.paddleA.height / 2 ),
             score: 0,
-            speed: 20
+            speed: 10
         };
+    }
 
-        this.renderGame();
-        this.startGameLoop();
-        this.attachKeyboardListeners();
+    private notifyScoreUpdate(): void {
+        if (this.onScoreUpdate) {
+            this.onScoreUpdate(this.paddleA.score, this.paddleB.score);
+        }
     }
 
     private attachKeyboardListeners(): void {
@@ -121,6 +138,7 @@ export class PongGame {
     }
 
     private updateGameState(): void {
+        // paddle stuff
         if (this.keys['w']) {
             this.paddleA.y -= this.paddleA.speed;
         }
@@ -136,8 +154,63 @@ export class PongGame {
 
         this.paddleA.y = Math.max(0, Math.min(this.paddleA.y, (this.canvas.height - this.paddleA.height - 5)));
         this.paddleB.y = Math.max(0, Math.min(this.paddleB.y, (this.canvas.height - this.paddleB.height - 5)));
-    }
 
+        // ball movement
+        this.ball.x += this.ball.v * this.ball.dx;
+        this.ball.y += this.ball.v * this.ball.dy;
+
+        // ball collision with top and bottom walls
+        if (this.ball.y <= 0 || this.ball.y >= this.canvas.height - 10) {
+            this.ball.dy *= -1; // Reverse vertical direction
+        }
+
+        // Ball collision with side walls (score update logic)
+        if (this.ball.x <= 0) {
+            this.paddleB.score += 1; // Player B scores
+            this.notifyScoreUpdate(); // Notify parent about score change
+            this.setInitialGameState();
+            return;
+        }
+
+        if (this.ball.x >= this.canvas.width - 10) {
+            this.paddleA.score += 1; // Player A scores
+            this.notifyScoreUpdate(); // Notify parent about score change
+            this.setInitialGameState();
+            return;
+        }
+
+        // ball collision with paddles
+        if (
+            this.ball.x <= this.paddleA.x + this.paddleA.width && // Ball is at paddle A's x range
+            this.ball.y >= this.paddleA.y && // Ball is within paddle A's top boundary
+            this.ball.y <= this.paddleA.y + this.paddleA.height // Ball is within paddle A's bottom boundary
+        ) {
+            this.ball.dx *= -1; // Reverse horizontal direction
+            // y reverse in random direction
+            this.ball.dy *= Math.random() < 0.5 ? 1 : -1;
+            this.ball.x = this.paddleA.x + this.paddleA.width; // Prevent sticking
+            if (this.ball.v < 2)
+                this.ball.v += 0.13;
+            else
+                this.ball.v += 0.05;
+        }
+
+        if (
+            this.ball.x >= this.paddleB.x - 10 && // Ball is at paddle B's x range
+            this.ball.y >= this.paddleB.y && // Ball is within paddle B's top boundary
+            this.ball.y <= this.paddleB.y + this.paddleB.height // Ball is within paddle B's bottom boundary
+        ) {
+            this.ball.dx *= -1; // Reverse horizontal direction
+            this.ball.dy *= Math.random() < 0.5 ? 1 : -1;
+            this.ball.x = this.paddleB.x - 10; // Prevent sticking
+            if (this.ball.v < 2)
+                this.ball.v += 0.13;
+            else
+                this.ball.v += 0.05;
+        }
+        
+        console.log(this.ball.v);
+    }
 
     // game loop logic
     private renderGame(): void {
@@ -150,7 +223,7 @@ export class PongGame {
         // Append the window element instead of just the canvas
         parent.appendChild(this.windowElement);
     }
-    
+
     public unmount(): void {
         if (this.animationFrameId) {
             cancelAnimationFrame(this.animationFrameId);
