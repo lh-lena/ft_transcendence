@@ -7,25 +7,23 @@ function createGameService(app: FastifyInstance) {
   const pausedGames: Map<string, PausedGameState> = new Map();
 
   function isPlayersConnected(gameId: string) : boolean {
-    app.log.debug(`[game-service] Check players' connection status in game ${gameId}`);
-    const game = app.gameSessionService.getGameSession(gameId);
+    app.log.debug(`[game-service] Checking players' connection status in game ${gameId}`);
+    const game = app.gameSessionService.getGameSession(gameId) as GameInstance;
     if (!game) {
       app.log.debug(`[game-service] Game ${gameId} not found`);
       return false;
     }
 
-    const player1 = app.connectionService.getConnection(game.players[0].userId);
-
-    if (game.gameMode !== GameMode.PVP_REMOTE && player1) {
+    if (game.gameMode !== GameMode.PVP_REMOTE && game.connectedPlayer1) {
       return true;
-    } else if (player1 && game.players[1] && app.connectionService.getConnection(game.players[1].userId)) {
+    } else if (game.connectedPlayer1 && game.connectedPlayer2) {
       return true;
     }
     return false;
   }
 
   function canStartGame(gameId: string) : boolean {
-    const game = app.gameSessionService.getGameSession(gameId);
+    const game = app.gameSessionService.getGameSession(gameId) as GameInstance;
     if (!game) {
       app.log.warn(`[game-service] Cannot check start conditions - game ${gameId} not found`);
       return false;
@@ -37,7 +35,7 @@ function createGameService(app: FastifyInstance) {
     }
 
     if (game.gameMode === GameMode.PVP_REMOTE && game.players.length !== 2) {
-      app.log.warn(`[game-service] Cannot start PVP_REMOTE game ${gameId} - not enough players (${game.players.length}/2)`);
+      app.log.debug(`[game-service] Cannot start PVP_REMOTE game ${gameId} - not enough players (${game.players.length}/2)`);
       return false;
     }
 
@@ -86,7 +84,7 @@ function createGameService(app: FastifyInstance) {
 
   function pauseGame(gameId: string, reason: string): void {
     app.log.info(`[game-service] Pausing game ${gameId} - Reason: ${reason}`);
-    const game = app.gameSessionService.getGameSession(gameId);
+    const game = app.gameSessionService.getGameSession(gameId) as GameInstance;
     if (!game) {
       app.log.warn(`[game-service] Cannot pause - game ${gameId} not found`);
       return;
@@ -119,7 +117,7 @@ function createGameService(app: FastifyInstance) {
   }
 
   function resumeGame(gameId: string): void {
-    const game = app.gameSessionService.getGameSession(gameId);
+    const game = app.gameSessionService.getGameSession(gameId) as GameInstance;
     const pausedState = pausedGames.get(gameId);
     
     if (!game) {
@@ -206,40 +204,134 @@ function createGameService(app: FastifyInstance) {
       payload: result
     });
     cleanup(gameId);
-    app.log.debug(`[game-service] Game ended ${gameId}`)
+    app.log.debug(`[game-service] Game ended ${gameId}`);
   }
 
   async function handleCreateGame(gameId: string, user: User) : Promise<void> {
     try {
-      const gameData = fetchInitialGameData(gameId);
-      const game = await app.gameSessionService.createGameSession(gameId, gameData);
+      // const gameData = await fetchGameData(gameId);
+      const gameData: StartGame = {
+        gameId,
+        gameMode: GameMode.PVP_REMOTE,
+        players: [user]
+      }
+      const gameSession = await app.gameSessionService.createGameSession(gameId, gameData);
+
+      if (!isExpectedPlayer(gameData.players, user.userId)) {
+        throw new Error(`User ${user.userId} is not an expected player for game ${gameId}`);
+      }
       assignPlayerToGame(user.userId, gameId);
+      app.gameSessionService.setPlayerConnectionStatus(user.userId, gameId, true);
+      app.wsService.sendToConnection(user.userId, 
+      {
+        event: 'notification',
+        payload: {
+          gameId,
+          message: `Game ${gameId} created successfully`,
+          timestamp: Date.now()
+        }
+      });
       if (canStartGame(gameId)) {
         await startGame(gameId);
       }
       app.log.debug(`[game-service] Game created successfully ${gameId} for user ${user.userId}`);
     } catch (error) {
       app.log.error(`[game-service] Failed to create game ${gameId} for ${user.userId}. Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      app.wsService.sendToConnection(
+        user.userId, 
+        {
+          event: 'error',
+          payload: {
+            error: `Failed to initialize game ${gameId}`,
+          }
+        }
+      );
     }
   }
 
   async function handleJoinGame(gameId: string, user: User) : Promise<void> {
     try {
-      const game = app.gameSessionService.getGameSessions(gameId);
-        if (!game) {
-        app.log.debug(`[game-service] Cannot check start conditions - game ${gameId} not found. Initialized game creation...`);
+      const gameSession = app.gameSessionService.getGameSession(gameId) as GameInstance;
+      if (!gameSession) {
+        app.log.debug(`[game-service] Cannot check start conditions - game ${gameId} not found. Initialized game creation`);
         await handleCreateGame(gameId, user);
         return;
       }
+      app.log.debug(`[game-service] Handling join game`);
+      await joinPlayerToGame(gameId, user, gameSession);
+      if (canStartGame(gameId)) {
+        await startGame(gameId);
+      }
     } catch (error) {
-        app.log.error(`[game-service] Failed to initialize game ${gameId} for joining user ${user.userId}. Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
-        return;
+      app.log.error(`[game-service] Failed to initialize game ${gameId} for joining user ${user.userId}. Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      app.wsService.sendToConnection(
+        user.userId, 
+        {
+          event: 'error',
+          payload: {
+            error: `Failed to initialize game ${gameId} for joining`,
+          }
+        }
+      );
+    }
+  }
+
+  async function joinPlayerToGame(gameId: string, user: User, gameSession: GameInstance): Promise<void> {
+    if (!gameSession) {
+      throw new Error(`Game session ${gameId} not found`);
     }
 
-    assignPlayerToGame(user.userId, gameId);
-    if (canStartGame(gameId)) {
-      await startGame(gameId);
+    if (isExpectedPlayer(gameSession.players, user.userId)) {
+      app.gameSessionService.setPlayerConnectionStatus(user.userId, gameId, true);
+      assignPlayerToGame(user.userId, gameId);
+      return;
     }
+
+    if (gameSession.status !== GameSessionStatus.PENDING) {
+      throw new Error(`Game ${gameId} is not in a joinable state (status: ${gameSession.status}).`);
+    }
+
+    if (gameSession.players.length >= 2) {
+      throw new Error(` Game ${gameId} is already full`);
+    }
+
+    // const gameData = await fetchGameData(gameId);
+    const gameData: StartGame = {
+      gameId,
+      gameMode: GameMode.PVP_REMOTE,
+      players: [user]
+    }
+
+    if (!isExpectedPlayer(gameData.players, user.userId)) {
+      throw new Error(` User ${user.userId} is not an expected player for game ${gameId}`);
+    }
+
+    if (isExpectedPlayer(gameSession.players, user.userId)) {
+      app.log.debug(`[game-service] User ${user.userId} is already in the game ${gameId}`);
+      assignPlayerToGame(user.userId, gameId);
+      app.gameSessionService.setPlayerConnectionStatus(user.userId, gameId, true);
+      return;
+    }
+
+    app.log.debug(`[game-service] Adding player ${user.userId} to game ${gameId}`);
+    const { players } = gameData;
+    const newPlayer = players.find(p => p.userId === user.userId);
+    if (!newPlayer) {
+      throw new Error(`User ${user.userId} is not an expected player for game ${gameId}`);
+    }
+    gameSession.players.push(newPlayer);
+    assignPlayerToGame(user.userId, gameId);
+    app.gameSessionService.setPlayerConnectionStatus(user.userId, gameId, true);
+    app.wsService.broadcastToGame(gameId, 
+    {
+      event: 'notification',
+      payload: {
+        gameId,
+        message: `Player ${user.userId} successfully joined game ${gameId}`,
+        timestamp: Date.now()
+      }
+    });
+    app.log.debug(`[game-service] Player ${user.userId} ${user.userAlias} successfully joined game ${gameId}`);
   }
 
   // TODO: 
@@ -275,27 +367,34 @@ function createGameService(app: FastifyInstance) {
     // apply updates in game engine
   }
 
-  async function fetchInitialGameData(gameId: string): Promise<StartGame | null> {
+  async function fetchGameData(gameId: string): Promise<StartGame> {
     app.log.debug(`[game-service] Fetching game data for ${gameId} from backend`);
-    try {
-      const BACKEND_URL = app.config.websocket.backendUrl;
-      const res = await fetch(`${BACKEND_URL}/api/game/:${gameId}`);
+    
+    const BACKEND_URL = app.config.websocket.backendUrl;
+    const res = await fetch(`${BACKEND_URL}/api/game/:${gameId}`);
 
-      if (!res.ok) return null;
-
-      const data = await res.json();
-      app.log.debug(`[game-service] Fetched game data for ${gameId}:`, data);
-      return data;
-    } catch (error) {
-      app.log.error(`Error fetching initial game data from backend id: ${gameId}. Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
-      return null;
+    if (!res.ok) {
+      throw new Error(`HTTP error! status: ${res.status}`);
     }
+
+    const data = await res.json();
+    app.log.debug(data, `[game-service] Fetched game data for ${gameId}:`);
+    return data;
+  }
+
+  function isExpectedPlayer(players: User[], userId: number) : boolean {
+    const expectedPlayer = players.find(p => p.userId === userId);
+    if (expectedPlayer) {
+      return true;
+    }
+    return false;
   }
 
   function assignPlayerToGame(userId: number, gameId: string): void {
     playerGameMap.set(userId, gameId);
     app.connectionService.updateUserGame(userId, gameId);
   }
+
 
   function cleanup(gameId: string) : void {
     app.log.info(`[game-service] Scheduling cleanup for game ${gameId} in ${app.config.websocket.connectionTimeout}ms`);
