@@ -63,6 +63,18 @@ export const handleWSConnection = (
           app.gameService.handleJoinGame(payload.gameId, user);
           break;
 
+        case 'game_update':
+          await app.gameService.handlePlayerInput(ws.userId, payload);
+          break;
+
+        case 'game_pause':
+          app.gameStateService.pauseGame(payload.gameId, `User ${user.userAlias} requested pause`);
+          break;
+
+        case 'game_resume':
+          app.gameStateService.resumeGame(payload.gameId);
+          break;
+
         default:
           app.log.warn(`[websocket-service] Unknown event from user ${userId}: ${event}`);
           ws.send(JSON.stringify({
