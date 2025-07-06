@@ -85,34 +85,12 @@ export default function createGameSessionService(app: FastifyInstance) {
     return true;
   }
 
-  // function addPlayerToGame(gameId: string, user: User): void {
-  //   const gameSession = gameSessions.get(gameId);
-
-  //   if (!gameSession) {
-  //     throw new Error(`[game-session] Game session ${gameId} not found`);
-  //   }
-  //   const { players } = gameSession;
-  //   const existingPlayerInSession = players.find(p => p.userId === user.userId);
-
-  //   if (existingPlayerInSession) {
-  //     // Player is already in the game session. This is a reconnect scenario.
-  //     // Just update their connection status.
-  //     app.log.debug(`[game-service] User ${user.userId} already in game ${gameId}. Updating connection status.`);
-  //     setPlayerConnectionStatus(user.userId, gameId, true);
-  //     return;
-  //   }
-
-  //   if (gameSession.status !== GameSessionStatus.PENDING) {
-  //     throw new Error(`Game ${gameId} is not in a joinable state. Status: ${gameSession.status}`);
-  //   }
-
-  // }
-
   return {
     getGameSession,
     createGameSession,
     removeGameSession,
     storeGameSession,
-    setPlayerConnectionStatus
+    setPlayerConnectionStatus,
+    updateGameSession
   };
 }
