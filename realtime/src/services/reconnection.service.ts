@@ -8,7 +8,7 @@ export default function reconnectionService(app: FastifyInstance) {
 
   const config = {
     reconnectionTimeout: app.config.websocket.connectionTimeout || 60000,
-    cleanupInterval: 300000 // 5 minutes
+    cleanupInterval: 300000
   };
 
   function getDiconnectionData(userId: number) : DisconnectInfo | undefined {
@@ -21,10 +21,7 @@ export default function reconnectionService(app: FastifyInstance) {
     app.log.info(`[reconnection-service] Handling disconnect for user ${userId} (${username}) in game ${gameId}`);
     const game = app.gameSessionService.getGameSession(gameId);
     if (!game) {
-      app.log.warn({
-        userId,
-        gameId
-      }, 'Cannot handle disconnection - game not found');
+      app.log.warn(`Cannot handle disconnection - game not found ${gameId}`);
       return;
     }
 
@@ -35,14 +32,7 @@ export default function reconnectionService(app: FastifyInstance) {
     }
 
     const connTimeout = config.reconnectionTimeout;
-    const info: DisconnectInfo = {
-      userId,
-      username,
-      gameId,
-      disconnectTime: Date.now()
-    }
-    disconnectedPlayers.set(userId, info);
-    app.log.debug(`[reconnection-service] Stored disconnect info for user ${userId}`);
+    setPlayerDisconnectInfo(userId, username, gameId);
 
     const event = 'notification';
     const payload: NotificationPayload = {
@@ -59,13 +49,9 @@ export default function reconnectionService(app: FastifyInstance) {
     }, connTimeout);
 
     reconnectionTimers.set(userId, timeout);
-    app.gameService.pauseGame(gameId, `${username} disconnected`);
-    app.log.info({
-      userId,
-      gameId,
-      username,
-      timeoutMs: config.reconnectionTimeout
-    }, 'User disconnected, waiting for reconnection');
+    app.gameStateService.pauseGame(gameId, `${username} disconnected`);
+    app.gameSessionService.setPlayerConnectionStatus(userId, gameId, false);
+    app.log.debug(`User ${userId} disconnected, waiting for reconnection to the game ${gameId}`);
   };
 
   function attemptReconnection(userId: number): string | null {
@@ -100,10 +86,10 @@ export default function reconnectionService(app: FastifyInstance) {
       message: `Player ${newConn.userAlias} reconnected`,
       timestamp: Date.now()
     }
-    app.wsService.broadcastToGame(gameId, {"event": "notification", msg}, [userId]);
+    app.wsService.broadcastToGame(gameId, {event: "notification", payload: msg}, [userId]);
 
     if (app.gameService.canStartGame(gameId) && gameSession.status === GameSessionStatus.PAUSED ) {
-        app.gameService.resumeGame(gameId);
+        app.gameStateService.resumeGame(gameId);
     } else {
       app.log.debug(`[reconnection-service] Game ${gameId} cannot be resumed. Players connected: ${app.gameService.isPlayersConnected(gameId)})`);
     }
@@ -112,7 +98,7 @@ export default function reconnectionService(app: FastifyInstance) {
   }
 
   function handleReconnectionTimeout(userId: number): void {
-    app.log.info(`[reconnection-service] Handling reconnection timeout for user ${userId}`);
+    app.log.debug(`[reconnection-service] Handling reconnection timeout for user ${userId}`);
     const info = disconnectedPlayers.get(userId);
     if (!info || !info.gameId) return;
 
@@ -121,7 +107,7 @@ export default function reconnectionService(app: FastifyInstance) {
 
     const game = app.gameSessionService.getGameSession(info.gameId);
     if (game && (game.status !== GameSessionStatus.FINISHED && game.status !== GameSessionStatus.CANCELLED)) {
-      app.gameService.endGame(info.gameId, GameSessionStatus.CANCELLED,`Player ${info.username} failed to reconnect`);
+      app.gameStateService.endGame(info.gameId, GameSessionStatus.CANCELLED,`Player ${info.username} failed to reconnect`);
     }
     const payload: NotificationPayload = {
       gameId: info.gameId,
@@ -130,6 +116,17 @@ export default function reconnectionService(app: FastifyInstance) {
     };
     app.wsService.broadcastToGame(info.gameId, { event: "notification", payload });
     cleanup(userId);
+  }
+
+  function setPlayerDisconnectInfo(userId: number, username: string, gameId: string): void {
+    const info: DisconnectInfo = {
+      userId,
+      username,
+      gameId,
+      disconnectTime: Date.now()
+    }
+    disconnectedPlayers.set(userId, info);
+    app.log.debug(`[reconnection-service] Stored disconnect info for user ${userId}`);
   }
 
   function cleanup(userId?: number) {
