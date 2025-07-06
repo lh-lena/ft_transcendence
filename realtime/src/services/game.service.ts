@@ -176,7 +176,7 @@ export default function createGameService(app: FastifyInstance) {
       app.log.debug(`[game-service] Handling join game`);
       await joinPlayerToGame(gameId, user, gameSession);
       if (canStartGame(gameId)) {
-        await startGame(gameId);
+        await app.gameStateService.startGame(gameId);
       }
     } catch (error) {
       if (error instanceof GameError) {
@@ -286,5 +286,3 @@ export default function createGameService(app: FastifyInstance) {
     getValidGameCheckPlayer,
   }
 }
-
-export default createGameService;
