@@ -9,6 +9,6 @@ ENV NODE_ENV=development
 COPY package*.json ./
 COPY . .
 
-RUN npm install && apk add --no-cache sqlite
+RUN apk update && apk add --no-cache sqlite sqlite-libs && npm install
 
 CMD ["npm", "run", "dev"]

@@ -10,7 +10,6 @@ export default async function registerRoutes( context: ServerContext ) {
 
 	await context.server.register( healthRoute( context ) );
 
-	await context.server.register( openAiDocs( context ) );
 	await context.server.register( userRoutes( context ), { prefix: '/api' } );
 
 	context.server.setErrorHandler( ( error, request, reply ) => {
