@@ -2,7 +2,7 @@ import { FastifyRequest, FastifyReply } from 'fastify';
 import { ServerContext } from '../../context';
 import Database from 'better-sqlite3';
 
-import { CreateuserSchema, UpdateuserSchema } from './user.schema';
+import { CreateuserSchema, UpdateuserSchema, ResponseuserSchema } from './user.schema';
 import * as userService from './user.service';
 
 //controller for user get All or by Id
@@ -37,14 +37,14 @@ export async function createuser(
 			message: 'Invalid Data' } );
 
 	const user = await userService.createuser( context, parsed.data );
-	reply.status( 201 ).send( user );
+	reply.status( 201 ).send( ResponseuserSchema.parse( user ) );
 }
 
 
 //update user
 export async function updateuser(
 	context: ServerContext,
-	req: FastifyRequest,
+	req: FastifyRequest<{ Body: z.infer<typeof UpdateuserSchema> }>,
 	reply: FastifyReply,
 ) {
 	const parsed = UpdateuserSchema.safeParse( req.body );

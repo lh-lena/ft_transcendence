@@ -13,6 +13,7 @@ async function buildServer() {
 	//build fastify instance
 	const server = Fastify({ logger: true }).withTypeProvider<ZodTypeProvider>();
 
+
 	//makes env variables avliable 
 	await configCreate( server );
 	await dbCreate( server );
