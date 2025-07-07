@@ -1,0 +1,170 @@
+openapi: 3.1.0
+info:
+  title: ft_transcendence User API
+  version: 1.0.0
+  description: API documentation for user management endpoints
+
+servers:
+  - url: http://localhost:8080
+
+paths:
+  /user:
+    get:
+      summary: Get all users or filtered users
+      description: Returns all users or users filtered by query parameters.
+      parameters:
+        - in: query
+          name: (filter fields)
+          schema:
+            type: object
+          description: Filter users by any user property (e.g., username, email)
+      responses:
+        '200':
+          description: List of users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+    post:
+      summary: Create a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUser'
+      responses:
+        '201':
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Invalid data
+
+  /user/{id}:
+    get:
+      summary: Get a user by ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: User ID
+      responses:
+        '200':
+          description: User found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '404':
+          description: User not found
+    patch:
+      summary: Update a user
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: User ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUser'
+      responses:
+        '200':
+          description: User updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Invalid data
+        '404':
+          description: User not found
+    delete:
+      summary: Delete a user
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: User ID
+      responses:
+        '200':
+          description: User deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '404':
+          description: User not found
+
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        email:
+          type: string
+          format: email
+        username:
+          type: string
+        password_hash:
+          type: string
+        is_2fa_enabled:
+          type: boolean
+        twofa_secret:
+          type: string
+      required:
+        - id
+        - email
+        - username
+        - password_hash
+    CreateUser:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        username:
+          type: string
+        password_hash:
+          type: string
+        is_2fa_enabled:
+          type: boolean
+        twofa_secret:
+          type: string
+      required:
+        - email
+        - username
+        - password_hash
+    UpdateUser:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        username:
+          type: string
+        password_hash:
+          type: string
+        is_2fa_enabled:
+          type: boolean
+        twofa_secret:
+          type: string
+      description: All fields optional for partial update

@@ -11,7 +11,7 @@ import { createContext, ServerContext } from './server.context';
 async function buildServer() {
 
 	//build fastify instance
-	const server = Fastify({ logger: true });
+	const server = Fastify({ logger: true }).withTypeProvider<ZodTypeProvider>();
 
 	//makes env variables avliable 
 	await configCreate( server );
