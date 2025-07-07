@@ -1,11 +1,11 @@
 import { FastifyInstance } from 'fastify';
 import { ServerContext } from '../context';
-//import { fastifyZod } from 'fastify-zod';
+
 import swagger from '@fastify/swagger'
 import swaggerUi from '@fastify/swagger-ui'
 
 
-export function openAiDocs(context: ServerContext) {
+export function openAiDocs( server: FastifyInstance ) {
   return async function( server: FastifyInstance ) {
 
 	await context.server.register(swagger, {

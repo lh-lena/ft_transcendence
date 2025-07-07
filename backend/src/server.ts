@@ -1,48 +1,24 @@
 import Fastify from 'fastify';
 import cors from '@fastify/cors'
-
-import configCreate from './config/config';
-import dbCreate from './config/db';
-import registerRoutes from './routes/index';
-
-import { createContext, ServerContext } from './server.context';
+import AutoLoad from '@fastify/autoload';
+import Path from 'path';
 
 //build server
-async function buildServer() {
+export async function buildServer() {
 
 	//build fastify instance
 	const server = Fastify({ logger: true }).withTypeProvider<ZodTypeProvider>();
 
+  server.register( AutoLoad, {
+    dir: Path.join( __dirname, 'plugins'),
+  } )
 
-	//makes env variables avliable 
-	await configCreate( server );
-	await dbCreate( server );
+  server.register( AutoLoad, {
+    dir: Path.join(__dirname, 'routes'),
+  } )
 
+  await server.ready();
 
-	const context = createContext( server, server.db, server.config );
-
-	await registerRoutes( context );
-
-
-	//parse allowed origins
-	const allowedOrigins = context.config.ALLOWED_ORIGINS ? 
-		context.config.ALLOWED_ORIGINS.split(',').map(origin => origin.trim()) : [];
-
-	const allowedMethods = context.config.ALLOWED_METHODS ? 
-		context.config.ALLOWED_METHODS.split(',').map(method => method.trim()).join(',') 
-			: [];
-
-			//register cors, healthcheck, db, etc.
-			await server.register(cors, { 
-				origin: (origin , cb) => {
-					if(!origin) return cb(null, true);
-					if(allowedOrigins.includes(origin)) cb(null, true);
-					//TODO:: add logging of cors violations??
-					cb(new Error("Not allowed with CORS"), false);
-				},
-				methods: allowedMethods,
-				credentials: true,
-			});
 			
 
 	return server;

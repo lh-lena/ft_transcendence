@@ -1,22 +1,23 @@
+import fp from 'fastify-plugin';
 import { FastifyInstance } from 'fastify';
+
 import Database from 'better-sqlite3';
 import fs from 'fs';
 import path from 'path';
 
-export default async function dbCreate(
-	server: FastifyInstance,
-){
+const dbPlugin = async ( server: FastifyInstance ) => {
 
 	//start database
 	const dbFile = server.config.DB_PATH;
-	console.log( dbFile );
+  
 	const db = new Database( dbFile, { verbose: console.log } );
 
 	//enable foreign keys
 	db.pragma( 'foreign_keys = ON' );
 
 	//apply schema files
-	const migrationDir = path.join(__dirname, '..', 'database', 'migrations');
+	const migrationDir = path.join(__dirname, '../database/migrations' );
+
 	const migrationFiles = fs
 		.readdirSync(migrationDir).filter(file => file.endsWith('.sql')).sort();
 
@@ -36,3 +37,5 @@ export default async function dbCreate(
 	});
 	 
 }
+
+export default fp( dbPlugin );

@@ -1,9 +1,9 @@
 import { FastifyInstance } from 'fastify';
-import { ServerContext } from '../context';
+import * as ServerContext from '../createContext';
 import { z } from 'zod';
-import { zodToJsonSchema } from 'zod-to-json-schema';
 
-import * as userController from '../database/user/user.controller';
+import * as userController from './user.controller';
+
 import { 
   CreateuserSchema,
   UpdateuserSchema,
@@ -11,10 +11,12 @@ import {
   DeleteuserSchema,
   userIdSchema,
   userQuerySchema
-} from '../database/user/user.schema';
+} from './user.schema';
 
 export function userRoutes( context: ServerContext ) {
   return async function( server: FastifyInstance ) {
+
+    const context = ServerContext.createContext( server );
 
     server.get( '/user', { 
       schema: {

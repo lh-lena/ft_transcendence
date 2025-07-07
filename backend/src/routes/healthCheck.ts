@@ -1,11 +1,11 @@
 //src/routes/healtCheck.ts
 import { FastifyInstance } from 'fastify';
-import { ServerContext } from '../context';
 
-export function healthRoute( context: ServerContext ) {
+export function healthRoute( server: FastifyInstance ) {
 	return async function ( server: FastifyInstance ) {
 
-	const db = context.db;
+
+	  const db = server.db;
 
 		server.get( '/health', async ( request, reply ) => {
 

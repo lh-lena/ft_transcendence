@@ -2,15 +2,14 @@ import { FastifyInstance } from 'fastify';
 import { Database } from 'better-sqlite3';
 import { Config } from './config/config';
 
-export type ServerContext = {
-	server: FastifyInstance;
+export interface ServerContext {
 	db: Database;
 	config: Config;
+  logger: FastifyBaseLogger;
 };
 
-export function createContext( server: FastifyInstance, db: Database, config: Config ) : ServerContext {
+export function createContext( db: Database, config: Config ) : ServerContext {
 	return {
-		server,
 		db,
 		config,
 	};

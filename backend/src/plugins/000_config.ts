@@ -1,10 +1,11 @@
+import fp from 'fastify-plugin';
 import { FastifyInstance } from 'fastify';
 import dotenv from 'dotenv';
 import envSchema from 'env-schema';
 import path from 'path';
 
 //load and check env variables
-export default async function configCreate( server: FastifyInstance ) {
+const configPlugin = async ( server: FastifyInstance ) => {
 
 	const schema = {
 		type: 'object',
@@ -22,8 +23,7 @@ export default async function configCreate( server: FastifyInstance ) {
 
 	const config = envSchema( { schema } );
 
-	console.log( config.PORT );
-	console.log( config.DB_PATH );
-
 	server.decorate( 'config', config );
 }
+
+export default fp( configPlugin );

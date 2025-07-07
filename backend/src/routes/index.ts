@@ -1,19 +1,18 @@
 import { FastifyInstance } from 'fastify';
-import { ServerContext } from '../server.context';
+
 import { healthRoute } from './healthCheck';
-import { userRoutes } from './user';
+import { userRoutes } from './user/user.routes';
 import { AppError } from '../utils/error';
 import { openAiDocs } from './openAiDocs';
 
-export default async function registerRoutes( context: ServerContext ) {
+export default async function registerRoutes( server: FastifyInstance ) {
 
-	await context.server.register( healthRoute( context ) );
 
-  await context.server.register( openAiDocs( context ) );
+	await server.register( healthRoute( server ) );
 
-	await context.server.register( userRoutes( context ), { prefix: '/api' } );
+	await server.register( userRoutes( server ), { prefix: '/api' } );
 
-	context.server.setErrorHandler( ( error, request, reply ) => {
+	server.setErrorHandler( ( error, request, reply ) => {
 		
 		console.error( '🚨 Error Detected:', error );
 
