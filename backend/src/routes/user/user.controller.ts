@@ -28,16 +28,17 @@ export async function getuserById(
 //controller to create an user
 export async function createuser(
 	context: ServerContext,
-	req: FastifyRequest<{ Body: z.infer<typeof CreateuserSchema> }>,
+	req: FastifyRequest<{ 
+    Body: userCreateSchema }>,
 	reply: FastifyReply
 ) {
-	const parsed = CreateuserSchema.safeParse( req.body );
-	if( !parsed.success )
-		return reply.status( 400 ).send( { error: 'BAD_REQUEST', 
-			message: 'Invalid Data' } );
 
-	const user = await userService.createuser( context, parsed.data );
+	const user = await userService.createuser( 
+        context, { 
+        ...req.body,  
+  } );
 	reply.status( 201 ).send( ResponseuserSchema.parse( user ) );
+
 }
 
 

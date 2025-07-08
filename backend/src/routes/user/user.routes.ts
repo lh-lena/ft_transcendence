@@ -4,25 +4,18 @@ import { z } from 'zod';
 
 import * as userController from './user.controller';
 
-import { 
-  CreateuserSchema,
-  UpdateuserSchema,
-  ResponseuserSchema,
-  DeleteuserSchema,
-  userIdSchema,
-  userQuerySchema
-} from './user.schema';
+import { $ref } from './user.schema';
 
-export function userRoutes( context: ServerContext ) {
+export function userRoutes( server: FastifyInstance ) {
   return async function( server: FastifyInstance ) {
 
     const context = ServerContext.createContext( server );
 
     server.get( '/user', { 
       schema: {
-         querystring: userQuerySchema , 
+        querystring: $ref( 'userQuerySchema' ),
          response: { 
-           200: z.array( ResponseuserSchema ),
+          200: z.array( $ref( 'userResponseSchema' ) ),
          },
          summary: "Get all or queryed Users",
        }
@@ -32,9 +25,9 @@ export function userRoutes( context: ServerContext ) {
 
     server.get( '/user/:id',
                { schema: {
-                 params: userIdSchema ,
+                 params: $ref( 'userIdSchema' ),
                  response: {
-                   200: ResponseuserSchema ,
+                   200: $ref( 'userResponseSchema' ) ,
                    404: z.object( { message: z.string() } ) ,
                  },
                  summary: "User by ID",
@@ -45,9 +38,9 @@ export function userRoutes( context: ServerContext ) {
 
     server.post( '/user', 
                 { schema: {
-                  body: CreateuserSchema ,
+                  body:  $ref( 'CreateuserSchema' ),
                   response: {
-                    201: ResponseuserSchema ,
+                    201: $ref ( 'userResponseSchema' ),
                   },
                   summary: "Created new User",
                 }
@@ -57,9 +50,9 @@ export function userRoutes( context: ServerContext ) {
 
     server.patch( '/user/:id', 
                  { schema: {
-                   body: UpdateuserSchema ,
+                   body: $ref( 'UpdateuserSchema' ),
                    response: {
-                     200: ResponseuserSchema ,
+                     200: $ref( 'userResponseSchema' ),
                    },
                    summary: "Updated User",
                  }
@@ -69,7 +62,7 @@ export function userRoutes( context: ServerContext ) {
 
     server.delete( '/user/:id', 
                   { schema: {
-                    params: userIdSchema ,
+                    params: $ref( 'userIdSchema' ),
                     response: {
                       200: z.object( { message: z.string() } ) ,
                       404: z.object( { message: z.string() } ) ,

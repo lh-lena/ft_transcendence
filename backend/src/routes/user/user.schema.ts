@@ -1,45 +1,56 @@
 import { z }from "zod";
+import { buildJsonSchemas } from "fastify-zod";
 
 //userchema
 
-export const userSchema = z.object( { 
-  id: z.number().int(),
+const userIn = {
 	email: z.string().email(),
 	username: z.string(),
 	password_hash: z.string(),
 	is_2fa_enabled: z.boolean(),
 	twofa_secret: z.string().nullable().optional(),
+}
+
+const userGen = {
+  id: z.number(),
   created_at: z.string(),
-  updated_at: z.string().nullable().optional(),
+  updated_at: z.string(),
+}
+
+
+const userResponseSchema = z.object( { 
+  ...userGen,
+  ...userIn,
 } );
 
-export const userIdSchema = z.object( {
-  id: z.string().regex(/^\d+$/),
+const userIdSchema = z.object( {
+  id: z.number().int(),
  } );
 
-export const userQuerySchema = z.object( {
+const userQuerySchema = z.object( {
   email: z.string().email().optional(),
   username: z.string().optional(),
 });
 
-export const CreateuserSchema = z.object( {
-  email: z.string().email(),
-  username: z.string(),
-  password_hash: z.string(),
-  is_2fa_enabled: z.boolean().default( false ),
-  twofa_secret: z.string().nullable().optional(),
+const userCreateSchema = z.object( {
+  ...userIn,
 } );
 
-export const UpdateuserSchema = z.object( {
-  email: z.string().email().optional(),
-  username: z.string().optional(),
-  password_hash: z.string().optional(),
-  is_2fa_enabled: z.boolean().optional(),
-  twofa_secret: z.string().nullable().optional(),
+const userUpdateSchema = z.object( {
+  ...userIn,
 } );
 
-export const ResponseuserSchema = userSchema.omit( {} );
-
-export const DeleteuserSchema = z.object( { 
+const userDeleteSchema = z.object( { 
   message: z.string() 
+} );
+
+export type userCreateInput = z.infer< typeof userCreateSchema >;
+
+export const { schemas: userSchemas, $ref } = buildJsonSchemas( {
+  userCreateSchema,
+  userUpdateSchema,
+  userDeleteSchema,
+  userResponseSchema,
+  userIdSchema,
+  userQuerySchema,
 } );
