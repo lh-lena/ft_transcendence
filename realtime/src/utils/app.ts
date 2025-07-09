@@ -9,9 +9,10 @@ export const buildServer = () => {
 
   server.register(registerPlugins);
 
-  server.get('/health', async (request, reply) => {
+  server.get('/api/health', async (request, reply) => {
   return {
     status: 'ok',
+    service: 'realtime',
     timestamp: new Date().toISOString()
   }});
 
