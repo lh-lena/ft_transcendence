@@ -1,5 +1,9 @@
 import { z } from "zod/v4";
 
+const internalError = z.object({
+  message: z.string().default("Internal server error"),
+}).meta({ $id: "InternalError" })
+
 const notFoundSchema = z.object({
   message: z.string().default("Resource not found"),
 }).meta({ $id: "NotFound" })
@@ -31,6 +35,7 @@ const deletedSchema = z.object({
 }).meta({ $id: "Deleted" })
 
 export const responseSchemas =  [
+  internalError,
   notFoundSchema,
   badRequestSchema,
   unauthorizedSchema,

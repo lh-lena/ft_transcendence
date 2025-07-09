@@ -3,27 +3,36 @@ import fp from 'fastify-plugin';
 
 const healthRoute = async ( server: FastifyInstance ) => {
 
-		server.get( '/api/health', async ( request, reply ) => {
+		server.get( '/api/health', {
+      schema: {
+        response: {
+          200: { $ref: 'healthCheck' },
+          500: { $ref: 'InternalError' },
+        },
+        summary: 'Health Check',
+      },
+      handler: async ( request, reply ) => {
 
-			let dbStatus = 'unknown';
+		    	let dbStatus = 'down';
 
-			try {
-				const stmt = server.db.prepare( 'SELECT 1' );
-				stmt.get();
-				dbStatus = 'ok';
-			} catch {
-				dbStatus = 'unreachable';
-			}
+		    	try {
+		    		const stmt = server.db.prepare( 'SELECT 1' );
+		    		stmt.get();
+		    		dbStatus = 'up';
+		    	} catch {
+		    		dbStatus = 'unreachable';
+		    	}
 
-			const healthStatus = {
-				service: 'backend',
-				message: 'OK',
-				uptime: process.uptime(),
-				timestamp: Date.now(),
-				db: dbStatus		};
+		    	const healthStatus = {
+            status: 'ok',
+		    		service: 'backend',
+						timestamp: new Date().toISOString(),
+		    		db: dbStatus		
+          };
 
-				reply.code( dbStatus === 'ok' ? 200 : 500 ).send( healthStatus );
-		});
+		    		response.code( dbStatus === 'ok' ? 200 : 500 ).send( healthStatus );
+		    },
+    });
 };
 
 export default fp( healthRoute );
