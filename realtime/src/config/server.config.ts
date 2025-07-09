@@ -13,6 +13,7 @@ interface LoggerConfig {
 interface WebsocketConfig {
   connectionTimeout: number,
   heartbeatInterval: number,
+  pauseTimeout: number;
   backendUrl: string;
   authUrl: string;
 }
@@ -49,6 +50,7 @@ const config: Config = {
     websocket: {
       connectionTimeout: 60_000,
       heartbeatInterval: 30_000,
+      pauseTimeout: 60_000,
       backendUrl: 'https://localhost:8080',
       authUrl: 'https://auth:8082',
     },
@@ -62,6 +64,7 @@ const config: Config = {
     websocket: {
       connectionTimeout: 60_000,
       heartbeatInterval: 30_000,
+      pauseTimeout: 60_000,
       backendUrl: process.env.BACKEND_URL || 'https://localhost:8080',
       authUrl: process.env.AUTH_URL || 'https://auth:8082',
     },

@@ -17,6 +17,7 @@ export interface DisconnectInfo {
 export interface PausedGameState {
     gameId: string;
     reason: string;
+    pausedByPlayerId: number;
     pausedAt: number;
     players: Array<User>;
 }
