@@ -32,6 +32,18 @@ export default function createGameSessionService(app: FastifyInstance) {
     return session;
   }
 
+  function getAllActiveGameSessions(): GameInstance[] {
+    const activeSessions: GameInstance[] = [];
+    gameSessions.forEach((session) => {
+      if (session.status !== GameSessionStatus.FINISHED &&
+        session.status !== GameSessionStatus.CANCELLED &&
+        session.status !== GameSessionStatus.CANCELLED_SERVER_ERROR) {
+        activeSessions.push(session);
+      }
+    });
+    return activeSessions;
+  }
+
   function storeGameSession(game: GameInstance): void {
     gameSessions.set(game.gameId, game);
     app.log.debug(`[game-session] Stored game session ${game.gameId}`);
@@ -43,14 +55,6 @@ export default function createGameSessionService(app: FastifyInstance) {
       app.log.debug(`[game-session] Removed game session ${gameId}`);
     }
     return removed;
-  }
-
-  function assignPlayersToGame(game: GameInstance): void {
-    game.players.forEach(player => {
-      if (player.userId !== -1) {
-        app.connectionService.updateUserGame(player.userId, game.gameId);
-      }
-    });
   }
 
   function setPlayerConnectionStatus(userId: number, gameId: string, connected: boolean): void {
@@ -81,8 +85,21 @@ export default function createGameSessionService(app: FastifyInstance) {
     }
 
     Object.assign(game, updates);
-    app.log.debug({ gameId, updates: Object.keys(updates) }, `Updated game session`);
+    app.log.debug(`Updated game session ${gameId}. Updates: ${Object.keys(updates).join(', ')}`);
     return true;
+  }
+
+  function shutdown(): void {
+    const activeSessions = getAllActiveGameSessions();
+    activeSessions.forEach((session) => {
+      app.log.info(`[game-session] Shutting down game session ${session.gameId}`);
+      session.status = GameSessionStatus.CANCELLED_SERVER_ERROR;
+      session.gameLoopInterval && clearInterval(session.gameLoopInterval);
+      app.gameStateService.endGame(session.gameId, GameSessionStatus.CANCELLED_SERVER_ERROR, 'Server shutdown');
+    });
+    gameSessions.clear();
+
+    app.log.info('[game-session] All game sessions cleared');
   }
 
   return {
@@ -91,6 +108,7 @@ export default function createGameSessionService(app: FastifyInstance) {
     removeGameSession,
     storeGameSession,
     setPlayerConnectionStatus,
-    updateGameSession
+    updateGameSession,
+    shutdown
   };
 }
