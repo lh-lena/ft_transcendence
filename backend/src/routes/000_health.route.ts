@@ -27,11 +27,12 @@ const healthRoute = async ( server: FastifyInstance ) => {
             status: 'ok',
 		    		service: 'backend',
 						timestamp: new Date().toISOString(),
-		    		db: dbStatus		
+		    		dbStatus: dbStatus		
           };
 
-		    		response.code( dbStatus === 'ok' ? 200 : 500 ).send( healthStatus );
-		    },
+			  return healthStatus;
+
+      },
     });
 };
 

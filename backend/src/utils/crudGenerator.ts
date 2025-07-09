@@ -4,16 +4,21 @@ export function createCrud( tableName: string, context: Context ) {
 
 	return {
 		findAll: ( context: Context ) => {
+
 			const stmt = context.db.prepare( `SELECT * FROM ${tableName}` );
 			return stmt.all();
+
 		},
 
 		findById: ( context: Context, id: string | number ) => {
+
 			const stmt = context.db.prepare( `SELECT * FROM ${tableName} WHERE id = ?` );
 			return stmt.get( id );	
+
 		},
 
 		findBy: ( context: Context, filters: Record<string, any> ) => {
+
 			const keys = Object.keys( filters );
 
 			const whereClause = keys.map( key => `${key} = ?` ).join( ' AND ' );
@@ -21,6 +26,7 @@ export function createCrud( tableName: string, context: Context ) {
 
 			const stmt = context.db.prepare( sql );
 			return stmt.all( ...Object.values( filters ) );
+
 		},
 
 		insert: ( context: Context, data: Record<string, any> ) => {
@@ -35,15 +41,19 @@ export function createCrud( tableName: string, context: Context ) {
 			let result;
 
 			try {
+
 				result = stmt.run( ...Object.values( data ) );
 
 				const sqlId = `SELECT * FROM ${tableName} WHERE id = ?`;
 				const getStmt = context.db.prepare( sqlId );
 
 				return getStmt.get( result.lastInsertRowid );
+
 			} catch ( error ) {
+
 				console.error( `Error inserting into ${tableName}:`, error );
 				throw error;
+
 			}
 		},
 
@@ -52,26 +62,32 @@ export function createCrud( tableName: string, context: Context ) {
 			const keys = Object.keys( data );
 
 			const setKeys = keys.map( key => `${key} = ?` ).join( ', ' );
-			const sql = `UPDATE ${tableName} SET ${setKeys} WHERE id = ?`;
+			const sql = `UPDATE ${tableName} SET ${setKeys}${keys.length ? ', ': ''}updated_at = CURRENT_TIMESTAMP WHERE id = ?`;
 
 			const stmt = context.db.prepare( sql );
 
 			try {
+
 				stmt.run( ...Object.values( data ), id );
 
 				const sqlId = `SELECT * FROM ${tableName} WHERE id = ?`;
 				const getStmt = context.db.prepare( sqlId );
 
 				return getStmt.get( id );
+
 			} catch ( error ) {
+
 				console.error( `Error updating ${tableName} with id ${id}:`, error );
 				throw error;
+
 			}
 		},
 
 		remove: ( context: Context, id: string | number ) => {
+
 			const stmt = context.db.prepare( `DELETE FROM ${tableName} WHERE id = ?` );
 			return stmt.run( id );
+
 		}
 	};
 }

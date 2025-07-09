@@ -17,7 +17,7 @@ curl -X POST http://[::1]:8080/api/user \
     "username": "Janesen"
   }'
 
-curl -X PATCH http://localhost:8080/api/user/1 \
+curl -X PATCH http://localhost:8080/api/user/3 \
   -H "Content-Type: application/json" \
   -d '{"username":"alice", "email":"alice_new@example.com"}'
 
