@@ -175,6 +175,7 @@ export default function createGameService(app: FastifyInstance) {
       }
       app.log.debug(`[game-service] Handling join game`);
       await joinPlayerToGame(gameId, user, gameSession);
+      app.wsService.sendToConnection(user.userId, {event: 'notification', payload: {gameId, message: `You joined game ${gameId}`, timestamp: Date.now()}});
       if (canStartGame(gameId)) {
         await app.gameStateService.startGame(gameId);
       }
