@@ -1,5 +1,7 @@
 import { FastifyInstance } from 'fastify';
 import { GameInstance, GameMode, StartGame, GameState, GameSessionStatus, GameResult, User, PlayerInput } from '../types/pong.types.js';
+import { ErrorCode } from 'types/error.types.js';
+import { updatePlayerPaddle } from './pong-engine.service.js';
 
 export default function createGameService(app: FastifyInstance) {
   const playerGameMap: Map<number, string> = new Map();
@@ -48,8 +50,12 @@ export default function createGameService(app: FastifyInstance) {
         await handleJoinGame(gameId, user);
         return;
       }
-      const gameData = await app.gameDataService.fetchGameData(gameId) as StartGame;
-
+      // const gameData = await app.gameDataService.fetchGameData(gameId) as StartGame;
+      const gameData: StartGame = {
+        gameId,
+        gameMode: GameMode.PVP_REMOTE,
+        players: [user]
+      }
       const gameSession = await app.gameSessionService.createGameSession(gameId, gameData);
 
       if (!isExpectedPlayer(gameData.players, user.userId)) {
@@ -77,7 +83,7 @@ export default function createGameService(app: FastifyInstance) {
         {
           event: 'error',
           payload: {
-            error: `Failed to initialize game ${gameId}`,
+            error: `Failed to initialize game ${gameId}`
           }
         }
       );
@@ -94,6 +100,7 @@ export default function createGameService(app: FastifyInstance) {
       }
       app.log.debug(`[game-service] Handling join game`);
       await joinPlayerToGame(gameId, user, gameSession);
+      app.wsService.sendToConnection(user.userId, {event: 'notification', payload: {gameId, message: `You joined game ${gameId}`, timestamp: Date.now()}});
       if (canStartGame(gameId)) {
         await app.gameStateService.startGame(gameId);
       }
@@ -123,7 +130,7 @@ export default function createGameService(app: FastifyInstance) {
     }
 
     if (gameSession.status !== GameSessionStatus.PENDING) {
-      throw new Error(`Game ${gameId} is not in a joinable state (status: ${gameSession.status}).`);
+      throw new Error(`Game ${gameId} is not in a joinable state. Status: ${gameSession.status}`);
     }
 
     if (gameSession.players.length >= 2) {
@@ -170,34 +177,86 @@ export default function createGameService(app: FastifyInstance) {
   }
 
   async function handlePlayerInput(userId: number, action: PlayerInput): Promise<void> {
-    action.inputType
-    const gameId = playerGameMap.get(userId);
-    if (!gameId) {
-      app.log.debug(`[game-service] The user ${userId} not in a game`);
-      return;
-    }
+    try {
+      const gameId = playerGameMap.get(userId);
+      if (!gameId) {
+        app.log.debug(`[game-service] The user ${userId} not in a game`);
+        throw new Error(`You are not in game ${gameId}`);
+      }
+  
+      const game = app.gameSessionService.getGameSession(gameId) as GameInstance;
+      if (!game) {
+        app.log.debug(`Game ${gameId} not found for user ${userId}`);
+        throw new Error(`Game ${gameId} is not found`);
+      }
+  
+      if (game.status !== GameSessionStatus.ACTIVE) {
+        app.log.debug(`[game-service] Game ${gameId} is not active`);
+        throw new Error(`Game ${gameId} is not active`);
+      }
+  
+      if (!isExpectedPlayer(game.players, userId)) {
+        app.log.debug(`[game-service] Player ${userId} not found in game ${gameId}`);
+        throw new Error(`You are not in game ${gameId}`);
+      }
+  
+      const playerIndex = game.players.findIndex(p => p.userId === userId);
+      const isPlayerA = playerIndex === 0;
+      const targetPaddle = isPlayerA ? game.gameState.paddleA : game.gameState.paddleB;
+      targetPaddle.direction = action.direction;
+    } catch (error) {
+      app.log.error(`[game-service] Failed to handle user's input. User ID${userId}. Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      app.wsService.sendToConnection(
+        userId,
+        {
+          event: 'error',
+          payload: {
+            error: `${error instanceof Error ? error.message : 'Invalid input'}`,
+          }
+        }
+      );
+    } 
+  }
 
-    const game = app.gameSessionService.getGameSession(gameId) as GameInstance;
-    if (!game) {
-      app.log.debug(`Game ${gameId} not found for user ${userId}`);
-      return;
-    }
+  function handleGameLeave(gameId: string, userId: number): void {
+    app.log.debug(`[game-service] Handling game leave for user ${userId} in game ${gameId}`);
+    try {
+      const gameId = playerGameMap.get(userId);
+      if (!gameId) {
+        app.log.debug(`[game-service] The user ${userId} not in a game ${gameId}`);
+        throw new Error(`You are not in game ${gameId}`);
+      }
+  
+      const game = app.gameSessionService.getGameSession(gameId) as GameInstance;
+      if (!game) {
+        app.log.debug(`Game ${gameId} not found for user ${userId}`);
+        throw new Error(`Game ${gameId} is not found`);
+      }
+  
+      if (game.status !== GameSessionStatus.ACTIVE) {
+        app.log.debug(`[game-service] Game ${gameId} is not active`);
+        throw new Error(`Game ${gameId} is not active`);
+      }
+  
+      if (!isExpectedPlayer(game.players, userId)) {
+        app.log.debug(`[game-service] Player ${userId} not found in game ${gameId}`);
+        throw new Error(`You are not in game ${gameId}`);
+      }
 
-    if (game.status !== GameSessionStatus.ACTIVE) {
-      app.log.debug(`[game-service] Game ${gameId} not active`);
-      return;
-    }
+      app.gameStateService.endGame(gameId, GameSessionStatus.CANCELLED, `User ${userId} left the game`);
 
-    if (!isExpectedPlayer(game.players, userId)) {
-      app.log.debug(`Player ${userId} not found in game ${gameId}`);
-      return;
+    } catch (error) {
+      app.log.error(`[game-service] Failed to handle user's input. User ID${userId}. Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      app.wsService.sendToConnection(
+        userId,
+        {
+          event: 'error',
+          payload: {
+            error: `${error instanceof Error ? error.message : 'Invalid input'}`,
+          }
+        }
+      );
     }
-
-    // get game session v
-    // check game status if active v
-    // double check player in game session x
-    // update player input in struct x
-    // apply updates in game engine x
   }
 
   function isExpectedPlayer(players: User[], userId: number) : boolean {
