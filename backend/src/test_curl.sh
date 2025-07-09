@@ -5,7 +5,8 @@ curl -X POST http://[::1]:8080/api/user \
   -d '{
     "email": "john4@example.com",
     "password_hash": "hashed_password",
-    "username": "Johnson"
+    "username": "Johnson",
+    "is_2fa_enabled": "true"
   }'
 
 curl -X POST http://[::1]:8080/api/user \

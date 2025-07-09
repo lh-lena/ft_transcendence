@@ -7,10 +7,12 @@ export function createCrud( tableName: string, context: Context ) {
 			const stmt = context.db.prepare( `SELECT * FROM ${tableName}` );
 			return stmt.all();
 		},
+
 		findById: ( context: Context, id: string | number ) => {
 			const stmt = context.db.prepare( `SELECT * FROM ${tableName} WHERE id = ?` );
 			return stmt.get( id );	
 		},
+
 		findBy: ( context: Context, filters: Record<string, any> ) => {
 			const keys = Object.keys( filters );
 
@@ -20,6 +22,7 @@ export function createCrud( tableName: string, context: Context ) {
 			const stmt = context.db.prepare( sql );
 			return stmt.all( ...Object.values( filters ) );
 		},
+
 		insert: ( context: Context, data: Record<string, any> ) => {
 
 			const keys = Object.keys( data );
@@ -43,6 +46,7 @@ export function createCrud( tableName: string, context: Context ) {
 				throw error;
 			}
 		},
+
 		patch: ( context: Context, id: string | number, data: Record<string, any> ) => {
 
 			const keys = Object.keys( data );
@@ -59,6 +63,7 @@ export function createCrud( tableName: string, context: Context ) {
 				throw error;
 			}
 		},
+
 		remove: ( context: Context, id: string | number ) => {
 			const stmt = context.db.prepare( `DELETE FROM ${tableName} WHERE id = ?` );
 			return stmt.run( id );

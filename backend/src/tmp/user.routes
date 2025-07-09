@@ -4,7 +4,8 @@ import { z } from 'zod';
 
 import * as userController from './user.controller';
 
-import { $ref } from './user.schema';
+import { userRef } from '../../schemas/user.schema';
+import { responseRef } from '../../schemas/response.schema';
 
 export function userRoutes( server: FastifyInstance ) {
   return async function( server: FastifyInstance ) {
@@ -13,22 +14,23 @@ export function userRoutes( server: FastifyInstance ) {
 
     server.get( '/user', { 
       schema: {
-        querystring: $ref( 'userQuerySchema' ),
+        querystring: userRef( 'userQuerySchema' ),
          response: { 
-          200: z.array( $ref( 'userResponseSchema' ) ),
+          200: userRef( 'userResponseSchemaArray' ),
          },
          summary: "Get all or queryed Users",
        }
        }, async ( request, reply ) => {
+         console.log( context.db );
          await userController.getAllorFiltereduser( context, request, reply );
        } );
 
     server.get( '/user/:id',
                { schema: {
-                 params: $ref( 'userIdSchema' ),
+                 params: userRef( 'userIdSchema' ),
                  response: {
-                   200: $ref( 'userResponseSchema' ) ,
-                   404: z.object( { message: z.string() } ) ,
+                   200: userRef( 'userResponseSchema' ),
+                  404: responseRef( 'notFoundSchema' ),
                  },
                  summary: "User by ID",
                }
@@ -38,9 +40,9 @@ export function userRoutes( server: FastifyInstance ) {
 
     server.post( '/user', 
                 { schema: {
-                  body:  $ref( 'CreateuserSchema' ),
+                  body:  userRef( 'userCreateSchema' ),
                   response: {
-                    201: $ref ( 'userResponseSchema' ),
+                    201: userRef( 'userResponseSchema' ),
                   },
                   summary: "Created new User",
                 }
@@ -50,9 +52,9 @@ export function userRoutes( server: FastifyInstance ) {
 
     server.patch( '/user/:id', 
                  { schema: {
-                   body: $ref( 'UpdateuserSchema' ),
+                   body: userRef( 'userUpdateSchema' ),
                    response: {
-                     200: $ref( 'userResponseSchema' ),
+                     200: userRef( 'userResponseSchema' ),
                    },
                    summary: "Updated User",
                  }
@@ -62,10 +64,10 @@ export function userRoutes( server: FastifyInstance ) {
 
     server.delete( '/user/:id', 
                   { schema: {
-                    params: $ref( 'userIdSchema' ),
+                    params: userRef( 'userIdSchema' ),
                     response: {
-                      200: z.object( { message: z.string() } ) ,
-                      404: z.object( { message: z.string() } ) ,
+                      200: responseRef( 'deletedSchema' ),
+                      404: responseRef( 'notFoundSchema' ),
                     },
                     summary: "Deleted User",
                   }

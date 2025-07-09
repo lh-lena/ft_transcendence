@@ -1,21 +1,17 @@
-//src/routes/healtCheck.ts
 import { FastifyInstance } from 'fastify';
+import fp from 'fastify-plugin';
 
-export function healthRoute( server: FastifyInstance ) {
-	return async function ( server: FastifyInstance ) {
-
-
-	  const db = server.db;
+const healthRoute = async ( server: FastifyInstance ) => {
 
 		server.get( '/health', async ( request, reply ) => {
 
 			let dbStatus = 'unknown';
-			try {
-				const stmt = db.prepare( 'SELECT 1' );
-				stmt.get();
 
+			try {
+				const stmt = server.db.prepare( 'SELECT 1' );
+				stmt.get();
 				dbStatus = 'ok';
-			} catch( err ){
+			} catch {
 				dbStatus = 'unreachable';
 			}
 
@@ -26,7 +22,8 @@ export function healthRoute( server: FastifyInstance ) {
 				timestamp: Date.now(),
 				db: dbStatus		};
 
-				reply.code( dbStatus == 'ok' ? 200 : 500 ).send( healthStatus );
+				reply.code( dbStatus === 'ok' ? 200 : 500 ).send( healthStatus );
 		});
 };
-}
+
+export default fp( healthRoute );

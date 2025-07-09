@@ -1,13 +1,17 @@
 import fp from 'fastify-plugin';
 import { FastifyInstance } from 'fastify';
 
-import { userSchemas } from '../routes/user/user.schema';
+import { userRefSchemas } from '../modules/user/user.schema';
+import { responseRefSchemas } from '../modules/response/response.schema';
 
 const schemaPlugin = async ( server: FastifyInstance ) => {
+  const schemaList = [
+    ...Object.values( userRefSchemas ),
+    ...Object.values( responseRefSchemas ),
+  ]
 
-  const allSchemas = [...Object.values( userSchemas )];
-
-  for( const schema of allSchemas ) {
+  for( const schema of schemaList ) {
+    console.log( `Registering schema: ${schema.$id}` );
       server.addSchema( schema );
   }
 }

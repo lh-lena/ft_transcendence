@@ -15,7 +15,7 @@
     "fastify": "^4.29.1",
     "fastify-plugin": "^5.0.1",
     "fastify-zod": "^1.4.0",
-    "zod": "^3.25.75"
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
