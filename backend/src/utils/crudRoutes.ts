@@ -29,6 +29,7 @@ const crudRoutes: FastifyPluginAsync<CrudRoutesOptions> = async ( server: Fastif
       querystring: { $ref: `${entityName}Query` },
       response: {
         200: { $ref: `${entityName}ResponseArray` },
+        404: { $ref: `NotFound` },
       },
       summary: `Get all or filtered ${basePath}`,
     },

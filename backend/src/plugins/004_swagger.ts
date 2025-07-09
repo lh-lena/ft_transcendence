@@ -1,31 +1,34 @@
+import fp from 'fastify-plugin';
 import { FastifyInstance } from 'fastify';
-import { ServerContext } from '../context';
 
-import swagger from '@fastify/swagger'
-import swaggerUi from '@fastify/swagger-ui'
+import swagger from '@fastify/swagger';
+import swaggerUi from '@fastify/swagger-ui';
 
+const openAiPlugin = async ( server: FastifyInstance ) => {
 
-export function openAiDocs( server: FastifyInstance ) {
-  return async function( server: FastifyInstance ) {
-
-	await context.server.register(swagger, {
+	await server.register(swagger, {
 	  openapi: {
 	    info: {
-	      title: 'API Documentation',
+	      title: 'transendence API Docs',
 	      description: 'Auto-generated OpenAPI docs for Transendence.',
 	      version: '1.0.0',
 	    },
 	  },
 	});
 	
-	await context.server.register(swaggerUi, {
-	  routePrefix: '/docs',
+	await server.register(swaggerUi, {
+	  routePrefix: 'api/docs',
 	  uiConfig: {
 	    docExpansion: 'list',
 	    deepLinking: false,
 	    },
-	  });
+    staticCSP: true,
+    transformSpecification: ( swaggerObject, request, reply ) => {
+      return swaggerObject;
+			},
+      transformSpecificationClone: true,
+  });
 
-    //await context.server.register( fastifyZod );
-  }
 }
+
+export default fp( openAiPlugin );
