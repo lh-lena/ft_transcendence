@@ -65,7 +65,17 @@ jobs:
       - name: Verify single command startup
         run: |
           docker-compose up -d
+          for i in {i..60}; do
+            curl -f  http://localhost:3000 && break || sleep 2
+          done
+          for i in {i..60}; do
+            curl -f http://localhost:8080/api/health && break || sleep 2
+
           sleep 30  # Wait for services to start
+          done
+          for i in {i..60}; do
+            curl -f http://localhost:8082/api/auth/health && break || sleep 2
+          done
           
       - name: Health checks
         run: |
@@ -74,7 +84,7 @@ jobs:
           # Backend
           curl -f http://localhost:8080/api/health || echo "Backend health check endpoint needed"
           # Auth
-          curl -f http://localhost:8082/health || echo "Auth health check endpoint needed"
+          curl -f http://localhost:8082/api/auth/health || echo "Auth health check endpoint needed"
           # WebSocket test would go here
           
       - name: Check HTTPS/WSS configuration
