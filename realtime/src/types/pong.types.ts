@@ -1,3 +1,5 @@
+import { ErrorCode } from './error.types';
+
 export interface WsClientMessage {
     'game_start': { gameId: string };
     'game_leave': { gameId: string };
@@ -9,14 +11,14 @@ export interface WsClientMessage {
 }
 
 export interface WsServerBroadcast {
-    'game_started': { gameId: string; status: GameSessionStatus; };
-    'game_state_sync': GameState;
+    'connected': { userId: number };
+    'game_update': GameState;
     'game_ended': GameResult;
-    'game_pause': { gameId: string };
-    'game_resume': { gameId: string };
+    'game_pause': { gameId: string, reason: string };
+    'countdown_update': { gameId: string, countdown: number, message: string };
     'chat_message': ChatMessage;
     'notification': NotificationPayload;
-    'error': {error: string};
+    'error': { message: string, code: ErrorCode };
 }
 
 export interface incomingMessage<T extends keyof WsClientMessage> {
@@ -24,17 +26,22 @@ export interface incomingMessage<T extends keyof WsClientMessage> {
     payload: WsClientMessage[T];
 }
 
-export const GAME_CONFIG = {
-    BOARD_WIDTH: 800,
-    BOARD_HEIGHT: 400,
+export const PONG_CONFIG = {
+    BOARD_WIDTH: 900,
+    BOARD_HEIGHT: 550,
     PADDLE_WIDTH: 10,
+    PADDLE_HALF_WIDTH: 5,
     PADDLE_HEIGHT: 80,
-    BALL_RADIUS: 8,
-    PADDLE_SPEED: 5,
-    INITIAL_BALL_SPEED_X: 5,
-    INITIAL_BALL_SPEED_Y: 3,
+    PADDLE_HALF_HEIGHT: 40,
+    PADDLE_OFFSET: 5,
+    PADDLE_SPEED: 10,
+    BALL_SIZE: 10,
+    INITIAL_BALL_VELOCITY: 1.2,
+    INITIAL_BALL_SPEED_X: 4,
+    INITIAL_BALL_SPEED_Y: 4,
     FPS: 60,
-    MAX_SCORE: 11
+    MAX_SCORE: 11,
+    COUNTDOWN: 3
 };
 
 export enum GameMode {
@@ -49,6 +56,7 @@ export enum GameSessionStatus {
     PAUSED = 'paused',      // temporarily paused
     FINISHED = 'finished',  // game finished
     CANCELLED = 'cancelled',// game aborted
+    CANCELLED_SERVER_ERROR = 'cancelled_server_error',// game aborted by server due to error or shutdown
 }
 
 export enum AIDifficulty {
@@ -64,21 +72,40 @@ export enum ConnectionState {
 
 export interface GameState {
     gameId: string;
-    ball: { x: number; y: number; dx: number; dy: number; radius: number; };
-    paddle1: { y: number; height: number; width: number; score: number; };
-    paddle2: { y: number; height: number; width: number; score: number; };
+    ball: { x: number; y: number; dx: number; dy: number; v: number; };
+    paddleA: {
+        width: number;
+        height: number;
+        x: number;
+        y: number;
+        score: number;
+        speed: number;
+        direction: Direction;
+    };
+    paddleB: {
+        width: number;
+        height: number;
+        x: number;
+        y: number;
+        score: number;
+        speed: number;
+        direction: Direction;
+    };
+    activePaddle: string;
     status: GameSessionStatus;
-    maxScore: number; // do i need this here?
-    aiDifficulty?: AIDifficulty; // do i need this here?
+    countdown: number;
+    sequence: number;
 }
 
-export enum PlayerInputType {
-    MOVE_UP = 'up',
-    MOVE_DOWN = 'down',
+export enum Direction {
+    UP = -1,
+    DOWN = 1,
+    STOP = 0
 }
 
 export interface PlayerInput {
-    inputType: PlayerInputType;
+    direction: Direction;
+    sequence: number;
 }
 
 export interface ChatMessage {
@@ -90,8 +117,9 @@ export interface ChatMessage {
 }
 
 export interface NotificationPayload {
+    type: 'info' | 'warn';
     tournamentId?: number;
-    gameId?: string;
+    gameId: string;
     message: string;
     timestamp: number;
 }
@@ -117,7 +145,7 @@ export interface GameResult {
     loserId: number | null;
     player1Username: string | null;
     player2Username: string | null;
-    status: GameSessionStatus.FINISHED | GameSessionStatus.CANCELLED;
+    status: GameSessionStatus.FINISHED | GameSessionStatus.CANCELLED | GameSessionStatus.CANCELLED_SERVER_ERROR;
     startedAt: string;
     finishedAt: string;
 }
@@ -125,13 +153,15 @@ export interface GameResult {
 export interface GameInstance {
     gameId: string;
     gameMode: GameMode;
-    players: Array<User>,
+    players: Array<User>;
+    connectedPlayer1: boolean;
+    connectedPlayer2: boolean;
     gameState: GameState;
     status: GameSessionStatus;
     gameLoopInterval?: NodeJS.Timeout;
     lastUpdate: number;
-    startedAt: string;
+    startedAt: string | null;
     finishedAt: string | null;
+    frameCount?: number
+    lastCountdownTime?: number;
 }
-
-

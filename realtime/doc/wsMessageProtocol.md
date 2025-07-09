@@ -6,7 +6,7 @@ The real-time communication protocol for the ft_transcendence Pong game. All mes
 
 ## Connection
 
-**The Single Real-time Entry Point:** `WS_SERVER_URL`=`wss://localhost:8081/ws`
+**The Single Real-time Entry Point:** `WS_SERVER_URL`=`wss://localhost:8081`
 
 ## Message Structure
 
@@ -31,45 +31,58 @@ All messages follow this base structure:
 
   #### Representation of events and payloads:
   ```markdown
-    export interface WsClientMessage {
-        'game_start': { gameId: string };
-        'game_leave': { gameId: string };
-        'game_update': PlayerInput;
-        'game_pause': { gameId: string };
-        'game_resume': { gameId: string };
-        'chat_message': ChatMessage;
-        'notification': NotificationPayload;
+    interface WsClientMessage {
+      'game_start': { gameId: string };
+      'game_leave': { gameId: string };
+      'game_update': PlayerInput;
+      'game_pause': { gameId: string };
+      'game_resume': { gameId: string };
+      'chat_message': ChatMessage;
+      'notification': NotificationPayload;
     }
 
-    export interface WsServerBroadcast {
-        'game_started': { gameId: string; status: GameSessionStatus; };
-        'game_state_sync': GameState;
-        'game_ended': GameResult;
-        'game_pause': { gameId: string };
-        'game_resume': { gameId: string };
-        'chat_message': ChatMessage;
-        'notification': NotificationPayload;
-        'error': {error: string};
+    interface WsServerBroadcast {
+      'connected': { userId: number };
+      'game_update': GameState;
+      'game_ended': GameResult;
+      'game_pause': { gameId: string, reason: string };
+      'countdown_update': { gameId: string, countdown: number, message: string };
+      'chat_message': ChatMessage;
+      'notification': NotificationPayload;
+      'error': { message: string, code: ErrorCode };
     }
   ```
 
   #### Related types:
   ```markdown
-    export enum PlayerInputType {
-        MOVE_UP = 'up',
-        MOVE_DOWN = 'down',
+    export enum Direction {
+      UP = -1,
+      DOWN = 1,
+      STOP = 0
     }
 
     export interface GameState {
       gameId: string;
-      ball: { x: number; y: number; dx: number; dy: number; radius: number; };
-      paddle1: { y: number; height: number; width: number; score: number; };
-      paddle2: { y: number; height: number; width: number; score: number; };
+      ball: { x: number; y: number; dx: number; dy: number; v: number; };
+      paddleA: { width: number; height: number; x: number; y: number; score: number; speed: number; direction: Direction; };
+      paddleB: { width: number; height: number; x: number; y: number; score: number; speed: number; direction: Direction; };
+      activePaddle?: string;
       status: GameSessionStatus;
+      countdown: number;
+      sequence: number; // default 0
     }
 
+    export enum GameSessionStatus {
+    PENDING = 'pending',    // Created but not yet started on ws-server
+    ACTIVE = 'active',      // running on ws-server
+    PAUSED = 'paused',      // temporarily paused
+    FINISHED = 'finished',  // game finished
+    CANCELLED = 'cancelled',// game aborted
+}
+
     export interface PlayerInput {
-        direction: PlayerInputType;
+        direction: Direction;
+        sequence: number; // default 0
     }
 
     export interface ChatMessage {
@@ -81,26 +94,47 @@ All messages follow this base structure:
     }
 
     export interface NotificationPayload {
+        type: 'info' | 'warn';
         tournamentId?: number;
-        gameId?: string;
+        gameId: string;
         message: string;
         timestamp: number;
     }
   ```
 
   ### Constant related to Pong game
-  export const GAME_CONFIG = {
+  ```
+  export const PONG_CONFIG = {
     BOARD_WIDTH: 800,
     BOARD_HEIGHT: 400,
     PADDLE_WIDTH: 10,
+    PADDLE_HALF_WIDTH: 5,
     PADDLE_HEIGHT: 80,
+    PADDLE_HALF_HEIGHT: 40,
     BALL_RADIUS: 8,
     PADDLE_SPEED: 5,
     INITIAL_BALL_SPEED_X: 5,
     INITIAL_BALL_SPEED_Y: 3,
     FPS: 60,
-    MAX_SCORE: 11
-};
+    MAX_SCORE: 11,
+    COUNTDOWN: 3
+  };
+
+  export enum ErrorCode {
+  UNAUTHORIZED = 'UNAUTHORIZED',
+  CONNECTION_TIMEOUT = 'CONNECTION_TIMEOUT',
+  INVALID_SESSION = 'INVALID_SESSION',
+  GAME_CREATION_FAILED = 'GAME_CREATION_FAILED',
+  GAME_NOT_FOUND = 'GAME_NOT_FOUND',
+  GAME_FULL = 'GAME_FULL',
+  GAME_ALREADY_STARTED = 'GAME_ALREADY_STARTED',
+  INVALID_GAME_ACTION = 'INVALID_GAME_ACTION',
+  INVALID_MESSAGE = 'INVALID_MESSAGE',
+  UNKNOWN_EVENT = 'UNKNOWN_EVENT',
+  VALIDATION_FAILED = 'VALIDATION_FAILED',
+  INTERNAL_ERROR = 'INTERNAL_ERROR'
+}
+  ```
 
 ### `TODO`: define API endpoints
 
@@ -132,16 +166,18 @@ All messages follow this base structure:
 #### on `game_ended`: update state sending GameResult -> POST {BACKEND_URL}/api/games/result
 ##### Expected request:
   ```markdown
-    export interface GameResult {
-        gameId: string;
-        scorePlayer1: number;
-        scorePlayer2: number;
-        winnerId: number | null;
-        loserId: number | null;
-        status: GameSessionStatus.FINISHED | GameSessionStatus.CANCELLED;
-        startedAt: string;
-        finishedAt: string;
-    }
+    interface GameResult {
+    gameId: string;
+    scorePlayer1: number;
+    scorePlayer2: number;
+    winnerId: number | null;
+    loserId: number | null;
+    player1Username: string | null;
+    player2Username: string | null;
+    status: GameSessionStatus.FINISHED | GameSessionStatus.CANCELLED | GameSessionStatus.CANCELLED_SERVER_ERROR;
+    startedAt: string;
+    finishedAt: string;
+}
   ```
 
 #### on `chat_message`
