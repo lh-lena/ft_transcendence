@@ -9,12 +9,12 @@ export async function buildServer() {
 	//build fastify instance
 	const server = Fastify({ logger: true }).withTypeProvider<ZodTypeProvider>();
 
-  server.addHook('onRoute', (routeOptions) => {
-  console.log('📦 Route registered:', routeOptions.method, routeOptions.url);
-  if (routeOptions.schema) {
-    console.log('🧪 Route schema:', JSON.stringify(routeOptions.schema, null, 2));
-  }
-});
+//  server.addHook('onRoute', (routeOptions) => {
+//   console.log('📦 Route registered:', routeOptions.method, routeOptions.url);
+//   if (routeOptions.schema) {
+//     console.log('🧪 Route schema:', JSON.stringify(routeOptions.schema, null, 2));
+//   }
+//  });
 
 
   server.register( AutoLoad, {
@@ -25,7 +25,6 @@ export async function buildServer() {
     dir: Path.join(__dirname, 'routes'),
   } )
 
-  console.log('Server is starting...');
   await server.ready();
 
 			

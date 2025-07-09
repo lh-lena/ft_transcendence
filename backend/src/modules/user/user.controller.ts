@@ -30,8 +30,7 @@ export const userController = {
     id: userIdInput,
     input: userUpdateInput,
   ) : Promise< userResponseType > {
-  	const upUser = await userService.updateuser( context, id, input );
-    return upUser;
+  	return await userService.updateuser( context, id, input );
   },
 
   //controller for user get All or by Id

@@ -29,8 +29,7 @@ export function insert(
 	context: ServerContext,
 	data: CreateuserInput
 ) {
-
-       return userModel.insert( context, data );
+  return userModel.insert( context, data );
 }
 
 export function patch( 

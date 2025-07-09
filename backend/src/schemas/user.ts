@@ -6,7 +6,7 @@ const userIn = {
 	email: z.string().email(),
 	username: z.string(),
 	password_hash: z.string(),
-	is_2fa_enabled: z.boolean(),
+	is_2fa_enabled: z.string(),
 	twofa_secret: z.string().nullable().optional(),
 }
 
@@ -16,14 +16,15 @@ const userGen = {
   updated_at: z.string(),
 }
 
-
-const userResponseSchema = z.object( { 
+const userResponseBase = z.object( { 
   ...userGen,
   ...userIn,
-} ).meta( { $id: "userResponse" } )
+} )
+
+const userResponseSchema = userResponseBase.meta( { $id: "userResponse" } )
 
 const userResponseSchemaArray = z.array(
-  userResponseSchema
+  userResponseBase
 ).meta( { $id: "userResponseArray" } )
 
 const userCreateSchema = z.object( {
@@ -32,7 +33,7 @@ const userCreateSchema = z.object( {
 
 const userUpdateSchema = z.object( {
   ...userIn,
-} ).meta( { $id: "userUpdate" } )
+} ).partial().meta( { $id: "userUpdate" } )
 
 const userDeleteSchema = z.object( { 
   message: z.string() 

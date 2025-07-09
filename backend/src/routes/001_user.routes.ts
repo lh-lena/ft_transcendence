@@ -1,7 +1,7 @@
 import { FastifyInstance } from 'fastify';
 import fp from 'fastify-plugin';
 
-import { createContext } from '../utils/contextFactory';
+import { contextFactory } from '../utils/contextFactory';
 import crudRoutes from '../utils/crudRoutes';
 
 import { userRefSchemas } from '../modules/user/user.schema';
@@ -15,9 +15,9 @@ const userRoutes = async ( server: FastifyInstance ) => {
     basePath: '/api/user',
     entityName: 'user',
     controller: userController,
-    contextFactory: createContext( server.db, server.context ),
+    contextFactory: contextFactory,
   });
-  console.log( 'User routes registered' );
+
 }
 
 export default fp( userRoutes );

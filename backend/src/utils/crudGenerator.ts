@@ -57,7 +57,12 @@ export function createCrud( tableName: string, context: Context ) {
 			const stmt = context.db.prepare( sql );
 
 			try {
-				return stmt.run( ...Object.values( data ), id );
+				stmt.run( ...Object.values( data ), id );
+
+				const sqlId = `SELECT * FROM ${tableName} WHERE id = ?`;
+				const getStmt = context.db.prepare( sqlId );
+
+				return getStmt.get( id );
 			} catch ( error ) {
 				console.error( `Error updating ${tableName} with id ${id}:`, error );
 				throw error;

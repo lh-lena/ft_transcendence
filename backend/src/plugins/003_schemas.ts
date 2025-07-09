@@ -5,13 +5,13 @@ import { userRefSchemas } from '../modules/user/user.schema';
 import { responseRefSchemas } from '../modules/response/response.schema';
 
 const schemaPlugin = async ( server: FastifyInstance ) => {
+
   const schemaList = [
     ...Object.values( userRefSchemas ),
     ...Object.values( responseRefSchemas ),
   ]
 
   for( const schema of schemaList ) {
-    console.log( `Registering schema: ${schema.$id}` );
       server.addSchema( schema );
   }
 }

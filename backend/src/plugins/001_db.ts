@@ -10,7 +10,7 @@ const dbPlugin = async ( server: FastifyInstance ) => {
 	//start database
 	const dbFile = server.config.DB_PATH;
   
-	const db = new Database( dbFile, { verbose: console.log } );
+	const db = new Database( dbFile );
 
 	//enable foreign keys
 	db.pragma( 'foreign_keys = ON' );

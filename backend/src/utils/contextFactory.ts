@@ -8,7 +8,7 @@ export interface ServerContext {
   logger: FastifyBaseLogger;
 };
 
-export function createContext( db: Database, config: Config ) : ServerContext {
+export function contextFactory( db: Database, config: Config ) : ServerContext {
 	return {
 		db,
 		config,
