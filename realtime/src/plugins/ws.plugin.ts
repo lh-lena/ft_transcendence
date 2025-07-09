@@ -84,6 +84,7 @@ function setupGracefulShutdown(app: FastifyInstance, connService: any): void {
     app.log.info(` ${signal} received - initiating graceful shutdown...`);
 
     try {
+      app.gameSessionService.shutdown();
       await connService.shutdown();
       await app.close();
       app.log.info('HTTP server closed');
