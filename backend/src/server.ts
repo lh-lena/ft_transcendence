@@ -1,7 +1,8 @@
 import Fastify from 'fastify';
-import cors from '@fastify/cors'
 import AutoLoad from '@fastify/autoload';
+
 import Path from 'path';
+import { errorHandler } from './utils/errorHandler';
 
 //build server
 export async function buildServer() {
@@ -25,9 +26,9 @@ export async function buildServer() {
     dir: Path.join(__dirname, 'routes'),
   } )
 
-  await server.ready();
+  server.setErrorHandler( errorHandler );			
 
-			
+  await server.ready();
 
 	return server;
 }

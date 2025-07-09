@@ -37,10 +37,6 @@ const crudRoutes: FastifyPluginAsync<CrudRoutesOptions> = async ( server: Fastif
       const context = contextFactory( server.db, server.config );
       const user = await controller.getAllorFiltered( context, request.query );
 
-      if( !user || user.length === 0 ) {
-        return reply.code( 404 ).send( { message: `${entityName} not found` } );
-      }
-
       return reply.code( 200 ).send( user );
     }
   });
@@ -57,10 +53,6 @@ const crudRoutes: FastifyPluginAsync<CrudRoutesOptions> = async ( server: Fastif
     handler: async ( request, reply ) => {
       const context = contextFactory( server.db, server.config );
       const user = await controller.getById( context, request.params.id );
-
-      if( !user || user.length === 0 ) {
-        return reply.code( 404 ).send( { message: `${entityName} not found` } );
-      }
 
       return reply.code( 200 ).send( user );
     }
@@ -98,10 +90,6 @@ const crudRoutes: FastifyPluginAsync<CrudRoutesOptions> = async ( server: Fastif
         const context = contextFactory( server.db, server.config );
         const user = await controller.update( context, request.params.id, request.body );
 
-      if( !user || user.length === 0 ) {
-        return reply.code( 404 ).send( { message: `${entityName} not found` } );
-      }
-
       return reply.code( 200 ).send( user );
       }
   });
@@ -118,10 +106,6 @@ const crudRoutes: FastifyPluginAsync<CrudRoutesOptions> = async ( server: Fastif
     handler: async ( request, reply ) => {
       const context = contextFactory( server.db, server.config );
       const user = await controller.remove( context, request.params.id );
-
-      if( !user || user.length === 0 ) {
-        return reply.code( 404 ).send( { message: `${entityName} not found` } );
-      }
 
       return reply.code( 200 ).send( user );
     }

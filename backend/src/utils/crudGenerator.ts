@@ -40,21 +40,13 @@ export function createCrud( tableName: string, context: Context ) {
 			const stmt = context.db.prepare( sql );
 			let result;
 
-			try {
+			result = stmt.run( ...Object.values( data ) );
 
-				result = stmt.run( ...Object.values( data ) );
+			const sqlId = `SELECT * FROM ${tableName} WHERE id = ?`;
+			const getStmt = context.db.prepare( sqlId );
 
-				const sqlId = `SELECT * FROM ${tableName} WHERE id = ?`;
-				const getStmt = context.db.prepare( sqlId );
+			return getStmt.get( result.lastInsertRowid );
 
-				return getStmt.get( result.lastInsertRowid );
-
-			} catch ( error ) {
-
-				console.error( `Error inserting into ${tableName}:`, error );
-				throw error;
-
-			}
 		},
 
 		patch: ( context: Context, id: string | number, data: Record<string, any> ) => {
@@ -66,21 +58,13 @@ export function createCrud( tableName: string, context: Context ) {
 
 			const stmt = context.db.prepare( sql );
 
-			try {
+			stmt.run( ...Object.values( data ), id );
 
-				stmt.run( ...Object.values( data ), id );
+			const sqlId = `SELECT * FROM ${tableName} WHERE id = ?`;
+			const getStmt = context.db.prepare( sqlId );
 
-				const sqlId = `SELECT * FROM ${tableName} WHERE id = ?`;
-				const getStmt = context.db.prepare( sqlId );
-
-				return getStmt.get( id );
-
-			} catch ( error ) {
-
-				console.error( `Error updating ${tableName} with id ${id}:`, error );
-				throw error;
-
-			}
+			return getStmt.get( id );
+			
 		},
 
 		remove: ( context: Context, id: string | number ) => {

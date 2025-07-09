@@ -1,16 +1,28 @@
 import { z } from "zod/v4";
 
 const internalError = z.object({
+  statusCode: z.number().default(500),
+  code: z.string().default("INTERNAL_ERROR"),
   message: z.string().default("Internal server error"),
 }).meta({ $id: "InternalError" })
 
 const notFoundSchema = z.object({
+  statusCode: z.number().default(404),
+  code: z.string().default("NOT_FOUND"),
   message: z.string().default("Resource not found"),
 }).meta({ $id: "NotFound" })
 
 const badRequestSchema = z.object({
+  statusCode: z.number().default(400),
+  code: z.string().default("BAD_REQUEST"),
   message: z.string().default("Bad request"),
 }).meta({ $id: "BadRequest" })
+
+const validationSchema = z.object({
+  statusCode: z.number().default(422),
+  code: z.string().default("VALIDATION_ERROR"),
+  message: z.string().default("Validation error"),
+}).meta({ $id: "ValidationError" })
 
 const unauthorizedSchema = z.object({
   message: z.string().default("Unauthorized"),
@@ -38,6 +50,7 @@ export const responseSchemas =  [
   internalError,
   notFoundSchema,
   badRequestSchema,
+  validationSchema,
   unauthorizedSchema,
   forbiddenSchema,
   createdSchema,
