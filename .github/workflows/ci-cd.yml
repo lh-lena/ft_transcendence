@@ -54,6 +54,10 @@ jobs:
     needs: lint-format
     steps:
       - uses: actions/checkout@v3
+      - name: Install Docker Compose
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y docker-compose
       
       - name: Build all services
         run: docker-compose build
@@ -137,6 +141,10 @@ jobs:
     if: github.event_name == 'pull_request'
     steps:
       - uses: actions/checkout@v3
+      - name: Install Docker Compose
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y docker-compose
       
       - name: Start services with docker-compose
         run: |
