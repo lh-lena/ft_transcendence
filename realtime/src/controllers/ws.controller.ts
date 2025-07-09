@@ -53,7 +53,6 @@ export const handleWSConnection = (
       if (connInfo) {
         connInfo.lastActivity = Date.now();
       }
-      app.log.debug(`[event-handling] recieved ${event} on connection ${userId}`);
       switch (event) {
         case 'game_create':
           await app.gameService.handleCreateGame(payload.gameId, user);
@@ -68,11 +67,15 @@ export const handleWSConnection = (
           break;
 
         case 'game_pause':
-          app.gameStateService.pauseGame(payload.gameId, `User ${user.userAlias} requested pause`);
+          app.gameStateService.pauseGame(user.userId, payload.gameId, `User ${user.userAlias} requested pause`);
           break;
 
         case 'game_resume':
-          app.gameStateService.resumeGame(payload.gameId);
+          app.gameStateService.resumeGame(user.userId, payload.gameId);
+          break;
+
+        case 'game_leave':
+          app.gameService.handleGameLeave(payload.gameId, userId);
           break;
 
         default:

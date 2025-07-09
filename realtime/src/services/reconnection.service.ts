@@ -1,6 +1,6 @@
 import { FastifyInstance, WSConnection } from 'fastify';
 import { DisconnectInfo } from '../types/network.types.js';
-import { GAME_CONFIG, GameSessionStatus, NotificationPayload } from '../types/pong.types.js';
+import { PONG_CONFIG, GameSessionStatus, NotificationPayload } from '../types/pong.types.js';
 
 export default function reconnectionService(app: FastifyInstance) {
   const disconnectedPlayers: Map<number, DisconnectInfo> = new Map();
@@ -36,6 +36,7 @@ export default function reconnectionService(app: FastifyInstance) {
 
     const event = 'notification';
     const payload: NotificationPayload = {
+      type: 'info',
       gameId,
       message: `${username} disconnected. Waiting for reconnection...`,
       timestamp: Date.now()
@@ -82,6 +83,7 @@ export default function reconnectionService(app: FastifyInstance) {
     cleanup(userId);
 
     const msg : NotificationPayload = {
+      type: 'info',
       gameId,
       message: `Player ${newConn.userAlias} reconnected`,
       timestamp: Date.now()
@@ -89,7 +91,7 @@ export default function reconnectionService(app: FastifyInstance) {
     app.wsService.broadcastToGame(gameId, {event: "notification", payload: msg}, [userId]);
 
     if (app.gameService.canStartGame(gameId) && gameSession.status === GameSessionStatus.PAUSED ) {
-        app.gameStateService.resumeGame(gameId);
+        app.gameStateService.resumeGame(userId, gameId);
     } else {
       app.log.debug(`[reconnection-service] Game ${gameId} cannot be resumed. Players connected: ${app.gameService.isPlayersConnected(gameId)})`);
     }
@@ -102,7 +104,7 @@ export default function reconnectionService(app: FastifyInstance) {
     const info = disconnectedPlayers.get(userId);
     if (!info || !info.gameId) return;
 
-    app.log.info(`[reconnection-service] User ${userId} (${info.username}) failed to reconnect within timeout period`);
+    app.log.info(`[reconnection-service] User ${userId} ${info.username} failed to reconnect within timeout period`);
     app.log.info(`[reconnection-service] Ending game ${info.gameId} due to timeout`);
 
     const game = app.gameSessionService.getGameSession(info.gameId);
@@ -110,6 +112,7 @@ export default function reconnectionService(app: FastifyInstance) {
       app.gameStateService.endGame(info.gameId, GameSessionStatus.CANCELLED,`Player ${info.username} failed to reconnect`);
     }
     const payload: NotificationPayload = {
+      type: 'warn',
       gameId: info.gameId,
       message: `Game ended: ${info.username} failed to reconnect`,
       timestamp: Date.now()

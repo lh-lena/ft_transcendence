@@ -146,6 +146,7 @@ export interface GameResult {
     player1Username: string | null;
     player2Username: string | null;
     status: GameSessionStatus.FINISHED | GameSessionStatus.CANCELLED | GameSessionStatus.CANCELLED_SERVER_ERROR;
+    mode: GameMode;
     startedAt: string;
     finishedAt: string;
 }
