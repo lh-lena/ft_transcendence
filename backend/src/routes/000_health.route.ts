@@ -3,7 +3,7 @@ import fp from 'fastify-plugin';
 
 const healthRoute = async ( server: FastifyInstance ) => {
 
-		server.get( '/health', async ( request, reply ) => {
+		server.get( '/api/health', async ( request, reply ) => {
 
 			let dbStatus = 'unknown';
 
