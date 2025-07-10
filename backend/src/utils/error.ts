@@ -23,7 +23,7 @@ export class ValidationError extends AppError {
 }
 
 export class ConflictError extends AppError {
-	constructor( message = 'Conflict', code = 'CONFLICT', detail = 'resourece already used' ) {
+	constructor( message = 'Conflict', code = 'CONFLICT', detail = 'resource already used' ) {
 		super( message, 409, 'CONFLICT' );
 	}
 }
