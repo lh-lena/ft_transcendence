@@ -1,4 +1,3 @@
-import server from 'fastify';
 import { ServerContext } from '../../context';
 import * as userModel from './user.model';
 import { AppError, NotFoundError, ConflictError } from '../../utils/error';

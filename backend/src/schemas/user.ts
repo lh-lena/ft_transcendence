@@ -1,4 +1,5 @@
 import { z }from 'zod/v4';
+import * as basics from './basics.js';
 
 //userchema
 
@@ -6,7 +7,7 @@ const userIn = {
 	email: z.string().email(),
 	username: z.string(),
 	password_hash: z.string(),
-	is_2fa_enabled: z.string(),
+	is_2fa_enabled: basics.booleanString, 
 	twofa_secret: z.string().nullable().optional(),
 }
 
@@ -40,7 +41,7 @@ const userDeleteSchema = z.object( {
 } ).meta( { $id: "userDelete" } )
 
 const userIdSchema = z.object( {
-  id: z.string(),
+  id: z.number(),
 } ).meta( { $id: "userId" } )
 
 const userQuerySchema = z.object( {
