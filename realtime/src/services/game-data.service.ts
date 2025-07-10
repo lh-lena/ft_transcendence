@@ -1,7 +1,6 @@
 import { FastifyInstance } from 'fastify';
-import { ErrorCode } from '../types/error.types.js';
+import { ErrorCode, ServiceError } from '../types/error.types.js';
 import { Result, ok, err } from 'neverthrow';
-import { ServiceError } from '../types/result.types.js';
 import { StartGame, GameResult, StartGameSchema } from '../schemas/game.schema.js';
 
 export default function createGameDataService(app: FastifyInstance) {
