@@ -8,6 +8,9 @@ export function errorHandler(
   request: FastifyRequest,
   reply: FastifyReply
 ) {
+
+  console.log( `Error occurred: ${error.message}, ${error.statusCode }` );
+
   if (error instanceof AppError) {
     return reply.code(error.statusCode).send({
       error: error.code,

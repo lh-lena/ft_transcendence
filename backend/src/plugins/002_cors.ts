@@ -13,16 +13,13 @@ const corsPlugin = async ( server: FastifyInstance ) => {
 		server.config.ALLOWED_METHODS.split(',').map(method => method.trim()).join(',') 
 			: [];
 
-			await server.register(cors, { 
-				origin: (origin , cb) => {
-					if(!origin) return cb(null, true);
-					if(allowedOrigins.includes(origin)) cb(null, true);
-					//TODO:: add logging of cors violations??
-					cb(new Error("Not allowed with CORS"), false);
-				},
-				methods: allowedMethods,
-				credentials: true,
-			});
+  const corsOptions = {
+    origin: allowedOrigins,
+    methods: allowedMethods,
+    credentials: true,
+  };
+
+  await server.register( cors, corsOptions );
 
 }
 

@@ -2,6 +2,8 @@ import { FastifyRequest, FastifyReply } from 'fastify';
 import { ServerContext } from '../../context';
 import Database from 'better-sqlite3';
 
+import * as matchService from './match.service.ts';
+
 import type {
   matchCreateInput,
   matchUpdateInput,
@@ -49,7 +51,7 @@ export const matchController = {
   	context: ServerContext,
     id: matchIdInput,
   ) : Promise< matchResponseType | null > {
-  	return await matchService.getmatchById( context, id );
+  	return await matchService.getMatchById( context, id );
   },
   
   //delete match

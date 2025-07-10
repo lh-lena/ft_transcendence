@@ -16,7 +16,7 @@ const matchRequestBase = z.object({
   mode: gameModeBase,
   visibility: matchVisibilityBase,
   matchId: z.string().optional(),
-  ready: basics.booleanString,
+  ready: basics.booleanString.default('false'),
   time: z.number().optional(),
 });
 const matchRequestSchema = matchRequestBase.meta( { $id: 'matchRequest' } );
@@ -28,7 +28,7 @@ const matchBase = z.object({
   mode: gameModeBase,
   status: matchStatusBase,
   visibility: matchVisibilityBase,
-  createAt: z.string(),
+  createAt: z.string().optional(),
 });
 const matchSchema = matchBase.meta( { $id: 'match' } );
 const matchArraySchema = z.array(matchBase).meta( { $id: 'matchArray' } );
