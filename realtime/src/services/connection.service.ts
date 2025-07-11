@@ -28,6 +28,8 @@ export default function connectionService(app: FastifyInstance) {
       return;
     }
 
+    const { userId } = conn.user;
+
     stopHeartbeat(conn);
     const { userId } = conn.user;
     const { gameId } = conn;
