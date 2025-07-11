@@ -19,10 +19,11 @@ declare module 'fastify' {
   }
 
   type WSConnection = WebSocket & {
-    userId: number;
-    username: string;
-    userAlias: string;
-    state: import('./pong.types.js').ConnectionState;
+    user: {
+      userId: number,
+      username: string,
+      userAlias: string,
+    }
     gameId?: string | null;
     lastPing: number;
     lastPong: number;
