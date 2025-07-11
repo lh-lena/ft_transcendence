@@ -17,8 +17,40 @@ curl -X POST http://[::1]:8080/api/user \
     "username": "Janesen"
   }'
 
-curl -X PATCH http://localhost:8080/api/user/3 \
+curl -X PATCH http://localhost:8080/api/match/ready/29369 \
   -H "Content-Type: application/json" \
-  -d '{"username":"alice", "email":"alice_new@example.com"}'
+  -d '{"ready": "true"}'
+
+curl -X PATCH http://localhost:8080/api/match/ready/49612 \
+  -H "Content-Type: application/json" \
+  -d '{"ready": "true"}'
 
 curl -X DELETE http://localhost:8080/api/user/1
+
+
+curl -X 'POST' \
+  'http://[::1]:8080/api/match' \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "userId": 29369,
+  "mode": "pvp_remote",
+  "visibility": "public",
+  "matchId": "string",
+  "ready": "false",
+  "time": 0
+}'
+
+
+curl -X 'POST' \
+  'http://[::1]:8080/api/match' \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "userId": 49612,
+  "mode": "pvp_remote",
+  "visibility": "public",
+  "matchId": "string",
+  "ready": "false",
+  "time": 0
+}'

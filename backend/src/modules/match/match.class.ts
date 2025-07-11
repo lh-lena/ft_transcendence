@@ -3,65 +3,24 @@ import { v4 as uuidv4 } from 'uuid';
 import { 
   matchRequest,
   match,
+  matchResponseArrayType,
 } from '../../schemas/match';
 
 export class matchMakingClass {
 
   private multiQueue: matchRequest[] = [];
-  private activeMatches: Map< string, Match > = new Map();
+  private activeMatches: match[] = [];
 
-  registerMatch( req: matchRequest ): Match {
-
-    console.log( req );
-    if( req.mode === 'pvp_remote' ){
-      if( req.visibility === 'public' ){
-
-        //public pvp game: add user to queue
-        this.multiQueue.push( req );
-        return this.tryMultiMatch();
-
-      } else {
-
-        //private pvp game: create 
-        const matchId = uuidv4();
-        const match: Match = {
-          matchId: matchId,
-          players: [ req ],
-          mode: req.mode,
-          visibility: 'private',
-          status: 'waiting',
-          createdAt: new Date().toISOString(),
-        };
-
-        this.activeMatches.set( matchId, match );
-        return match;
-      }
-    } else {
-      
-      //Local or AI: create single playermatch
-      const matchId = uuidv4();
-      const match: Match = {
-        matchId: matchId,
-        players: [ req ],
-        mode: req.mode,
-        visibility: 'private',
-        status: 'waiting',
-        createdAt: new Date().toISOString(),
-      };
-
-      this.activeMatches.set( matchId, match );
-      return match;
-    }
-  }
 
   //check if two players are ready and match them ( can add matching logic later )
-  private tryMultiMatch(): Match {
+  private tryMultiMatch(): match {
 
+    console.log( 'tryMultiMatch', this.multiQueue );
     if( this.multiQueue.length >= 2 ) {
 
       const players = this.multiQueue.splice( 0, 2 );
       const matchId = uuidv4();
-      const match: Match = {
+      const match: match = {
         matchId: matchId,
         players: players,
         mode: 'pvp_remote',
@@ -70,7 +29,8 @@ export class matchMakingClass {
         createdAt: new Date().toISOString(),
       };
 
-      this.activeMatches.set( matchId, match );
+      console.log( 'match created', match );
+      this.activeMatches.push( match );
       return match;
     }
 
@@ -87,7 +47,7 @@ export class matchMakingClass {
   }
 
   //join match via uuid
-  joinPrivateMatch( matchId: string, req: matchRequest ): Match | undefined {
+  joinPrivateMatch( matchId: string, req: matchRequest ): match | undefined {
 
     const match = this.activeMatches.get( matchId );
 
@@ -104,53 +64,124 @@ export class matchMakingClass {
 
   }
 
-  //set user ready and update game if all are ready
-  updateStatus( userId: number, status: string ): Match | undefined {
+  findAll( ) {
+    return( this.activeMatches as matchResponseArrayType );
+  }
 
-      const matchId = this.getMatchIdByUserId( userId );
-      if( !matchId ) {
-        return undefined;
+  findFiltered( query: Record<string, any> ) {
+    return this.activeMatches.filter( item =>
+      Object.entries( query ).every( ( [key, value] ) => item[key] === value));
+  }
+
+  findById( matchId: string ): match | undefined {
+
+    const match = this.activeMatches.find(m => m.matchId === matchId );
+    return match;
+  }
+
+
+  insert( req: matchRequest ): match {
+
+    if( req.mode === 'pvp_remote' ){
+      if( req.visibility === 'public' ){
+
+        //public pvp game: add user to queue
+        this.multiQueue.push( req );
+        return this.tryMultiMatch();
+
+      } else {
+
+        //private pvp game: create 
+        const matchId = uuidv4();
+        const match: match = {
+          matchId: matchId,
+          players: [ req ],
+          mode: req.mode,
+          visibility: 'private',
+          status: 'waiting',
+          createdAt: new Date().toISOString(),
+        };
+
+        this.activeMatches.push(  match );
+        console.log( this.activeMatches );
+        return match;
       }
+    } else {
       
-      const match = this.getMatchById( matchId );
-      if( !match ){
-        return undefined;
-      }
+      //Local or AI: create single playermatch
+      const matchId = uuidv4();
+      const match: match = {
+        matchId: matchId,
+        players: [ req ],
+        mode: req.mode,
+        visibility: 'private',
+        status: 'waiting',
+        createdAt: new Date().toISOString(),
+      };
 
-      const player = match.players.find( p => p.userId === userId );
-      if( player ) {
-        player.ready = 'true';
-      }
-      if( match.players.every( p => p.ready === 'true' ) ){
-        match.status = 'ready';
-      }
-
+      console.log( 'registerMatch', match );
+      this.activeMatches.push( match );
       return match;
-  }
-
-
-  //get match id by userid
-  getMatchIdByUserId( userId: number ): string | undefined {
-    for( const match of this.activeMatches.values() ) {
-      if( match.players.some( p => p.userId === userId ) ) {
-        return match.matchId;
-      }
     }
-    return undefined;
   }
 
-  getAllorFilteredMatch( query: string ){
-    if( !query )
-      return( this.activeMatches );
-    return this.activeMatches.get( query );
+  patchMatch( matchId: string, update: Record< string, any > ): match | undefined {
+
+   const match = this.findById( matchId );
+
+   console.log( match ); 
+
+   if( !match ){
+     return undefined;
+   }
+   
+  Object.assign( match, update ); 
+
+  return match;
+      
   }
 
-  getMatchById( matchId: string ): Match | undefined {
-    return this.activeMatches.get( matchId );
+  patchUser( userId: number, update: Record< string, any > ): match | undefined {
+
+
   }
 
-  removeMatch( matchId: string ): void {
-    this.activeMatches.delete( matchId );
+  remove( matchId: string ): void {
+
+    const index  = this.activeMatches.findIndex( m => m.matchId === matchId );
+
+    if( index !== -1 )
+      this.activeMatches.splice( index, 1 );
   }
 
+  setReady( userId: number ) : match {
+
+    let match;
+
+    this.activeMatches.forEach(match => {
+      match.players.forEach(player => {
+        if( player.userId == userId ){
+          match = match;
+        }
+      });
+    });   
+
+    console.log( match );
+    //const match = this.activeMatches.find( m => m.players.some( p => p.userId === userId ) );
+
+    const player = match?.players.find( p => p.userId === userId );
+
+    console.log( player );
+    if( !match || !player ){
+      return undefined;
+    }
+
+    Object.assign( player, update ); 
+
+    if( match.players.every( p => p.status === 'ready' ) ){
+      match.status = 'ready';
+    }
+
+    return match;
+  }
 }

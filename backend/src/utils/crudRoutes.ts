@@ -35,9 +35,9 @@ const crudRoutes: FastifyPluginAsync<CrudRoutesOptions> = async ( server: Fastif
     },
     handler: async ( request, reply ) => {
       const context = contextFactory( server.db, server.config );
-      const user = await controller.getAllorFiltered( context, request.query );
+      const ret = await controller.getAllorFiltered( context, request.query );
 
-      return reply.code( 200 ).send( user );
+      return reply.code( 200 ).send( ret );
     }
   });
 
@@ -52,9 +52,9 @@ const crudRoutes: FastifyPluginAsync<CrudRoutesOptions> = async ( server: Fastif
     },
     handler: async ( request, reply ) => {
       const context = contextFactory( server.db, server.config );
-      const user = await controller.getById( context, request.params.id );
+      const ret = await controller.getById( context, request.params.id );
 
-      return reply.code( 200 ).send( user );
+      return reply.code( 200 ).send( ret );
     }
   });
 
@@ -69,9 +69,9 @@ const crudRoutes: FastifyPluginAsync<CrudRoutesOptions> = async ( server: Fastif
     },
     handler: async ( request, reply ) => {
       const context = contextFactory( server.db, server.config );
-      const user = await controller.create( context, request.body );
+      const ret = await controller.create( context, request.body );
 
-      return reply.code( 201 ).send( user );
+      return reply.code( 201 ).send( ret );
     }
   });
 
@@ -88,9 +88,9 @@ const crudRoutes: FastifyPluginAsync<CrudRoutesOptions> = async ( server: Fastif
       },
       handler: async ( request, reply ) => {
         const context = contextFactory( server.db, server.config );
-        const user = await controller.update( context, request.params.id, request.body );
+        const ret = await controller.update( context, request.params.id, request.body );
 
-      return reply.code( 200 ).send( user );
+      return reply.code( 200 ).send( ret );
       }
   });
 
@@ -105,9 +105,9 @@ const crudRoutes: FastifyPluginAsync<CrudRoutesOptions> = async ( server: Fastif
     },
     handler: async ( request, reply ) => {
       const context = contextFactory( server.db, server.config );
-      const user = await controller.remove( context, request.params.id );
+      const ret = await controller.remove( context, request.params.id );
 
-      return reply.code( 200 ).send( user );
+      return reply.code( 200 ).send( ret );
     }
   });
 };

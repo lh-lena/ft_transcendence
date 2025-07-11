@@ -40,9 +40,11 @@ const userDeleteSchema = z.object( {
   message: z.string() 
 } ).meta( { $id: "userDelete" } )
 
-const userIdSchema = z.object( {
+export const userIdBase = z.object( {
   id: z.number(),
-} ).meta( { $id: "userId" } )
+} )
+
+const userIdSchema = userIdBase.meta( { $id: "userId" } )
 
 const userQuerySchema = z.object( {
   email: z.string().email().optional(),

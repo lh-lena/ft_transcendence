@@ -43,7 +43,7 @@ const matchResponseSchemaArray = z.array(
   matchBase
 ).meta( { $id: "matchResponseArray" } );
 
-const matchIdSchema = z.object({
+export const matchIdSchema = z.object({
   id: z.string().uuid(),
 }).meta( { $id: "matchId" } );
 
@@ -52,7 +52,7 @@ const matchResponseSchema = matchBase.meta( { $id: "matchResponse" } );
 const matchCreateSchema = matchRequestBase.meta( { $id: "matchCreate" } );
 
 const matchUpdateSchema = z.object({
-  ready: basics.booleanString.optional(),
+  status: matchStatusBase,
 }).meta( { $id: "matchUpdate" } );
 
 const matchDeleteSchema = z.object({
@@ -61,6 +61,7 @@ const matchDeleteSchema = z.object({
 
 export type matchCreateInput = z.infer< typeof matchCreateSchema >;
 export type matchUpdateInput = z.infer< typeof matchUpdateSchema >;
+export type userUpdateInput = z.infer< typeof userUpdateSchema >;
 export type matchIdInput = z.infer< typeof matchIdSchema >;
 export type matchQueryInput = z.infer< typeof matchQuerySchema >;
 export type matchResponseType = z.infer< typeof matchResponseSchema >;
