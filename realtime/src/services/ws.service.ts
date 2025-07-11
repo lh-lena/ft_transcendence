@@ -1,5 +1,6 @@
 import { FastifyInstance, WSConnection } from 'fastify';
-import { GameInstance } from 'types/pong.types';
+import { GameInstance } from '../types/game.types';
+import { User } from '../schemas/user.schema';
 import WebSocket from 'ws';
 import { GameSession } from '../schemas/game.schema.js';
 
