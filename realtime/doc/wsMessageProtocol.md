@@ -49,14 +49,14 @@ All messages follow this base structure:
       'countdown_update': { gameId: string, countdown: number, message: string };
       'chat_message': ChatMessage;
       'notification': NotificationPayload;
-      'error': { message: string, code: ErrorCode };
+      'error': { message: string };
     }
   ```
 
   #### Related types:
   ```markdown
     export enum Direction {
-      UP = -1,
+      UP = -1, // -10
       DOWN = 1,
       STOP = 0
     }
@@ -68,7 +68,7 @@ All messages follow this base structure:
       paddleB: { width: number; height: number; x: number; y: number; score: number; speed: number; direction: Direction; };
       activePaddle?: string;
       status: GameSessionStatus;
-      countdown: number;
+      countdown: number; // rm
       sequence: number; // default 0
     }
 
@@ -78,6 +78,7 @@ All messages follow this base structure:
     PAUSED = 'paused',      // temporarily paused
     FINISHED = 'finished',  // game finished
     CANCELLED = 'cancelled',// game aborted
+    CANCELLED_SERVER_ERROR = 'cancelled_server_error',// game aborted by server due to error or shutdown
 }
 
     export interface PlayerInput {
@@ -105,35 +106,26 @@ All messages follow this base structure:
   ### Constant related to Pong game
   ```
   export const PONG_CONFIG = {
-    BOARD_WIDTH: 800,
-    BOARD_HEIGHT: 400,
+    BOARD_WIDTH: 900,
+    BOARD_HEIGHT: 550,
     PADDLE_WIDTH: 10,
     PADDLE_HALF_WIDTH: 5,
     PADDLE_HEIGHT: 80,
     PADDLE_HALF_HEIGHT: 40,
-    BALL_RADIUS: 8,
-    PADDLE_SPEED: 5,
-    INITIAL_BALL_SPEED_X: 5,
-    INITIAL_BALL_SPEED_Y: 3,
+    PADDLE_OFFSET: 5,
+    PADDLE_SPEED: 400,
+    BALL_SIZE: 10,
+    BALL_RESET_DELAY: 1,
+    INITIAL_BALL_VELOCITY: 1.2,
+    INCREMENT_BALL_VELOCITY: 0.1,
+    MAX_BALL_VELOCITY: 2.5,
+    INITIAL_BALL_SPEED_X: 4,
+    INITIAL_BALL_SPEED_Y: 4,
     FPS: 60,
     MAX_SCORE: 11,
     COUNTDOWN: 3
   };
 
-  export enum ErrorCode {
-  UNAUTHORIZED = 'UNAUTHORIZED',
-  CONNECTION_TIMEOUT = 'CONNECTION_TIMEOUT',
-  INVALID_SESSION = 'INVALID_SESSION',
-  GAME_CREATION_FAILED = 'GAME_CREATION_FAILED',
-  GAME_NOT_FOUND = 'GAME_NOT_FOUND',
-  GAME_FULL = 'GAME_FULL',
-  GAME_ALREADY_STARTED = 'GAME_ALREADY_STARTED',
-  INVALID_GAME_ACTION = 'INVALID_GAME_ACTION',
-  INVALID_MESSAGE = 'INVALID_MESSAGE',
-  UNKNOWN_EVENT = 'UNKNOWN_EVENT',
-  VALIDATION_FAILED = 'VALIDATION_FAILED',
-  INTERNAL_ERROR = 'INTERNAL_ERROR'
-}
   ```
 
 ### `TODO`: define API endpoints
@@ -170,9 +162,9 @@ All messages follow this base structure:
     gameId: string;
     scorePlayer1: number;
     scorePlayer2: number;
-    winnerId: number | null;
+    winnerId: number | null; // -1 for AI
     loserId: number | null;
-    player1Username: string | null;
+    player1Username: string | null; // for ai -> AI
     player2Username: string | null;
     status: GameSessionStatus.FINISHED | GameSessionStatus.CANCELLED | GameSessionStatus.CANCELLED_SERVER_ERROR;
     startedAt: string;
