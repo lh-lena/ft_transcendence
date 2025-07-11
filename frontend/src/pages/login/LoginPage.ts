@@ -23,6 +23,7 @@ export class LoginPage {
         inputEmail.type = 'email';
         inputEmail.id = 'text_email';
         inputEmail.placeholder = 'email';
+        inputEmail.style.paddingLeft = '0.5em';
         form.appendChild(inputEmail);
 
         // password input
@@ -30,6 +31,7 @@ export class LoginPage {
         inputPassword.type = 'password';
         inputPassword.id = 'text_password';
         inputPassword.placeholder = 'password';
+        inputPassword.style.paddingLeft = '0.5em';
         form.appendChild(inputPassword);
 
         const loginMenu = [

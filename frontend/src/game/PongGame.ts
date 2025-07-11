@@ -1,10 +1,12 @@
 import { Ball } from '../types';
 import { Paddle } from '../types';
+import { GameState } from '../types'
 
 export class PongGame {
     private canvas: HTMLCanvasElement;
     private ctx: CanvasRenderingContext2D;
     private onScoreUpdate: ((scoreA: number, scoreB: number) => void) | null = null;
+    private gameState: GameState;
 
     // added ! so they dont need to be initialized directly in the constructor
     private ball!: Ball;
@@ -16,13 +18,14 @@ export class PongGame {
     private animationFrameId: number | null = null;
     private windowElement: HTMLDivElement;
 
-    constructor(onScoreUpdate?: (scoreA: number, scoreB: number) => void) {
+    constructor(onScoreUpdate?: (scoreA: number, scoreB: number) => void, gameState: GameState) {
+        this.gameState = gameState;
         if (onScoreUpdate) {
             this.onScoreUpdate = onScoreUpdate;
         }
         // Create window structure
         this.windowElement = document.createElement('div');
-        this.windowElement.className = 'window';
+        this.windowElement.className = 'window border-2';
         
         // Create title bar
         const titleBar = document.createElement('div');
@@ -41,7 +44,7 @@ export class PongGame {
 
         // Create canvas element
         this.canvas = document.createElement('canvas');
-        this.canvas.style.backgroundColor = '#ffffffff'; 
+        this.canvas.style.backgroundColor = '#a9b3d6ff'; 
 
         // Add canvas to the window content area
         contentArea.appendChild(this.canvas);
@@ -61,7 +64,8 @@ export class PongGame {
             y: this.canvas.height / 2,
             dx: Math.random() < 0.5 ? 6 : -6,
             dy: Math.random() < 0.5 ? 1 : -1,
-            v: 1.2
+            v: 1.2,
+            color: 'white'
         };
 
         // init paddleA
@@ -71,7 +75,8 @@ export class PongGame {
             x: 5,
             y: this.ball.y - 25,
             score: 0,
-            speed: 10
+            speed: 10,
+            color: this.gameState.playerA.color
         };
 
         // init paddleB
@@ -81,7 +86,8 @@ export class PongGame {
             x: this.canvas.width - ( this.paddleA.x + this.paddleA.width ),
             y: this.ball.y - ( this.paddleA.height / 2 ),
             score: 0,
-            speed: 10
+            speed: 10,
+            color: this.gameState.playerB.color
         };
         this.renderGame();
         this.startGameLoop();
@@ -119,14 +125,15 @@ export class PongGame {
     }
 
     private drawBall(): void {
-        this.ctx.fillStyle = "black";
+        this.ctx.fillStyle = this.ball.color;
         this.ctx.fillRect(this.ball.x, this.ball.y, 10, 10);
     }
 
     private drawPaddles(): void {
-        this.ctx.fillStyle = "black";
+        this.ctx.fillStyle = this.paddleA.color;
         // draw paddle 1
         this.ctx.fillRect(this.paddleA.x, this.paddleA.y, this.paddleA.width, this.paddleA.height);
+        this.ctx.fillStyle = this.paddleB.color;
         // draw paddle 2
         this.ctx.fillRect(this.paddleB.x, this.paddleB.y, this.paddleB.width, this.paddleB.height);
     }
@@ -162,8 +169,8 @@ export class PongGame {
             this.paddleB.y += this.paddleB.speed;
         }
 
-        this.paddleA.y = Math.max(0, Math.min(this.paddleA.y, (this.canvas.height - this.paddleA.height - 5)));
-        this.paddleB.y = Math.max(0, Math.min(this.paddleB.y, (this.canvas.height - this.paddleB.height - 5)));
+        this.paddleA.y = Math.max(5, Math.min(this.paddleA.y, (this.canvas.height - this.paddleA.height - 5)));
+        this.paddleB.y = Math.max(5, Math.min(this.paddleB.y, (this.canvas.height - this.paddleB.height - 5)));
 
         // ball movement
         this.ball.x += this.ball.v * this.ball.dx;

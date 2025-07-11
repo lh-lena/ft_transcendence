@@ -143,10 +143,10 @@ h2 {
 }
 .title-bar {
     align-items: center;
-    background: linear-gradient(#000 50%, transparent 0);
     background-clip: content-box;
     background-size: 6.6666666667% 13.3333333333%;
     display: flex;
+    background-color: #dcdcdcff;
     flex: none;
     height: 1.5rem;
     margin: 0.1rem 0;

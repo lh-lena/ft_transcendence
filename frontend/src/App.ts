@@ -1,14 +1,14 @@
 import { Router } from './router/Router';
 import { HomePage } from './pages/home'
 import { ProfilePage } from './pages/profile'
-import { GamePage } from './pages/game'
+import { LocalGamePage } from './pages/localGame'
 import { LoginPage } from './pages/login'
 import { RegisterPage } from './pages/register'
 
 export class App {
     private router: Router;
     private container: HTMLElement;
-    private currentPage: HomePage | ProfilePage | GamePage | LoginPage | RegisterPage | null = null;
+    private currentPage: HomePage | ProfilePage | LocalGamePage | LoginPage | RegisterPage | null = null;
 
     constructor() {
         this.container = document.createElement('div');
@@ -58,7 +58,7 @@ export class App {
         if (this.currentPage) {
             this.currentPage.unmount();
         }
-        this.currentPage = new GamePage(this.router);
+        this.currentPage = new LocalGamePage(this.router);
         this.currentPage.mount(this.container);
     }
 

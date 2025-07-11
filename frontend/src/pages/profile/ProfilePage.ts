@@ -13,6 +13,7 @@ export class ProfilePage {
         const fingerprintContainer = document.createElement('div');
         // color is saved as primary color we can use if we like
         const color = generateProfilePrint(fingerprintContainer);
+        fingerprintContainer.className = 'animate-bounce-slow'
         this.container.appendChild(fingerprintContainer);
 
         const header = document.createElement('h1');

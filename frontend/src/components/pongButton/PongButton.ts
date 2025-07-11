@@ -17,4 +17,8 @@ export class PongButton {
     mount(parent: HTMLElement): void {
         parent.appendChild(this.element);
     }
+
+    setBounce(): void {
+        this.element.className = 'animate-bounce-slow';
+    }
 }

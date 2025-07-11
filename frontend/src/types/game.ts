@@ -11,6 +11,7 @@ export interface Ball {
     dx: number;
     dy: number;
     v: number;
+    color: string;
 }
 
 export interface Paddle {
@@ -20,11 +21,14 @@ export interface Paddle {
     height: number;
     score: number;
     speed: number;
+    color: string;
 }
 
 export interface Player {
     username: string;
     score: number;
+    color: string;
+    colorMap: string[];
 }
 
 export interface GameState {

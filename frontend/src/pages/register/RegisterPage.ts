@@ -23,6 +23,7 @@ export class RegisterPage {
         inputName.type = 'text';
         inputName.id = 'text_username';
         inputName.placeholder = 'username';
+        inputName.style.paddingLeft = '0.5em'; // Add left padding
         form.appendChild(inputName);
 
         // email input
@@ -30,6 +31,7 @@ export class RegisterPage {
         inputEmail.type = 'email';
         inputEmail.id = 'text_email';
         inputEmail.placeholder = 'email';
+        inputEmail.style.paddingLeft = '0.5em'; // Add left padding
         form.appendChild(inputEmail);
 
         // password input
@@ -37,6 +39,7 @@ export class RegisterPage {
         inputPassword.type = 'password';
         inputPassword.id = 'text_password';
         inputPassword.placeholder = 'password';
+        inputPassword.style.paddingLeft = '0.5em'; // Add left padding
         form.appendChild(inputPassword);
 
         // password input
@@ -44,6 +47,7 @@ export class RegisterPage {
         inputPasswordConfirm.type = 'password';
         inputPasswordConfirm.id = 'text_password_confirm';
         inputPasswordConfirm.placeholder = 'confirm password';
+        inputPasswordConfirm.style.paddingLeft = '0.5em'; // Add left padding
         form.appendChild(inputPasswordConfirm);
 
         const loginMenu = [
