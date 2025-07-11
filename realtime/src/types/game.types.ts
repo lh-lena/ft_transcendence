@@ -1,4 +1,5 @@
 import { ErrorCode } from './error.types';
+import { GameResult } from '../schemas/game.schema';
 
 export interface WsClientMessage {
     'game_start': { gameId: string };
@@ -34,9 +35,12 @@ export const PONG_CONFIG = {
     PADDLE_HEIGHT: 80,
     PADDLE_HALF_HEIGHT: 40,
     PADDLE_OFFSET: 5,
-    PADDLE_SPEED: 10,
+    PADDLE_SPEED: 400,
     BALL_SIZE: 10,
+    BALL_RESET_DELAY: 1,
     INITIAL_BALL_VELOCITY: 1.2,
+    INCREMENT_BALL_VELOCITY: 0.1,
+    MAX_BALL_VELOCITY: 2.5,
     INITIAL_BALL_SPEED_X: 4,
     INITIAL_BALL_SPEED_Y: 4,
     FPS: 60,
