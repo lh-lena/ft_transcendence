@@ -1,5 +1,5 @@
 import { Socket } from 'net';
-import { User } from './pong.types.js';
+import { User } from './game.types';
 
 declare module 'net' {
   interface Socket {

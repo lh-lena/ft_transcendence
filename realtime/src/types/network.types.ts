@@ -1,4 +1,4 @@
-import { ConnectionState, User } from './pong.types';
+import { User } from './game.types';
 
 export enum NETWORK_QUALITY {
     GOOD = 'good',

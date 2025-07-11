@@ -1,5 +1,6 @@
 import { FastifyInstance, WSConnection } from 'fastify';
-import { GameInstance } from 'types/pong.types';
+import { GameInstance } from '../types/game.types';
+import { User } from '../schemas/user.schema';
 import WebSocket from 'ws';
 
 export default function createWSService(app: FastifyInstance) {
@@ -13,7 +14,6 @@ export default function createWSService(app: FastifyInstance) {
     try {
       const messageStr = JSON.stringify(message);
       conn.send(messageStr);
-      app.log.debug(`[ws-service] Sent to user ${userId}: ${message.event}`);
     } catch (error) {
       app.log.error(`[ws-service] Failed to send to user ${userId}. Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
       app.connectionService.removeConnection(conn);
@@ -31,11 +31,11 @@ export default function createWSService(app: FastifyInstance) {
       return;
     }
 
-    const userIds = game.players
+    const { players } = game;
+    const userIds = players
       .map(p => p.userId)
       .filter(id => id !== -1 && !excludeConnections.includes(id));
 
-    app.log.debug(`[ws-service] Broadcasting '${message.event}' to game ${gameId} (${userIds.length} recipients, excluding: [${excludeConnections.join(', ')}])`);
     sendToConnections(userIds, message);
   }
 
