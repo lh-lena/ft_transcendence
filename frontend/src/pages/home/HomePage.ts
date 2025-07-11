@@ -12,7 +12,6 @@ export class HomePage {
         this.main.className = 'flex flex-col gap-5 w-full min-h-full justify-center items-center bg-[#0400FF]';
 
         this.pongButton = new PongButton();
-        this.pongButton.setBounce();
         this.pongButton.mount(this.main);
 
         // menu for when user is not logged in

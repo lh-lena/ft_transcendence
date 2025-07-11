@@ -49,11 +49,17 @@ export class ScoreBar {
         this.scoreB.textContent = `${scoreB}`;
 
         // add animation to current winner
-        if (this.gameState.playerA.score > this.gameState.playerB.score) {
+        if (scoreA > scoreB) {
             this.playerAContainer.className = 'flex flex-row items-center gap-4 animate-bounce-slow';
+            this.playerBContainer.className = 'flex flex-row items-center gap-4';
+        }
+        else if (scoreA == scoreB) {
+            this.playerAContainer.className = 'flex flex-row items-center gap-4';
+            this.playerBContainer.className = 'flex flex-row items-center gap-4';
         }
         else {
             this.playerBContainer.className = 'flex flex-row items-center gap-4 animate-bounce-slow';
+            this.playerAContainer.className = 'flex flex-row items-center gap-4';
         }
     }
 

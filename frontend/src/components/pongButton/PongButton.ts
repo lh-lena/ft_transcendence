@@ -9,7 +9,7 @@ export class PongButton {
         this.element.appendChild(homeButton);
 
         const title = document.createElement('h1'); // Use an <h1> element for styling
-        title.className = 'title text-white text-3xl hover:text-[#4D4DFF] transition-colors duration-300';
+        title.className = 'title text-white text-3xl hover:text-[#4D4DFF] animate-bounce-slow transition-colors duration-300';
         title.innerText = 'pong';
         homeButton.appendChild(title); // Append the styled <h1> inside the <a>
     }

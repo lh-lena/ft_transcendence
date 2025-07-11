@@ -1,6 +1,10 @@
 import { Router } from '../../router'
 import { Menu } from '../../components/menu'
 import { generateProfilePrint } from '../../utils/generateProfilePrint'
+import { ProfileAvatar } from '../../components/profileAvatar'
+
+// TODO-BACKEND
+import { userStore } from '../../types'
 
 export class ProfilePage {
     private container: HTMLElement;
@@ -10,11 +14,9 @@ export class ProfilePage {
         this.container = document.createElement('div');
         this.container.className = 'w-full min-h-full justify-center flex flex-col gap-5 items-center bg-[#0400FF]';
 
-        const fingerprintContainer = document.createElement('div');
-        // color is saved as primary color we can use if we like
-        const color = generateProfilePrint(fingerprintContainer);
-        fingerprintContainer.className = 'animate-bounce-slow'
-        this.container.appendChild(fingerprintContainer);
+        const profilePic = new ProfileAvatar(userStore.colorMap).getElement();
+        profilePic.className = 'animate-bounce-slow'
+        this.container.appendChild(profilePic);
 
         const header = document.createElement('h1');
         header.textContent = 'hi Alec';
