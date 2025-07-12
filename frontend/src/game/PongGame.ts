@@ -1,13 +1,14 @@
 import { Ball } from '../types';
 import { Paddle } from '../types';
 import { GameState } from '../types'
-import { BALL_DEFAULTS, PADDLE_A_DEFAULTS, PADDLE_B_DEFAULTS, CANVAS_DEFAULTS } from '../types'
+import { BALL_DEFAULTS, PADDLE_DEFAULTS, PADDLE_A_DEFAULTS, PADDLE_B_DEFAULTS, CANVAS_DEFAULTS } from '../types'
 
 export class PongGame {
     private canvas: HTMLCanvasElement;
     private ctx: CanvasRenderingContext2D;
     private onScoreUpdate: ((scoreA: number, scoreB: number) => void) | null = null;
     private gameState: GameState;
+    private lastFrameTime: number = performance.now();
 
     // added ! so they dont need to be initialized directly in the constructor
     private ball!: Ball;
@@ -56,8 +57,8 @@ export class PongGame {
         this.ctx = context;
         
         // Set initial canvas size
-        this.canvas.width = 900;  // Default width
-        this.canvas.height = 550; // Default height
+        this.canvas.width = CANVAS_DEFAULTS.width;
+        this.canvas.height = CANVAS_DEFAULTS.height;
 
         // Initialize ball
         // clone object
@@ -85,11 +86,11 @@ export class PongGame {
     }
 
     private setInitialGameLayout(): void {
-        this.ball.x = this.canvas.width / 2;
-        this.ball.y = this.canvas.height / 2;
+        this.ball.x = BALL_DEFAULTS.x;
+        this.ball.y = BALL_DEFAULTS.y;
         this.ball.dx =  Math.random() < 0.5 ? 6 : -6;
         this.ball.dy =  Math.random() < 0.5 ? 1 : -1;
-        this.ball.v = 1.2;
+        this.ball.v = BALL_DEFAULTS.v;
 
         // no need to change back to org pos
         // this.paddleA.y = this.ball.y - 25,   
@@ -114,7 +115,7 @@ export class PongGame {
 
     private drawBall(): void {
         this.ctx.fillStyle = this.ball.color;
-        this.ctx.fillRect(this.ball.x, this.ball.y, 10, 10);
+        this.ctx.fillRect(this.ball.x, this.ball.y, this.ball.size, this.ball.size);
     }
 
     private drawPaddles(): void {
@@ -127,11 +128,14 @@ export class PongGame {
     }
 
     private startGameLoop(): void {
-        const gameLoop = () => {
-            this.updateGameState(); // Update game logic
+        const gameLoop = (now: number) => {
+            const dt = (now - this.lastFrameTime) / 1000;
+            this.lastFrameTime = now;
+            this.updateGameState(dt); // Update game logic
             this.renderGame(); // Render the game state to the canvas
             this.animationFrameId = requestAnimationFrame(gameLoop); // Continue the loop
         };
+        this.lastFrameTime = performance.now();
         this.animationFrameId = requestAnimationFrame(gameLoop); // Start the loop
     }
 
@@ -142,76 +146,87 @@ export class PongGame {
         }
     }
 
-    private updateGameState(): void {
-        // paddle stuff
+    private updateGameState(dt: number): void {
+        // --- Paddle Movement ---
         if (this.keys['w']) {
-            this.paddleA.y -= this.paddleA.speed;
+            this.paddleA.y -= this.paddleA.speed * dt;
         }
         if (this.keys['s']) {
-            this.paddleA.y += this.paddleA.speed;
+            this.paddleA.y += this.paddleA.speed * dt;
         }
         if (this.keys['ArrowUp']) {
-            this.paddleB.y -= this.paddleB.speed;
+            this.paddleB.y -= this.paddleB.speed * dt;
         }
         if (this.keys['ArrowDown']) {
-            this.paddleB.y += this.paddleB.speed;
+            this.paddleB.y += this.paddleB.speed * dt;
         }
-
-        this.paddleA.y = Math.max(5, Math.min(this.paddleA.y, (this.canvas.height - this.paddleA.height - 5)));
-        this.paddleB.y = Math.max(5, Math.min(this.paddleB.y, (this.canvas.height - this.paddleB.height - 5)));
-
-        // ball movement
-        this.ball.x += this.ball.v * this.ball.dx;
-        this.ball.y += this.ball.v * this.ball.dy;
-
-        // ball collision with top and bottom walls
-        if (this.ball.y <= 0 || this.ball.y >= this.canvas.height - 10) {
-            this.ball.dy *= -1; // Reverse vertical direction
+    
+        // Clamp paddles within canvas
+        this.paddleA.y = Math.max(5, Math.min(this.paddleA.y, this.canvas.height - this.paddleA.height - 5));
+        this.paddleB.y = Math.max(5, Math.min(this.paddleB.y, this.canvas.height - this.paddleB.height - 5));
+    
+        // --- Ball Movement ---
+        this.ball.x += this.ball.v * this.ball.dx * dt;
+        this.ball.y += this.ball.v * this.ball.dy * dt;
+    
+        // --- Ball Collision: Top/Bottom Walls ---
+        if (this.ball.y <= 0) {
+            this.ball.y = 0;
+            this.ball.dy *= -1;
         }
-
-        // ball collision with side walls (score update logic)
+        if (this.ball.y >= this.canvas.height - this.ball.size) {
+            this.ball.y = this.canvas.height - this.ball.size;
+            this.ball.dy *= -1;
+        }
+    
+        // --- Ball Collision: Left/Right Walls (Scoring) ---
         if (this.ball.x <= 0) {
-            this.paddleB.score += 1; // Player B scores
-            this.notifyScoreUpdate(); // Notify parent about score change
+            this.paddleB.score += 1;
+            this.notifyScoreUpdate();
             this.setInitialGameLayout();
             return;
         }
-
-        if (this.ball.x >= this.canvas.width - 10) {
-            this.paddleA.score += 1; // Player A scores
-            this.notifyScoreUpdate(); // Notify parent about score change
+        if (this.ball.x >= this.canvas.width - this.ball.size) {
+            this.paddleA.score += 1;
+            this.notifyScoreUpdate();
             this.setInitialGameLayout();
             return;
         }
-
-        // ball collision with paddles
-        // paddle A
+    
+        // --- Ball Collision: Paddle A ---
         if (
-            this.ball.x <= this.paddleA.x + this.paddleA.width && // Ball is at paddle A's x range
-            this.ball.y >= this.paddleA.y && // Ball is within paddle A's top boundary
-            this.ball.y <= this.paddleA.y + this.paddleA.height // Ball is within paddle A's bottom boundary
+            this.ball.x <= this.paddleA.x + this.paddleA.width &&
+            this.ball.x + this.ball.size >= this.paddleA.x &&
+            this.ball.y + this.ball.size >= this.paddleA.y &&
+            this.ball.y <= this.paddleA.y + this.paddleA.height
         ) {
-            this.ball.dx *= -1; // Reverse horizontal direction
-            // y reverse in random direction
-            this.ball.dy *= Math.random() < 0.5 ? 1 : -1; // reverse Y dir
-            this.ball.dy += Math.random() < 0.5 ? 0.1 : -0.1; // random little bit extra on Y dir
             this.ball.x = this.paddleA.x + this.paddleA.width; // Prevent sticking
-            if (this.ball.v < 2.5)
-                this.ball.v += 0.05;
+            this.ball.dx = Math.abs(this.ball.dx); // Always bounce right
+            // Acceleration logic
+            this.ball.v += BALL_DEFAULTS.acceleration;
+            // random y 
+            this.ball.dy += (Math.random() - 0.5) * 0.5;
         }
-        // paddle B
+    
+        // --- Ball Collision: Paddle B ---
         if (
-            this.ball.x >= this.paddleB.x - 10 && // Ball is at paddle B's x range
-            this.ball.y >= this.paddleB.y && // Ball is within paddle B's top boundary
-            this.ball.y <= this.paddleB.y + this.paddleB.height // Ball is within paddle B's bottom boundary
+            this.ball.x + this.ball.size >= this.paddleB.x &&
+            this.ball.x <= this.paddleB.x + this.paddleB.width &&
+            this.ball.y + this.ball.size >= this.paddleB.y &&
+            this.ball.y <= this.paddleB.y + this.paddleB.height
         ) {
-            this.ball.dx *= -1; // Reverse horizontal direction
-            this.ball.dy *= Math.random() < 0.5 ? 1 : -1; // reverse Y dir
-            this.ball.dy += Math.random() < 0.5 ? 0.1 : -0.1; // random little bit extra on Y dir
-            this.ball.x = this.paddleB.x - 10; // Prevent sticking
-            if (this.ball.v < 2.5)
-                this.ball.v += 0.05;
+            this.ball.x = this.paddleB.x - this.ball.size; // Prevent sticking
+            this.ball.dx = -Math.abs(this.ball.dx); // Always bounce left
+            // acceleration
+            this.ball.v += BALL_DEFAULTS.acceleration;
+            // random y 
+            this.ball.dy += (Math.random() - 0.5) * 0.5;
         }
+    
+        // Limit ball.dy to prevent vertical lock ---
+        const maxDY = 2.5;
+        if (this.ball.dy > maxDY) this.ball.dy = maxDY;
+        if (this.ball.dy < -maxDY) this.ball.dy = -maxDY;
     }
 
     // game loop logic

@@ -12,6 +12,8 @@ export interface Ball {
     dy: number;
     v: number;
     color: string;
+    size: number;
+    acceleration: number;
 }
 
 export interface Paddle {
@@ -47,29 +49,36 @@ export const BALL_DEFAULTS = {
     y: CANVAS_DEFAULTS.height / 2,
     dx: Math.random() < 0.5 ? 6 : -6,
     dy: Math.random() < 0.5 ? 1 : -1,
-    v: 1.2,
-    color: 'white'
+    v: 70,
+    color: 'white',
+    size: 15,
+    acceleration: 2,
 };
 
-const paddleHeight = 80;
-const paddleWidth = 10;
+export const PADDLE_DEFAULTS = {
+    height: 80,
+    width: 15,
+    speed: 500,
+    color: 'white',
+    score: 0,
+}
 
 export const PADDLE_A_DEFAULTS = {
-    width: paddleWidth,
-    height: paddleHeight,
+    width: PADDLE_DEFAULTS.width,
+    height: PADDLE_DEFAULTS.height,
     x: 5,
-    y: BALL_DEFAULTS.y - (paddleHeight / 2),
-    score: 0,
-    speed: 10,
-    color: 'white'
+    y: BALL_DEFAULTS.y - (PADDLE_DEFAULTS.height / 2),
+    score: PADDLE_DEFAULTS.score,
+    speed: PADDLE_DEFAULTS.speed,
+    color: PADDLE_DEFAULTS.color
 };
 
 export const PADDLE_B_DEFAULTS = {
-    width: 10,
-    height: paddleHeight,
-    x: CANVAS_DEFAULTS.width - ( PADDLE_A_DEFAULTS.x + paddleWidth ),
-    y: BALL_DEFAULTS.y - ( paddleHeight / 2 ),
-    score: 0,
-    speed: 10,
-    color: 'white'
+    width: PADDLE_DEFAULTS.width,
+    height: PADDLE_DEFAULTS.height,
+    x: CANVAS_DEFAULTS.width - ( PADDLE_A_DEFAULTS.x + PADDLE_DEFAULTS.width ),
+    y: BALL_DEFAULTS.y - ( PADDLE_DEFAULTS.height / 2 ),
+    score: PADDLE_DEFAULTS.score,
+    speed: PADDLE_DEFAULTS.speed,
+    color: PADDLE_DEFAULTS.color
 };
