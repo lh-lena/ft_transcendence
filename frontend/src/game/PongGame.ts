@@ -1,6 +1,6 @@
 import { Ball } from '../types';
 import { Paddle } from '../types';
-import { GameState } from '../types'
+import { GameState, GameStatus } from '../types'
 import { BALL_DEFAULTS, PADDLE_DEFAULTS, PADDLE_A_DEFAULTS, PADDLE_B_DEFAULTS, CANVAS_DEFAULTS } from '../types'
 
 export class PongGame {
@@ -20,10 +20,21 @@ export class PongGame {
     private animationFrameId: number | null = null;
     private windowElement: HTMLDivElement;
 
-    constructor(gameState: GameState, onScoreUpdate?: (scoreA: number, scoreB: number) => void) {
+    private pauseCallback?: () => void;
+
+    constructor(
+        gameState: GameState,
+        onScoreUpdate?: (scoreA: number, scoreB: number) => void,
+        pauseCallback?: () => void
+    ) {
         this.gameState = gameState;
+        // score callback for localGamePage
         if (onScoreUpdate) {
             this.onScoreUpdate = onScoreUpdate;
+        }
+        // pause call back for localGamePage
+        if (pauseCallback) {
+            this.pauseCallback = pauseCallback;
         }
         // Create window structure
         this.windowElement = document.createElement('div');
@@ -76,14 +87,6 @@ export class PongGame {
         this.startGameLoop();
     }
 
-    public pauseGame(): void {
-        this.stopGameLoop();
-        // this.stopGameLoop();
-    }
-
-    public resumeGame(): void {
-        this.startGameLoop();
-    }
 
     private setInitialGameLayout(): void {
         this.ball.x = BALL_DEFAULTS.x;
@@ -147,6 +150,14 @@ export class PongGame {
     }
 
     private updateGameState(dt: number): void {
+        if (this.gameState.status !== GameStatus.PLAYING) {
+            // render paused state or overlay here
+            if (this.pauseCallback) {
+                this.pauseCallback()
+            };
+            return;
+        }
+
         // --- Paddle Movement ---
         if (this.keys['w']) {
             this.paddleA.y -= this.paddleA.speed * dt;
@@ -160,7 +171,7 @@ export class PongGame {
         if (this.keys['ArrowDown']) {
             this.paddleB.y += this.paddleB.speed * dt;
         }
-    
+        
         // Clamp paddles within canvas
         this.paddleA.y = Math.max(5, Math.min(this.paddleA.y, this.canvas.height - this.paddleA.height - 5));
         this.paddleB.y = Math.max(5, Math.min(this.paddleB.y, this.canvas.height - this.paddleB.height - 5));

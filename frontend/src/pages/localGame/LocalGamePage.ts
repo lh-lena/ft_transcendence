@@ -14,8 +14,9 @@ export class LocalGamePage {
     private game: PongGame | null = null;
     private gameState: GameState;
     private countdown: Countdown;
-    private spectatorBar: SpectatorBar;
-    private scoreBar: ScoreBar;
+    private spectatorBar!: SpectatorBar;
+    private scoreBar!: ScoreBar;
+    private overlay: HTMLElement | null = null;
 
     constructor(private router: Router) {
 
@@ -46,17 +47,44 @@ export class LocalGamePage {
         gameContainer.className = 'flex items-center justify-center';
 
         // create game instance before score bar so we can pass game (need for pausing) into scorebar
-        this.game = new PongGame(this.gameState, (scoreA, scoreB) => this.scoreBar.updateScores(scoreA, scoreB));
+        this.game = new PongGame(
+            this.gameState, (scoreA, scoreB) => this.scoreBar.updateScores(scoreA, scoreB),
+            () => this.checkPauseStatus()
+        );
 
-        this.scoreBar = new ScoreBar(this.gameState, this.game);
+        this.scoreBar = new ScoreBar(this.gameState);
         this.scoreBar.mount(this.element);
 
-        
         this.element.appendChild(gameContainer);
         this.game.mount(gameContainer);
 
         this.spectatorBar = new SpectatorBar();
         this.spectatorBar.mount(this.element);
+    }
+
+
+    private showPauseOverlay(): void {
+        if (!this.overlay) {
+            this.overlay = document.createElement('div');
+            this.overlay.className = 'absolute inset-250 w-[950px] h-[550px] bg-opacity-60 flex items-center justify-center z-50';
+            this.overlay.innerHTML = `<h1 class="text-white text-3xl font-bold">Paused</h1>`;
+            this.element.appendChild(this.overlay);
+        }
+    }
+
+    private hidePauseOverlay(): void {
+        if (this.overlay) {
+            this.overlay.remove();
+            this.overlay = null;
+        }
+    }
+
+    private checkPauseStatus(): void {
+        if (this.gameState.status === GameStatus.PAUSED) {
+            this.showPauseOverlay();
+        } else {
+            this.hidePauseOverlay();
+        }
     }
 
     private handleBackClick(): void {
