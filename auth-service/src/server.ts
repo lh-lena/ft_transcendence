@@ -11,6 +11,7 @@ type User = {
 	id: number;
 	email: string;
 	username: string;
+	alias?: string;
 	password_hash: string;
 	is_2fa_enabled: number;
 	twofa_secret?: string | null;
@@ -29,7 +30,7 @@ server.get('/api/auth/health', async (request, reply) => {
 
 // Registration endpoint
 server.post('/api/auth/register', async (request, reply) => {
-	const { email, username, password } = request.body as { email?: string, username?: string, password?: string };
+	const { email, username, password, alias } = request.body as { email?: string, username?: string, password?: string, alias?: string };
 
 	if (!email || !username || !password) {
 		return reply.status(400).send({ error: 'Email, username, and password are required.' });
@@ -60,8 +61,8 @@ server.post('/api/auth/register', async (request, reply) => {
 
 	try {
 		db.prepare(
-			'INSERT INTO users (email, username, password_hash) VALUES (?, ?, ?)'
-		).run(email, username, password_hash);
+			'INSERT INTO users (email, username, alias, password_hash) VALUES (?, ?, ?, ?)'
+		).run(email, username, alias, password_hash);
 	} catch (err) {
 		server.log.error(err);
 		return reply.status(500).send({ error: 'Failed to create user.' });
@@ -92,6 +93,7 @@ server.post('/api/auth/login', async (request, reply) => {
 		sub: user.id,
 		username: user.username,
 		email: user.email,
+		alias: user.alias,
 		is_2fa_enabled: user.is_2fa_enabled
 	});
 
@@ -106,7 +108,7 @@ server.post('/api/auth/logout', async (request, reply) => {
 // Get user info endpoint (who am I?)
 // This endpoint is protected by the authMiddleware
 server.get('/api/auth/me', { preHandler: authMiddleware }, async (request, reply) => {
-  return { user: (request as any).user };
+    return { user: request.user };
 });
 
 const start = async () => {
