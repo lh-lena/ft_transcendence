@@ -45,7 +45,7 @@ export class PongGame {
 
         // Create canvas element
         this.canvas = document.createElement('canvas');
-        this.canvas.style.backgroundColor = '#333e67ff'; 
+        this.canvas.style.backgroundColor = '#182245'; 
 
         // Add canvas to the window content area
         contentArea.appendChild(this.canvas);
