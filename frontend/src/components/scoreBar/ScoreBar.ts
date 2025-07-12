@@ -1,7 +1,7 @@
-import { generateProfilePrint } from '../../utils/generateProfilePrint';
 import { PausePlay } from '../pausePlay';
 import { GameState } from '../../types';
 import { ProfileAvatar } from '../profileAvatar'
+import { PongGame } from '../../game/'
 
 export class ScoreBar {
     private element: HTMLElement;
@@ -10,8 +10,13 @@ export class ScoreBar {
     private scoreA: HTMLElement;
     private scoreB: HTMLElement;
     private pausePlay: PausePlay;
+    private gameState: GameState;
+    private pongGame: PongGame;
 
-    constructor(private gameState: GameState) {
+    constructor(gameState: GameState, pongGame: PongGame) {
+        this.gameState = gameState;
+        this.pongGame = pongGame;
+        
         this.element = document.createElement('div');
         this.element.className = 'flex flex-row justify-between w-[880px] items-center';
 
@@ -28,7 +33,13 @@ export class ScoreBar {
         this.element.appendChild(this.playerAContainer);
 
         // Pause/Play button
-        this.pausePlay = new PausePlay();
+        this.pausePlay = new PausePlay((isPlaying) => {
+            if (isPlaying) {
+                this.pongGame.resumeGame();
+            } else {
+                this.pongGame.pauseGame();
+            }
+        });
         this.pausePlay.mount(this.element);
 
         // Player B profile and score

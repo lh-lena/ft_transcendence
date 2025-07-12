@@ -2,7 +2,6 @@ import { Router } from '../../router';
 import { PongGame } from '../../game';
 import { Countdown } from '../../components/countdown'
 import { GameState, GameStatus } from '../../types'
-import { PausePlay } from '../../components/pausePlay'
 import { SpectatorBar } from '../../components/spectatorBar'
 import { ScoreBar } from '../../components/scoreBar'
 import { generateProfilePrint } from '../../utils/generateProfilePrint'
@@ -15,7 +14,6 @@ export class LocalGamePage {
     private game: PongGame | null = null;
     private gameState: GameState;
     private countdown: Countdown;
-    private pausePlay: PausePlay;
     private spectatorBar: SpectatorBar;
     private scoreBar: ScoreBar;
 
@@ -47,10 +45,13 @@ export class LocalGamePage {
         const gameContainer = document.createElement('div');
         gameContainer.className = 'flex items-center justify-center';
 
-        this.scoreBar = new ScoreBar(this.gameState);
+        // create game instance before score bar so we can pass game (need for pausing) into scorebar
+        this.game = new PongGame(this.gameState, (scoreA, scoreB) => this.scoreBar.updateScores(scoreA, scoreB));
+
+        this.scoreBar = new ScoreBar(this.gameState, this.game);
         this.scoreBar.mount(this.element);
 
-        this.game = new PongGame((scoreA, scoreB) => this.scoreBar.updateScores(scoreA, scoreB), this.gameState);
+        
         this.element.appendChild(gameContainer);
         this.game.mount(gameContainer);
 

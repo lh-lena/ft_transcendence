@@ -1,14 +1,17 @@
 export class PausePlay {
     private button: HTMLButtonElement;
     private isPlaying: boolean = true;
+    private onToggle?: (isPlaying: boolean) => void;
 
-    constructor() {
+    constructor(onToggle?: (isPlaying: boolean) => void) {
+        this.onToggle = onToggle;
         this.button = document.createElement('button');
         this.button.className = 'btn flex items-center justify-center w-8 h-8 bg-white duration-150';
         this.renderIcon();
         this.button.addEventListener('click', () => {
             this.isPlaying = !this.isPlaying;
             this.renderIcon();
+            if (this.onToggle) this.onToggle(this.isPlaying);
         });
     }
 

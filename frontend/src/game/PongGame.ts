@@ -1,6 +1,7 @@
 import { Ball } from '../types';
 import { Paddle } from '../types';
 import { GameState } from '../types'
+import { BALL_DEFAULTS, PADDLE_A_DEFAULTS, PADDLE_B_DEFAULTS, CANVAS_DEFAULTS } from '../types'
 
 export class PongGame {
     private canvas: HTMLCanvasElement;
@@ -18,7 +19,7 @@ export class PongGame {
     private animationFrameId: number | null = null;
     private windowElement: HTMLDivElement;
 
-    constructor(onScoreUpdate?: (scoreA: number, scoreB: number) => void, gameState: GameState) {
+    constructor(gameState: GameState, onScoreUpdate?: (scoreA: number, scoreB: number) => void) {
         this.gameState = gameState;
         if (onScoreUpdate) {
             this.onScoreUpdate = onScoreUpdate;
@@ -44,7 +45,7 @@ export class PongGame {
 
         // Create canvas element
         this.canvas = document.createElement('canvas');
-        this.canvas.style.backgroundColor = '#a9b3d6ff'; 
+        this.canvas.style.backgroundColor = '#333e67ff'; 
 
         // Add canvas to the window content area
         contentArea.appendChild(this.canvas);
@@ -59,39 +60,28 @@ export class PongGame {
         this.canvas.height = 550; // Default height
 
         // Initialize ball
-        this.ball = {
-            x: this.canvas.width / 2,
-            y: this.canvas.height / 2,
-            dx: Math.random() < 0.5 ? 6 : -6,
-            dy: Math.random() < 0.5 ? 1 : -1,
-            v: 1.2,
-            color: 'white'
-        };
+        // clone object
+        this.ball = { ...BALL_DEFAULTS };
 
         // init paddleA
-        this.paddleA = {
-            width: 10,
-            height: 80,
-            x: 5,
-            y: this.ball.y - 25,
-            score: 0,
-            speed: 10,
-            color: this.gameState.playerA.color
-        };
+        this.paddleA = { ...PADDLE_A_DEFAULTS };
+        this.paddleA.color = gameState.playerA.color;
 
         // init paddleB
-        this.paddleB = {
-            width: 10,
-            height: 80,
-            x: this.canvas.width - ( this.paddleA.x + this.paddleA.width ),
-            y: this.ball.y - ( this.paddleA.height / 2 ),
-            score: 0,
-            speed: 10,
-            color: this.gameState.playerB.color
-        };
-        this.renderGame();
-        this.startGameLoop();
+        this.paddleB = { ...PADDLE_B_DEFAULTS };
+        this.paddleB.color = gameState.playerB.color;
+
         this.attachKeyboardListeners();
+        this.startGameLoop();
+    }
+
+    public pauseGame(): void {
+        this.stopGameLoop();
+        // this.stopGameLoop();
+    }
+
+    public resumeGame(): void {
+        this.startGameLoop();
     }
 
     private setInitialGameLayout(): void {
@@ -101,11 +91,9 @@ export class PongGame {
         this.ball.dy =  Math.random() < 0.5 ? 1 : -1;
         this.ball.v = 1.2;
 
-        this.paddleA.x = 5;
-        this.paddleA.y = this.ball.y - 25,
-
-        this.paddleB.x = this.canvas.width - ( this.paddleA.x + this.paddleA.width );
-        this.paddleB.y = this.ball.y - ( this.paddleA.height / 2 )
+        // no need to change back to org pos
+        // this.paddleA.y = this.ball.y - 25,   
+        // this.paddleB.y = this.ball.y - ( this.paddleA.height / 2 )
     }
 
     private notifyScoreUpdate(): void {

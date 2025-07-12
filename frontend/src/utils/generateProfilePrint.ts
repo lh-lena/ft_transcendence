@@ -4,7 +4,7 @@ export function generateProfilePrint(
     gridSize: number = 2
 ): { color: string, colorMap: string[] } {
     // define the palette and colors
-    const pallete = ['#ff0071', '#ff683e', '#ffbb33', '#ff0000'];
+    const pallete = ['#D72E1D', '#ed623c', '#ffc02e', '#06833e'];
     const color = pallete[Math.floor(Math.random() * pallete.length)];
     const colors = ['white', color];
 
