@@ -5,7 +5,7 @@ import { generateJWT } from './jwt';
 import { authMiddleware } from './authMiddleware';
 
 const server = Fastify({ logger: true });
-const db = new Database('users.db');
+const db = new Database('../backend/src/database/database.sqlite');
 
 type User = {
 	id: number;
@@ -46,7 +46,7 @@ server.post('/api/auth/register', async (request, reply) => {
 	}
 
 	// 2. Check if email or username already exists
-	const exists = db.prepare('SELECT id FROM users WHERE email = ? OR username = ?').get(email, username);
+	const exists = db.prepare('SELECT id FROM user WHERE email = ? OR username = ?').get(email, username);
 	if (exists) {
 		return reply.status(409).send({ error: 'Email or username already in use.' });
 	}
@@ -61,8 +61,8 @@ server.post('/api/auth/register', async (request, reply) => {
 
 	try {
 		db.prepare(
-			'INSERT INTO users (email, username, alias, password_hash) VALUES (?, ?, ?, ?)'
-		).run(email, username, alias, password_hash);
+			'INSERT INTO user (email, username, password_hash) VALUES (?, ?, ?)'
+		).run(email, username, password_hash);
 	} catch (err) {
 		server.log.error(err);
 		return reply.status(500).send({ error: 'Failed to create user.' });
@@ -79,7 +79,7 @@ server.post('/api/auth/login', async (request, reply) => {
 		return reply.status(400).send({ error: 'Email and password are required.' });
 	}
 
-	const user = db.prepare('SELECT * FROM users WHERE email = ?').get(email) as User | undefined;
+	const user = db.prepare('SELECT * FROM user WHERE email = ?').get(email) as User | undefined;
 	if (!user) {
 		return reply.status(401).send({ error: 'Invalid credentials.' });
 	}

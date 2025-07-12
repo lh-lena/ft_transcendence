@@ -2,19 +2,20 @@
   "name": "ft_transcendence_auth",
   "version": "1.0.0",
   "scripts": {
-    "dev": "tsx watch src/server.ts"
+    "start": "tsx src/server.ts"
   },
   "dependencies": {
     "argon2": "^0.28.5",
     "better-sqlite3": "^9.1.1",
     "fastify": "^4.24.3",
-    "jsonwebtoken": "^9.0.2"
+    "jsonwebtoken": "^9.0.2",
+    "ts-node": "^10.9.2"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.13",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^20.0.0",
     "tsx": "^3.12.7",
-    "typescript": "^5.2.2"
+    "typescript": "^5.8.3"
   }
 }
