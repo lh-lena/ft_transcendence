@@ -3,6 +3,10 @@ import Database from 'better-sqlite3';
 import { hashPassword, verifyPassword } from './passwords';
 import { generateJWT } from './jwt';
 import { authMiddleware } from './authMiddleware';
+import profileRoutes from './routes/profile';
+import avatarRoutes from './avatarupload';
+import friendsRoutes from './routes/friends';
+import fastifyMultipart from '@fastify/multipart';
 
 const server = Fastify({ logger: true });
 const db = new Database('../backend/src/database/database.sqlite');
@@ -18,6 +22,9 @@ type User = {
 	created_at: string;
 	updated_at: string;
 };
+
+// Register multipart plugin, so can add avatar images and multi part forms
+server.register(fastifyMultipart);
 
 // Health check endpoint
 server.get('/api/auth/health', async (request, reply) => {
@@ -110,6 +117,10 @@ server.post('/api/auth/logout', async (request, reply) => {
 server.get('/api/auth/me', { preHandler: authMiddleware }, async (request, reply) => {
     return { user: request.user };
 });
+
+profileRoutes(server, db);
+avatarRoutes(server, db);
+friendsRoutes(server, db);
 
 const start = async () => {
 	try {
