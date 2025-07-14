@@ -95,9 +95,7 @@ All messages follow this base structure:
     }
 
     export interface NotificationPayload {
-        type: 'info' | 'warn';
-        tournamentId?: number;
-        gameId: string;
+        type: 'info' | 'warn' | 'error';
         message: string;
         timestamp: number;
     }
