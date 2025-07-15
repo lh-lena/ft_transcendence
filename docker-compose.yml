@@ -7,15 +7,25 @@ services:
       - "443:443"
       - "80:80"
     depends_on:
-      - frontend
-      - backend
-      - realtime
-      - auth-service
+      backend:
+        condition: service_healthy
+      frontend:
+        condition: service_healthy
+      realtime:
+        condition: service_healthy
+      auth-service:
+        condition: service_healthy
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./nginx/ssl:/etc/nginx/ssl:ro
     networks:
       - pong-network
+
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
   frontend:
     build: ./frontend
     container_name: ft_transcendence_frontend
@@ -26,6 +36,11 @@ services:
       - /app/node_modules
     networks:
       - pong-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
 
   backend:
     build: ./backend
@@ -38,6 +53,11 @@ services:
       - ./data:/data
     networks:
       - pong-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
 
   realtime:
     build: ./realtime
@@ -60,6 +80,11 @@ services:
       - /app/node_modules
     networks:
       - pong-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8082/api/auth/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
 
 networks:
   pong-network:
