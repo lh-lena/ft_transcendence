@@ -1,5 +1,4 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
-import { ServerContext } from '../../context';
 import Database from 'better-sqlite3';
 
 import type {
@@ -17,43 +16,37 @@ export const userController = {
 
   //controller to create an user
   async create(
-  	context: ServerContext,
     input: userCreateInput,
   ) : Promise< userResponseType > {
-  	const newUser = await userService.createuser( context, input );
+  	const newUser = await userService.createuser( input );
     return newUser;
   },
   
   //update user
   async update(
-  	context: ServerContext,
     id: userIdInput,
     input: userUpdateInput,
   ) : Promise< userResponseType > {
-  	return await userService.updateuser( context, id, input );
+  	return await userService.updateuser( id, input );
   },
 
   //controller for user get All or by Id
   async getAllorFiltered(
-  	context: ServerContext,
     query: userQueryInput,
   ) : Promise< userResponseArrayType > {
-    return await userService.getAllorFiltereduser( context, query );
+    return await userService.getAllorFiltereduser( query );
   },
   
   async getById(
-  	context: ServerContext,
     id: userIdInput,
   ) : Promise< userResponseType | null > {
-  	return await userService.getuserById( context, id );
+  	return await userService.getuserById( id );
   },
   
   //delete user
  async remove(
-  	context: ServerContext,
     id: userIdInput,
   ) : Promise< { message: string } > {
-  	await userService.removeuser( context, id );
-    return { message: 'User deleted' };
+  	return await userService.removeuser( id );
   },
 }

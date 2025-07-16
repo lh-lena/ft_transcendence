@@ -1,8 +1,6 @@
 import { FastifyInstance } from 'fastify';
 import { FastifyPluginAsync } from 'fastify';
 
-import { contextFactory } from '../utils/contextFactory';
-
 interface CrudRoutesOptions {
   basePath: string;
   entityName: string;
@@ -13,7 +11,6 @@ interface CrudRoutesOptions {
     update: Function;
     delete: Function;
   };
-  contextFactory: ( request: any ) => any;
 }
 
 const crudRoutes: FastifyPluginAsync<CrudRoutesOptions> = async ( server: FastifyInstance, options ) => {
@@ -21,7 +18,6 @@ const crudRoutes: FastifyPluginAsync<CrudRoutesOptions> = async ( server: Fastif
     basePath,
     entityName,
     controller,
-    contextFactory
   } = options;
 
   server.get( basePath, {
@@ -34,8 +30,7 @@ const crudRoutes: FastifyPluginAsync<CrudRoutesOptions> = async ( server: Fastif
       summary: `Get all or filtered ${basePath}`,
     },
     handler: async ( request, reply ) => {
-      const context = contextFactory( server.db, server.config );
-      const ret = await controller.getAllorFiltered( context, request.query );
+      const ret = await controller.getAllorFiltered( request.query );
 
       return reply.code( 200 ).send( ret );
     }
@@ -51,8 +46,7 @@ const crudRoutes: FastifyPluginAsync<CrudRoutesOptions> = async ( server: Fastif
       summary: `Get ${entityName} by ID`,
     },
     handler: async ( request, reply ) => {
-      const context = contextFactory( server.db, server.config );
-      const ret = await controller.getById( context, request.params.id );
+      const ret = await controller.getById( request.params.id );
 
       return reply.code( 200 ).send( ret );
     }
@@ -69,8 +63,7 @@ const crudRoutes: FastifyPluginAsync<CrudRoutesOptions> = async ( server: Fastif
     },
     handler: async ( request, reply ) => {
 
-      const context = contextFactory( server.db, server.config );
-      const ret = await controller.create( context, request.body );
+      const ret = await controller.create( request.body );
 
       return reply.code( 201 ).send( ret );
     }
@@ -88,8 +81,7 @@ const crudRoutes: FastifyPluginAsync<CrudRoutesOptions> = async ( server: Fastif
       summary: `Update ${entityName} by ID`,
       },
       handler: async ( request, reply ) => {
-        const context = contextFactory( server.db, server.config );
-        const ret = await controller.update( context, request.params.id, request.body );
+        const ret = await controller.update( request.params.id, request.body );
 
       return reply.code( 200 ).send( ret );
       }
@@ -105,8 +97,7 @@ const crudRoutes: FastifyPluginAsync<CrudRoutesOptions> = async ( server: Fastif
       summary: `Delete ${entityName} by ID`,
     },
     handler: async ( request, reply ) => {
-      const context = contextFactory( server.db, server.config );
-      const ret = await controller.remove( context, request.params.id );
+      const ret = await controller.remove( request.params.id );
 
       return reply.code( 200 ).send( ret );
     }

@@ -1,7 +1,6 @@
 import { FastifyInstance } from 'fastify';
 import fp from 'fastify-plugin';
 
-import { contextFactory } from '../utils/contextFactory';
 import crudRoutes from '../utils/crudRoutes';
 
 import { userRefSchemas } from '../modules/user/user.schema';
@@ -15,7 +14,6 @@ const userRoutes = async ( server: FastifyInstance ) => {
     basePath: '/api/user',
     entityName: 'user',
     controller: userController,
-    contextFactory: contextFactory,
   });
 
 }

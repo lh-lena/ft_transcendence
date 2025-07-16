@@ -7,7 +7,7 @@ const userIn = {
 	email: z.string().email(),
 	username: z.string(),
 	password_hash: z.string(),
-	is_2fa_enabled: basics.booleanString, 
+	is_2fa_enabled: z.boolean().optional().default( false ),
 	twofa_secret: z.string().nullable().optional(),
 }
 

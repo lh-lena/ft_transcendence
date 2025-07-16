@@ -8,7 +8,17 @@ import { errorHandler } from './utils/errorHandler';
 export async function buildServer() {
 
 	//build fastify instance
-	const server = Fastify({ logger: true }).withTypeProvider<ZodTypeProvider>();
+	const server = Fastify({ 
+    logger: {
+      transport: {
+        target: 'pino-pretty',
+        options: {
+          translateTime: 'HH:MM:ss Z',
+          ignore: 'pid,hostname'
+        }
+      }
+    }
+   }).withTypeProvider<ZodTypeProvider>();
 
 //  server.addHook('onRoute', (routeOptions) => {
 //   console.log('📦 Route registered:', routeOptions.method, routeOptions.url);

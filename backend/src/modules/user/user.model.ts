@@ -1,48 +1,40 @@
-import Database from 'better-sqlite3';
-import { ServerContext } from '../../context';
-import { createCrud } from '../../utils/crudGenerator';
+import { createCrud } from '../../utils/prismaCrudGenerator';
+
 import { ConflictError } from '../../utils/error';
 
-export const userModel = createCrud( 'user', );
+export const userModel = createCrud( 'user' );
 
-export function findAll(
-	context: ServerContext,
-) {
-	return userModel.findAll( context );
+export function findAll() {
+	return userModel.findAll();
 }
 
 export function findFiltered(
-	context: ServerContext,
 	filters: Record<string, any>
 ) {
-	return userModel.findBy( context, filters );
+	return userModel.findBy( filters );
 }
 
 export function findById(
-	context: ServerContext,
 	id: number
 ) {
-	return userModel.findById( context, id );
+	return userModel.findById( id );
 }
 
 export function insert(
-	context: ServerContext,
 	data: CreateuserInput
 ) {
-  return userModel.insert( context, data );
+  return userModel.insert( data );
 }
 
 export function patch( 
-      context: ServerContext,
       id: number,
       data: PatchuserInput
 ) {
-	return userModel.patch( context, id, data );
+	return userModel.patch( id, data );
 }
 
 export function remove(
-        context: ServerContext,
         id: number
 ) {
-	return userModel.remove( context, id );
+	return userModel.remove( id );
 }
