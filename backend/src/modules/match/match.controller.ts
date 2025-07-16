@@ -28,6 +28,7 @@ export const matchController = {
   	context: ServerContext,
     input: matchCreateInput,
   ) : Promise< matchResponseType > {
+
   	const newMatch = await matchService.creatematch( context, input );
     return newMatch;
   },
@@ -35,21 +36,11 @@ export const matchController = {
   //update match
   async update(
   	context: ServerContext,
-    id: matchIdInput | userIdInput,
-    input: matchUpdateInput | userUpdateInput,
+    id: matchIdInput,
+    input: matchUpdateInput,
   ) : Promise< matchResponseType > | undefined {
 
-    let match;
-  
-    if( matchIdBase.safeParse( { matchId: id } ).success ) {
-      console.log( 'inside you match' );
-  	  match = await matchService.updatematch( context, id, input );
-    }
-    else if( userIdBase.safeParse( { userId: id } ).success ) {
-      console.log( 'inside you user' );
-      match = await matchService.updateuser( context, id, input );
-    }
-
+    const match = await matchService.updatematch( context, id, input );
     return match;
   },
 
@@ -78,11 +69,13 @@ export const matchController = {
   },
 
   //extra routes
-  async setReady(
-    context: ServerContext,
+  async updateUser(
+  	context: ServerContext,
     id: userIdInput,
-  ) : Promise< matchResponseType | undefined > {
-    return await matchService.setReady( context, id );
-  },
+    input: userUpdateInput,
+  ) : Promise< matchResponseType > | undefined {
 
+    const match = await matchService.updateuser( context, id, input );
+    return match;
+  },
 }

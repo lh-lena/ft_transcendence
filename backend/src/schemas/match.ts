@@ -1,6 +1,7 @@
 import { z } from 'zod/v4';
 
 import * as basics from './basics';
+import { userIdBase } from './user';
 
 const gameModeBase = z.enum([ 'pvp_remote', 'pvp_local', 'pvp_ai' ]);
 const gameModeSchema = gameModeBase.meta({ $id: 'gameMode' });
@@ -8,28 +9,28 @@ const gameModeSchema = gameModeBase.meta({ $id: 'gameMode' });
 const matchStatusBase = z.enum([ 'waiting', 'ready', 'playing', 'finished' ]);
 const matchStatusSchema = matchStatusBase.meta({ $id: 'matchStatus' });
 
-const matchVisibilityBase = z.enum([ 'public', 'private' ]);
-const matchVisibilitySchema = matchVisibilityBase.meta({ $id: 'matchVisibility' });
+const aiDifficultyBase = z.enum([ 'easy', 'medium', 'hard' ]);
+const aiDifficultySchema = aiDifficultyBase.meta({ $id: 'aiDifficulty' });
 
-const matchRequestBase = z.object({
+const matchCreateBase = z.object({
   userId: z.number(),
   mode: gameModeBase,
-  visibility: matchVisibilityBase,
+  aiDifficulty: aiDifficultyBase.optional(),
   matchId: z.string().optional(),
-  ready: basics.booleanString.default('false'),
-  time: z.number().optional(),
 });
-const matchRequestSchema = matchRequestBase.meta( { $id: 'matchRequest' } );
-const matchRequestArray = z.array( matchRequestBase ).meta( { $id: 'matchRequestArray' } );
+
+const matchCreateSchema = matchCreateBase.meta( { $id: 'matchCreate' } );
+
+//const matchRequestArray = z.array( matchRequestBase ).meta( { $id: 'matchRequestArray' } );
 
 const matchBase = z.object({
   matchId: z.string(),
-  players: z.array(matchRequestBase),
+  players: z.array(matchCreateBase),
   mode: gameModeBase,
   status: matchStatusBase,
-  visibility: matchVisibilityBase,
   createAt: z.string().optional(),
 });
+
 const matchSchema = matchBase.meta( { $id: 'match' } );
 const matchArraySchema = z.array(matchBase).meta( { $id: 'matchArray' } );
 
@@ -43,13 +44,13 @@ const matchResponseSchemaArray = z.array(
   matchBase
 ).meta( { $id: "matchResponseArray" } );
 
-export const matchIdSchema = z.object({
+export const matchIdBase = z.object({
   id: z.string().uuid(),
-}).meta( { $id: "matchId" } );
+});
+
+export const matchIdSchema = matchIdBase.meta(  { $id: "matchId" } );
 
 const matchResponseSchema = matchBase.meta( { $id: "matchResponse" } );
-
-const matchCreateSchema = matchRequestBase.meta( { $id: "matchCreate" } );
 
 const matchUpdateSchema = z.object({
   status: matchStatusBase,
@@ -67,18 +68,15 @@ export type matchQueryInput = z.infer< typeof matchQuerySchema >;
 export type matchResponseType = z.infer< typeof matchResponseSchema >;
 export type matchResponseArrayType = z.infer< typeof matchResponseSchemaArray >;
 
-export type matchRequest = z.infer<typeof matchRequestSchema>;
+export type matchCreate = z.infer<typeof matchCreateSchema>;
 export type match = z.infer<typeof matchSchema>;
 
 export const matchSchemas = [
   gameModeSchema,
   matchStatusSchema,
-  matchVisibilitySchema,
-  matchRequestSchema,
-  matchRequestArray,
+  matchCreateSchema,
   matchSchema,
   matchArraySchema,
-  matchCreateSchema,
   matchUpdateSchema,
   matchDeleteSchema,
   matchResponseSchema,

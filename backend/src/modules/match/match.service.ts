@@ -48,7 +48,7 @@ export async function updatematch(
 	data: matchUpdateInput
 ) {
 
-	const	match = matchmaker.patch( id, data );
+	const	match = matchmaker.patchmatch( id, data );
 
 	if( !match )
 		throw new NotFoundError( `match with ${id} not found` );
@@ -62,11 +62,11 @@ export async function updateuser(
 	data: userUpdateInput
 ) {
 
-	const	match = matchmaker.patch( id, data );
+	const	match = matchmaker.patchuser( id, data );
 
   console.log( 'user updated match:', match );
 	if( !match )
-		throw new NotFoundError( `match with ${id} not found` );
+		throw new NotFoundError( `user with ${id} not found in match` );
 
   return match;
 }
@@ -81,12 +81,3 @@ export async function removematch(
 	matchmaker.remove( id );
 	return { message: `match ${id} deleted successfulyy` };
 }
-
-export async function setReady(
-  server: ServerContext,
-  id: userIdInput,
-) {
-
-  return matchmaker.setReady( id );
-}
-

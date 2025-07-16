@@ -68,6 +68,7 @@ const crudRoutes: FastifyPluginAsync<CrudRoutesOptions> = async ( server: Fastif
       summary: `Create a new ${entityName}`,
     },
     handler: async ( request, reply ) => {
+
       const context = contextFactory( server.db, server.config );
       const ret = await controller.create( context, request.body );
 

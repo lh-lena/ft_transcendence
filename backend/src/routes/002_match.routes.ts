@@ -20,7 +20,7 @@ const matchRoutes = async ( server: FastifyInstance ) => {
     contextFactory: contextFactory,
   });
   
-  server.patch( '/api/match/ready/:id', {
+  server.patch( '/api/match/user/:id', {
     params: {
       id: { $ref: 'userId' },
       response: { 
@@ -30,8 +30,9 @@ const matchRoutes = async ( server: FastifyInstance ) => {
       summary: 'Set player to ready. Start game when every player is ready',
     },
     handler: async ( request, reply ) => {
+      console.log( typeof request.params.id );
       const context = contextFactory( server.db, server.config );
-      const ret = await matchController.setReady( context, request.params.id );
+      const ret = await matchController.updateUser( context, Number( request.params.id ) );
 
       return reply.code( 200 ).send( `user ${request.params.id} is ready` );
     }
