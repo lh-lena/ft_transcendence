@@ -56,7 +56,7 @@ All messages follow this base structure:
   #### Related types:
   ```markdown
     export enum Direction {
-      UP = -1, // -10
+      UP = -1,
       DOWN = 1,
       STOP = 0
     }
@@ -68,7 +68,7 @@ All messages follow this base structure:
       paddleB: { width: number; height: number; x: number; y: number; score: number; speed: number; direction: Direction; };
       activePaddle?: string;
       status: GameSessionStatus;
-      countdown: number; // rm
+      countdown: number;
       sequence: number; // default 0
     }
 
