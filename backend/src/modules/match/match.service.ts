@@ -1,4 +1,5 @@
 import { matchMakingClass } from './match.class';
+import { userModel } from '../user/user.service';
 
 import { AppError, NotFoundError, ConflictError } from '../../utils/error';
 
@@ -47,20 +48,6 @@ export async function updatematch(
 
 	if( !match )
 		throw new NotFoundError( `match with ${id} not found` );
-
-  return match;
-}
-
-export async function updateuser( 
-	id: userIdInput,
-	data: userUpdateInput
-) {
-
-	const	match = matchmaker.patchuser( id, data );
-
-  console.log( 'user updated match:', match );
-	if( !match )
-		throw new NotFoundError( `user with ${id} not found in match` );
 
   return match;
 }

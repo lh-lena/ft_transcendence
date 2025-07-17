@@ -1,16 +1,8 @@
 import { z } from 'zod/v4';
 
-import * as basics from './basics';
-import { userIdBase } from './user';
-
 const gameModeBase = z.enum([ 'pvp_remote', 'pvp_local', 'pvp_ai' ]);
-const gameModeSchema = gameModeBase.meta({ $id: 'gameMode' });
-
 const matchStatusBase = z.enum([ 'waiting', 'ready', 'playing', 'finished' ]);
-const matchStatusSchema = matchStatusBase.meta({ $id: 'matchStatus' });
-
 const aiDifficultyBase = z.enum([ 'easy', 'medium', 'hard' ]);
-const aiDifficultySchema = aiDifficultyBase.meta({ $id: 'aiDifficulty' });
 
 const matchCreateBase = z.object({
   userId: z.number(),
@@ -20,8 +12,6 @@ const matchCreateBase = z.object({
 });
 
 const matchCreateSchema = matchCreateBase.meta( { $id: 'matchCreate' } );
-
-//const matchRequestArray = z.array( matchRequestBase ).meta( { $id: 'matchRequestArray' } );
 
 const matchBase = z.object({
   matchId: z.string(),
@@ -72,9 +62,6 @@ export type matchCreate = z.infer<typeof matchCreateSchema>;
 export type match = z.infer<typeof matchSchema>;
 
 export const matchSchemas = [
-  gameModeSchema,
-  matchStatusSchema,
-  matchCreateSchema,
   matchSchema,
   matchArraySchema,
   matchUpdateSchema,

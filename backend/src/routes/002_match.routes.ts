@@ -9,7 +9,6 @@ import { userRefSchemas } from '../modules/user/user.schema';
 import { matchController } from '../modules/match/match.controller';
 
 import { responseRefSchemas } from '../modules/response/response.schema';
-import { contextFactory } from '../utils/contextFactory';
 
 const matchRoutes = async ( server: FastifyInstance ) => {
   
@@ -17,7 +16,6 @@ const matchRoutes = async ( server: FastifyInstance ) => {
     basePath: '/api/match',
     entityName: 'match',
     controller: matchController,
-    contextFactory: contextFactory,
   });
   
   server.patch( '/api/match/user/:id', {
@@ -29,15 +27,6 @@ const matchRoutes = async ( server: FastifyInstance ) => {
       },
       summary: 'Set player to ready. Start game when every player is ready',
     },
-    handler: async ( request, reply ) => {
-      console.log( typeof request.params.id );
-      const context = contextFactory( server.db, server.config );
-      const ret = await matchController.updateUser( context, Number( request.params.id ) );
-
-      return reply.code( 200 ).send( `user ${request.params.id} is ready` );
-    }
-  });
-
 }
 
 export default fp( matchRoutes );

@@ -42,53 +42,6 @@ export class matchMakingClass {
     return match;
   }
 
-      /*const players = this.multiQueue.splice( 0, 2 );
-      const matchId = uuidv4();
-      players.forEach( p => p.matchId = matchId );
-
-      const match: match = {
-        matchId: matchId,
-        players: players,
-        mode: 'pvp_remote',
-        visibility: 'public',
-        status: 'waiting',
-        createdAt: new Date().toISOString(),
-      };
-
-      this.activeMatches.push( match );
-      return match;
-    }
-
-    //if not enough players, return a pending match with the last player in queue
-    const lastPlayer = this.multiQueue[ this.multiQueue.length - 1 ];
-    return {
-      matchId: 'pending',
-      players: [ lastPlayer ],
-      mode: 'pvp_remote',
-      status: 'waiting',
-      visibility: 'public',
-      createdAt: new Date().toISOString(),
-    };
-  }
-
-  //join match via uuid
-  joinPrivateMatch( matchId: string, req: matchRequest ): match | undefined {
-
-    const match = this.activeMatches.get( matchId );
-
-    if( !match || match.status != 'waiting' || match.players.length != 1 ) {
-      return undefined;
-    }
-    
-    if( match.players.some( p => p.userId === req.userId ) ) {
-      return match;
-    }
-
-    match.players.push( req );
-    return match;
-
-  }*/
-
   findAll( ) {
     return( this.activeMatches as matchResponseArrayType );
   }

@@ -1,24 +1,16 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
 import Database from 'better-sqlite3';
 
-import * as matchService from './match.service.ts';
-
-import { userIdBase } from '../../schemas/user';
-
-import { matchIdBase } from '../../schemas/match';
+import * as matchService from './match.service';
 
 import type {
   matchCreateInput,
   matchUpdateInput,
-  userUpdateInput,
   matchQueryInput,
   matchIdInput,
   matchResponseType,
   matchResponseArrayType,
   } from '../../schemas/match';
-
-
-import * as matchService from './match.service';
 
 export const matchController = { 
 
@@ -60,15 +52,5 @@ export const matchController = {
   ) : Promise< { message: string } > {
   	await matchService.removematch( id );
     return { message: 'Match deleted' };
-  },
-
-  //extra routes
-  async updateUser(
-    id: userIdInput,
-    input: userUpdateInput,
-  ) : Promise< matchResponseType > | undefined {
-
-    const match = await matchService.updateuser( id, input );
-    return match;
   },
 }
