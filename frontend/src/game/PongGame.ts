@@ -150,14 +150,15 @@ export class PongGame {
     }
 
     private updateGameState(dt: number): void {
-        if (this.gameState.status !== GameStatus.PLAYING) {
-            // render paused state or overlay here
-            if (this.pauseCallback) {
+        // callback to update pause play in localGamePage
+        if (this.pauseCallback) {
                 this.pauseCallback()
-            };
+        }
+        // if game is paused return 
+        if (this.gameState.status !== GameStatus.PLAYING) {
             return;
         }
-
+       
         // --- Paddle Movement ---
         if (this.keys['w']) {
             this.paddleA.y -= this.paddleA.speed * dt;
@@ -217,6 +218,7 @@ export class PongGame {
             this.ball.v += BALL_DEFAULTS.acceleration;
             // random y 
             this.ball.dy += (Math.random() - 0.5) * 0.5;
+            this.ball.dy *= (Math.random() < 0.5) ? -1 : 1;
         }
     
         // --- Ball Collision: Paddle B ---
@@ -232,6 +234,7 @@ export class PongGame {
             this.ball.v += BALL_DEFAULTS.acceleration;
             // random y 
             this.ball.dy += (Math.random() - 0.5) * 0.5;
+            this.ball.dy *= (Math.random() < 0.5) ? -1 : 1;
         }
     
         // Limit ball.dy to prevent vertical lock ---

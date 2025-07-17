@@ -6,6 +6,8 @@ import { SpectatorBar } from '../../components/spectatorBar'
 import { ScoreBar } from '../../components/scoreBar'
 import { generateProfilePrint } from '../../utils/generateProfilePrint'
 
+import { Menu } from '../../components/menu'
+
 // TODO-BACKEND switch out for backend data cached on merge
 import { userStore } from '../../types'
 
@@ -16,7 +18,8 @@ export class LocalGamePage {
     private countdown: Countdown;
     private spectatorBar!: SpectatorBar;
     private scoreBar!: ScoreBar;
-    private overlay: HTMLElement | null = null;
+    private menu: Menu | null = null;
+    private gameContainer: HTMLElement | null = null;
 
     constructor(private router: Router) {
 
@@ -43,8 +46,8 @@ export class LocalGamePage {
     }
 
     private initializeGame(): void {
-        const gameContainer = document.createElement('div');
-        gameContainer.className = 'flex items-center justify-center';
+        this.gameContainer = document.createElement('div');
+        this.gameContainer.className = 'flex items-center justify-center relative';
 
         // create game instance before score bar so we can pass game (need for pausing) into scorebar
         this.game = new PongGame(
@@ -55,8 +58,8 @@ export class LocalGamePage {
         this.scoreBar = new ScoreBar(this.gameState);
         this.scoreBar.mount(this.element);
 
-        this.element.appendChild(gameContainer);
-        this.game.mount(gameContainer);
+        this.element.appendChild(this.gameContainer);
+        this.game.mount(this.gameContainer);
 
         this.spectatorBar = new SpectatorBar();
         this.spectatorBar.mount(this.element);
@@ -64,25 +67,41 @@ export class LocalGamePage {
 
 
     private showPauseOverlay(): void {
-        if (!this.overlay) {
-            this.overlay = document.createElement('div');
-            this.overlay.className = 'absolute inset-250 w-[950px] h-[550px] bg-opacity-60 flex items-center justify-center z-50';
-            this.overlay.innerHTML = `<h1 class="text-white text-3xl font-bold">Paused</h1>`;
-            this.element.appendChild(this.overlay);
+        if (this.gameContainer && !this.menu) {
+            // Create and mount menu to game container instead of main element
+            const menuItems = [
+                { name: 'quit', link: '/profile' }
+            ];
+            this.menu = new Menu(this.router, menuItems);
+            this.menu.mount(this.gameContainer);
+            // Add overlay styling to menu element
+            const menuElement = this.menu.menuElement;
+            menuElement.style.position = 'absolute';
+            menuElement.style.top = '50%';
+            menuElement.style.left = '50%';
+            menuElement.style.transform = 'translate(-50%, -50%)';
+            menuElement.style.zIndex = '1000';
+            menuElement.style.width = '900px';
+            menuElement.style.height = '520px';
+            menuElement.style.backgroundColor = '#182245';
         }
     }
 
     private hidePauseOverlay(): void {
-        if (this.overlay) {
-            this.overlay.remove();
-            this.overlay = null;
+        console.log('is this even being triggered?');
+        // Unmount menu before removing overlay
+        if (this.menu) {
+            this.menu.unmount();
+            this.menu = null;
         }
     }
 
     private checkPauseStatus(): void {
         if (this.gameState.status === GameStatus.PAUSED) {
+            console.log('paused')
             this.showPauseOverlay();
         } else {
+            console.log('play!')
             this.hidePauseOverlay();
         }
     }

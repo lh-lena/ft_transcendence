@@ -1,12 +1,16 @@
 import { GameState, GameStatus } from '../../types'
 
+
 export class PausePlay {
     private button: HTMLButtonElement;
     private isPlaying: boolean = true;
     private gameState: GameState;
 
-    constructor(gameState: GameState) {
+    private onPauseStatusChange?: () => void;
+
+    constructor(gameState: GameState, onPauseStatusChange?: () => void) {
         this.gameState = gameState;
+        this.onPauseStatusChange = onPauseStatusChange;
         this.button = document.createElement('button');
         this.button.className = 'btn flex items-center justify-center w-8 h-8 bg-white duration-150';
         this.renderIcon();
@@ -14,6 +18,9 @@ export class PausePlay {
             this.isPlaying = !this.isPlaying;
             this.gameState.status = this.isPlaying ? GameStatus.PLAYING : GameStatus.PAUSED;
             this.renderIcon();
+            if (this.onPauseStatusChange) {
+                this.onPauseStatusChange();
+            }
         });
     }
 

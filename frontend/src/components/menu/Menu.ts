@@ -1,9 +1,15 @@
 import { Router } from '../../router';
 
-type MenuItem = {
+export type MenuItem = {
   name: string; // Button text
-  link: string; // URL link
+  link?: string; // optional URL link 
+  onClick?: () => void; // optional custom callback
+  style?: string;
 };
+
+// MACROS AND SHORTCUTS
+// '//back' always routes to the previous page using router
+// style: tiny, default is large
 
 export class Menu {
   private element: HTMLElement;
@@ -14,22 +20,35 @@ export class Menu {
     this.createMenuContent();
   }
 
+  get menuElement(): HTMLElement {
+    return this.element;
+  }
+
   private createMenuContent(): void {
-    // Dynamically create buttons based on menuItems
-    this.menuItems.forEach((item) => {
+   this.menuItems.forEach((item) => {
       const button = document.createElement('button');
-      button.className = 'btn w-36';
+      button.className = 'btn w-36'
+      if (item.style == 'tiny')
+        button.className = 'btn flex items-center justify-center w-8 h-8 bg-[#0400FF]'
       button.textContent = item.name;
-      // have a quick and easy way to call for back -> previous page
-      if (item.link == '//back')
+      if (item.onClick) {
+        button.onclick = item.onClick;
+      } else if (item.link === '//back') {
         button.onclick = () => this.router.navigateBack();
-      else
-        button.onclick = () => this.router.navigate(item.link);
+      } else if (item.link) {
+        button.onclick = () => this.router.navigate(item.link ?? '/');
+      }
       this.element.appendChild(button);
     });
   }
 
   mount(parent: HTMLElement): void {
     parent.appendChild(this.element);
+  }
+
+  unmount(): void {
+    if (this.element && this.element.parentNode) {
+      this.element.parentNode.removeChild(this.element);
+    }
   }
 }

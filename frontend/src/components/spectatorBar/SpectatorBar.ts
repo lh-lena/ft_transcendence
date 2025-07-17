@@ -10,7 +10,7 @@ export class SpectatorBar {
         this.element.className = 'flex flex-row justify-center gap-8 w-[880px] max-w-[880px]';
 
         // Create 8 spectator boxes
-        for (let i = 0; i < 6; i++) {
+        for (let i = 0; i < 8; i++) {
             const { color, colorMap } = generateProfilePrint();
             const profileAvatar = new ProfileAvatar(colorMap) // You can set width/height/gridSize as needed
             profileAvatar.mount(this.element); // Mounts the avatar to the SpectatorBar

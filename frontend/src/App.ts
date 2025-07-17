@@ -17,7 +17,7 @@ export class App {
         
         // Define routes
         this.router.add('/', () => this.showHome());
-        this.router.add('/game', () => this.showGame());
+        this.router.add('/local', () => this.showGame());
         this.router.add('/profile', () => this.showProfile());
         this.router.add('/login', () => this.showLogin());
         this.router.add('/register', () => this.showRegister());

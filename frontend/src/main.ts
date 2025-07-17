@@ -3,7 +3,7 @@ import './style.css';
 import { Loading } from './components/loading'
 import { App } from './App'
 
-const loading = new Loading();
+const loading = new Loading('pong');
 loading.mount(document.body);
 
 setTimeout(() => {
