@@ -12,9 +12,10 @@ export class matchMakingClass {
 
 
   //check if two players are ready and match them ( can add matching logic later )
-  private tryMultiMatch( req: matchCreate ): match {
+  private tryMultiMatch( req: matchCreateInput ): match {
 
-    let match = this.activeMatches.find( m => m.status === 'waiting' );
+    let match = this.activeMatches.find( m => 
+        m.status === 'waiting' && m.visibility === 'public' );
 
     if( match ){
 
@@ -31,6 +32,7 @@ export class matchMakingClass {
       match = { 
         matchId: matchId,
         players: [ req ],
+        visibility: req.visibility,
         mode: 'pvp_remote',
         status: 'waiting',
         createdAt: new Date().toISOString(),
@@ -58,7 +60,7 @@ export class matchMakingClass {
   }
 
 
-  insert( req: matchCreate ): match {
+  insert( req: matchCreateInput ): match {
 
     let match;
 
@@ -119,4 +121,22 @@ export class matchMakingClass {
       this.activeMatches.splice( index, 1 );
   }
 
+  join( matchId: string, req: matchCreateInput ) : match | undefined {
+
+    const match = this.findById( matchId );
+    console.log( match );
+    if( match === undefined )
+      return undefined;
+
+    console.log( match.players.length, "PLAYER" );
+    if( match.players.length !== 1 )
+      return undefined;
+
+    match.players.push( req );
+    match.status = 'playing';
+    req.matchId = matchId;
+
+    return match;
+  }
 }
+

@@ -34,7 +34,7 @@ export async function getmatchById(
 }
 
 export async function creatematch(
-	data: creatematchInput
+	data: matchCreateInput
 ) {
 		return matchmaker.insert( data );
 }
@@ -60,4 +60,16 @@ export async function removematch(
 
 	matchmaker.remove( id );
 	return { message: `match ${id} deleted successfulyy` };
+}
+
+export async function joinmatch(
+  id: matchIdInput,
+  input: matchCreateInput,
+) {
+   await getmatchById( id );
+
+   const match = matchmaker.join( id, input );
+   if( !match )
+    throw new NotFoundError( `match with ${id} not found` );
+  return match;
 }

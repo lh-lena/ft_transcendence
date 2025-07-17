@@ -34,7 +34,8 @@ curl -X POST \
   -d '{
   "userId": 2936,
   "mode": "pvp_remote",
-  "matchId": "string"
+  "matchId": "string",
+  "visibility": "public"
 }'
 
 curl -X POST \
@@ -44,9 +45,20 @@ curl -X POST \
   -d '{
   "userId": 29369,
   "mode": "pvp_remote",
-  "matchId": "string"
+  "matchId": "string",
+  "visibility": "private"
 }'
 
+curl -X POST \
+  'http://[::1]:8080/api/match/join/dc47c749-f16f-4457-8f4d-3bffb8928049' \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "userId": 29369,
+  "mode": "pvp_remote",
+  "matchId": "string",
+  "visibility": "private"
+}'
 
 curl -X POST \
   'http://[::1]:8080/api/match' \

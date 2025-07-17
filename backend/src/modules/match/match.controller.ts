@@ -53,4 +53,12 @@ export const matchController = {
   	await matchService.removematch( id );
     return { message: 'Match deleted' };
   },
+
+  async join(
+    id: matchIdInput,
+    input: matchCreateInput,
+  ) : Promise< matchResponseType | null > {
+    return await matchService.joinmatch( id, input );
+  }
+
 }
