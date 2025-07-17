@@ -11,19 +11,27 @@ export class ProfilePage {
     private menuStart: Menu;
     private menuGame: Menu;
     private loadingScreen: Loading;
+    private profileCard: HTMLElement;
 
     constructor(private router: Router) {
         this.container = document.createElement('div');
-        this.container.className = 'w-full min-h-full justify-center flex flex-col gap-5 items-center bg-[#0400FF]';
+        this.container.className = 'w-full min-h-full bg-brandBlue';
+
+        this.profileCard = document.createElement('div');
+        this.profileCard.className = 'window justify-center flex flex-col gap-5 items-center';
+
+        const titleBar = document.createElement('div');
+        this.profileCard.className = 'title-bar';
+
 
         const profilePic = new ProfileAvatar(userStore.colorMap).getElement();
         profilePic.className = 'animate-bounce-slow'
-        this.container.appendChild(profilePic);
+        this.profileCard.appendChild(profilePic);
 
         const header = document.createElement('h1');
-        header.textContent = 'hi Alec';
+        header.textContent = `hi ${userStore.username}`;
         header.className = 'text-white text-2xl'
-        this.container.appendChild(header);
+        this.profileCard.appendChild(header);
 
         const profileMenuStart: MenuItem[] = [
             { name: 'start game', onClick: () => this.showGameMenu() },

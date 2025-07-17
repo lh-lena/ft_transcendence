@@ -6,6 +6,10 @@ export default {
   ],
   theme: {
     extend: {
+      colors: {
+        brandBlue: '#0400FF',
+        gameGrey: '#182245',
+      },
       animation: {
         'spin-slow': 'spin 5s linear infinite',
         'pulse-gold': 'pulse-gold 2.5s ease-in-out infinite',

@@ -9,7 +9,7 @@ export interface UserProfile {
 const { color, colorMap } = generateProfilePrint(40, 40, 2);
 
 export const userStore: UserProfile = {
-    username: 'Alec',
+    username: 'Mo',
     color: color,
     colorMap: colorMap
 }

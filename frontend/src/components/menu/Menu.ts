@@ -1,6 +1,6 @@
 import { Router } from '../../router';
 
-export type MenuItem = {
+export interface MenuItem {
   name: string; // Button text
   link?: string; // optional URL link 
   onClick?: () => void; // optional custom callback
@@ -29,7 +29,7 @@ export class Menu {
       const button = document.createElement('button');
       button.className = 'btn w-36'
       if (item.style == 'tiny')
-        button.className = 'btn flex items-center justify-center w-8 h-8 bg-[#0400FF]'
+        button.className = 'btn flex items-center justify-center w-8 h-8 bg-brandBlue'
       button.textContent = item.name;
       if (item.onClick) {
         button.onclick = item.onClick;

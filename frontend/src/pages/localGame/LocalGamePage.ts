@@ -16,7 +16,7 @@ export class LocalGamePage {
     private game: PongGame | null = null;
     private gameState: GameState;
     private countdown: Countdown;
-    private spectatorBar!: SpectatorBar;
+    // private spectatorBar!: SpectatorBar;
     private scoreBar!: ScoreBar;
     private menu: Menu | null = null;
     private gameContainer: HTMLElement | null = null;
@@ -61,12 +61,13 @@ export class LocalGamePage {
         this.element.appendChild(this.gameContainer);
         this.game.mount(this.gameContainer);
 
-        this.spectatorBar = new SpectatorBar();
-        this.spectatorBar.mount(this.element);
+        // this.spectatorBar = new SpectatorBar();
+        // this.spectatorBar.mount(this.element);
     }
 
 
     private showPauseOverlay(): void {
+        this.game?.hideGamePieces();
         if (this.gameContainer && !this.menu) {
             // Create and mount menu to game container instead of main element
             const menuItems = [
@@ -81,14 +82,11 @@ export class LocalGamePage {
             menuElement.style.left = '50%';
             menuElement.style.transform = 'translate(-50%, -50%)';
             menuElement.style.zIndex = '1000';
-            menuElement.style.width = '900px';
-            menuElement.style.height = '520px';
-            menuElement.style.backgroundColor = '#182245';
         }
     }
 
     private hidePauseOverlay(): void {
-        console.log('is this even being triggered?');
+        this.game?.showGamePieces();
         // Unmount menu before removing overlay
         if (this.menu) {
             this.menu.unmount();
@@ -98,10 +96,8 @@ export class LocalGamePage {
 
     private checkPauseStatus(): void {
         if (this.gameState.status === GameStatus.PAUSED) {
-            console.log('paused')
             this.showPauseOverlay();
         } else {
-            console.log('play!')
             this.hidePauseOverlay();
         }
     }

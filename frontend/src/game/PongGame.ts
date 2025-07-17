@@ -9,6 +9,7 @@ export class PongGame {
     private onScoreUpdate: ((scoreA: number, scoreB: number) => void) | null = null;
     private gameState: GameState;
     private lastFrameTime: number = performance.now();
+    private bgColor: string;
 
     // added ! so they dont need to be initialized directly in the constructor
     private ball!: Ball;
@@ -39,7 +40,9 @@ export class PongGame {
         // Create window structure
         this.windowElement = document.createElement('div');
         this.windowElement.className = 'window border-2';
-        
+
+        this.bgColor = '#182245'
+    
         // Create title bar
         const titleBar = document.createElement('div');
         titleBar.className = 'title-bar';
@@ -57,7 +60,7 @@ export class PongGame {
 
         // Create canvas element
         this.canvas = document.createElement('canvas');
-        this.canvas.style.backgroundColor = '#182245'; 
+        this.canvas.style.backgroundColor = this.bgColor; 
 
         // Add canvas to the window content area
         contentArea.appendChild(this.canvas);
@@ -95,7 +98,7 @@ export class PongGame {
         this.ball.dy =  Math.random() < 0.5 ? 1 : -1;
         this.ball.v = BALL_DEFAULTS.v;
 
-        // no need to change back to org pos
+        // no need to change paddles back to org pos
         // this.paddleA.y = this.ball.y - 25,   
         // this.paddleB.y = this.ball.y - ( this.paddleA.height / 2 )
     }
@@ -149,6 +152,18 @@ export class PongGame {
         }
     }
 
+    public hideGamePieces(): void {
+        this.paddleA.color = this.bgColor;
+        this.paddleB.color = this.bgColor;
+        this.ball.color = this.bgColor;
+    }
+
+    public showGamePieces(): void {
+        this.paddleA.color = this.gameState.playerA.color;
+        this.paddleB.color = this.gameState.playerB.color;
+        this.ball.color = BALL_DEFAULTS.color;
+    }
+
     private updateGameState(dt: number): void {
         // callback to update pause play in localGamePage
         if (this.pauseCallback) {
@@ -156,6 +171,8 @@ export class PongGame {
         }
         // if game is paused return 
         if (this.gameState.status !== GameStatus.PLAYING) {
+            console.log("here?")
+            this.hideGamePieces();
             return;
         }
        
