@@ -1,4 +1,3 @@
-import { ServerContext } from '../../context';
 import { matchMakingClass } from './match.class';
 
 import { AppError, NotFoundError, ConflictError } from '../../utils/error';
@@ -6,13 +5,12 @@ import { AppError, NotFoundError, ConflictError } from '../../utils/error';
 const matchmaker = new matchMakingClass();
 
 export async function getAllorFilteredmatch(
-	context: ServerContext,
 	filters: Record<string, any>
 ) {
 
   let match;
 
-	if( Object.keys( filters ).length === 0 ) {
+	if( !filters ) {
 		match = matchmaker.findAll( );
 	} else {
 		match = matchmaker.findFiltered( filters );
@@ -24,7 +22,6 @@ export async function getAllorFilteredmatch(
 }
 
 export async function getmatchById(
-	context: ServerContext,
 	id: matchIdInput,
 ) {
 
@@ -36,14 +33,12 @@ export async function getmatchById(
 }
 
 export async function creatematch(
-	context: ServerContext,
 	data: creatematchInput
 ) {
 		return matchmaker.insert( data );
 }
 
 export async function updatematch( 
-	context: ServerContext,
 	id: matchIdInput,
 	data: matchUpdateInput
 ) {
@@ -57,7 +52,6 @@ export async function updatematch(
 }
 
 export async function updateuser( 
-	context: ServerContext,
 	id: userIdInput,
 	data: userUpdateInput
 ) {
@@ -72,11 +66,10 @@ export async function updateuser(
 }
 
 export async function removematch(
-	context: ServerContext,
 	id: matchIdInput,
 ) {
 
-	await getmatchById( context, id );
+	await getmatchById( id );
 
 	matchmaker.remove( id );
 	return { message: `match ${id} deleted successfulyy` };

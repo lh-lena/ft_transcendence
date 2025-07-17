@@ -1,5 +1,4 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
-import { ServerContext } from '../../context';
 import Database from 'better-sqlite3';
 
 import * as matchService from './match.service.ts';
@@ -25,57 +24,51 @@ export const matchController = {
 
   //controller to create an match
   async create(
-  	context: ServerContext,
     input: matchCreateInput,
   ) : Promise< matchResponseType > {
 
-  	const newMatch = await matchService.creatematch( context, input );
+  	const newMatch = await matchService.creatematch( input );
     return newMatch;
   },
   
   //update match
   async update(
-  	context: ServerContext,
     id: matchIdInput,
     input: matchUpdateInput,
   ) : Promise< matchResponseType > | undefined {
 
-    const match = await matchService.updatematch( context, id, input );
+    const match = await matchService.updatematch( id, input );
     return match;
   },
 
   //controller for match get All or by Id
   async getAllorFiltered(
-  	context: ServerContext,
     query: matchQueryInput,
   ) : Promise< matchResponseArrayType > | null {
-    return await matchService.getAllorFilteredmatch( context, query );
+    return await matchService.getAllorFilteredmatch( query );
   },
   
   async getById(
-  	context: ServerContext,
     id: matchIdInput,
   ) : Promise< matchResponseType | null > {
-  	return await matchService.getmatchById( context, id );
+  	return await matchService.getmatchById( id );
   },
   
   //delete match
  async remove(
-  	context: ServerContext,
     id: matchIdInput,
   ) : Promise< { message: string } > {
-  	await matchService.removematch( context, id );
+  	await matchService.removematch( id );
     return { message: 'Match deleted' };
   },
 
   //extra routes
   async updateUser(
-  	context: ServerContext,
     id: userIdInput,
     input: userUpdateInput,
   ) : Promise< matchResponseType > | undefined {
 
-    const match = await matchService.updateuser( context, id, input );
+    const match = await matchService.updateuser( id, input );
     return match;
   },
 }
