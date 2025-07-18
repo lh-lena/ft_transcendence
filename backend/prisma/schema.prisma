@@ -25,26 +25,32 @@ model user {
   }
 
 model matchHistory {
-  id              Int @id @default( autoincrement() )
-  matchId         String @unique
+  id              String @id 
   startedAt       DateTime @default( now() )
   endedAt         DateTime?
   status          MatchStatus @default( PENDING )
+  matchMode       MatchMode
   player1Id       Int
   player2Id       Int
   player1         user  @relation( fields: [player1Id], references: [id] )
-  player2         user  @relation( fiels: [player2Id], references: [id] )
+  player2         user  @relation( fields: [player2Id], references: [id] )
   player1Score    Int   @default(0)
   player2Score    Int   @default(0)
   winnerId        Int?
-  winner          user? @realtion( fields: [winnerId], references: [id] )
+  winner          user? @relation( fields: [winnerId], references: [id] )
   loserId         Int?
   loser           user? @relation( fields: [loserId], references: [id] )
   }
 
   enum MatchStatus {
-  PENDING
-  ACTIVE
-  FINISHED
-  CANCELLED
+  pending
+  active
+  finished
+  canceled
+  }
+
+  enum MatchMode {
+    pvp_remote
+    pvp_ai
+    tournamnet
   }

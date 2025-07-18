@@ -17,16 +17,16 @@ const userGen = {
   updated_at: z.string(),
 }
 
-const userResponseBase = z.object( { 
+const userBase = z.object( { 
   ...userGen,
   ...userIn,
 } )
 
-const userResponseSchema = userResponseBase.meta( { $id: "userResponse" } )
+const userSchema = userBase.meta( { $id: "user" } )
 
-const userResponseSchemaArray = z.array(
-  userResponseBase
-).meta( { $id: "userResponseArray" } )
+const userSchemaArray = z.array(
+  userBase
+).meta( { $id: "userArray" } )
 
 const userCreateSchema = z.object( {
   ...userIn,
@@ -46,24 +46,21 @@ export const userIdBase = z.object( {
 
 const userIdSchema = userIdBase.meta( { $id: "userId" } )
 
-const userQuerySchema = z.object( {
-  email: z.string().email().optional(),
-  username: z.string().optional(),
-}).meta( { $id: "userQuery" } )
+const userQuerySchema = userBase.partial().meta( { $id: "userQuery" } )
 
 export type userCreateInput = z.infer< typeof userCreateSchema >;
 export type userUpdateInput = z.infer< typeof userUpdateSchema >;
 export type userIdInput = z.infer< typeof userIdSchema >;
 export type userQueryInput = z.infer< typeof userQuerySchema >;
-export type userResponseType = z.infer< typeof userResponseSchema >;
-export type userResponseArrayType = z.infer< typeof userResponseSchemaArray >;
+export type userType = z.infer< typeof userSchema >;
+export type userArrayType = z.infer< typeof userSchemaArray >;
 
 export const userSchemas = [
   userCreateSchema,
   userUpdateSchema,
   userDeleteSchema,
-  userResponseSchema,
-  userResponseSchemaArray,
+  userSchema,
+  userSchemaArray,
   userIdSchema,
   userQuerySchema,
 ]

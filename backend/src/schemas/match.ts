@@ -36,9 +36,7 @@ const matchArraySchema = z.array(matchBase).meta( { $id: 'matchArray' } );
 
 //crud types
 
-const matchQuerySchema = z.object({
-  status: matchStatusBase.optional(),
-}).meta( { $id: 'matchQuery' } );
+const matchQuerySchema = matchBase.partial().meta( { $id: 'matchQuery' } );
 
 const matchResponseSchemaArray = z.array(
   matchBase

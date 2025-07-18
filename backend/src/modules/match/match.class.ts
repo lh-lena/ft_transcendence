@@ -1,5 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
 
+import { createMatch } from '../matchHistory/matchHistory.service';
+
 import { 
   matchCreateInput,
   match,
@@ -10,6 +12,19 @@ export class matchMakingClass {
 
   private activeMatches: match[] = [];
 
+  private createMatchHistory( match: match ) {
+    
+    const matchHistory = {
+      id:         match.matchId,
+      startedAt:  new Date().toISOString(),
+      status:     'canceled',
+      mode:       match.mode,
+      player1Id:  match.players[0].userId,
+      player2Id:  match.players[1]?.userId || null,
+    }
+
+    createMatch( matchHistory );
+  }
 
   //check if two players are ready and match them ( can add matching logic later )
   private tryMultiMatch( req: matchCreateInput ): match {
@@ -23,6 +38,7 @@ export class matchMakingClass {
       match.players.push( req );
       match.status = 'playing';
 
+      createMatch( match );
     } else {
     
       const matchId = uuidv4();
@@ -93,6 +109,7 @@ export class matchMakingClass {
 
       console.log( match );
       this.activeMatches.push( match );
+      createMatch( match );
       return match;
     }
   }
