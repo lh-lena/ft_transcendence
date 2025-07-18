@@ -5,10 +5,10 @@ export class ProfileAvatar {
         private colorMap: string[],
         private width: number = 40,
         private height: number = 40,
-        private gridSize: number = 2
+        private gridSize: number = 2,
+        private style?: string
     ) {
         this.element = document.createElement('div');
-        this.element.className = 'profile-avatar';
 
         const canvas = document.createElement('canvas');
         canvas.width = width;
@@ -27,7 +27,7 @@ export class ProfileAvatar {
                 i++;
             }
         }
-
+    
         this.element.appendChild(canvas);
     }
 

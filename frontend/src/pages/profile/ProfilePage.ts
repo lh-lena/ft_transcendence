@@ -2,6 +2,9 @@ import { Router } from '../../router'
 import { Menu, MenuItem } from '../../components/menu'
 import { ProfileAvatar } from '../../components/profileAvatar'
 import { Loading } from '../../components/loading'
+import { MenuBar } from '../../components/menuBar'
+import { CANVAS_DEFAULTS } from '../../types'
+import { Window } from '../../components/window'
 
 // TODO-BACKEND
 import { userStore } from '../../types'
@@ -11,41 +14,53 @@ export class ProfilePage {
     private menuStart: Menu;
     private menuGame: Menu;
     private loadingScreen: Loading;
-    private profileCard: HTMLElement;
+    private menuBar: MenuBar;
 
     constructor(private router: Router) {
+        // Full page background
         this.container = document.createElement('div');
-        this.container.className = 'w-full min-h-full bg-brandBlue';
+        this.container.className = 'profile-bg w-full min-h-screen flex items-center justify-center bg-brandBlue';
 
-        this.profileCard = document.createElement('div');
-        this.profileCard.className = 'window justify-center flex flex-col gap-5 items-center';
+        // Window content
+        const menuBarItems = [
+        {
+            label: 'start Game',
+            items: [
+            { label: 'Local Game', href: '/local' },
+            { label: 'Vs AI', href: '/vs-ai' },
+            { label: 'Vs Player', href: '/vs-player' }
+            ]
+        },
+        {
+            label: 'settings',
+            href: '/settings'
+        },
+        {
+            label: 'logout',
+            href: '/logout'
+        }
+        ];
 
-        const titleBar = document.createElement('div');
-        this.profileCard.className = 'title-bar';
+        this.menuBar = new MenuBar(router, menuBarItems);
+        const menuBarElement = this.menuBar.render();
+        menuBarElement.classList.add('self-start');
 
-
-        const profilePic = new ProfileAvatar(userStore.colorMap).getElement();
-        profilePic.className = 'animate-bounce-slow'
-        this.profileCard.appendChild(profilePic);
+        const profilePic = new ProfileAvatar(userStore.colorMap, 40, 40, 2).getElement();
+        profilePic.className = 'animate-bounce-slow border-2 border-black';
 
         const header = document.createElement('h1');
         header.textContent = `hi ${userStore.username}`;
-        header.className = 'text-white text-2xl'
-        this.profileCard.appendChild(header);
+        header.className = 'text-black title text-2xl';
 
-        const profileMenuStart: MenuItem[] = [
-            { name: 'start game', onClick: () => this.showGameMenu() },
-            { name: 'log out', link: '/logout'}
-        ]
-        this.menuStart = new Menu(this.router, profileMenuStart);
-
-        const profileMenuGame: MenuItem[] = [
-            { name: 'local game', link: '/local'},
-            { name: 'vs AI', onClick: () => this.waitForOpponent()},
-            { name: 'vs player', onClick: () => this.waitForOpponent()},
-            { name: 'x', onClick: () =>  this.hideGameMenu(), style: 'tiny'}
-        ]
-        this.menuGame = new Menu(this.router, profileMenuGame);
+        // use Window component
+        const windowComponent = new Window({
+            title: 'Profile',
+            width: CANVAS_DEFAULTS.width,
+            height: CANVAS_DEFAULTS.height,
+            className: '',
+            children: [menuBarElement, profilePic, header]
+        });
+        this.container.appendChild(windowComponent.getElement());
 
         // waiting for opponent loading screen
         this.loadingScreen = new Loading('waiting for opponent', 'button', this.cancelWaitForOpponent.bind(this));
@@ -63,7 +78,7 @@ export class ProfilePage {
 
     public mount(parent: HTMLElement): void {
         parent.appendChild(this.container);
-        this.menuStart.mount(this.container);
+        // this.menuStart.mount(this.container);
     }
 
     public unmount(): void {
