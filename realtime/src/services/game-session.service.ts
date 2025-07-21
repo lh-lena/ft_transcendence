@@ -1,39 +1,37 @@
 import { FastifyInstance } from 'fastify';
-import { GameInstance, StartGame, GameSessionStatus, User } from '../types/pong.types.js';
+import { GameSessionStatus } from '../types/game.types.js';
+import { StartGame, GameSession } from '../schemas/game.schema.js';
 import { initializeGameState } from './pong-engine.service.js';
 
 export default function createGameSessionService(app: FastifyInstance) {
-  const gameSessions: Map<string, GameInstance> = new Map();
+  const gameSessions: Map<string, GameSession> = new Map();
 
-  async function createGameSession(gameId: string, gameData: StartGame): Promise<GameInstance> {
+  async function createGameSession(gameId: string, gameData: StartGame): Promise<GameSession | null> {
     if (gameSessions.has(gameId)) {
-      app.log.debug(`[game-session] Game session ${gameId} already exists`);
-      return gameSessions.get(gameId)!;
+      app.log.debug(`[game-session] Game session ${gameId} already exists. Replacing it`);
     }
 
-    const newGame: GameInstance = {
+    const newGame: GameSession = {
       ...gameData,
-      connectedPlayer1: false,
-      connectedPlayer2: false,
+      isConnected: new Map(),
       gameState: initializeGameState(gameId),
       status: GameSessionStatus.PENDING,
       gameLoopInterval: undefined,
-      lastUpdate: Date.now(),
       startedAt: null,
       finishedAt: null,
+      lastSequence: 0,
+      countdownInterval: undefined,
     };
-
-    storeGameSession(newGame);
     return newGame;
   }
 
-  function getGameSession(gameId: string) : GameInstance | undefined {
+  function getGameSession(gameId: string) : GameSession | undefined {
     const session = gameSessions.get(gameId);
     return session;
   }
 
-  function getAllActiveGameSessions(): GameInstance[] {
-    const activeSessions: GameInstance[] = [];
+  function getAllActiveGameSessions(): GameSession[] {
+    const activeSessions: GameSession[] = [];
     gameSessions.forEach((session) => {
       if (session.status !== GameSessionStatus.FINISHED &&
         session.status !== GameSessionStatus.CANCELLED &&
@@ -44,7 +42,7 @@ export default function createGameSessionService(app: FastifyInstance) {
     return activeSessions;
   }
 
-  function storeGameSession(game: GameInstance): void {
+  function storeGameSession(game: GameSession): void {
     gameSessions.set(game.gameId, game);
     app.log.debug(`[game-session] Stored game session ${game.gameId}`);
   }
@@ -59,46 +57,41 @@ export default function createGameSessionService(app: FastifyInstance) {
 
   function setPlayerConnectionStatus(userId: number, gameId: string, connected: boolean): void {
     const gameSession = gameSessions.get(gameId);
-
     if (!gameSession) {
       throw new Error(`[game-session] Game session ${gameId} not found`);
     }
-    const { players } = gameSession;
-    const playerIdx: number = players.findIndex(p => p.userId == userId && p.userId !== -1);
-    if (playerIdx === -1) {
-      return;
+    if (connected) {
+      gameSession.isConnected.set(userId, connected);
+    } else {
+      gameSession.isConnected.delete(userId);
     }
-    if (playerIdx === 0) {
-      gameSession.connectedPlayer1 = connected;
-      app.log.debug(`[game-session] Player ${userId} in the game ${gameId} as Player 1: ${connected}`);
-    } else if (playerIdx === 1) {
-      gameSession.connectedPlayer2 = connected;
-      app.log.debug(`[game-session] Player ${userId} connected in the game ${gameId} as Player 2: ${connected}`);
-    }
+    app.log.debug(`[game-session] Player ${userId} in the game ${gameId} is ${connected ? 'connected' : 'disconnected'}`);
   }
 
-  function updateGameSession(gameId: string, updates: Partial<GameInstance>): boolean {
+  function updateGameSession(gameId: string, updates: Partial<GameSession>): boolean {
     const game = gameSessions.get(gameId);
     if (!game) {
-      app.log.debug(`Cannot update - game not found ${ gameId }`);
+      app.log.debug(`[game-session] Cannot update - game not found ${ gameId }`);
       return false;
     }
 
     Object.assign(game, updates);
-    app.log.debug(`Updated game session ${gameId}. Updates: ${Object.keys(updates).join(', ')}`);
+    app.log.debug(`[game-session] Updated game session ${gameId}. Updates: ${Object.keys(updates).join(', ')}`);
     return true;
   }
 
-  function shutdown(): void {
+  async function shutdown(): Promise<void> {
     const activeSessions = getAllActiveGameSessions();
-    activeSessions.forEach((session) => {
-      app.log.info(`[game-session] Shutting down game session ${session.gameId}`);
-      session.status = GameSessionStatus.CANCELLED_SERVER_ERROR;
-      session.gameLoopInterval && clearInterval(session.gameLoopInterval);
-      app.gameStateService.endGame(session.gameId, GameSessionStatus.CANCELLED_SERVER_ERROR, 'Server shutdown');
-    });
+    for (const session of activeSessions) {
+      try {
+        app.log.debug(`[game-session] Closing a game session ${session.gameId}`);
+        app.respond.notificationToGame(session.gameId, 'error', 'server error occurred. game session is cancelled.');
+        await app.gameStateService.endGame(session, GameSessionStatus.CANCELLED_SERVER_ERROR);
+      } catch (error) {
+        app.log.error(`[game-session] Error closing a game session ${session.gameId}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      }
+    }
     gameSessions.clear();
-
     app.log.info('[game-session] All game sessions cleared');
   }
 

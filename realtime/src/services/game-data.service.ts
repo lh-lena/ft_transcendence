@@ -1,23 +1,22 @@
 import { FastifyInstance } from 'fastify';
-import { ErrorCode, ServiceError } from '../types/error.types.js';
-import { Result, ok, err } from 'neverthrow';
 import { StartGame, GameResult, StartGameSchema } from '../schemas/game.schema.js';
+import { GameError } from '../utils/game.error.js';
 
 export default function createGameDataService(app: FastifyInstance) {
   const BACKEND_URL = app.config.websocket.backendUrl;
+  if (!BACKEND_URL) {
+    throw new Error('Backend URL is not configured');
+  }
 
-  async function fetchGameData(gameId: string): Promise<Result<StartGame, ServiceError>> {
-    app.log.debug(`Fetching game data from backend. Game ID: ${gameId}`);
+  async function fetchGameData(gameId: string): Promise<StartGame> {
+    app.log.debug(`[game-data] Fetching game data from backend. Game ID: ${gameId}`);
     try {
-      const response = await fetch(`${BACKEND_URL}/api/game/:${gameId}`);
+      const response = await fetch(`${BACKEND_URL}/api/game/${gameId}`);
 
       if (!response.ok) {
         const errorDetails = await response.text();
-        return err({
-          code: ErrorCode.FETCH_FAILED,
-          message: `Failed to fetch game data for ${gameId}: HTTP ${response.status} - ${response.statusText}`,
-          details: { gameId, status: response.status, responseBody: errorDetails }
-        });
+        app.log.error(`Failed to fetch game data for ${gameId}. Status: ${response.status} - ${response.statusText}. Details: ${errorDetails}`);
+        throw new GameError(`failed to fetch game data for ${gameId}`);
       }
 
       const rawGameData : unknown = await response.json();
@@ -29,30 +28,20 @@ export default function createGameDataService(app: FastifyInstance) {
           mode: gameData.gameMode,
           AIDifficulty: gameData?.aiDifficulty,
           playersCount: gameData.players?.length || 0
-        },`Successfully fetched game data`);
-        
-        return ok(gameData);
+        },`[game-data] Successfully fetched game data`);
+
+        return gameData;
       } else {
-        return err({
-          code: ErrorCode.INVALID_GAME_DATA,
-          message: `Invalid game data received for game ${gameId}`,
-          details: {
-            gameId,
-            errors: ValidationResult.error.errors.map(err => err.message)
-          }
-        });
+        app.log.error(`[game-data] Invalid game data received for game ${gameId}. Validation errors: ${JSON.stringify(ValidationResult.error.issues)}`);
+        throw new GameError(`invalid game data received for game ${gameId}. try to create a new game`);
       }
     } catch (error) {
-      return err({
-        code: ErrorCode.FETCH_FAILED,
-        message: `Network error while fetching game data`,
-        details: { gameId, error: error instanceof Error ? error.message : 'Unknown error' }
-      });
+      throw error;
     }
   }
 
-  async function sendGameResult(result: GameResult): Promise<Result<void, ServiceError>> {
-    app.log.debug({ gameId: result.gameId }, `Sending game result to backend`);
+  async function sendGameResult(result: GameResult): Promise<boolean> {
+    app.log.debug({ gameId: result.gameId }, `[game-data] Sending game result to backend`);
     try {
       const response = await fetch(`${BACKEND_URL}/api/games/result`, {
         method: 'POST',
@@ -62,22 +51,14 @@ export default function createGameDataService(app: FastifyInstance) {
 
       if (!response.ok) {
         app.log.error(`Failed to send results of the game ${result.gameId}. Status: ${response.status} - ${response.statusText}`);
-        return err({
-          code: ErrorCode.SEND_RESULT_FAILED,
-          message: `Failed to send game result: HTTP ${response.status}`,
-          details: { gameId: result.gameId, status: response.status }
-        });
+        throw new GameError(`failed to send game result for ${result.gameId}`);
       }
 
-      app.log.debug({ gameId: result.gameId }, `Game result sent successfully`);
-      return ok(undefined);
+      app.log.debug({ gameId: result.gameId }, `[game-data] Game result sent successfully`);
+      return true;
     } catch (error) {
       app.log.error(`Failed to send results of the game ${result.gameId}. ${error instanceof Error ? error.message : 'Unknown error'}`);
-      return err({
-        code: ErrorCode.FETCH_FAILED,
-        message: 'Network error while sending game result',
-        details: { gameId: result.gameId, error: error instanceof Error ? error.message : 'Unknown error' }
-      });
+      return false;
     }
   }
 
