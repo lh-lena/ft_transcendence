@@ -1,29 +1,9 @@
-export enum ErrorCode {
-  UNAUTHORIZED = 'UNAUTHORIZED',
-  CONNECTION_TIMEOUT = 'CONNECTION_TIMEOUT',
-  CONNECTION_NOT_FOUND = 'CONNECTION_NOT_FOUND',
-  INVALID_SESSION = 'INVALID_SESSION',
-  GAME_CREATION_FAILED = 'GAME_CREATION_FAILED',
-  GAME_NOT_FOUND = 'GAME_NOT_FOUND',
-  GAME_FULL = 'GAME_FULL',
-  GAME_ALREADY_STARTED = 'GAME_ALREADY_STARTED',
-  INVALID_GAME_ACTION = 'INVALID_GAME_ACTION',
-  INVALID_GAME_DATA = 'INVALID_GAME_DATA',
-  INVALID_MESSAGE = 'INVALID_MESSAGE',
-  UNKNOWN_EVENT = 'UNKNOWN_EVENT',
-  VALIDATION_FAILED = 'VALIDATION_FAILED',
-  FETCH_FAILED = 'FETCH_FAILED',
-  SEND_RESULT_FAILED = 'SEND_RESULT_FAILED',
-  INTERNAL_ERROR = 'INTERNAL_ERROR'
-}
-
 export enum ErrorServerMsg {
-  REPLACED = 'Replaced by new connection',
-  SHUTDOWN = 'Server shutting down',
+  REPLACED = 'replaced by new connection',
+  SHUTDOWN = 'realtime server is shutting down',
+  CONNECTION_LOST = 'connection lost',
 }
 
 export interface ServiceError {
-  code: ErrorCode;
   message: string;
-  details?: any;
 }

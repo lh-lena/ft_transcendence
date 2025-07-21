@@ -1,4 +1,4 @@
-import { User } from './game.types';
+import { User } from '../schemas/user.schema.js';
 
 export enum NETWORK_QUALITY {
     GOOD = 'good',
@@ -16,7 +16,6 @@ export interface DisconnectInfo {
 
 export interface PausedGameState {
     gameId: string;
-    reason: string;
     pausedByPlayerId: number;
     pausedAt: number;
     players: Array<User>;
