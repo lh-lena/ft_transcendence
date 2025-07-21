@@ -1,13 +1,14 @@
 import { buildServer } from './utils/app.js';
+import { serverConfig } from './config/server.config.js';
 
 const start = async () => {
   const server = buildServer();
 
-  const port = process.env.WS_PORT ? Number(process.env.WS_PORT) : 8081;
-  const host = process.env.WS_HOST || '0.0.0.0';
+  const port = serverConfig.port;
+  const host = serverConfig.host;
   server.listen({ port, host }, function (err, address) {
     if (err) {
-      server.log.error('Failed to start server:', err);
+      server.log.error(err, 'Failed to start server:');
       process.exit(1)
     }
     server.log.info(`WebSocket server listening on ${address}`)
