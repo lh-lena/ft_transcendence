@@ -5,7 +5,7 @@
     "target": "ES2022",
     "module": "ES2022",
     "moduleResolution": "node",
-    "lib": ["ES2022", "DOM"],
+    "lib": ["ES2022"],
     "allowSyntheticDefaultImports": true,
     "outDir": "./dist",
     "rootDir": "./src",
@@ -21,7 +21,6 @@
     "noImplicitAny": true,
     "sourceMap": true,
     "baseUrl": "./",
-    "jsx": "preserve",
     "paths": {
         "*": [
         "node_modules/*",
@@ -30,7 +29,8 @@
     },
     "typeRoots": [
         "./node_modules/@types",
-        "./src/types"
+        "./src/types",
+        "./src/schemas"
     ]
     },
     "include": [
