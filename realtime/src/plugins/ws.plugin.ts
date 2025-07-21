@@ -5,25 +5,25 @@ import { IncomingMessage } from 'http';
 import { handleWSConnection } from '../controllers/ws.controller.js';
 import createWSService from '../services/ws.service.js';
 import connectionService from '../services/connection.service.js';
-import networkMonitorService from '../services/network.service.js';
 import reconnectionService from '../services/reconnection.service.js';
-
+import createRespondService from '../services/respond.service.js';
+import { setupGracefulShutdown } from '../utils/shutdown.js';
 const wsPlugin: FastifyPluginAsync = async (app: FastifyInstance) => {
 
   const wss = createWebSocketServer(app);
   const wsService = createWSService(app);
+  const respondService = createRespondService(app);
   const connService = connectionService(app);
-  const networkService = networkMonitorService(app);
   const reconnService = reconnectionService(app);
 
   app.decorate('wss', wss);
   app.decorate('wsService', wsService);
-  app.decorate('networkService', networkService);
+  app.decorate('respond', respondService);
   app.decorate('connectionService', connService);
   app.decorate('reconnectionService', reconnService);
 
   setupWebSocketHandlers(wss, app);
-  setupGracefulShutdown(app, connService);
+  setupGracefulShutdown(wss, app);
 }
 
 function createWebSocketServer(app: FastifyInstance): WebSocketServer {
@@ -71,35 +71,41 @@ function setupWebSocketHandlers(wss: WebSocketServer, app: FastifyInstance): voi
   });
 }
 
-function setupGracefulShutdown(app: FastifyInstance, connService: any): void {
-  
-  app.addHook('onClose', async () => {
-    app.log.info('Shutting down WebSocket server...');
-    await connService.shutdown();
-    process.removeAllListeners('SIGINT');
-    process.removeAllListeners('SIGTERM');
-  });
+function setupFastifyHooks(wss: WebSocketServer, app: FastifyInstance) {
 
-  const gracefulShutdown = async (signal: string) => {
-    app.log.info(` ${signal} received - initiating graceful shutdown...`);
+  // app.addHook('onClose', async () => {
+  //   app.log.info('[ws-plugin] Starting cleanup sequence...');
+    
+  //   try {
+  //     app.log.info('[ws-plugin] Closing WebSocket server...');
+  //     await new Promise<void>((resolve) => {
+  //       wss.close(() => {
+  //         app.log.info('[ws-plugin] WebSocket server closed');
+  //         resolve();
+  //       });
+  //     });
 
-    try {
-      app.gameSessionService.shutdown();
-      await connService.shutdown();
-      await app.close();
-      app.log.info('HTTP server closed');
-      process.exit(0);
-    } catch (error) {
-      app.log.error(`Error during shutdown: ${error instanceof Error ? error.message : 'Unknown error'}`);
-      process.exit(1);
-    }
-  };
+  //     app.log.info('[ws-plugin] Notifying clients of shutdown...');
+  //     await app.connectionService.notifyShutdown();
 
-  process.once('SIGINT', () => gracefulShutdown('SIGINT'));
-  process.once('SIGTERM', () => gracefulShutdown('SIGTERM'));
+  //     app.log.info('[ws-plugin] Shutting down game sessions...');
+  //     await app.gameSessionService?.shutdown();
+
+  //     app.log.info('[ws-plugin] Cleaning up reconnection service...');
+  //     app.reconnectionService.cleanup?.();
+
+  //     app.log.info('[ws-plugin] Closing all connections...');
+  //     await app.connectionService.shutdown();
+
+  //     app.log.info('[ws-plugin] All WebSocket services cleaned up successfully');
+      
+  //   } catch (error) {
+  //     app.log.error('[ws-plugin] Error during cleanup:', error);
+  //   }
+  // });
 }
 
 export const websocketPlugin = fp(wsPlugin, {
   name: 'websocket-plugin',
-  dependencies: ['auth-plugin', 'config-plugin']
+  dependencies: ['auth-plugin', 'config-plugin', 'event-bus-plugin']
 });
