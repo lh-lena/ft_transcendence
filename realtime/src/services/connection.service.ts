@@ -28,6 +28,7 @@ export default function connectionService(app: FastifyInstance) {
       return;
     }
 
+    stopHeartbeat(conn);
     const { userId } = conn.user;
 
     stopHeartbeat(conn);

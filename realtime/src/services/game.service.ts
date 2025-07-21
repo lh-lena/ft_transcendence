@@ -173,11 +173,14 @@ export default function createGameService(app: FastifyInstance) {
         respond.notificationToGame(gameId, NotificationType.INFO, ` ${user.userAlias} left the game`);
         gameStateService.endGame(game, GameSessionStatus.CANCELLED, user.userId);
       }
-      app.log.debug(`[game-service] Handling join game`);
-      await joinPlayerToGame(gameId, user, gameSession);
-      app.wsService.sendToConnection(user.userId, {event: 'notification', payload: {gameId, message: `You joined game ${gameId}`, timestamp: Date.now()}});
-      if (canStartGame(gameId)) {
-        await app.gameStateService.startGame(gameId);
+      const game = getValidGameCheckPlayer(gameId, userId);
+      validateGameStatus(game.status, [GameSessionStatus.ACTIVE, GameSessionStatus.PAUSED, GameSessionStatus.PENDING]);
+      if (game.status === GameSessionStatus.PENDING) {
+        respond.notificationToGame(gameId, NotificationType.INFO, ` ${user.userAlias} left the game before it started`);
+        gameStateService.endGame(game, GameSessionStatus.CANCELLED);
+      } else {
+        respond.notificationToGame(gameId, NotificationType.INFO, ` ${user.userAlias} left the game`);
+        gameStateService.endGame(game, GameSessionStatus.CANCELLED, user.userId);
       }
     } catch (error) {
       if (error instanceof GameError) {
