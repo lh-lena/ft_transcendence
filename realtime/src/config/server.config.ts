@@ -16,6 +16,8 @@ interface WebsocketConfig {
   pauseTimeout: number;
   backendUrl: string;
   authUrl: string;
+  allowedOrigins: string[];
+  maxConnections: number
 }
 
 export interface EnvironmentConfig {
@@ -34,10 +36,10 @@ const environment: keyof Config = (process.env.NODE_ENV as keyof Config) || 'dev
 
 const config: Config = {
   development: {
-    port: 8081,
-    host: '0.0.0.0',
+    port: process.env.PORT ? parseInt(process.env.PORT, 10) : 8081,
+    host: process.env.HOST || '0.0.0.0',
     logger: {
-      level: 'debug',
+      level: process.env.LOG_LEVEL || 'debug',
       transport: {
         target: 'pino-pretty',
         options: {
@@ -48,25 +50,39 @@ const config: Config = {
       },
     },
     websocket: {
-      connectionTimeout: 60_000,
-      heartbeatInterval: 30_000,
-      pauseTimeout: 60_000,
-      backendUrl: 'https://localhost:8080',
-      authUrl: 'https://auth:8082',
+      connectionTimeout: process.env.WS_CONNECTION_TIMEOUT ? parseInt(process.env.WS_CONNECTION_TIMEOUT, 10) : 60_000,
+      heartbeatInterval: process.env.WS_HEARTBEAT_INTERVAL ? parseInt(process.env.WS_HEARTBEAT_INTERVAL, 10) : 30_000,
+      pauseTimeout: process.env.WS_PAUSE_TIMEOUT ? parseInt(process.env.WS_PAUSE_TIMEOUT, 10) : 60_000,
+      backendUrl: process.env.BACKEND_URL || 'https://127.0.0.1:8080',
+      authUrl: process.env.AUTH_URL || 'https://127.0.0.1:8082',
+      allowedOrigins: [
+        ...(process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : []),
+        'https://127.0.0.1:3000',
+        'http://127.0.0.1:3000',
+        'http://127.0.0.1:5500',
+        'http://127.0.0.1:5501',
+        'http://127.0.0.1:5502',
+        'http://127.0.0.1:5503'
+      ],
+      maxConnections: process.env.WS_MAX_CONNECTIONS ? parseInt(process.env.WS_MAX_CONNECTIONS, 10) : 1000,
     },
   },
   production: {
     port: process.env.PORT ? parseInt(process.env.PORT, 10) : 8081,
-    host: '0.0.0.0',
+    host: process.env.HOST || '0.0.0.0',
     logger: {
-      level: 'info',
+      level: process.env.LOG_LEVEL || 'info',
     },
     websocket: {
-      connectionTimeout: 60_000,
-      heartbeatInterval: 30_000,
-      pauseTimeout: 60_000,
-      backendUrl: process.env.BACKEND_URL || 'https://localhost:8080',
-      authUrl: process.env.AUTH_URL || 'https://auth:8082',
+      connectionTimeout: process.env.WS_CONNECTION_TIMEOUT ? parseInt(process.env.WS_CONNECTION_TIMEOUT, 10) : 60_000,
+      heartbeatInterval: process.env.WS_HEARTBEAT_INTERVAL ? parseInt(process.env.WS_HEARTBEAT_INTERVAL, 10) : 30_000,
+      pauseTimeout: process.env.WS_PAUSE_TIMEOUT ? parseInt(process.env.WS_PAUSE_TIMEOUT, 10) : 60_000,
+      backendUrl: process.env.BACKEND_URL || 'https://127.0.0.1:8080',
+      authUrl: process.env.AUTH_URL || 'https://127.0.0.1:8082',
+      allowedOrigins: process.env.ALLOWED_ORIGINS
+        ? process.env.ALLOWED_ORIGINS.split(',')
+        : [process.env.ALLOWED_ORIGIN || 'https://127.0.0.1:3000'],
+      maxConnections: process.env.WS_MAX_CONNECTIONS ? parseInt(process.env.WS_MAX_CONNECTIONS, 10) : 1000,
     },
   },
 };
