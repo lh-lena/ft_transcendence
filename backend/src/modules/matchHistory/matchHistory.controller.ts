@@ -13,7 +13,7 @@ export const matchHistoryController = {
     input: matchHistoryCreateInput,
   ) : Promise< matchHistoryResponseType > {
 
-  	const newMatch = await MatchHistoryService.createMatchHistory( input );
+  	const newMatch = await MatchHistoryService.create( input );
     return newMatch;
   },
   
@@ -23,7 +23,7 @@ export const matchHistoryController = {
     input: matchHistoryUpdateInput,
   ) : Promise< matchHistoryResponseType > | undefined {
 
-    const matchHistory = await MatchHistoryService.updateMatchHistory( id, input );
+    const matchHistory = await MatchHistoryService.update( id, input );
     return matchHistory;
   },
 
@@ -31,20 +31,20 @@ export const matchHistoryController = {
   async getAllorFiltered(
     query: matchHistoryQueryInput,
   ) : Promise< matchHistoryResponseArrayType > | null {
-    return await MatchHistoryService.getAllorFilteredMatchHistory( query );
+    return await MatchHistoryService.getQuery( query );
   },
   
   async getById(
     id: matchHistoryIdInput,
   ) : Promise< matchHistoryResponseType | null > {
-  	return await MatchHistoryService.getMatchHistoryById( id );
+  	return await MatchHistoryService.getById( id );
   },
   
   //delete matchHistory
  async remove(
     id: matchHistoryIdInput,
   ) : Promise< { message: string } > {
-  	await MatchHistoryService.removeMatchHistory( id );
+  	await MatchHistoryService.remove( id );
     return { message: 'Match deleted' };
   },
 }

@@ -2,75 +2,86 @@ import { createCrud } from '../../utils/prismaCrudGenerator';
 import { AppError, NotFoundError, ConflictError } from '../../utils/error';
 import { Prisma } from '@prisma/client';
 
-const MatchHistoryModel = createCrud('matchHistory');
+const matchHistoryModel = createCrud( 'matchHistory' );
 
-export async function getAllorFilteredMatchHistory(
-  filters: Record<string, any>
+export async function getQuery(
+	filters: Record<string, any>
 ) {
 
-  let MatchHistory;
+  let ret;
 
-  if (Object.keys(filters).length === 0) {
-    MatchHistoryes = await MatchHistoryModel.findAll();
-  } else {
-    MatchHistoryes = await MatchHistoryModel.findBy(filters);
+  console.log( matchHistoryModel.findAll );
+
+	if( Object.keys( filters ).length === 0 ) {
+		ret = await matchHistoryModel.findAll();
+	} else {
+		ret = await matchHistoryModel.findBy( filters );
+	}
+  if( !ret || ret.length === 0 ) {
+    throw new NotFoundError( 'No matchHistory found' );
   }
-
-  if (!MatchHistoryes || MatchHistoryes.length === 0) {
-    throw new NotFoundError('No MatchHistoryes found');
-  }
-
-  return MatchHistoryes;
+  return ret;
 }
 
-export async function getMatchHistoryById(id: number) {
-  const MatchHistory = await MatchHistoryModel.findById(id);
-  if (!MatchHistory) {
-    throw new NotFoundError(`MatchHistory with id ${id} not found`);
-  }
-  return MatchHistory;
+export async function getById(
+	id: number
+) {
+
+	const ret = await matchHistoryModel.findById( id );
+	if( !ret || ret.length === 0 )
+		throw new NotFoundError( `matchHistory with ${id} not found` );
+
+	return ret;
 }
 
-export async function createMatchHistory(data: any) {
+export async function create(
+	data: creatematchHistoryInput
+) {
+
+	try { 
+		const ret = await matchHistoryModel.insert( data );
+    return( ret );
+	} catch( err: any ){
+    if( err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002' ) {
+      throw new ConflictError( `matchHistory already exists` );
+    }
+		throw err;
+	}
+}
+
+export async function update( 
+	id: number,
+	data: patchmatchHistoryInput
+) {
+
+	try { 
+		const ret = await matchHistoryModel.patch( id, data );
+	  if( !ret )
+	  	throw new NotFoundError( `matchHistory with ${id} not found` );
+    return ret;
+	} catch( err: any ) {
+    if( err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002' ) {
+      throw new ConflictError( `matchHistory already exists` );
+    }
+      if( err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2025' ) {
+        throw new NotFoundError( `matchHistory with ${id} not found` );
+    }
+		throw err;
+	}
+}
+
+export async function remove(
+	id: number
+) {
   try {
-    const MatchHistory = await MatchHistoryModel.insert(data);
-    return MatchHistory;
-  } catch (err: any) {
-    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
-      throw new ConflictError('MatchHistory already exists');
+  	const ret = await matchHistoryModel.remove( id );
+    if( !ret )
+      throw new NotFoundError( `matchHistory with ${id} not found` );
+  	return { message: `matchHistory ${id} deleted successfulyy` };
+  } catch( err: any ) {
+    if( err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2025' ) {
+      throw new NotFoundError( `matchHistory with ${id} not found` );
     }
     throw err;
-  }
-}
-
-export async function updateMatchHistory(id: number, data: any) {
-  try {
-    const MatchHistory = await MatchHistoryModel.patch(id, data);
-    if (!MatchHistory) {
-      throw new NotFoundError(`MatchHistory with id ${id} not found`);
-    }
-    return MatchHistory;
-  } catch (err: any) {
-    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
-      throw new ConflictError('MatchHistory already exists');
-    }
-    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2025') {
-      throw new NotFoundError(`MatchHistory with id ${id} not found`);
-    }
-    throw err;
-  }
-}
-
-export async function removeMatchHistory(id: number) {
-  try {
-    const MatchHistory = await MatchHistoryModel.remove(id);
-    if (!MatchHistory)
-      throw new NotFoundError(`MatchHistory with id ${id} not found`);
-    return { message: `MatchHistory ${id} deleted successfully` };
-  } catch (err: any) {
-    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2025') {
-      throw new NotFoundError(`MatchHistory with id ${id} not found`);
-    }
-    throw err;
-  }
+      }
 }

@@ -6,6 +6,7 @@ export function createCrud<ModelName extends keyof PrismaClient>( modelName: Mod
 
 	return {
     findAll: async() => {
+      console.log( modelName );
       return await model.findMany()
     },
 
