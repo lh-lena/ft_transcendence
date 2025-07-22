@@ -12,8 +12,6 @@ COPY package*.json ./
 
 COPY . .
 
-COPY .env .env
-
 ENV DATABASE_URL="file:./data/database.sqlite"
 
 RUN npm install && npx prisma db push
