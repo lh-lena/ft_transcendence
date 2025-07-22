@@ -2,16 +2,23 @@
   "name": "ft_transcendence_backend",
   "version": "1.0.0",
   "scripts": {
-    "dev": "tsx watch src/server.ts"
+    "dev": "tsx watch src/server.ts",
+    "lint": "eslint . --ext .ts,.tsx",
+    "format:check": "prettier --check \"src/**/*.{ts,tsx}\"",
+    "build": "tsc"
   },
   "dependencies": {
-    "fastify": "^4.24.3",
     "@fastify/cors": "^8.4.1",
-    "better-sqlite3": "^9.1.1"
+    "better-sqlite3": "^9.1.1",
+    "fastify": "^4.24.3"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.36.0",
+    "@typescript-eslint/parser": "^8.36.0",
+    "eslint": "^9.30.1",
+    "prettier": "^3.6.2",
     "tsx": "^3.12.7",
-    "typescript": "^5.2.2"
+    "typescript": "^5.8.3"
   }
 }
