@@ -9,8 +9,11 @@ EXPOSE 8080
 ENV NODE_ENV=development
 
 COPY package*.json ./
+
 COPY . .
 
-RUN npm install && npx prisma db push
+COPY .env .env
+
+RUN  npm install && npx prisma db push
 
 CMD [ "npm", "run", "dev" ]
