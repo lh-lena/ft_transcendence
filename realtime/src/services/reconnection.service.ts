@@ -12,7 +12,7 @@ export default function reconnectionService(app: FastifyInstance) {
     reconnectionTimeout: app.config.websocket.connectionTimeout,
   };
 
-  function getDiconnectionData(userId: number) : DisconnectInfo | undefined {
+  function getDisconnectionData(userId: number) : DisconnectInfo | undefined {
     const info = disconnectedPlayers.get(userId);
     app.log.debug(`[reconnection-service] Getting disconnect info for user ${userId}: ${info ? 'found' : 'not found'}`);
     return info;
@@ -93,7 +93,7 @@ export default function reconnectionService(app: FastifyInstance) {
       app.gameStateService
       .endGame(info.gameId, GameSessionStatus.CANCELLED,`Player ${info.username} failed to reconnect`)
       .catch((error: Error | GameError) => {
-        app.log.debug(`[reconnection-service] Failed to end game ${info.gameId} due to error: ${error instanceof ( Error || GameError) ? error.message : String(error)}`);
+        app.log.debug(`[reconnection-service] Failed to end game ${info.gameId} due to error: ${error?.message}`);
       });
     }
     cleanup(userId);
@@ -130,7 +130,7 @@ export default function reconnectionService(app: FastifyInstance) {
 
   return {
     handleDisconnect,
-    getDiconnectionData,
+    getDisconnectionData,
     attemptReconnection,
     cleanup,
   }

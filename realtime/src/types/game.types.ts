@@ -45,7 +45,7 @@ export enum AIDifficulty {
 
 export enum ConnectionState {
     CONNECTED = 'connected',
-    DISCONNECTED = 'diconnected'
+    DISCONNECTED = 'disconnected'
 }
 
 export enum NotificationType {

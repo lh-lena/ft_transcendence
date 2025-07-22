@@ -1,4 +1,5 @@
 import { FastifyInstance, WSConnection } from 'fastify';
+import { WebSocket } from 'ws';
 import { ErrorServerMsg } from '../types/error.types.js';
 import { NETWORK_QUALITY } from '../types/network.types.js';
 import { NotificationType } from '../types/game.types.js';
@@ -57,7 +58,7 @@ export default function connectionService(app: FastifyInstance) {
   function handleNewConnection(conn: WSConnection): void {
     const { userId } = conn.user;
     addConnection(conn);
-    const disconnectInfo = app.reconnectionService.getDiconnectionData(userId);
+    const disconnectInfo = app.reconnectionService.getDisconnectionData(userId);
     if (disconnectInfo) {
       app.reconnectionService.attemptReconnection(userId);
     }
