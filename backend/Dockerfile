@@ -9,6 +9,7 @@ ENV NODE_ENV=development
 COPY package*.json ./
 COPY . .
 
+RUN apk add --no-cache curl
 RUN apk update && npm install && npx prisma db push
 
 CMD [ "npm", "run", "dev" ]
