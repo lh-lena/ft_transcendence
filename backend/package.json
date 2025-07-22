@@ -2,7 +2,10 @@
   "name": "ft_transcendence_backend",
   "version": "1.0.0",
   "scripts": {
-    "dev": "tsx watch src/server.ts"
+    "dev": "tsx watch src/server.ts",
+    "lint": "eslint . --ext .ts,.tsx",
+    "format:check": "prettier --check \"src/**/*.{ts,tsx}\"",
+    "build": "tsc"
   },
   "dependencies": {
     "@fastify/autoload": "^6.3.1",
