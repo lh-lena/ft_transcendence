@@ -1,16 +1,6 @@
 
 services:
-#  frontend:
-#    build: ./frontend
-#    container_name: ft_transcendence_frontend
-#    ports:
-#      - "3000:3000"
-#    volumes:
-#      - ./frontend:/app
-#      - /app/node_modules
-#    networks:
-#      - pong-network
-#
+
   nginx:
     image: nginx:alpine
     container_name: ft_transcendence_nginx
@@ -62,28 +52,6 @@ services:
       timeout: 5s
       retries: 10
 
-
-#  realtime:
-#    build: ./realtime
-#    container_name: ft_transcendence_realtime
-#    ports:
-#      - "8081:8081"
-#    volumes:
-#      - ./realtime:/app
-#      - /app/node_modules
-#    networks:
-#      - pong-network
-#
-#  auth-service:
-#    build: ./auth-service
-#    container_name: ft_transcendence_auth
-#    ports:
-#      - "8082:8082"
-#    volumes:
-#      - ./auth-service:/app
-#      - /app/node_modules
-#    networks:
-#      - pong-network
   realtime:
     build: ./realtime
     container_name: ft_transcendence_realtime
@@ -95,12 +63,6 @@ services:
     networks:
       - pong-network
 
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8081"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-
   auth-service:
     build: ./auth-service
     container_name: ft_transcendence_auth
@@ -111,11 +73,6 @@ services:
       - /app/node_modules
     networks:
       - pong-network
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8082/api/auth/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
 
 networks:
   pong-network:

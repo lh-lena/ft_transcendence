@@ -2,15 +2,20 @@
   "name": "ft_transcendence_auth",
   "version": "1.0.0",
   "scripts": {
-    "dev": "tsx watch src/server.ts",
-    "lint": "eslint . --ext .ts,.tsx",
-    "format:check": "prettier --check \"src/**/*.{ts,tsx}\"",
-    "build": "tsc"
+    "start": "tsx src/server.ts",
+    "dev": "tsx src/server.ts"
   },
   "dependencies": {
-    "fastify": "^4.24.3"
+    "@fastify/multipart": "^7.4.0",
+    "argon2": "^0.28.5",
+    "better-sqlite3": "^9.1.1",
+    "fastify": "^4.24.3",
+    "jsonwebtoken": "^9.0.2",
+    "ts-node": "^10.9.2"
   },
   "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^20.0.0",
     "@typescript-eslint/eslint-plugin": "^8.36.0",
     "@typescript-eslint/parser": "^8.36.0",
