@@ -14,6 +14,8 @@ COPY . .
 
 COPY .env .env
 
-RUN export $(grep -v '^#' .env | xargs) && npm install && npx prisma db push
+ENV DATABASE_URL="file:./data/database.sqlite"
+
+RUN npm install && npx prisma db push
 
 CMD [ "npm", "run", "dev" ]
