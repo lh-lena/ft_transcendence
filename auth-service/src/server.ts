@@ -9,7 +9,7 @@ import friendsRoutes from './routes/friends';
 import fastifyMultipart from '@fastify/multipart';
 
 const server = Fastify({ logger: true });
-const db = new Database('../backend/src/database/database.sqlite');
+const db = new Database(':memory:');
 
 type User = {
 	id: number;

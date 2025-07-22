@@ -2,7 +2,8 @@ import { FastifyRequest, FastifyReply } from 'fastify';
 import { verifyJWT } from './jwt';
 import Database from 'better-sqlite3';
 
-const db = new Database('../backend/src/database/database.sqlite');
+// Use the same in-memory database as server.ts
+const db = new Database(':memory:');
 
 export function authMiddleware(request: FastifyRequest, reply: FastifyReply, done: () => void) {
 	const authHeader = request.headers['authorization'];

@@ -2,7 +2,8 @@
   "name": "ft_transcendence_auth",
   "version": "1.0.0",
   "scripts": {
-    "start": "tsx src/server.ts"
+    "start": "tsx src/server.ts",
+    "dev": "tsx src/server.ts"
   },
   "dependencies": {
     "@fastify/multipart": "^7.4.0",
