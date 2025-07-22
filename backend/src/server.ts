@@ -1,52 +1,27 @@
+// backend/src/server.ts
 import Fastify from 'fastify';
-import AutoLoad from '@fastify/autoload';
+import cors from '@fastify/cors';
 
-import Path from 'path';
-import { errorHandler } from './utils/errorHandler';
+const server = Fastify({ logger: true });
 
-//build server
-export async function buildServer() {
+server.register(cors, { origin: true });
 
-	//build fastify instance
-	const server = Fastify({ logger: true }).withTypeProvider<ZodTypeProvider>();
+// Basic health check endpoint
+server.get('/api/health', async (request, reply) => {
+  return {
+    status: 'ok',
+    service: 'backend',
+    message: 'Fastify server running on port 8080'
+  };
+});
 
-//  server.addHook('onRoute', (routeOptions) => {
-//   console.log('📦 Route registered:', routeOptions.method, routeOptions.url);
-//   if (routeOptions.schema) {
-//     console.log('🧪 Route schema:', JSON.stringify(routeOptions.schema, null, 2));
-//   }
-//  });
-
-
-  server.register( AutoLoad, {
-    dir: Path.join( __dirname, 'plugins'),
-  } )
-
-  server.register( AutoLoad, {
-    dir: Path.join(__dirname, 'routes'),
-  } )
-
-  server.setErrorHandler( errorHandler );			
-
-  await server.ready();
-
-	return server;
-}
-
-//start server
-async function start() {
-	
-	try{
-		const server = await buildServer();
-		const PORT = parseInt(server.config.PORT);
-
-		//start listening with the instance
-		await server.listen({ port: PORT, host: server.config.HOST });
-	  } catch (err) {
-	    console.error(err);
-	    process.exit(1);
-	  }
-}
-
+const start = async () => {
+  try {
+    await server.listen({ port: 8080, host: '0.0.0.0' });
+  } catch (err) {
+    server.log.error(err);
+    process.exit(1);
+  }
+};
 
 start();
