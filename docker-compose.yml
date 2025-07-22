@@ -53,7 +53,7 @@ services:
     volumes:
       - ./backend:/app
       - /app/node_modules
-      - ./data:/app/data
+      - ./backend/data:/app/data
     networks:
       - pong-network
     healthcheck:
