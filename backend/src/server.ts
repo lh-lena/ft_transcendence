@@ -4,6 +4,8 @@ import AutoLoad from '@fastify/autoload';
 import Path from 'path';
 import { errorHandler } from './utils/errorHandler';
 
+//test 
+
 //build server
 export async function buildServer() {
 
