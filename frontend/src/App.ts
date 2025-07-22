@@ -4,11 +4,26 @@ import { ProfilePage } from './pages/profile'
 import { LocalGamePage } from './pages/localGame'
 import { LoginPage } from './pages/login'
 import { RegisterPage } from './pages/register'
+import { SettingsPage } from './pages/settings'
+import { LeaderboardPage } from './pages/leaderboard'
+
+// keeps state for router and passes between pages
+// to add a page
+// import page at the top
+// add to current page type
+// add in define routes
 
 export class App {
     private router: Router;
     private container: HTMLElement;
-    private currentPage: HomePage | ProfilePage | LocalGamePage | LoginPage | RegisterPage | null = null;
+    private currentPage: HomePage 
+    | ProfilePage 
+    | LocalGamePage 
+    | LoginPage 
+    | RegisterPage 
+    | SettingsPage
+    | LeaderboardPage
+    | null = null;
 
     constructor() {
         this.container = document.createElement('div');
@@ -16,12 +31,13 @@ export class App {
         this.router = new Router();
         
         // Define routes
-        this.router.add('/', () => this.showHome());
-        this.router.add('/local', () => this.showGame());
-        this.router.add('/profile', () => this.showProfile());
-        this.router.add('/login', () => this.showLogin());
-        this.router.add('/register', () => this.showRegister());
-
+        this.router.add('/', () => this.showPage(HomePage));
+        this.router.add('/local', () => this.showPage(LocalGamePage));
+        this.router.add('/profile', () => this.showPage(ProfilePage));
+        this.router.add('/login', () => this.showPage(LoginPage));
+        this.router.add('/register', () => this.showPage(RegisterPage));
+        this.router.add('/settings', () => this.showPage(SettingsPage));
+        this.router.add('/leaderboard', () => this.showPage(LeaderboardPage));
         // Initialize router
         this.router.init();
     }
@@ -30,43 +46,13 @@ export class App {
         parent.appendChild(this.container);
     }
 
-    private showHome(): void {
+    private showPage(PageClass: any) {
         if (this.currentPage) {
             this.currentPage.unmount();
         }
-        this.currentPage = new HomePage(this.router);
-        this.currentPage.mount(this.container);
-    }
-
-    private showLogin(): void {
+        this.currentPage = new PageClass(this.router);
         if (this.currentPage) {
-            this.currentPage.unmount();
+            this.currentPage.mount(this.container);
         }
-        this.currentPage = new LoginPage(this.router);
-        this.currentPage.mount(this.container);
-    }
-
-    private showRegister(): void {
-        if (this.currentPage) { 
-            this.currentPage.unmount();
-        }
-        this.currentPage = new RegisterPage(this.router);
-        this.currentPage.mount(this.container);
-    }
-
-    private showGame(): void {
-        if (this.currentPage) {
-            this.currentPage.unmount();
-        }
-        this.currentPage = new LocalGamePage(this.router);
-        this.currentPage.mount(this.container);
-    }
-
-    private showProfile(): void {
-        if (this.currentPage) {
-            this.currentPage.unmount();
-        }
-        this.currentPage = new ProfilePage(this.router);
-        this.currentPage.mount(this.container);
     }
 }

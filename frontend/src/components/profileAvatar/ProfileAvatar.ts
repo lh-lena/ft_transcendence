@@ -9,6 +9,9 @@ export class ProfileAvatar {
         private style?: string
     ) {
         this.element = document.createElement('div');
+        this.element.style.width = `${width + 5}px`;
+        this.element.style.height = `${height + 5}px`;
+        this.element.className = 'bg-white flex items-center justify-center';
 
         const canvas = document.createElement('canvas');
         canvas.width = width;

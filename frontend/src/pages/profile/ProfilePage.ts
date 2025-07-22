@@ -1,5 +1,4 @@
 import { Router } from '../../router'
-import { Menu, MenuItem } from '../../components/menu'
 import { ProfileAvatar } from '../../components/profileAvatar'
 import { Loading } from '../../components/loading'
 import { MenuBar } from '../../components/menuBar'
@@ -11,46 +10,33 @@ import { userStore } from '../../types'
 
 export class ProfilePage {
     private container: HTMLElement;
-    private menuStart: Menu;
-    private menuGame: Menu;
     private loadingScreen: Loading;
     private menuBar: MenuBar;
 
     constructor(private router: Router) {
         // Full page background
         this.container = document.createElement('div');
-        this.container.className = 'profile-bg w-full min-h-screen flex items-center justify-center bg-brandBlue';
+        this.container.className = 'w-full min-h-screen flex items-center justify-center bg-brandBlue';
 
         // Window content
-        const menuBarItems = [
-        {
-            label: 'start Game',
-            items: [
-            { label: 'Local Game', href: '/local' },
-            { label: 'Vs AI', href: '/vs-ai' },
-            { label: 'Vs Player', href: '/vs-player' }
-            ]
-        },
-        {
-            label: 'settings',
-            href: '/settings'
-        },
-        {
-            label: 'logout',
-            href: '/logout'
-        }
-        ];
+        
 
-        this.menuBar = new MenuBar(router, menuBarItems);
+        this.menuBar = new MenuBar(router);
         const menuBarElement = this.menuBar.render();
-        menuBarElement.classList.add('self-start');
 
         const profilePic = new ProfileAvatar(userStore.colorMap, 40, 40, 2).getElement();
-        profilePic.className = 'animate-bounce-slow border-2 border-black';
+        profilePic.className = 'animate-bounce-slow border-4 border-black';
 
         const header = document.createElement('h1');
         header.textContent = `hi ${userStore.username}`;
         header.className = 'text-black title text-2xl';
+
+        const profileCard = document.createElement('div')
+        profileCard.className = 'flex flex-col items-center gap-5'
+        profileCard.appendChild(profilePic);
+        profileCard.appendChild(header);
+
+        const footer = document.createElement('div');
 
         // use Window component
         const windowComponent = new Window({
@@ -58,7 +44,7 @@ export class ProfilePage {
             width: CANVAS_DEFAULTS.width,
             height: CANVAS_DEFAULTS.height,
             className: '',
-            children: [menuBarElement, profilePic, header]
+            children: [menuBarElement, profileCard, footer]
         });
         this.container.appendChild(windowComponent.getElement());
 
@@ -66,19 +52,8 @@ export class ProfilePage {
         this.loadingScreen = new Loading('waiting for opponent', 'button', this.cancelWaitForOpponent.bind(this));
     }
 
-    private showGameMenu(): void {
-        this.menuStart.unmount();
-        this.menuGame.mount(this.container)
-    }
-
-    private hideGameMenu(): void {
-        this.menuGame.unmount();
-        this.menuStart.mount(this.container)
-    }
-
     public mount(parent: HTMLElement): void {
         parent.appendChild(this.container);
-        // this.menuStart.mount(this.container);
     }
 
     public unmount(): void {
@@ -86,7 +61,6 @@ export class ProfilePage {
     }
 
     private waitForOpponent(): void {
-        // this.container.remove();
         this.loadingScreen.mount(document.body);
     }
 

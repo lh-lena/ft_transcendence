@@ -1,4 +1,3 @@
-
 import { Router } from '../../router'
 
 export interface MenuBarItem {
@@ -17,16 +16,35 @@ export class MenuBar {
   router: Router;
   menuBarItems: MenuBarItem[];
 
-  constructor(router: Router, menuBarItems: MenuBarItem[]) {
+  static defaultMenuBarItems: MenuBarItem[] = [
+    {
+      label: 'start Game',
+      items: [
+        { label: 'Local Game', href: '/local' },
+        { label: 'Vs AI', href: '/vs-ai' },
+        { label: 'Vs Player', href: '/vs-player' },
+        { label: 'Tournament', href: '/tournament' }
+      ]
+    },
+    { label: 'settings', href: '/settings' },
+    { label: 'chat', href: '/chat' },
+    { label: 'leaderboard', href: '/leaderboard' },
+    { label: 'logout', href: '/logout' }
+  ];
+
+  constructor(router: Router, menuBarItems?: MenuBarItem[]) {
     this.router = router;
-    this.menuBarItems = menuBarItems;
+    this.menuBarItems = MenuBar.defaultMenuBarItems.slice();
+    if (menuBarItems && menuBarItems.length > 0) {
+      this.menuBarItems = this.menuBarItems.concat(menuBarItems);
+    }
   }
 
   render(): HTMLElement {
     const ul = document.createElement('ul');
     ul.setAttribute('role', 'menu-bar');
 
-    this.menuBarItems.forEach(menu => {
+    this.menuBarItems.forEach((menu: MenuBarItem) => {
       const li = document.createElement('li');
       li.setAttribute('role', 'menu-item');
       li.setAttribute('tabindex', '0');
@@ -56,7 +74,7 @@ export class MenuBar {
       const subUl = document.createElement('ul');
       subUl.setAttribute('role', 'menu');
 
-      menu.items.forEach(item => {
+      menu.items.forEach((item) => {
         const subLi = document.createElement('li');
         subLi.setAttribute('role', 'menu-item');
         if (item.divider) subLi.classList.add('divider');
