@@ -14,6 +14,6 @@ COPY . .
 
 COPY .env .env
 
-RUN  npm install && npx prisma db push
+RUN export $(grep -v '^#' .env | xargs) && npm install && npx prisma db push
 
 CMD [ "npm", "run", "dev" ]
