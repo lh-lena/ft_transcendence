@@ -260,7 +260,7 @@ function startGameLoop(game: GameSession) : void {
       app.log.info(`[game-state] Auto-resuming game ${gameId} after pause timeout ${config.pauseTimeout/1000}s`);
       pauseTimeouts.delete(gameId);
       resumeGame(pausedByPlayerId, game).catch(error => {
-        app.log.debug(`[game-state] Error during auto-resume for game ${gameId}: ${error instanceof (Error || GameError) ? error.message : 'Unknown error'}`);
+        app.log.debug(`[game-state] Error during auto-resume for game ${gameId}: ${error instanceof GameError ? error.message : 'Unknown error'}`);
         endGame(game, GameSessionStatus.CANCELLED_SERVER_ERROR);
       });
     }, config.pauseTimeout);
