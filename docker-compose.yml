@@ -62,12 +62,6 @@ services:
     networks:
       - pong-network
 
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8081"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-
   auth-service:
     build: ./auth-service
     container_name: ft_transcendence_auth
@@ -78,11 +72,6 @@ services:
       - /app/node_modules
     networks:
       - pong-network
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8082/api/auth/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
 
 networks:
   pong-network:
