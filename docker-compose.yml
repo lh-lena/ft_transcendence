@@ -1,6 +1,5 @@
 
 services:
-<<<<<<< HEAD
 #  frontend:
 #    build: ./frontend
 #    container_name: ft_transcendence_frontend
@@ -12,7 +11,6 @@ services:
 #    networks:
 #      - pong-network
 #
-=======
   nginx:
     image: nginx:alpine
     container_name: ft_transcendence_nginx
@@ -47,7 +45,6 @@ services:
       timeout: 5s
       retries: 10
 
->>>>>>> develop
   backend:
     build: ./backend
     container_name: ft_transcendence_backend
@@ -65,7 +62,6 @@ services:
       timeout: 5s
       retries: 10
 
-<<<<<<< HEAD
 #  realtime:
 #    build: ./realtime
 #    container_name: ft_transcendence_realtime
@@ -87,7 +83,6 @@ services:
 #      - /app/node_modules
 #    networks:
 #      - pong-network
-=======
   realtime:
     build: ./realtime
     container_name: ft_transcendence_realtime
@@ -120,7 +115,6 @@ services:
       interval: 10s
       timeout: 5s
       retries: 10
->>>>>>> develop
 
 networks:
   pong-network:
