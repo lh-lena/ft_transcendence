@@ -30,9 +30,6 @@ export default function connectionService(app: FastifyInstance) {
 
     stopHeartbeat(conn);
     const { userId } = conn.user;
-
-    stopHeartbeat(conn);
-    const { userId } = conn.user;
     const { gameId } = conn;
     if (!gameId) {
       app.log.debug(`[connection-service] User ${userId} disconnected and not in a game`);

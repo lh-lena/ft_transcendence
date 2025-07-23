@@ -173,15 +173,6 @@ export default function createGameService(app: FastifyInstance) {
         respond.notificationToGame(gameId, NotificationType.INFO, ` ${user.userAlias} left the game`);
         gameStateService.endGame(game, GameSessionStatus.CANCELLED, user.userId);
       }
-      const game = getValidGameCheckPlayer(gameId, userId);
-      validateGameStatus(game.status, [GameSessionStatus.ACTIVE, GameSessionStatus.PAUSED, GameSessionStatus.PENDING]);
-      if (game.status === GameSessionStatus.PENDING) {
-        respond.notificationToGame(gameId, NotificationType.INFO, ` ${user.userAlias} left the game before it started`);
-        gameStateService.endGame(game, GameSessionStatus.CANCELLED);
-      } else {
-        respond.notificationToGame(gameId, NotificationType.INFO, ` ${user.userAlias} left the game`);
-        gameStateService.endGame(game, GameSessionStatus.CANCELLED, user.userId);
-      }
     } catch (error) {
       if (error instanceof GameError) {
         log.debug(`[game-service] User ID ${userId}. Game ID ${gameId}. Error: ${error.message}`);
