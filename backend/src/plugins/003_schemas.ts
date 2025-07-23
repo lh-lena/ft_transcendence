@@ -4,8 +4,7 @@ import { FastifyInstance } from 'fastify';
 import { healthRefSchemas } from '../modules/health/health.schema';
 import { responseRefSchemas } from '../modules/response/response.schema';
 import { userRefSchemas } from '../modules/user/user.schema';
-import { matchRefSchemas } from '../modules/match/match.schema';
-import { matchHistoryRefSchemas } from '../modules/matchHistory/matchHistory.schema';
+import { gameRefSchemas } from '../modules/game/game.schema';
 
 const schemaPlugin = async ( server: FastifyInstance ) => {
 
@@ -13,8 +12,7 @@ const schemaPlugin = async ( server: FastifyInstance ) => {
     ...Object.values( healthRefSchemas ),
     ...Object.values( responseRefSchemas ),
     ...Object.values( userRefSchemas ),
-    ...Object.values( matchRefSchemas ),
-    ...Object.values( matchHistoryRefSchemas ),
+    ...Object.values( gameRefSchemas ),
   ]
 
   for( const schema of schemaList ) {

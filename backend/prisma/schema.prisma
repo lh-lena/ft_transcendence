@@ -20,24 +20,8 @@ model user {
   password_hash   String
   is_2fa_enabled  Boolean @default(false)
   twofa_secret    String?
-  matches         matchHistory[] @relation( "userMatches" )
   created_at      DateTime @default( now() )
   updated_at      DateTime @updatedAt
-  }
-
-model matchHistory {
-  id              String @id 
-  startedAt       DateTime @default( now() )
-  endedAt         DateTime?
-  status          MatchStatus @default( canceled )
-  matchMode       MatchMode
-  users           user[] @relations( "userMatches" ); 
-  player1Score    Int   @default(0)
-  player2Score    Int   @default(0)
-  winnerId        Int?
-  winner          user? @relation( "WinnerHistory", fields: [winnerId], references: [id] )
-  loserId         Int?
-  loser           user? @relation( "LoserHistory", fields: [loserId], references: [id] )
   }
 
   enum MatchStatus {

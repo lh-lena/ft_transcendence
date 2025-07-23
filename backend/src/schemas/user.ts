@@ -24,9 +24,9 @@ const userBase = z.object( {
 
 const userSchema = userBase.meta( { $id: "user" } )
 
-const userSchemaArray = z.array(
-  userBase
-).meta( { $id: "userArray" } )
+export const userBaseArray = z.array( userBase )
+
+const userSchemaArray = userBaseArray.meta( { $id: "userArray" } )
 
 const userCreateSchema = z.object( {
   ...userIn,

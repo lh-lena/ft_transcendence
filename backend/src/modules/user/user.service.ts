@@ -26,6 +26,7 @@ export async function getById(
 ) {
 
 	const ret = await userModel.findById( id );
+  console.log( "USERID: ", Number( id ), "USER: ", ret );
 	if( !ret || ret.length === 0 )
 		throw new NotFoundError( `user with ${id} not found` );
 

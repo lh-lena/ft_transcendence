@@ -30,7 +30,7 @@ const crudRoutes: FastifyPluginAsync<CrudRoutesOptions> = async ( server: Fastif
         200: { $ref: `${entityName}Array` },
         404: { $ref: `NotFound` },
       },
-      summary: `Get all or filtered ${basePath}`,
+      summary: `Get all or filtered ${entityName}`,
     },
     handler: async ( request, reply ) => {
       const ret = await controller.getAllorFiltered( request.query );

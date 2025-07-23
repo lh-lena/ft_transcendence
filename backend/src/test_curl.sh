@@ -17,56 +17,67 @@ curl -X POST http://[::1]:8080/api/user \
     "username": "Janesen"
   }'
 
-curl -X PATCH http://localhost:8080/api/match/user/29369 \
+curl -X PATCH http://localhost:8080/api/game/user/29369 \
   -H "Content-Type: application/json" \
   -d '{"status": "ready" }'
 
-curl -X PATCH http://localhost:8080/api/match/user/49612 \
+curl -X PATCH http://localhost:8080/api/game/user/49612 \
   -H "Content-Type: application/json" \
   -d '{ "status": "ready" }'
 
 curl -X DELETE http://localhost:8080/api/user/1
 
 curl -X POST \
-  'http://[::1]:8080/api/match' \
+  'http://[::1]:8080/api/game' \
   -H 'accept: application/json' \
   -H 'Content-Type: application/json' \
   -d '{
-  "userId": 2936,
+  "userId": 2,
   "mode": "pvp_remote",
-  "matchId": "string",
+  "gameId": "string",
   "visibility": "public"
 }'
 
 curl -X POST \
-  'http://[::1]:8080/api/match' \
+  'http://[::1]:8080/api/game' \
   -H 'accept: application/json' \
   -H 'Content-Type: application/json' \
   -d '{
-  "userId": 29369,
+  "userId": 12,
   "mode": "pvp_remote",
-  "matchId": "string",
+  "gameId": "string",
+  "visibility": "public"
+}'
+
+curl -X POST \
+  'http://[::1]:8080/api/game' \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "userId": 10,
+  "mode": "pvp_remote",
+  "gameId": "string",
   "visibility": "private"
 }'
 
 curl -X POST \
-  'http://[::1]:8080/api/match/join/dc47c749-f16f-4457-8f4d-3bffb8928049' \
+  'http://[::1]:8080/api/game/join/b0324abe-aa5c-486b-9f5b-184d16bf2c3d' \
   -H 'accept: application/json' \
   -H 'Content-Type: application/json' \
   -d '{
-  "userId": 29369,
+  "userId": 19,
   "mode": "pvp_remote",
-  "matchId": "string",
+  "gameId": "string",
   "visibility": "private"
 }'
 
 curl -X POST \
-  'http://[::1]:8080/api/match' \
+  'http://[::1]:8080/api/game' \
   -H 'accept: application/json' \
   -H 'Content-Type: application/json' \
   -d '{
   "userId": 49612,
   "mode": "pvp_ai",
   "aiDifficulty": "hard",
-  "matchId": "string"
+  "gameId": "string"
 }'
