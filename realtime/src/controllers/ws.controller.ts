@@ -10,8 +10,8 @@ import { NotificationType } from '../types/game.types.js';
 export const handleWSConnection = (
   connection: WebSocket,
   req: IncomingMessage,
-  app: FastifyInstance) => {
-
+  app: FastifyInstance,
+) => {
   const user = (req.socket as any)._user as User;
 
   const ws = connection as WSConnection;
@@ -25,7 +25,9 @@ export const handleWSConnection = (
   ws.missedPings = 0;
 
   const { userId } = ws.user;
-  app.log.debug(`[websocket-service] User ${userId} connected from ${req.socket.remoteAddress || 'unknown'}`);
+  app.log.debug(
+    `[websocket-service] User ${userId} connected from ${req.socket.remoteAddress || 'unknown'}`,
+  );
   app.connectionService.handleNewConnection(ws);
 
   ws.on('message', async (message: string) => {
@@ -34,23 +36,38 @@ export const handleWSConnection = (
       const rawMessage = await JSON.parse(message.toString());
       const validationResult = WsClientMessageSchema.safeParse(rawMessage);
       if (!validationResult.success) {
-        throw new Error(validationResult.error.issues.map(issue => issue.message).join(', '));
+        throw new Error(
+          validationResult.error.issues
+            .map((issue) => issue.message)
+            .join(', '),
+        );
       }
       const { event, payload } = validationResult.data;
       app.eventBus.emit(event, { user, payload });
     } catch (error) {
       if (error instanceof SyntaxError) {
-        app.log.error(`[websocket-service] Invalid JSON message from user ${userId}: ${message}`);
+        app.log.error(
+          `[websocket-service] Invalid JSON message from user ${userId}: ${message}`,
+        );
         app.respond.error(userId, `Invalid JSON format: ${error.message}`);
       } else if (error instanceof Error) {
-        app.log.error(`[websocket-service] Error processing message from user ${userId}: ${error.message}`);
+        app.log.error(
+          `[websocket-service] Error processing message from user ${userId}: ${error.message}`,
+        );
         app.respond.error(userId, `Error processing message: ${error.message}`);
       } else if (error instanceof GameError) {
-        app.log.error(`[websocket-service] Game error for user ${userId}: ${error.message}`);
-        app.respond.notification(userId, NotificationType.ERROR,`${error.message}`);
-      }
-      else {
-        app.log.error(`[websocket-service] Unknown error for user ${userId}: ${error}`);
+        app.log.error(
+          `[websocket-service] Game error for user ${userId}: ${error.message}`,
+        );
+        app.respond.notification(
+          userId,
+          NotificationType.ERROR,
+          `${error.message}`,
+        );
+      } else {
+        app.log.error(
+          `[websocket-service] Unknown error for user ${userId}: ${error}`,
+        );
         app.respond.error(userId, 'Unknown error occurred');
       }
     }
@@ -61,13 +78,16 @@ export const handleWSConnection = (
   });
 
   ws.on('close', (code: number, reason: Buffer) => {
-    app.log.info(`[websocket-service] Handling closing connection for user ${userId} ${ws.user.username}. ${code}: ${reason.toString()}`);
+    app.log.info(
+      `[websocket-service] Handling closing connection for user ${userId} ${ws.user.username}. ${code}: ${reason.toString()}`,
+    );
     app.connectionService.removeConnection(ws);
-    
   });
 
   ws.on('error', (err: any) => {
-    app.log.error(`[websocket-service] WebSocket ${userId} error: ${err.message}`);
+    app.log.error(
+      `[websocket-service] WebSocket ${userId} error: ${err.message}`,
+    );
     app.connectionService.removeConnection(ws);
   });
 };

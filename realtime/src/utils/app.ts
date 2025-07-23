@@ -4,7 +4,7 @@ import { registerPlugins } from '../plugins/index.js';
 
 export const buildServer = () => {
   const server = Fastify({
-    logger: serverConfig.logger
+    logger: serverConfig.logger,
   });
 
   server.register(registerPlugins);
@@ -14,7 +14,7 @@ export const buildServer = () => {
       status: 'ok',
       service: 'realtime',
       websocket: 'ready',
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
   });
 

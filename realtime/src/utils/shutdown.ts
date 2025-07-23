@@ -1,11 +1,16 @@
 import { WebSocketServer } from 'ws';
 import { FastifyInstance } from 'fastify';
 
-export function setupGracefulShutdown(wss: WebSocketServer, app: FastifyInstance): void {
+export function setupGracefulShutdown(
+  wss: WebSocketServer,
+  app: FastifyInstance,
+): void {
   let shutdownInProgress = false;
   const gracefulShutdown = async (signal: string) => {
     if (shutdownInProgress) {
-      app.log.warn(`${signal} received but shutdown already in progress - ignoring`);
+      app.log.warn(
+        `${signal} received but shutdown already in progress - ignoring`,
+      );
       return;
     }
     shutdownInProgress = true;
@@ -20,7 +25,7 @@ export function setupGracefulShutdown(wss: WebSocketServer, app: FastifyInstance
       app.log.info('Shutting down game sessions...');
       await app.gameSessionService.shutdown();
       app.log.info('Waiting for final API calls to complete...');
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await new Promise((resolve) => setTimeout(resolve, 2000));
       app.log.info('Closing WebSocket connections...');
       await app.connectionService.shutdown();
       app.log.info('Closing Fastify instance...');
@@ -28,12 +33,20 @@ export function setupGracefulShutdown(wss: WebSocketServer, app: FastifyInstance
       app.log.info('Graceful shutdown completed');
 
       if (process.env.NODE_ENV === 'development') {
-        console.log('Active handles after shutdown:', (process as any)._getActiveHandles?.());
-        console.log('Active requests after shutdown:', (process as any)._getActiveRequests?.());
+        console.log(
+          'Active handles after shutdown:',
+          (process as any)._getActiveHandles?.(),
+        );
+        console.log(
+          'Active requests after shutdown:',
+          (process as any)._getActiveRequests?.(),
+        );
       }
       process.exit(0);
     } catch (error) {
-      app.log.error(`Error during shutdown: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      app.log.error(
+        `Error during shutdown: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
       process.exit(1);
     }
   };

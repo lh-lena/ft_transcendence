@@ -4,11 +4,10 @@ import { WsServerBroadcast } from '../schemas/ws.schema.js';
 import { GameResult, GameState } from '../schemas/game.schema.js';
 
 export default function createRespondService(app: FastifyInstance) {
-
   function send<T extends keyof WsServerBroadcast>(
     userId: number,
     event: T,
-    payload: WsServerBroadcast[T]
+    payload: WsServerBroadcast[T],
   ): void {
     app.wsService.sendToConnection(userId, { event, payload });
   }
@@ -17,7 +16,8 @@ export default function createRespondService(app: FastifyInstance) {
     gameId: string,
     event: T,
     payload: WsServerBroadcast[T],
-    excludeUsers: number[] = []): void {
+    excludeUsers: number[] = [],
+  ): void {
     app.wsService.broadcastToGame(gameId, { event, payload }, excludeUsers);
   }
   function connected(userId: number): void {
@@ -36,7 +36,11 @@ export default function createRespondService(app: FastifyInstance) {
     broadcast(gameId, 'game_pause', { gameId, reason });
   }
 
-  function countdownUpdate(gameId: string, countdown: number, message: string): void {
+  function countdownUpdate(
+    gameId: string,
+    countdown: number,
+    message: string,
+  ): void {
     broadcast(gameId, 'countdown_update', { gameId, countdown, message });
   }
 
@@ -47,7 +51,7 @@ export default function createRespondService(app: FastifyInstance) {
   function notification(
     userId: number,
     type: NotificationType,
-    message: string
+    message: string,
   ): void {
     send(userId, 'notification', { type, message, timestamp: Date.now() });
   }
@@ -56,9 +60,14 @@ export default function createRespondService(app: FastifyInstance) {
     gameId: string,
     type: NotificationType,
     message: string,
-    excludeUsers: number[] = []
+    excludeUsers: number[] = [],
   ): void {
-    broadcast(gameId, 'notification', {type, message, timestamp: Date.now()}, excludeUsers);
+    broadcast(
+      gameId,
+      'notification',
+      { type, message, timestamp: Date.now() },
+      excludeUsers,
+    );
   }
 
   return {
@@ -69,6 +78,6 @@ export default function createRespondService(app: FastifyInstance) {
     countdownUpdate,
     notification,
     notificationToGame,
-    error
-  }
+    error,
+  };
 }

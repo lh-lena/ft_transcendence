@@ -1,5 +1,10 @@
 import { z } from 'zod';
-import { GameMode, AIDifficulty, GameSessionStatus, Direction } from '../types/game.types.js';
+import {
+  GameMode,
+  AIDifficulty,
+  GameSessionStatus,
+  Direction,
+} from '../types/game.types.js';
 import { UserSchema } from './user.schema.js';
 
 export const StartGameSchema = z.object({
@@ -20,7 +25,7 @@ export const GameResultSchema = z.object({
   status: z.union([
     z.literal(GameSessionStatus.FINISHED),
     z.literal(GameSessionStatus.CANCELLED),
-    z.literal(GameSessionStatus.CANCELLED_SERVER_ERROR)
+    z.literal(GameSessionStatus.CANCELLED_SERVER_ERROR),
   ]),
   mode: z.nativeEnum(GameMode),
   startedAt: z.string(),
@@ -44,7 +49,7 @@ export const GameStateSchema = z.object({
     y: z.number(),
     dx: z.number(),
     dy: z.number(),
-    v: z.number()
+    v: z.number(),
   }),
   paddleA: PaddleSchema,
   paddleB: PaddleSchema,

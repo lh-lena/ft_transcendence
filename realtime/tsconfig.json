@@ -1,7 +1,7 @@
 /* To learn more about Typescript configuration file: https://www.typescriptlang.org/docs/handbook/tsconfig-json.html. */
 
 {
-    "compilerOptions": {
+  "compilerOptions": {
     "target": "ES2022",
     "module": "ES2022",
     "moduleResolution": "node",
@@ -22,27 +22,13 @@
     "sourceMap": true,
     "baseUrl": "./",
     "paths": {
-        "*": [
-        "node_modules/*",
-        "src/*"
-        ]
+      "*": ["node_modules/*", "src/*"]
     },
-    "typeRoots": [
-        "./node_modules/@types",
-        "./src/types",
-        "./src/schemas"
-    ]
-    },
-    "include": [
-        "src/**/*.ts",
-        "src/**/*.d.ts"
-    ],
-    "exclude": [
-        "node_modules",
-        "dist",
-        "tmp"
-    ],
-    "ts-node": {
-        "esm": true
-    }
+    "typeRoots": ["./node_modules/@types", "./src/types", "./src/schemas"]
+  },
+  "include": ["src/**/*.ts", "src/**/*.d.ts"],
+  "exclude": ["node_modules", "dist", "tmp"],
+  "ts-node": {
+    "esm": true
+  }
 }

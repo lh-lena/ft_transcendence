@@ -16,56 +16,74 @@ export default function authService(app: FastifyInstance) {
         },
       });
       if (!res.ok) {
-        app.log.warn(`[auth-service] Token validation failed: ${res.status} ${res.statusText}`);
+        app.log.warn(
+          `[auth-service] Token validation failed: ${res.status} ${res.statusText}`,
+        );
         return null;
       }
       const rawUserData = await res.json();
       const validationResult = UserSchema.safeParse(rawUserData);
       if (!validationResult.success) {
-        app.log.warn(`[auth-service] Invalid user data received from auth service. Data: ${rawUserData}. Errors: ${validationResult.error.errors.map(err => err.message).join(', ')}`);
+        app.log.warn(
+          `[auth-service] Invalid user data received from auth service. Data: ${rawUserData}. Errors: ${validationResult.error.errors.map((err) => err.message).join(', ')}`,
+        );
         return null;
       }
       const user = validationResult.data;
       return user;
     } catch (error) {
-      app.log.error(`[auth-service] Error validating user: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      app.log.error(
+        `[auth-service] Error validating user: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
       return null;
     }
   }
 
   async function verifyClient(info: VerifyClientInfo): Promise<boolean> {
-    app.log.debug(`[auth-service]: Attempting client verification for origin: ${info.origin}, secure: ${info.secure}`);
+    app.log.debug(
+      `[auth-service]: Attempting client verification for origin: ${info.origin}, secure: ${info.secure}`,
+    );
     try {
       if (info.origin && !isAllowedOrigin(info.origin)) {
-        app.log.warn(`[auth-service]: Connection rejected - Forbidden Origin: ${info.origin}`);
+        app.log.warn(
+          `[auth-service]: Connection rejected - Forbidden Origin: ${info.origin}`,
+        );
         return false;
       }
 
       if (!info.secure && !info.origin.includes('127.0.0.1')) {
-        app.log.warn('[auth-service]: Connection rejected - Only secure (WSS) connections are allowed.');
+        app.log.warn(
+          '[auth-service]: Connection rejected - Only secure (WSS) connections are allowed.',
+        );
         return false;
       }
 
       const token = extractTokenFromRequest(info);
       if (!token) {
-        app.log.warn('[auth-service] Connection rejected - No authentication token provided');
+        app.log.warn(
+          '[auth-service] Connection rejected - No authentication token provided',
+        );
         return false;
       }
 
       const user = await validateUser(token);
       if (!user) {
-        app.log.debug('[auth-service]: Connection rejected: Invalid token or expired authentication credentials.');
+        app.log.debug(
+          '[auth-service]: Connection rejected: Invalid token or expired authentication credentials.',
+        );
         return false;
       }
 
       (info.req.socket as any)._user = user;
-      app.log.debug(`[auth-service]: Finished verification for user ${user.userId}`);
+      app.log.debug(
+        `[auth-service]: Finished verification for user ${user.userId}`,
+      );
       return true;
     } catch (error) {
       app.log.debug('[auth-service]: Error verifying client:', error);
       return false;
     }
-  };
+  }
 
   function isAllowedOrigin(origin: string): boolean {
     const expectedOrigins = app.config.websocket.allowedOrigins;
@@ -81,7 +99,7 @@ export default function authService(app: FastifyInstance) {
 
     const cookies = cookie.parse(cookieHeader);
     const token = cookies['token'] as string | undefined;
-    
+
     if (!token) {
       app.log.warn('[auth-service]: No token found in cookies');
       return null;
@@ -92,6 +110,6 @@ export default function authService(app: FastifyInstance) {
 
   return {
     verifyClient,
-    validateUser
-  }
+    validateUser,
+  };
 }

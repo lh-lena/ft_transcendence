@@ -7,7 +7,6 @@ import { eventBusPlugin } from './eventBus.plugin.js';
 
 export const registerPlugins = async (app: FastifyInstance) => {
   try {
-
     app.register(configPlugin);
 
     await app.register(eventBusPlugin);
@@ -17,10 +16,12 @@ export const registerPlugins = async (app: FastifyInstance) => {
     await app.register(websocketPlugin);
 
     app.register(gamePlugin);
-    
+
     app.log.debug('All plugins registered successfully');
   } catch (err) {
-    app.log.error(`Error registering plugins: ${err instanceof Error ? err.message : err}`);
+    app.log.error(
+      `Error registering plugins: ${err instanceof Error ? err.message : err}`,
+    );
     throw err;
   }
 };

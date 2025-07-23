@@ -6,9 +6,14 @@ import { initializeGameState } from './pong-engine.service.js';
 export default function createGameSessionService(app: FastifyInstance) {
   const gameSessions: Map<string, GameSession> = new Map();
 
-  async function createGameSession(gameId: string, gameData: StartGame): Promise<GameSession | null> {
+  async function createGameSession(
+    gameId: string,
+    gameData: StartGame,
+  ): Promise<GameSession | null> {
     if (gameSessions.has(gameId)) {
-      app.log.debug(`[game-session] Game session ${gameId} already exists. Replacing it`);
+      app.log.debug(
+        `[game-session] Game session ${gameId} already exists. Replacing it`,
+      );
     }
 
     const newGame: GameSession = {
@@ -25,7 +30,7 @@ export default function createGameSessionService(app: FastifyInstance) {
     return newGame;
   }
 
-  function getGameSession(gameId: string) : GameSession | undefined {
+  function getGameSession(gameId: string): GameSession | undefined {
     const session = gameSessions.get(gameId);
     return session;
   }
@@ -33,9 +38,11 @@ export default function createGameSessionService(app: FastifyInstance) {
   function getAllActiveGameSessions(): GameSession[] {
     const activeSessions: GameSession[] = [];
     gameSessions.forEach((session) => {
-      if (session.status !== GameSessionStatus.FINISHED &&
+      if (
+        session.status !== GameSessionStatus.FINISHED &&
         session.status !== GameSessionStatus.CANCELLED &&
-        session.status !== GameSessionStatus.CANCELLED_SERVER_ERROR) {
+        session.status !== GameSessionStatus.CANCELLED_SERVER_ERROR
+      ) {
         activeSessions.push(session);
       }
     });
@@ -55,7 +62,11 @@ export default function createGameSessionService(app: FastifyInstance) {
     return removed;
   }
 
-  function setPlayerConnectionStatus(userId: number, gameId: string, connected: boolean): void {
+  function setPlayerConnectionStatus(
+    userId: number,
+    gameId: string,
+    connected: boolean,
+  ): void {
     const gameSession = gameSessions.get(gameId);
     if (!gameSession) {
       throw new Error(`[game-session] Game session ${gameId} not found`);
@@ -65,18 +76,25 @@ export default function createGameSessionService(app: FastifyInstance) {
     } else {
       gameSession.isConnected.delete(userId);
     }
-    app.log.debug(`[game-session] Player ${userId} in the game ${gameId} is ${connected ? 'connected' : 'disconnected'}`);
+    app.log.debug(
+      `[game-session] Player ${userId} in the game ${gameId} is ${connected ? 'connected' : 'disconnected'}`,
+    );
   }
 
-  function updateGameSession(gameId: string, updates: Partial<GameSession>): boolean {
+  function updateGameSession(
+    gameId: string,
+    updates: Partial<GameSession>,
+  ): boolean {
     const game = gameSessions.get(gameId);
     if (!game) {
-      app.log.debug(`[game-session] Cannot update - game not found ${ gameId }`);
+      app.log.debug(`[game-session] Cannot update - game not found ${gameId}`);
       return false;
     }
 
     Object.assign(game, updates);
-    app.log.debug(`[game-session] Updated game session ${gameId}. Updates: ${Object.keys(updates).join(', ')}`);
+    app.log.debug(
+      `[game-session] Updated game session ${gameId}. Updates: ${Object.keys(updates).join(', ')}`,
+    );
     return true;
   }
 
@@ -84,11 +102,22 @@ export default function createGameSessionService(app: FastifyInstance) {
     const activeSessions = getAllActiveGameSessions();
     for (const session of activeSessions) {
       try {
-        app.log.debug(`[game-session] Closing a game session ${session.gameId}`);
-        app.respond.notificationToGame(session.gameId, 'error', 'server error occurred. game session is cancelled.');
-        await app.gameStateService.endGame(session, GameSessionStatus.CANCELLED_SERVER_ERROR);
+        app.log.debug(
+          `[game-session] Closing a game session ${session.gameId}`,
+        );
+        app.respond.notificationToGame(
+          session.gameId,
+          'error',
+          'server error occurred. game session is cancelled.',
+        );
+        await app.gameStateService.endGame(
+          session,
+          GameSessionStatus.CANCELLED_SERVER_ERROR,
+        );
       } catch (error) {
-        app.log.error(`[game-session] Error closing a game session ${session.gameId}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        app.log.error(
+          `[game-session] Error closing a game session ${session.gameId}: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        );
       }
     }
     gameSessions.clear();
@@ -102,6 +131,6 @@ export default function createGameSessionService(app: FastifyInstance) {
     storeGameSession,
     setPlayerConnectionStatus,
     updateGameSession,
-    shutdown
+    shutdown,
   };
 }
