@@ -18,8 +18,8 @@ const schemaPlugin = async ( server: FastifyInstance ) => {
   ]
 
   for( const schema of schemaList ) {
-   // console.log( `Registering schema: ${schema.$id}` );
-   // console.log( schema );
+    console.log( `Registering schema: ${schema.$id}` );
+    console.log( schema );
       server.addSchema( schema );
   }
 }

@@ -1,10 +1,13 @@
 import { z } from 'zod/v4';
 
 import { userBase, userQueryBase } from './user';
+import { gamePlayedArrayBase, gamePlayedQueryBase } from './gamePlayed';
 
+//define the possible statie 
 const resultStatusBase = z.enum([ 'finished', 'cancelled', 'cancelled_server_error' ])
 const resultStatusSchema = resultStatusBase.meta({ $id: 'resultStatus' });
 
+//define basic object for input 
 export const resultBase = z.object({
   id:              z.number().int().optional(),
   gameId:          z.string().uuid(),
@@ -19,46 +22,26 @@ export const resultBase = z.object({
   finishedAt:      z.string(),
 });
 
-const resultSchema = resultBase.meta( { $id: 'result' } );
-const resultSchemaArray = z.array( resultBase ).meta({ $id: 'resultArray' });
-
-const resultIdBase = z.object({
-  id: z.number(),
-})
-const resultIdSchema = resultIdBase.meta({ $id: 'resultId' });
-
-const resultCreateSchema = resultBase.meta({ $id: 'resultCreate' })
-
-const gamePlayedBase = z.object({
-  id:              z.number(),
-  userId:          z.number(),
-  user:            userBase,
-  score:           z.number(),
-  isWinner:        z.boolean(),
-  isAi:            z.boolean(),
-})
-const gamePlayedBaseArray = z.array(gamePlayedBase)
-
+//define schema for response
 const resultResponseBase = z.object({
   id:              z.number(),
   gameId:          z.string().uuid(),
   status:          resultStatusBase,
   startedAt:       z.string(),
   finishedAt:      z.string(),
-  gamePlayed:      z.any(),
+  gamePlayed:      gamePlayedArrayBase,
+
 });
-
 const resultResponseSchema = resultResponseBase.meta( { $id: "resultResponse" } )
-const resultResponseSchemaArray = z.array(resultResponseBase).meta( { $id: "resultResponseArray" } )
 
-const gamePlayedQueryBase = gamePlayedBase.extend({
-  id: z.coerce.number().optional(),
-  userId: z.coerce.number().optional(),
-  user: userQueryBase.optional(),
-  isWinner: z.coerce.boolean().optional(),
-  isAi: z.coerce.boolean().optional(),
-}).partial();
-const gamePlayedQuerySchema = gamePlayedQueryBase.meta({ $id: 'gamePlayedQuery' });
+const resultResponseArrayBase = z.array( resultResponseBase )
+const resultResponseArraySchema = resultResponseArrayBase.meta( { $id: "resultResponseArray" } )
+
+//define schema for GET
+const resultIdBase = z.object({
+  id: z.number(),
+})
+const resultIdSchema = resultIdBase.meta({ $id: 'resultId' });
 
 const resultQueryBase = resultResponseBase.extend({
   id: z.coerce.number().optional(),
@@ -66,14 +49,15 @@ const resultQueryBase = resultResponseBase.extend({
 }).partial();
 const resultQuerySchema = resultQueryBase.meta({ $id: 'resultQuery' });
 
+//define schema for POST
+const resultCreateSchema = resultBase.meta({ $id: 'resultCreate' })
 
+//export schemas
 export const resultSchemas = [
   resultStatusSchema,
-  resultSchema,
-  resultSchemaArray,
   resultCreateSchema,
   resultQuerySchema,
   resultIdSchema,
   resultResponseSchema,
-  resultResponseSchemaArray,
+  resultResponseArraySchema,
 ]

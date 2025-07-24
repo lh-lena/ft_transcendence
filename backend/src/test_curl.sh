@@ -87,7 +87,7 @@ curl -X POST \
   -H 'accept: application/json' \
   -H 'Content-Type: application/json' \
   -d '{
-  "gameId": "e3325abd-bb5c-486b-9f5b-184d16bf2c3d",
+  "gameId": "a3325abd-bb5c-486b-9f5b-184d16bf2c3d",
   "scorePlayer1": "2",
   "scorePlayer2": "8",
   "winnerId": 1,
