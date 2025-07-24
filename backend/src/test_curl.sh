@@ -81,3 +81,20 @@ curl -X POST \
   "aiDifficulty": "hard",
   "gameId": "string"
 }'
+
+curl -X POST \
+  'http://[::1]:8080/api/result' \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "gameId": "e3325abd-bb5c-486b-9f5b-184d16bf2c3d",
+  "scorePlayer1": "2",
+  "scorePlayer2": "8",
+  "winnerId": 1,
+  "loserId": 2,
+  "player1Username": "alec",
+  "player2Username": "moschi",
+  "status":   "finished",
+  "startedAt": "2025-07-24T15:45:09.142Z",
+  "finishedAt": "2025-07-24T15:45:09.142Z"
+}'

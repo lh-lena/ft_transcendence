@@ -3,6 +3,7 @@ import { AppError, NotFoundError, ConflictError } from '../../utils/error';
 import { Prisma } from '@prisma/client';
 
 const userModel = createCrud( 'user' );
+const options = { include: { gamePlayed: true } };
 
 export async function getQuery(
 	filters: Record<string, any>
@@ -11,9 +12,9 @@ export async function getQuery(
   let ret;
 
 	if( Object.keys( filters ).length === 0 ) {
-		ret = await userModel.findAll();
+		ret = await userModel.findAll( options );
 	} else {
-		ret = await userModel.findBy( filters );
+		ret = await userModel.findBy( filters, options );
 	}
   if( !ret || ret.length === 0 ) {
     throw new NotFoundError( 'No user found' );

@@ -24,16 +24,22 @@ const crudRoutes: FastifyPluginAsync<CrudRoutesOptions> = async ( server: Fastif
 
   if( routes.includes( 'getAll' ) && controller.getAllorFiltered ){
   server.get( basePath, {
-    schema: {
-      querystring: { $ref: `${entityName}Query` },
-      response: {
-        200: { $ref: `${entityName}Array` },
-        404: { $ref: `NotFound` },
-      },
-      summary: `Get all or filtered ${entityName}`,
-    },
+//    schema: {
+//      querystring: { $ref: `${entityName}Query` },
+//      response: {
+//        200: { $ref: `${entityName}ResponseArray` },
+//        404: { $ref: `NotFound` },
+//      },
+//      summary: `Get all or filtered ${entityName}`,
+//    },
     handler: async ( request, reply ) => {
+      console.log( request.query );
       const ret = await controller.getAllorFiltered( request.query );
+
+      console.log( ret );
+     // ret.forEach((ret) => {
+     //   console.log(JSON.stringify(ret, null, 3));
+     // });
 
       return reply.code( 200 ).send( ret );
     }
@@ -45,7 +51,7 @@ const crudRoutes: FastifyPluginAsync<CrudRoutesOptions> = async ( server: Fastif
     schema: {
       params: { $ref: `${entityName}Id` },
       response: {
-      200: { $ref: `${entityName}` },
+      200: { $ref: `${entityName}Response` },
       404: { $ref: `NotFound` },
       },
       summary: `Get ${entityName} by ID`,
@@ -63,7 +69,7 @@ const crudRoutes: FastifyPluginAsync<CrudRoutesOptions> = async ( server: Fastif
     schema: {
       body: { $ref: `${entityName}Create` },
       response: {
-        201: { $ref: `${entityName}` },
+        201: { $ref: `${entityName}Response` },
         400: { $ref: `BadRequest` },
       },
       summary: `Create a new ${entityName}`,
@@ -83,7 +89,7 @@ const crudRoutes: FastifyPluginAsync<CrudRoutesOptions> = async ( server: Fastif
       params: { $ref: `${entityName}Id` },
       body: { $ref: `${entityName}Update` },
       response: {
-        200: { $ref: `${entityName}` },
+        200: { $ref: `${entityName}Response` },
         404: { $ref: `NotFound` },
         400: { $ref: `BadRequest` },
       },

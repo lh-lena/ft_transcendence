@@ -18,8 +18,8 @@ export const userController = {
   async create(
     input: userCreateInput,
   ) : Promise< userResponseType > {
-  	const newUser = await userService.create( input );
-    return newUser;
+  	const ret = await userService.create( input );
+    return ret;
   },
   
   //update user
@@ -27,26 +27,30 @@ export const userController = {
     id: userIdInput,
     input: userUpdateInput,
   ) : Promise< userResponseType > {
-  	return await userService.update( id, input );
+  	const ret = await userService.update( id, input );
+    return ret;
   },
 
   //controller for user get All or by Id
   async getAllorFiltered(
     query: userQueryInput,
   ) : Promise< userResponseArrayType > {
-    return await userService.getQuery( query );
+    const ret = await userService.getQuery( query );
+    return ret;
   },
   
   async getById(
     id: userIdInput,
   ) : Promise< userResponseType | null > {
-  	return await userService.getById( id );
+  	const ret = await userService.getById( id );
+    return ret;
   },
   
   //delete user
  async remove(
     id: userIdInput,
   ) : Promise< { message: string } > {
-  	return await userService.remove( id );
+  	const ret = await userService.remove( id );
+    return ret;
   },
 }

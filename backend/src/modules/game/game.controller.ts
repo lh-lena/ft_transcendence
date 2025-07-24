@@ -19,8 +19,8 @@ export const gameController = {
     input: gameCreateInput,
   ) : Promise< gameResponseType > {
 
-  	const newMatch = await gameService.creategame( input );
-    return newMatch;
+  	const ret = await gameService.creategame( input );
+    return ret;
   },
   
   //update game
@@ -29,28 +29,31 @@ export const gameController = {
     input: gameUpdateInput,
   ) : Promise< gameResponseType > | undefined {
 
-    const game = await gameService.updategame( id, input );
-    return game;
+    const ret = await gameService.updategame( id, input );
+    return ret;
   },
 
   //controller for game get All or by Id
   async getAllorFiltered(
     query: gameQueryInput,
   ) : Promise< gameResponseArrayType > | null {
-    return await gameService.getAllorFilteredgame( query );
+    const ret = await gameService.getAllorFilteredgame( query );
+    return ret;
   },
   
   async getById(
     id: gameIdInput,
   ) : Promise< gameResponseType | null > {
-  	return await gameService.getgameById( id );
+  	const ret = await gameService.getgameById( id );
+    return ret;
   },
   
   //delete game
  async remove(
     id: gameIdInput,
   ) : Promise< { message: string } > {
-  	await gameService.removegame( id );
+  	const ret = gameService.removegame( id );
+    return ret;
     return { message: 'Match deleted' };
   },
 

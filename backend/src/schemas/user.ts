@@ -1,4 +1,4 @@
-import { z }from 'zod/v4';
+import { z } from 'zod/v4';
 import * as basics from './basics.js';
 
 //userchema
@@ -7,17 +7,18 @@ const userIn = {
 	email: z.string().email(),
 	username: z.string(),
 	password_hash: z.string(),
-	is_2fa_enabled: z.boolean().optional().default( false ),
+	is_2fa_enabled: z.boolean().optional(),
 	twofa_secret: z.string().nullable().optional(),
 }
 
 const userGen = {
   id: z.number(),
+  gamePlayed: z.any(),
   created_at: z.string(),
   updated_at: z.string(),
 }
 
-const userBase = z.object( { 
+export const userBase = z.object( { 
   ...userGen,
   ...userIn,
 } )
@@ -46,7 +47,15 @@ export const userIdBase = z.object( {
 
 const userIdSchema = userIdBase.meta( { $id: "userId" } )
 
-const userQuerySchema = userBase.partial().meta( { $id: "userQuery" } )
+export const userQueryBase = userBase.extend({
+    id: z.coerce.number().optional(),
+    is_2fa_enabled: z.coerce.boolean().optional(),
+  }).partial();
+const userQuerySchema = userQueryBase.meta( { $id: "userQuery" } );
+
+const userResponseBase = userBase;
+const userResponseSchema = userResponseBase.meta( { $id: "userResponse" } )
+const userResponseSchemaArray = z.array(userResponseBase).meta( { $id: "userResponseArray" })
 
 export type userCreateInput = z.infer< typeof userCreateSchema >;
 export type userUpdateInput = z.infer< typeof userUpdateSchema >;
@@ -63,4 +72,6 @@ export const userSchemas = [
   userSchemaArray,
   userIdSchema,
   userQuerySchema,
+  userResponseSchema,
+  userResponseSchemaArray,
 ]
