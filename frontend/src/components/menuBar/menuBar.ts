@@ -27,17 +27,15 @@ export class MenuBar {
       ]
     },
     { label: 'settings', href: '/settings' },
+    { label: 'profile', href: '/profile' },
     { label: 'chat', href: '/chat' },
     { label: 'leaderboard', href: '/leaderboard' },
     { label: 'logout', href: '/logout' }
   ];
 
-  constructor(router: Router, menuBarItems?: MenuBarItem[]) {
+  constructor(router: Router, private skipThis?: string) {
     this.router = router;
     this.menuBarItems = MenuBar.defaultMenuBarItems.slice();
-    if (menuBarItems && menuBarItems.length > 0) {
-      this.menuBarItems = this.menuBarItems.concat(menuBarItems);
-    }
   }
 
   render(): HTMLElement {
@@ -45,6 +43,8 @@ export class MenuBar {
     ul.setAttribute('role', 'menu-bar');
 
     this.menuBarItems.forEach((menu: MenuBarItem) => {
+      if (this.skipThis && menu.label == this.skipThis)
+        return;
       const li = document.createElement('li');
       li.setAttribute('role', 'menu-item');
       li.setAttribute('tabindex', '0');

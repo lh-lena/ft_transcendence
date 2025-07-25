@@ -36,7 +36,7 @@ export class Window {
 
     // Window pane
     this.windowPane = document.createElement('div');
-    this.windowPane.className = 'window-pane w-full h-full flex flex-col gap-12 justify-between items-center';
+    this.windowPane.className = 'window-pane w-full h-full flex flex-col gap-8 items-center';
     this.element.appendChild(this.windowPane);
 
     // Add children

@@ -4,9 +4,25 @@ import { Loading } from '../../components/loading'
 import { MenuBar } from '../../components/menuBar'
 import { CANVAS_DEFAULTS } from '../../types'
 import { Window } from '../../components/window'
+import { ScoreBox } from '../../components/scoreBoxes'
 
 // TODO-BACKEND
 import { userStore } from '../../types'
+
+export const sampleScoreHistory = [
+  { playerName: 'mo', result: 'loss' },
+  { playerName: 'alex', result: 'loss' },
+  { playerName: 'sam', result: 'win' },
+  { playerName: 'jamie', result: 'loss' },
+  { playerName: 'taylor', result: 'win' },
+  { playerName: 'jordan', result: 'win' },
+  { playerName: 'mrgan', result: 'loss' },
+  { playerName: 'casey', result: 'win' },
+  { playerName: 'riley', result: 'loss' },
+  { playerName: 'drew', result: 'win' },
+  { playerName: 'sky', result: 'loss' },
+  { playerName: 'quinn', result: 'win' },
+];
 
 export class ProfilePage {
     private container: HTMLElement;
@@ -20,8 +36,8 @@ export class ProfilePage {
 
         // Window content
         
-
-        this.menuBar = new MenuBar(router);
+        // skips profile menuBar
+        this.menuBar = new MenuBar(router, 'profile');
         const menuBarElement = this.menuBar.render();
 
         const profilePic = new ProfileAvatar(userStore.colorMap, 40, 40, 2).getElement();
@@ -36,7 +52,15 @@ export class ProfilePage {
         profileCard.appendChild(profilePic);
         profileCard.appendChild(header);
 
-        const footer = document.createElement('div');
+        const scoreBoxTitle = document.createElement('h1');
+        scoreBoxTitle.textContent = 'match history:';
+
+        const scoreBoxes = document.createElement('div');
+        scoreBoxes.className = 'flex flex-col gap-5';
+        sampleScoreHistory.forEach(scoreObj => {
+            const box = new ScoreBox(scoreObj.playerName, 0 ,scoreObj.result);
+            scoreBoxes.appendChild(box.getElement());
+        });
 
         // use Window component
         const windowComponent = new Window({
@@ -44,7 +68,7 @@ export class ProfilePage {
             width: CANVAS_DEFAULTS.width,
             height: CANVAS_DEFAULTS.height,
             className: '',
-            children: [menuBarElement, profileCard, footer]
+            children: [menuBarElement, profileCard, scoreBoxTitle,scoreBoxes]
         });
         this.container.appendChild(windowComponent.getElement());
 
