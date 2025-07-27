@@ -2,7 +2,6 @@ import { Router } from '../../router';
 import { PongGame } from '../../game';
 import { Countdown } from '../../components/countdown'
 import { GameState, GameStatus } from '../../types'
-import { SpectatorBar } from '../../components/spectatorBar'
 import { ScoreBar } from '../../components/scoreBar'
 import { generateProfilePrint } from '../../utils/generateProfilePrint'
 

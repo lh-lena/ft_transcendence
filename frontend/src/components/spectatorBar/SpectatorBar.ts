@@ -11,7 +11,7 @@ export class SpectatorBar {
 
         // Create 8 spectator boxes
         for (let i = 0; i < 8; i++) {
-            const { color, colorMap } = generateProfilePrint();
+            const { colorMap } = generateProfilePrint();
             const profileAvatar = new ProfileAvatar(colorMap) // You can set width/height/gridSize as needed
             profileAvatar.mount(this.element); // Mounts the avatar to the SpectatorBar
             this.spectatorBoxes.push(profileAvatar.getElement());

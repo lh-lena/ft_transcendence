@@ -1,7 +1,7 @@
 import { Ball } from '../types';
 import { Paddle } from '../types';
 import { GameState, GameStatus } from '../types'
-import { BALL_DEFAULTS, PADDLE_DEFAULTS, PADDLE_A_DEFAULTS, PADDLE_B_DEFAULTS, CANVAS_DEFAULTS } from '../types'
+import { BALL_DEFAULTS, PADDLE_A_DEFAULTS, PADDLE_B_DEFAULTS, CANVAS_DEFAULTS } from '../types'
 
 export class PongGame {
     private canvas: HTMLCanvasElement;

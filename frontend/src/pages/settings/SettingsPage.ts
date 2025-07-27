@@ -3,9 +3,6 @@ import { CANVAS_DEFAULTS } from '../../types'
 import { Window } from '../../components/window'
 import { MenuBar } from '../../components/menuBar'
 
-// TODO-BACKEND
-import { userStore } from '../../types'
-
 const settingButtons = [
   'this',
   'that',

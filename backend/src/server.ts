@@ -8,8 +8,8 @@ server.register(cors, { origin: true });
 
 // Basic health check endpoint
 server.get('/api/health', async (request, reply) => {
-  return { 
-    status: 'ok', 
+  return {
+    status: 'ok',
     service: 'backend',
     message: 'Fastify server running on port 8080'
   };

@@ -46,7 +46,14 @@ export class App {
         parent.appendChild(this.container);
     }
 
-    private showPage(PageClass: any) {
+    private showPage(PageClass: { new(router: Router): 
+        HomePage 
+        | ProfilePage 
+        | LocalGamePage 
+        | LoginPage 
+        | RegisterPage 
+        | SettingsPage 
+        | LeaderboardPage }) {
         if (this.currentPage) {
             this.currentPage.unmount();
         }

@@ -1,5 +1,5 @@
 import { PausePlay } from '../pausePlay';
-import { GameState, GameStatus } from '../../types';
+import { GameState } from '../../types';
 import { ProfileAvatar } from '../profileAvatar'
 
 export class ScoreBar {

@@ -7,7 +7,6 @@ import { ScoreBox } from '../../components/scoreBoxes'
 
 // TODO-BACKEND
 import { sampleScores } from '../../types/user'
-import { userStore } from '../../types'
 
 export class LeaderboardPage {
     private container: HTMLElement;

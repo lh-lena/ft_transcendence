@@ -1,6 +1,9 @@
-# start everything
+# start everything for prod environment
+all:
+	docker-compose -f docker-compose.prod.yml up --build
+# start everything for dev environment
 dev:
-	docker-compose up --build
+	docker-compose up -d --build 
 
 # stop everything
 down:

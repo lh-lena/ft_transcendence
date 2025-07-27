@@ -1,6 +1,4 @@
 export function generateProfilePrint(
-    width: number = 40,
-    height: number = 40,
     gridSize: number = 2
 ): { color: string, colorMap: string[] } {
     // define the palette and colors

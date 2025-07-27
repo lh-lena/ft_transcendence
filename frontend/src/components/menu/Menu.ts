@@ -5,7 +5,7 @@ export interface MenuItem {
   link?: string; // optional URL link 
   onClick?: () => void; // optional custom callback
   style?: string;
-};
+}
 
 // MACROS AND SHORTCUTS
 // '//back' always routes to the previous page using router

@@ -1,5 +1,23 @@
 
 services:
+  nginx:
+    image: nginx:alpine
+    container_name: ft_transcendence_nginx
+    ports:
+      - "443:443"
+      - "80:80"
+    depends_on:
+      - backend
+      - frontend
+      - realtime
+      - auth-service
+
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+    networks:
+      - pong-network
+
   frontend:
     build: ./frontend
     container_name: ft_transcendence_frontend
@@ -10,6 +28,11 @@ services:
       - /app/node_modules
     networks:
       - pong-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
 
   backend:
     build: ./backend
@@ -22,6 +45,11 @@ services:
       - ./data:/data
     networks:
       - pong-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
 
   realtime:
     build: ./realtime
