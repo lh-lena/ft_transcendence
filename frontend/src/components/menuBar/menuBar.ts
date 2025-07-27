@@ -26,8 +26,8 @@ export class MenuBar {
         { label: 'Tournament', href: '/tournament' }
       ]
     },
-    { label: 'settings', href: '/settings' },
     { label: 'profile', href: '/profile' },
+    { label: 'settings', href: '/settings' },
     { label: 'chat', href: '/chat' },
     { label: 'leaderboard', href: '/leaderboard' },
     { label: 'logout', href: '/logout' }
