@@ -7,23 +7,8 @@ import { Window } from '../../components/window'
 import { ScoreBox } from '../../components/scoreBoxes'
 
 // TODO-BACKEND
-import { userStore, sampleFriends } from '../../types'
-import { doc } from 'prettier'
+import { userStore, sampleFriends, sampleScoreHistory } from '../../types'
 
-export const sampleScoreHistory = [
-  { playerName: 'mo', result: 'loss' },
-  { playerName: 'alex', result: 'loss' },
-  { playerName: 'sam', result: 'win' },
-  { playerName: 'jamie', result: 'loss' },
-  { playerName: 'taylor', result: 'win' },
-  { playerName: 'jordan', result: 'win' },
-  { playerName: 'mrgan', result: 'loss' },
-  { playerName: 'casey', result: 'win' },
-  { playerName: 'riley', result: 'loss' },
-  { playerName: 'drew', result: 'win' },
-  { playerName: 'sky', result: 'loss' },
-  { playerName: 'quinn', result: 'win' },
-];
 
 export class ProfilePage {
     private container: HTMLElement;
@@ -83,13 +68,16 @@ export class ProfilePage {
         sampleFriends.slice(0, 9).forEach(friend => {
             const box = document.createElement('div');
             box.className = 'flex flex-row justify-start standard-dialog w-[300px] gap-5 h-20 items-center p-4'
-            const friendAvatar = new ProfileAvatar(friend.color , friend.colorMap, 40, 40, 2).getElement();
+            const friendAvatar = new ProfileAvatar(friend.color , friend.colorMap, 30, 30, 2).getElement();
             friendAvatar.title = friend.username;
             const friendName = document.createElement('h1');
             friendName.textContent = friend.username;
-
+            const chatButton = document.createElement('button');
+            chatButton.className = 'btn ml-auto';
+            chatButton.innerText = 'chat';
             box.appendChild(friendAvatar);
             box.appendChild(friendName);
+            box.appendChild(chatButton);
             friends.appendChild(box);
         });
 

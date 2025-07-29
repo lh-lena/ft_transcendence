@@ -40,7 +40,7 @@ git pull origin feature/your-branch
 
 ### Features to Implement
 - [ ] Account settings
-- [ ] Add friends panel to profile
+- [x] Add friends panel to profile
 - [ ] Chat system
 - [ ] Friend settings
 - [ ] Tournament functionality

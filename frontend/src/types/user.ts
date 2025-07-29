@@ -63,3 +63,18 @@ export const sampleFriends = [
     ...generateProfilePrint(2)
   }
 ]
+
+export const sampleScoreHistory = [
+  { playerName: 'mo', result: 'loss' },
+  { playerName: 'alex', result: 'loss' },
+  { playerName: 'sam', result: 'win' },
+  { playerName: 'jamie', result: 'loss' },
+  { playerName: 'taylor', result: 'win' },
+  { playerName: 'jordan', result: 'win' },
+  { playerName: 'mrgan', result: 'loss' },
+  { playerName: 'casey', result: 'win' },
+  { playerName: 'riley', result: 'loss' },
+  { playerName: 'drew', result: 'win' },
+  { playerName: 'sky', result: 'loss' },
+  { playerName: 'quinn', result: 'win' },
+];

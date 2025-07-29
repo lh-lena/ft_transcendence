@@ -15,13 +15,12 @@ export function generateProfilePrint(
         // Randomly select a color from the predefined list
         const squareColor = colors[Math.floor(Math.random() * colors.length)];
         colorMap.push(squareColor);
-        if (squareColor === color) accentPlaced = true;
+        if (squareColor == color) accentPlaced = true;
     }
 
     // Ensure at least one accent color is placed
     if (!accentPlaced) {
-        const randIndex = Math.floor(Math.random() * colorMap.length);
-        colorMap[randIndex] = color;
+        colorMap[3] = color;
     }
 
     return { color, colorMap };
