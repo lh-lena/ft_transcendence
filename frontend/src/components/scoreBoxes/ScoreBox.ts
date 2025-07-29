@@ -1,16 +1,9 @@
-export interface ScoreBoxProps {
-  playerName: string;
-  score: number;
-  width?: string;
-}
-
 export class ScoreBox {
   private element: HTMLElement;
 
   constructor(playerName: string, score: number, result?: string){
     this.element = document.createElement('div');
-    this.element.className = 'standard-dialog center scale-down';
-    this.element.style.width = '700px';
+    this.element.className = 'standard-dialog center scale-down w-[300px]';
 
     const title = document.createElement('h1');
     title.className = 'dialog-text';

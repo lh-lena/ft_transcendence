@@ -48,19 +48,39 @@ export class ProfilePage {
         header.className = 'text-black title text-2xl';
 
         const profileCard = document.createElement('div')
-        profileCard.className = 'flex flex-col items-center gap-5'
+        profileCard.className = 'flex flex-col items-center'
         profileCard.appendChild(profilePic);
         profileCard.appendChild(header);
 
+        const profileBottomRow = document.createElement('div');
+        profileBottomRow.className = `flex flex-row gap-10 w-full`;
+        
+        // match history collumn
+        const matchHistoryCollumn = document.createElement('div');
+        matchHistoryCollumn.className = 'flex flex-col gap-5 items-center text-center w-1/2';
         const scoreBoxTitle = document.createElement('h1');
         scoreBoxTitle.textContent = 'match history:';
-
         const scoreBoxes = document.createElement('div');
         scoreBoxes.className = 'flex flex-col gap-5';
         sampleScoreHistory.forEach(scoreObj => {
-            const box = new ScoreBox(scoreObj.playerName, 0 ,scoreObj.result);
+            const box = new ScoreBox(scoreObj.playerName, 0,scoreObj.result);
             scoreBoxes.appendChild(box.getElement());
         });
+
+        matchHistoryCollumn.appendChild(scoreBoxTitle);
+        matchHistoryCollumn.appendChild(scoreBoxes);
+
+        // friends collummn
+        const friendsCollumn = document.createElement('div');
+        friendsCollumn.className = 'flex flex-col gap-5 items-center text-center w-1/2';
+        const friendsTitle = document.createElement('h1');
+        friendsTitle.textContent = 'friends:';
+
+        friendsCollumn.appendChild(friendsTitle);
+
+        // put both rows into the bottom collumn
+        profileBottomRow.appendChild(matchHistoryCollumn);
+        profileBottomRow.appendChild(friendsCollumn);
 
         // use Window component
         const windowComponent = new Window({
@@ -68,7 +88,7 @@ export class ProfilePage {
             width: CANVAS_DEFAULTS.width,
             height: CANVAS_DEFAULTS.height,
             className: '',
-            children: [menuBarElement, profileCard, scoreBoxTitle,scoreBoxes]
+            children: [menuBarElement, profileCard, profileBottomRow]
         });
         this.container.appendChild(windowComponent.getElement());
 
