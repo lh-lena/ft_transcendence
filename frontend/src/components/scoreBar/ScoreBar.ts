@@ -19,7 +19,7 @@ export class ScoreBar {
         // Player A profile and score
         this.playerAContainer = document.createElement('div');
         this.playerAContainer.className = 'flex flex-row items-center gap-4';
-        const profileA = new ProfileAvatar(this.gameState.playerA.colorMap).getElement();
+        const profileA = new ProfileAvatar(this.gameState.playerA.color, this.gameState.playerA.colorMap).getElement();
         this.playerAContainer.appendChild(profileA);
         this.scoreA = document.createElement('h1');
         this.scoreA.id = 'score-a';
@@ -40,7 +40,7 @@ export class ScoreBar {
         this.scoreB.textContent = `${this.gameState.playerB.score}`;
         this.scoreB.className = 'text-white';
         this.playerBContainer.appendChild(this.scoreB);
-        const profileB = new ProfileAvatar(this.gameState.playerB.colorMap).getElement();
+        const profileB = new ProfileAvatar(this.gameState.playerB.color, this.gameState.playerB.colorMap).getElement();
         this.playerBContainer.appendChild(profileB);
         this.element.appendChild(this.playerBContainer);
     }

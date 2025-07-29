@@ -2,6 +2,7 @@ export class ProfileAvatar {
     private element: HTMLElement;
 
     constructor(
+        private color: string,
         private colorMap: string[],
         private width: number = 40,
         private height: number = 40,
@@ -9,13 +10,13 @@ export class ProfileAvatar {
         private style?: string
     ) {
         this.element = document.createElement('div');
-        this.element.style.width = `${width + 5}px`;
-        this.element.style.height = `${height + 5}px`;
-        this.element.className = 'bg-white flex items-center justify-center';
+        this.element.style.width = `${width}px`;
+        this.element.style.height = `${height}px`;
+        this.element.className = 'flex items-center justify-center';
 
         const canvas = document.createElement('canvas');
-        canvas.width = width;
-        canvas.height = height;
+        canvas.width = width + 5;
+        canvas.height = height + 5;
         const ctx = canvas.getContext('2d')!;
 
         const squareWidth = width / gridSize;
@@ -30,6 +31,11 @@ export class ProfileAvatar {
                 i++;
             }
         }
+
+        // Draw border around the edge using the primary color
+        ctx.strokeStyle = this.color;
+        ctx.lineWidth = 4;
+        ctx.strokeRect(2, 2, width - 1, height - 1);
     
         this.element.appendChild(canvas);
     }

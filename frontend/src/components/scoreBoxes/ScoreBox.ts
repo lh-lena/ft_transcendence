@@ -1,9 +1,9 @@
 export class ScoreBox {
   private element: HTMLElement;
 
-  constructor(playerName: string, score: number, result?: string){
+  constructor(playerName: string, result: string){
     this.element = document.createElement('div');
-    this.element.className = 'standard-dialog center scale-down w-[300px]';
+    this.element.className = 'standard-dialog w-[300px] h-20';
 
     const title = document.createElement('h1');
     title.className = 'dialog-text';
@@ -12,10 +12,7 @@ export class ScoreBox {
 
     const scoreText = document.createElement('p');
     scoreText.className = 'dialog-text';
-    if (result)
-        scoreText.textContent = `Result: ${result}`;
-    else
-        scoreText.textContent = `Score: ${score}`;
+    scoreText.innerHTML = `result: <span class="${result === 'win' ? 'text-winGreen' : result === 'loss' ? 'text-lossRed' : ''}">${result}</span>`;
     this.element.appendChild(scoreText);
   }
 

@@ -7,7 +7,8 @@ import { Window } from '../../components/window'
 import { ScoreBox } from '../../components/scoreBoxes'
 
 // TODO-BACKEND
-import { userStore } from '../../types'
+import { userStore, sampleFriends } from '../../types'
+import { doc } from 'prettier'
 
 export const sampleScoreHistory = [
   { playerName: 'mo', result: 'loss' },
@@ -40,8 +41,8 @@ export class ProfilePage {
         this.menuBar = new MenuBar(router, 'profile');
         const menuBarElement = this.menuBar.render();
 
-        const profilePic = new ProfileAvatar(userStore.colorMap, 40, 40, 2).getElement();
-        profilePic.className = 'animate-bounce-slow border-4 border-black';
+        const profilePic = new ProfileAvatar(userStore.color, userStore.colorMap, 40, 40, 2).getElement();
+        profilePic.className = 'animate-bounce-slow';
 
         const header = document.createElement('h1');
         header.textContent = `hi ${userStore.username}`;
@@ -63,7 +64,7 @@ export class ProfilePage {
         const scoreBoxes = document.createElement('div');
         scoreBoxes.className = 'flex flex-col gap-5';
         sampleScoreHistory.forEach(scoreObj => {
-            const box = new ScoreBox(scoreObj.playerName, 0,scoreObj.result);
+            const box = new ScoreBox(scoreObj.playerName, scoreObj.result);
             scoreBoxes.appendChild(box.getElement());
         });
 
@@ -75,8 +76,25 @@ export class ProfilePage {
         friendsCollumn.className = 'flex flex-col gap-5 items-center text-center w-1/2';
         const friendsTitle = document.createElement('h1');
         friendsTitle.textContent = 'friends:';
+        const friends = document.createElement('div');
+        friends.className = 'flex flex-col gap-5 gap-10 justify-items-center w-[300px]';
+        
+        // Add friend avatars (limit to 9 friends)
+        sampleFriends.slice(0, 9).forEach(friend => {
+            const box = document.createElement('div');
+            box.className = 'flex flex-row justify-start standard-dialog w-[300px] gap-5 h-20 items-center p-4'
+            const friendAvatar = new ProfileAvatar(friend.color , friend.colorMap, 40, 40, 2).getElement();
+            friendAvatar.title = friend.username;
+            const friendName = document.createElement('h1');
+            friendName.textContent = friend.username;
+
+            box.appendChild(friendAvatar);
+            box.appendChild(friendName);
+            friends.appendChild(box);
+        });
 
         friendsCollumn.appendChild(friendsTitle);
+        friendsCollumn.appendChild(friends);
 
         // put both rows into the bottom collumn
         profileBottomRow.appendChild(matchHistoryCollumn);

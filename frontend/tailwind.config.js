@@ -9,6 +9,8 @@ export default {
       colors: {
         brandBlue: '#0400FF',
         gameGrey: '#182245',
+        winGreen: '#06833eec',
+        lossRed: '#d72d1db5'
       },
       animation: {
         'spin-slow': 'spin 5s linear infinite',

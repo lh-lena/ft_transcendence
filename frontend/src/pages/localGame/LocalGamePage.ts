@@ -60,10 +60,7 @@ export class LocalGamePage {
         this.element.appendChild(this.gameContainer);
         this.game.mount(this.gameContainer);
 
-        // this.spectatorBar = new SpectatorBar();
-        // this.spectatorBar.mount(this.element);
     }
-
 
     private showPauseOverlay(): void {
         this.game?.hideGamePieces();

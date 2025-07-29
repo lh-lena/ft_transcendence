@@ -6,7 +6,7 @@ export interface UserProfile {
     colorMap: string[];
 }
 
-const { color, colorMap } = generateProfilePrint(40, 40, 2);
+const { color, colorMap } = generateProfilePrint(2);
 
 export const userStore: UserProfile = {
     username: 'mo',
@@ -28,3 +28,38 @@ export const sampleScores = [
   { playerName: 'Sky', score: 79 },
   { playerName: 'Quinn', score: 77 },
 ];
+
+export const sampleFriends = [
+  {
+    username: 'alex',
+    ...generateProfilePrint(2)
+  },
+  {
+    username: 'sam',
+    ...generateProfilePrint(2)
+  },
+  {
+    username: 'jamie',
+    ...generateProfilePrint(2)
+  },
+  {
+    username: 'taylor',
+    ...generateProfilePrint(2)
+  },
+  {
+    username: 'jordan',
+    ...generateProfilePrint(2)
+  },
+  {
+    username: 'casey',
+    ...generateProfilePrint(2)
+  },
+  {
+    username: 'riley',
+    ...generateProfilePrint(2)
+  },
+  {
+    username: 'drew',
+    ...generateProfilePrint(2)
+  }
+]
