@@ -8,6 +8,7 @@ import { sampleChatHistory } from '../../types/user';
 
 export class ChatPage {
     private container;
+    private clickedContact: HTMLDivElement;
 
     constructor (private router: Router) {
         this.container = document.createElement('div');
@@ -30,12 +31,16 @@ export class ChatPage {
         sampleFriends.forEach( friend => {
             const contact = document.createElement('div');
             contact.className = 'flex flex-row gap-2 box standard-dialog w-full items-center';
+            const clickableContact = document.createElement('a');
+            clickableContact.onclick = () => this.onClickTest(contact);
+            clickableContact.style.cursor = 'pointer';
             const contactName = document.createElement('h1');
             contactName.textContent = friend.username;
             const contactAvatar = new ProfileAvatar(friend.color , friend.colorMap, 30, 30, 2).getElement();
+            clickableContact.appendChild(contact);
             contact.appendChild(contactAvatar);
             contact.appendChild(contactName);
-            contacts.appendChild(contact);
+            contacts.appendChild(clickableContact);
         })
 
         // chat panel
@@ -61,6 +66,7 @@ export class ChatPage {
         chatRow.appendChild(contactsPanel);
         chatRow.appendChild(chatPanel);
 
+        // input at bottom
         const inputBox = document.createElement('div');
         inputBox.className = 'flex flex-row gap-2 w-full mt-auto';
         const inputMessage = document.createElement('input')
@@ -90,6 +96,19 @@ export class ChatPage {
     
     public mount(parent: HTMLElement): void {
         parent.appendChild(this.container);
+    }
+
+    private onClickTest(contact: HTMLDivElement): void {
+        // remove styling from old contact selected
+        if (this.clickedContact) {
+            this.clickedContact.classList.remove('bg-black');
+            this.clickedContact.classList.remove('text-white');
+        }
+        // select new contact
+        contact.classList.add('bg-black');
+        contact.classList.add('text-white');
+        this.clickedContact = contact;
+        console.log('Contact clicked!');
     }
 
     public unmount(): void {
