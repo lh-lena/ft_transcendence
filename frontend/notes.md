@@ -44,7 +44,7 @@ git pull origin feature/your-branch
 - [ ] Chat system
 - [ ] Friend settings
 - [ ] Tournament functionality
-- [ ] Match history
+- [x] Match history
 
 ## Additional Notes
 *Add any additional development notes here*
