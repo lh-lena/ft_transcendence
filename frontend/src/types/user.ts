@@ -78,3 +78,18 @@ export const sampleScoreHistory = [
   { playerName: 'sky', result: 'loss' },
   { playerName: 'quinn', result: 'win' },
 ];
+
+export const sampleChatHistory = [
+  { sender: 'me', message: 'hey! want to play a game?' },
+  { sender: 'other', message: 'sure! I was just about to ask you the same thing' },
+  { sender: 'me', message: 'haha great minds think alike' },
+  { sender: 'other', message: 'ready when you are' },
+  { sender: 'me', message: 'let\'s do this 🏓' },
+  { sender: 'other', message: 'prepare to lose! 😄' },
+  { sender: 'me', message: 'we\'ll see about that...' },
+  { sender: 'other', message: 'good game! you got me that time' },
+  { sender: 'me', message: 'thanks! you played really well too' },
+  { sender: 'other', message: 'rematch?' },
+  { sender: 'me', message: 'absolutely! best of 3?' },
+  { sender: 'other', message: 'you\'re on!' }
+]

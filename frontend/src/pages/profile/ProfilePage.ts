@@ -9,7 +9,6 @@ import { ScoreBox } from '../../components/scoreBoxes'
 // TODO-BACKEND
 import { userStore, sampleFriends, sampleScoreHistory } from '../../types'
 
-
 export class ProfilePage {
     private container: HTMLElement;
     private loadingScreen: Loading;
@@ -21,7 +20,7 @@ export class ProfilePage {
         this.container.className = 'w-full min-h-screen flex items-center justify-center bg-brandBlue';
 
         // Window content
-        
+
         // skips profile menuBar
         this.menuBar = new MenuBar(router, 'profile');
         const menuBarElement = this.menuBar.render();
@@ -63,7 +62,7 @@ export class ProfilePage {
         friendsTitle.textContent = 'friends:';
         const friends = document.createElement('div');
         friends.className = 'flex flex-col gap-5 gap-10 justify-items-center w-[300px]';
-        
+
         // Add friend avatars (limit to 9 friends)
         sampleFriends.slice(0, 9).forEach(friend => {
             const box = document.createElement('div');
