@@ -2,7 +2,7 @@ import { z } from 'zod/v4';
 
 import { userBase, userQueryBase } from './user';
 
-const gamePlayedBase = z.object({
+export const gamePlayedBase = z.object({
   id:              z.number(),
   userId:          z.number(),
   user:            userBase,
@@ -12,7 +12,7 @@ const gamePlayedBase = z.object({
 })
 const gamePlayedSchema = gamePlayedBase.meta( { $id: "gamePlayed" } )
 
-const gamePlayedArrayBase = z.array(gamePlayedBase)
+export const gamePlayedArrayBase = z.array(gamePlayedBase)
 const gamePlayedArraySchema = gamePlayedArrayBase.meta( { $id: "gamePlayedArray" } )
 
 const gamePlayedQueryBase = gamePlayedBase.extend({

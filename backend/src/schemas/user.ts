@@ -1,6 +1,6 @@
 import { z } from 'zod/v4';
 import * as basics from './basics.js';
-import { gamePlayedBase } from './gamePlayed';
+//import { gamePlayedBase } from './gamePlayed';
 
 //define user schema
 const userIn = {
@@ -13,7 +13,7 @@ const userIn = {
 
 const userGen = {
   id:         z.number(),
-  gamePlayed: gamePlayedBase,
+  gamePlayed: z.any().optional(),
   created_at: z.string(),
   updated_at: z.string(),
 }
@@ -79,6 +79,6 @@ export type userCreateInput = z.infer< typeof userCreateSchema >;
 export type userUpdateInput = z.infer< typeof userUpdateSchema >;
 export type userIdInput = z.infer< typeof userIdSchema >;
 export type userQueryInput = z.infer< typeof userQuerySchema >;
-export type userType = z.infer< typeof userSchema >;
-export type userArrayType = z.infer< typeof userSchemaArray >;
+//export type userType = z.infer< typeof userSchema >;
+//export type userArrayType = z.infer< typeof userSchemaArray >;
 

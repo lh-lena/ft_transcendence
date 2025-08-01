@@ -1,7 +1,7 @@
 import { z } from 'zod/v4';
 
 import { userBase, userQueryBase } from './user';
-import { gamePlayedArrayBase, gamePlayedQueryBase } from './gamePlayed';
+import { gamePlayedBase, gamePlayedQueryBase } from './gamePlayed';
 
 //define the possible statie 
 const resultStatusBase = z.enum([ 'finished', 'cancelled', 'cancelled_server_error' ])
@@ -29,7 +29,7 @@ const resultResponseBase = z.object({
   status:          resultStatusBase,
   startedAt:       z.string(),
   finishedAt:      z.string(),
-  gamePlayed:      gamePlayedArrayBase,
+  gamePlayed:      z.array(gamePlayedBase),
 
 });
 const resultResponseSchema = resultResponseBase.meta( { $id: "resultResponse" } )
