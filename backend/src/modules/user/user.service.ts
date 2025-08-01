@@ -2,7 +2,9 @@ import { createCrud } from '../../utils/prismaCrudGenerator';
 import { AppError, NotFoundError, ConflictError } from '../../utils/error';
 import { Prisma } from '@prisma/client';
 
-const userModel = createCrud( 'user' );
+import { createuserInput, patchuserInput } from '../../schemas/user';
+
+export const userModel = createCrud( 'user' );
 
 export async function getAllorFiltereduser(
 	filters: Record<string, any>

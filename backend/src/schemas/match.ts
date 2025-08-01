@@ -17,7 +17,7 @@ const matchCreateBase = z.object({
   mode: gameModeBase,
   aiDifficulty: aiDifficultyBase.optional(),
   matchId: z.string().optional(),
-  visibility: matchVisibilityBase,
+  visibility: matchVisibilityBase.optional(),
 });
 
 const matchCreateSchema = matchCreateBase.meta( { $id: 'matchCreate' } );

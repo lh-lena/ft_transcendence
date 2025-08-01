@@ -1,7 +1,8 @@
 import { matchMakingClass } from './match.class';
-import { userModel } from '../user/user.service';
 
 import { AppError, NotFoundError, ConflictError } from '../../utils/error';
+
+import { matchIdInput, matchCreateInput, matchUpdateInput } from '../../schemas/match';
 
 const matchmaker = new matchMakingClass();
 

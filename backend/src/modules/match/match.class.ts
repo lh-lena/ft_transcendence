@@ -88,6 +88,7 @@ export class matchMakingClass {
         players: [ req ],
         mode: req.mode,
         status: 'playing',
+        visibility: req.visibility,
         createdAt: new Date().toISOString(),
       };
 
