@@ -55,6 +55,7 @@ const gameResponseArraySchema = gameResponseArrayBase.meta( { $id: "gameResponse
 export const gameSchemas = [
   gameSchema,
   gameArraySchema,
+  gameCreateSchema,
   gameResponseSchema,
   gameResponseArraySchema,
   gameIdSchema,

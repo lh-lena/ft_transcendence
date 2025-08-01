@@ -56,8 +56,8 @@ const resultCreateSchema = resultBase.meta({ $id: 'resultCreate' })
 export const resultSchemas = [
   resultStatusSchema,
   resultCreateSchema,
-  resultQuerySchema,
+  //resultQuerySchema,
   resultIdSchema,
   resultResponseSchema,
-  resultResponseArraySchema,
+  //resultResponseArraySchema,
 ]
