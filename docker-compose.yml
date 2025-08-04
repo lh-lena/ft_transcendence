@@ -1,5 +1,6 @@
 
 services:
+
   nginx:
     image: nginx:alpine
     container_name: ft_transcendence_nginx
@@ -42,7 +43,7 @@ services:
     volumes:
       - ./backend:/app
       - /app/node_modules
-      - ./data:/data
+      - ./backend/data:/app/data
     networks:
       - pong-network
     healthcheck:
