@@ -7,7 +7,7 @@ import { Window } from '../../components/window'
 import { ScoreBox } from '../../components/scoreBoxes'
 
 // TODO-BACKEND
-import { userStore, sampleFriends, sampleScoreHistory } from '../../types'
+import { userStore, sampleFriends, sampleScoreHistory } from '../../constants/backend'
 
 export class ProfilePage {
     private container: HTMLElement;
@@ -46,7 +46,7 @@ export class ProfilePage {
         const scoreBoxTitle = document.createElement('h1');
         scoreBoxTitle.textContent = 'match history:';
         const scoreBoxes = document.createElement('div');
-        scoreBoxes.className = 'flex flex-col gap-5';
+        scoreBoxes.className = 'flex flex-col gap-2';
         sampleScoreHistory.forEach(scoreObj => {
             const box = new ScoreBox(scoreObj.playerName, scoreObj.result);
             scoreBoxes.appendChild(box.getElement());
@@ -61,7 +61,7 @@ export class ProfilePage {
         const friendsTitle = document.createElement('h1');
         friendsTitle.textContent = 'friends:';
         const friends = document.createElement('div');
-        friends.className = 'flex flex-col gap-5 gap-10 justify-items-center w-[300px]';
+        friends.className = 'flex flex-col gap-2 gap-10 justify-items-center w-[300px]';
 
         // Add friend avatars (limit to 9 friends)
         sampleFriends.slice(0, 9).forEach(friend => {

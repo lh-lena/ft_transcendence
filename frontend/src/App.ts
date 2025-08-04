@@ -7,6 +7,7 @@ import { RegisterPage } from './pages/register'
 import { SettingsPage } from './pages/settings'
 import { LeaderboardPage } from './pages/leaderboard'
 import { ChatPage } from './pages/chat';
+import { VsPlayerGamePage } from './pages/vsPlayerGame';
 
 // keeps state for router and passes between pages
 // to add a page
@@ -25,6 +26,7 @@ export class App {
     | SettingsPage
     | LeaderboardPage
     | ChatPage
+    | VsPlayerGamePage
     | null = null;
 
     constructor() {
@@ -41,6 +43,7 @@ export class App {
         this.router.add('/settings', () => this.showPage(SettingsPage));
         this.router.add('/leaderboard', () => this.showPage(LeaderboardPage));
         this.router.add('/chat', () => this.showPage(ChatPage));
+        this.router.add('/vs-player', () => this.showPage(VsPlayerGamePage));
         // Initialize router
         this.router.init();
     }
@@ -58,6 +61,7 @@ export class App {
         | SettingsPage 
         | LeaderboardPage
         | ChatPage
+        | VsPlayerGamePage
         }) {
         if (this.currentPage) {
             this.currentPage.unmount();

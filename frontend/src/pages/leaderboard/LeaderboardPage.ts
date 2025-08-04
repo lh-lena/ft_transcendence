@@ -6,7 +6,7 @@ import { MenuBar } from '../../components/menuBar'
 import { ScoreBox } from '../../components/scoreBoxes'
 
 // TODO-BACKEND
-import { sampleScores } from '../../types/user'
+import { sampleScores } from '../../constants/backend'
 
 export class LeaderboardPage {
     private container: HTMLElement;

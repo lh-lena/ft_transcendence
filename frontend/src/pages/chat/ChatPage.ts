@@ -2,9 +2,9 @@ import { Router } from '../../router'
 import { Window } from '../../components/window'
 import { CANVAS_DEFAULTS } from '../../types';
 import { MenuBar } from '../../components/menuBar'
-import { sampleFriends } from '../../types/user'
+import { sampleFriends } from '../../constants/backend'
 import { ProfileAvatar } from '../../components/profileAvatar';
-import { sampleChatHistory } from '../../types/user';
+import { sampleChatHistory } from '../../constants/backend';
 
 export class ChatPage {
     private container;
@@ -108,7 +108,6 @@ export class ChatPage {
         contact.classList.add('bg-black');
         contact.classList.add('text-white');
         this.clickedContact = contact;
-        console.log('Contact clicked!');
     }
 
     public unmount(): void {
