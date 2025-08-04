@@ -46,10 +46,12 @@ const resultIdBase = z.object({
 });
 const resultIdSchema = resultIdBase.meta({ $id: 'resultId' });
 
-const resultQueryBase = resultResponseBase.extend({
+const resultQueryBase = resultResponseBase
+  .extend({
     id: z.coerce.number().optional(),
     gamePlayed: z.array(gamePlayedQueryBase).optional(),
-  }).partial();
+  })
+  .partial();
 const resultQuerySchema = resultQueryBase.meta({ $id: 'resultQuery' });
 
 //define schema for POST

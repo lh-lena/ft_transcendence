@@ -1,4 +1,4 @@
-import { FastifyError, FastifyReply, FastifyRequest } from 'fastify';
+import { FastifyError, FastifyReply } from 'fastify';
 import { ZodError } from 'zod';
 import {
   AppError,
@@ -8,16 +8,12 @@ import {
   //DatabaseError,
 } from './error';
 
-function hasValidationError(error: unknown): error is { validation: unkown } {
+function hasValidationError(error: unknown): error is { validation: unknown } {
   return typeof error === 'object' && error !== null && 'validation' in error;
 }
 
-export function errorHandler(
-  error: FastifyError | Error,
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
-  console.log(`Error occurred: ${error.message}, ${error.statusCode}`);
+export function errorHandler(error: FastifyError | Error, reply: FastifyReply) {
+  console.log(`Error occurred: ${error.message}`);
 
   if (error instanceof AppError) {
     return reply.code(error.statusCode).send({
@@ -40,7 +36,11 @@ export function errorHandler(
     });
   }
 
-  if (error.statusCode === 404 && !('validation' in error)) {
+  if (
+    error.statusCode &&
+    error.statusCode === 404 &&
+    !('validation' in error)
+  ) {
     return reply.code(404).send({
       error: 'NOT_FOUND',
       message: error.message || 'Route not found',

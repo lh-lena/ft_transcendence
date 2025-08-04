@@ -1,23 +1,7 @@
 import { FastifyInstance } from 'fastify';
+import { FastifyRequest, FastifyReply } from 'fastify';
 import { FastifyPluginAsync } from 'fastify';
-
-interface CrudRoutesOptions<
-  TEntity = unknown,
-  TQuery = unknown,
-  TCreate = unknown,
-  TUpdate = unknown,
-> {
-  basePath: string;
-  entityName: string;
-  controller: {
-    getAllorFiltered?: (query: TQuery) => Promise<TEntity[]>;
-    getById?: (id: number | string) => Promise<TEntity>;
-    create?: (body: TCreate) => Promise<TEntity>;
-    update?: (id: number | string, body: TUpdate) => Promise<TEntity>;
-    deleteOne?: (id: number | string) => Promise<{ success: boolean }>;
-  };
-  routes?: Array<'getAll' | 'getById' | 'create' | 'update' | 'delete'>;
-}
+import * as crudDefines from './crudDefines';
 
 const crudRoutes =
   <
@@ -26,7 +10,7 @@ const crudRoutes =
     TCreate = unknown,
     TUpdate = unknown,
   >(): FastifyPluginAsync<
-    CrudRoutesOptions<TEntity, TQuery, TCreate, TUpdate>
+    crudDefines.CrudRoutesOptions<TEntity, TQuery, TCreate, TUpdate>
   > =>
   async (server: FastifyInstance, options) => {
     const {
@@ -38,25 +22,20 @@ const crudRoutes =
 
     if (routes.includes('getAll') && controller.getAllorFiltered) {
       server.get(basePath, {
-            schema: {
-              querystring: { $ref: `${entityName}Query` },
-              response: {
-                200: { $ref: `${entityName}ResponseArray` },
-                404: { $ref: `NotFound` },
-              },
-              summary: `Get all or filtered ${entityName}`,
-            },
+        schema: {
+          querystring: { $ref: `${entityName}Query` },
+          response: {
+            200: { $ref: `${entityName}ResponseArray` },
+            404: { $ref: `NotFound` },
+          },
+          summary: `Get all or filtered ${entityName}`,
+        },
         handler: async (
-          request: FastifyRequest<{ QueryString: TQuery }>,
+          request: FastifyRequest<crudDefines.GetAll<TQuery>>,
           reply: FastifyReply,
         ) => {
-          console.log(request.query);
-          const ret = await controller.getAllorFiltered!(request.query);
-
-          //console.log(ret);
-          // ret.forEach((ret) => {
-          //   console.log(JSON.stringify(ret, null, 3));
-          // });
+          const query = request.query as TQuery;
+          const ret = await controller.getAllorFiltered!(query);
 
           return reply.code(200).send(ret);
         },
@@ -74,7 +53,7 @@ const crudRoutes =
           summary: `Get ${entityName} by ID`,
         },
         handler: async (
-          request: FastifyRequest<{ Params: { id: string | number } }>,
+          request: FastifyRequest<crudDefines.GetById>,
           reply: FastifyReply,
         ) => {
           const ret = await controller.getById!(request.params.id);
@@ -95,10 +74,11 @@ const crudRoutes =
           summary: `Create a new ${entityName}`,
         },
         handler: async (
-          request: FastifyRequest<{ Body: TCreate }>,
+          request: FastifyRequest<crudDefines.Create<TCreate>>,
           reply: FastifyReply,
         ) => {
-          const ret = await controller.create!(request.body);
+          const body = request.body as TCreate;
+          const ret = await controller.create!(body);
 
           return reply.code(201).send(ret);
         },
@@ -118,13 +98,12 @@ const crudRoutes =
           summary: `Update ${entityName} by ID`,
         },
         handler: async (
-          request: FastifyRequest<{
-            Params: { id: string | number };
-            Body: TUpdate;
-          }>,
+          request: FastifyRequest<crudDefines.Update<TUpdate>>,
           reply: FastifyReply,
         ) => {
-          const ret = await controller.update!(request.params.id, request.body);
+          const id = request.params.id;
+          const body = request.body as TUpdate;
+          const ret = await controller.update!(id, body);
 
           return reply.code(200).send(ret);
         },
@@ -142,7 +121,7 @@ const crudRoutes =
           summary: `Delete ${entityName} by ID`,
         },
         handler: async (
-          request: FastifyRequest<{ Params: { id: string | number } }>,
+          request: FastifyRequest<crudDefines.Delete>,
           reply: FastifyReply,
         ) => {
           const ret = await controller.deleteOne!(request.params.id);
