@@ -5,15 +5,14 @@ import { PrismaClient } from '@prisma/client';
 
 export const prisma = new PrismaClient();
 
-const prismaPlugin: FastifyPluginAsync = async ( server, options ) => {
+const prismaPlugin: FastifyPluginAsync = async (server) => {
+  await prisma.$connect();
 
-  await prisma.$connect()
+  server.decorate('prisma', prisma);
 
-  server.decorate( 'prisma', prisma )
+  server.addHook('onClose', async (server) => {
+    await server.prisma.$disconnect();
+  });
+};
 
-  server.addHook( 'onClose', async ( server ) => {
-    await server.prisma.$disconnect()
-  })
-}
-
-export default fp( prismaPlugin );
+export default fp(prismaPlugin);

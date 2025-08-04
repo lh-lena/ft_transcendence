@@ -36,7 +36,7 @@ model result {
 
 model gamePlayed {
   id              Int @id @default( autoincrement() )
-  user            user @relation(fields: [userId], references: [id])
+  user            user @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId          Int
   game            result @relation(fields: [gameResultId], references: [id])
   gameResultId    Int

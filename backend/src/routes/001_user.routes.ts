@@ -2,20 +2,24 @@ import { FastifyInstance } from 'fastify';
 import fp from 'fastify-plugin';
 
 import crudRoutes from '../utils/crudRoutes';
-
-import { userRefSchemas } from '../modules/user/user.schema';
 import { userController } from '../modules/user/user.controller';
+import {
+  user,
+  userQueryInput,
+  userCreateInput,
+  userUpdateInput,
+} from '../schemas/user';
 
-import { responseRefSchemas } from '../modules/response/response.schema';
+const userRoutes = async (server: FastifyInstance) => {
+  server.register(
+    crudRoutes<user, userQueryInput, userCreateInput, userUpdateInput>(),
+    {
+      basePath: '/api/user',
+      entityName: 'user',
+      controller: userController,
+      routes: ['getAll', 'getById', 'create', 'update', 'delete'],
+    },
+  );
+};
 
-const userRoutes = async ( server: FastifyInstance ) => {
-  
-  server.register( crudRoutes, {
-    basePath: '/api/user',
-    entityName: 'user',
-    controller: userController,
-  });
-
-}
-
-export default fp( userRoutes );
+export default fp(userRoutes);

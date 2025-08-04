@@ -7,21 +7,20 @@ import { userRefSchemas } from '../modules/user/user.schema';
 import { gameRefSchemas } from '../modules/game/game.schema';
 import { resultRefSchemas } from '../modules/result/result.schema';
 
-const schemaPlugin = async ( server: FastifyInstance ) => {
-
+const schemaPlugin = async (server: FastifyInstance) => {
   const schemaList = [
-    ...Object.values( healthRefSchemas ),
-    ...Object.values( responseRefSchemas ),
-    ...Object.values( userRefSchemas ),
-    ...Object.values( gameRefSchemas ),
-    ...Object.values( resultRefSchemas ),
-  ]
+    ...Object.values(healthRefSchemas),
+    ...Object.values(responseRefSchemas),
+    ...Object.values(userRefSchemas),
+    ...Object.values(gameRefSchemas),
+    ...Object.values(resultRefSchemas),
+  ];
 
-  for( const schema of schemaList ) {
-  //    console.log( `Registering schema: ${schema.$id}` );
-  //    console.log( schema );
-      server.addSchema( schema );
+  for (const schema of schemaList) {
+    //    console.log( `Registering schema: ${schema.$id}` );
+    //    console.log( schema );
+    server.addSchema(schema);
   }
-}
+};
 
-export default fp( schemaPlugin );
+export default fp(schemaPlugin);

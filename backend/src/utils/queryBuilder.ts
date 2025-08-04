@@ -1,5 +1,3 @@
-type QueryValue = string | string[];
-
 const PRISMA_OPERATORS = [
   'equals',
   'in',
@@ -18,7 +16,22 @@ const PRISMA_OPERATORS = [
   'none',
 ];
 
-function parseValue(val: string | number | boolean | null): any {
+type queryValue = string | string[];
+
+type prismaFilterValue =
+  | string
+  | number
+  | null
+  | PrismaFilterObject
+  | PrismaFilterValue[];
+
+interface prismaFilterObject {
+  [key: string]: PrismafilterValue;
+}
+
+function parseValue(
+  val: string | number | boolean | null,
+): string | number | boolean | null {
   if (val === 'true') return true;
   if (val === 'false') return false;
   if (val === 'null') return null;
@@ -30,7 +43,9 @@ function parseValue(val: string | number | boolean | null): any {
   return val;
 }
 
-function parseArray(val: string | string[]): any[] {
+function parseArray(
+  val: string | string[],
+): Array<string | number | boolean | null> {
   if (Array.isArray(val)) return val.map(parseValue);
   if (typeof val === 'string' && val.includes(','))
     return val.split(',').map(parseValue);
@@ -38,9 +53,9 @@ function parseArray(val: string | string[]): any[] {
 }
 
 export function buildQuery(
-  query: Record<string, QueryValue>,
-): Record<string, any> {
-  const where: Record<string, any> = {};
+  query: Record<string, queryValue>,
+): prismaFilterObject {
+  const where: prismaFilterObject = {};
 
   for (const [rawKey, rawVal] of Object.entries(query)) {
     // Support repeated keys as array: { userId: ['1','2'] }
@@ -59,7 +74,7 @@ export function buildQuery(
       // If at last key part, assign value directly (do not nest)
       if (i === keyParts.length - 1) {
         // Set value at the final level
-        let value: any;
+        let value: prismaFilterValue;
         if (operator) {
           // Operators: multi-value if needed
           if (['in', 'notIn'].includes(operator)) {

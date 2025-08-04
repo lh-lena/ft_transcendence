@@ -4,7 +4,7 @@
   "scripts": {
     "dev": "npm run lint && npm run typecheck && npm run run",
     "run": "tsx watch src/server.ts",
-    "lint": "eslint 'src/**/*.{ts,tsx}'",
+    "lint": "eslint --fix 'src/**/*.{ts,tsx}'",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

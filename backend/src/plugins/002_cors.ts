@@ -3,15 +3,17 @@ import { FastifyInstance } from 'fastify';
 
 import cors from '@fastify/cors';
 
-const corsPlugin = async ( server: FastifyInstance ) => {
-
+const corsPlugin = async (server: FastifyInstance) => {
   //parse allowed origins
-	const allowedOrigins = server.config.ALLOWED_ORIGINS ? 
-		server.config.ALLOWED_ORIGINS.split(',').map(origin => origin.trim()) : [];
+  const allowedOrigins = server.config.ALLOWED_ORIGINS
+    ? server.config.ALLOWED_ORIGINS.split(',').map((origin) => origin.trim())
+    : [];
 
-	const allowedMethods = server.config.ALLOWED_METHODS ? 
-		server.config.ALLOWED_METHODS.split(',').map(method => method.trim()).join(',') 
-			: [];
+  const allowedMethods = server.config.ALLOWED_METHODS
+    ? server.config.ALLOWED_METHODS.split(',')
+        .map((method) => method.trim())
+        .join(',')
+    : [];
 
   const corsOptions = {
     origin: allowedOrigins,
@@ -19,8 +21,7 @@ const corsPlugin = async ( server: FastifyInstance ) => {
     credentials: true,
   };
 
-  await server.register( cors, corsOptions );
+  await server.register(cors, corsOptions);
+};
 
-}
-
-export default fp( corsPlugin );
+export default fp(corsPlugin);
