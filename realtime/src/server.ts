@@ -1,23 +1,28 @@
-// realtime/src/server.ts
-import { WebSocketServer } from 'ws';
-import { createServer } from 'http';
+import { buildServer } from './utils/app.js';
+import { serverConfig } from './config/server.config.js';
 
-const server = createServer();
-const wss = new WebSocketServer({ server });
+const start = async () => {
+  const server = buildServer();
 
-wss.on('connection', (ws) => {
-  console.log('Client connected');
-  
-  ws.send(JSON.stringify({ 
-    type: 'connected', 
-    message: 'WebSocket server running on port 8081' 
-  }));
-  
-  ws.on('close', () => {
-    console.log('Client disconnected');
+  const port = serverConfig.port;
+  const host = serverConfig.host;
+  server.listen({ port, host }, function (err, address) {
+    if (err) {
+      server.log.error(err, 'Failed to start server:');
+      process.exit(1);
+    }
+    server.log.info(`WebSocket server listening on ${address}`);
   });
-});
 
-server.listen(8081, () => {
-  console.log('Realtime server listening on port 8081');
-});
+  const gracefulShutdown = async (signal: string) => {
+    await server.ready();
+    await server.close();
+    server.log.info('HTTP server closed');
+    process.exit(0);
+  };
+
+  process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+  process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+};
+
+start();

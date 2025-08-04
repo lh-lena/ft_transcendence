@@ -32,7 +32,18 @@ curl -X POST \
   -H 'accept: application/json' \
   -H 'Content-Type: application/json' \
   -d '{
-  "userId": 2,
+  "userId": 293,
+  "mode": "pvp_remote",
+  "matchId": "string",
+  "visibility": "public"
+}'
+
+curl -X POST \
+  'http://[::1]:8080/api/match' \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "userId": 2936,
   "mode": "pvp_remote",
   "gameId": "string",
   "visibility": "public"
@@ -43,7 +54,7 @@ curl -X POST \
   -H 'accept: application/json' \
   -H 'Content-Type: application/json' \
   -d '{
-  "userId": 12,
+  "userId": 2939,
   "mode": "pvp_remote",
   "gameId": "string",
   "visibility": "public"
@@ -61,7 +72,7 @@ curl -X POST \
 }'
 
 curl -X POST \
-  'http://[::1]:8080/api/game/join/b0324abe-aa5c-486b-9f5b-184d16bf2c3d' \
+  'http://[::1]:8080/api/match/join/4b43024b-a7f4-42a7-bb80-ead483621da6' \
   -H 'accept: application/json' \
   -H 'Content-Type: application/json' \
   -d '{

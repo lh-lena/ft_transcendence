@@ -16,8 +16,7 @@ const healthRoute = async ( server: FastifyInstance ) => {
 		    	let dbStatus = 'down';
 
 		    	try {
-		    		const stmt = server.db.prepare( 'SELECT 1' );
-		    		stmt.get();
+            await server.prisma.$queryRaw`SELECT 1`;
 		    		dbStatus = 'up';
 		    	} catch {
 		    		dbStatus = 'unreachable';
@@ -30,7 +29,7 @@ const healthRoute = async ( server: FastifyInstance ) => {
 		    		dbStatus: dbStatus		
           };
 
-			  return healthStatus;
+			  return reply.code( 200 ).send( healthStatus );
 
       },
     });

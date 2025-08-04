@@ -4,6 +4,8 @@ import AutoLoad from '@fastify/autoload';
 import Path from 'path';
 import { errorHandler } from './utils/errorHandler';
 
+//test 
+
 //build server
 export async function buildServer() {
 
@@ -18,7 +20,8 @@ export async function buildServer() {
         }
       }
     }
-   }).withTypeProvider<ZodTypeProvider>();
+  });
+   //}).withTypeProvider<ZodTypeProvider>();
 
 //  server.addHook('onRoute', (routeOptions) => {
 //   console.log('📦 Route registered:', routeOptions.method, routeOptions.url);

@@ -4,7 +4,7 @@ export class AppError extends Error {
 		public message: string,
 		public statusCode: number = 500,
 		public code: string = 'INTERNAL_ERROR',
-		public deatails?: string
+		public details?: string
 	) {
 		super( message );
 	}
