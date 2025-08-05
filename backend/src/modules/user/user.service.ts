@@ -5,6 +5,8 @@ import { Prisma } from '@prisma/client';
 const userModel = createCrud('user');
 const options = { include: { gamePlayed: true } };
 
+import { user, userCreateInput, userUpdateInput } from '../../schemas/user';
+
 export async function getQuery(filters?: Partial<user>) {
   let ret;
 
@@ -21,18 +23,17 @@ export async function getQuery(filters?: Partial<user>) {
 
 export async function getById(id: number) {
   const ret = await userModel.findById(id);
-  console.log('USERID: ', Number(id), 'USER: ', ret);
-  if (!ret || ret.length === 0)
-    throw new NotFoundError(`user with ${id} not found`);
+
+  if (!ret) throw new NotFoundError(`user with ${id} not found`);
 
   return ret;
 }
 
-export async function create(data: createuserInput) {
+export async function create(data: userCreateInput) {
   try {
     const ret = await userModel.insert(data);
     return ret;
-  } catch (err: unkown) {
+  } catch (err: unknown) {
     if (
       err instanceof Prisma.PrismaClientKnownRequestError &&
       err.code === 'P2002'
@@ -43,7 +44,7 @@ export async function create(data: createuserInput) {
   }
 }
 
-export async function update(id: number, data: patchuserInput) {
+export async function update(id: number, data: userUpdateInput) {
   try {
     const ret = await userModel.patch(id, data);
     if (!ret) throw new NotFoundError(`user with ${id} not found`);

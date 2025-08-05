@@ -21,8 +21,8 @@ model user {
   is_2fa_enabled  Boolean @default(false)
   twofa_secret    String?
   gamePlayed      gamePlayed[]
-  created_at      DateTime @default( now() )
-  updated_at      DateTime @updatedAt
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
   }
 
 model result {
@@ -36,8 +36,8 @@ model result {
 
 model gamePlayed {
   id              Int @id @default( autoincrement() )
-  user            user @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId          Int
+  user            user? @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId          Int?
   game            result @relation(fields: [gameResultId], references: [id])
   gameResultId    Int
 
@@ -48,7 +48,7 @@ model gamePlayed {
 
 enum GameStatus {
   finished
-  canceled
+  cancled
   cancled_server_error
 }
 

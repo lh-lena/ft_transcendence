@@ -1,7 +1,9 @@
 import { v4 as uuidv4 } from 'uuid';
+import { z } from 'zod/v4';
 
 import { getById as userGetById } from '../user/user.service';
-import { userType as user } from '../../schemas/user';
+import { userBase } from '../../schemas/user';
+type user = z.infer<typeof userBase>;
 
 import {
   game,
@@ -31,7 +33,7 @@ export class gameMakingClass {
         visibility: req.visibility,
         mode: 'pvp_remote',
         status: 'waiting',
-        createdAt: new Date().toISOString(),
+        createdAt: new Date(),
       };
 
       this.activeMatches.push(game);
@@ -46,7 +48,9 @@ export class gameMakingClass {
 
   findFiltered(query: Partial<game>) {
     return this.activeMatches.filter((item) =>
-      Object.entries(query).every(([key, value]) => item[key] === value),
+      Object.entries(query).every(
+        ([key, value]) => item[key as keyof game] === value,
+      ),
     );
   }
 
@@ -55,7 +59,7 @@ export class gameMakingClass {
     return game;
   }
 
-  async insert(req: gameCreateInput): game {
+  async insert(req: gameCreateInput): Promise<game> {
     const user = await userGetById(Number(req.userId));
     if (!user) throw new Error('User not found');
 
@@ -78,7 +82,8 @@ export class gameMakingClass {
         players: [user],
         mode: req.mode,
         status: 'playing',
-        createdAt: new Date().toISOString(),
+        visibility: 'private',
+        createdAt: new Date(),
       };
 
       console.log(game);
@@ -107,7 +112,7 @@ export class gameMakingClass {
     if (index !== -1) this.activeMatches.splice(index, 1);
   }
 
-  async join(gameId: string, req: gameCreateInput): game | undefined {
+  async join(gameId: string, req: gameCreateInput): Promise<game | undefined> {
     const game = this.findById(gameId);
     console.log(game);
     if (game === undefined) return undefined;

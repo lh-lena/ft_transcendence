@@ -1,63 +1,77 @@
 import { prisma } from '../plugins/001_prisma';
 import { buildQuery } from './queryBuilder';
 
-export function createCrud<
-  ModelName extends keyof PrismaClient,
-  ModelDelegate extends PrismaClient[ModelName] = PrismaClient[ModelName],
-  ModelType = ModelName extends keyof PrismaClient
-    ? ReturnType<PrismaClient[ModelName]['findUnique']> extends Promise<infer R>
-      ? R
-      : never
-    : never,
->(modelName: ModelName) {
-  const model = prisma[modelName] as ModelDelegate;
+const modelMap = {
+  user: prisma.user,
+  result: prisma.result,
+};
+
+type ModelName = keyof typeof modelMap;
+
+type ModelDelegate<M extends ModelName> = (typeof modelMap)[M];
+
+type ModelType<M extends ModelName> = Awaited<
+  ReturnType<ModelDelegate<M>['findUnique']>
+>;
+
+export function createCrud<M extends ModelName>(modelName: M) {
+  const model = modelMap[modelName];
 
   return {
     findAll: async (
-      options?: Parameters<ModelDelegate['findMany']>[0],
-    ): Promise<ModelType[]> => {
-      return await model.findMany(options);
+      options?: Parameters<ModelDelegate<M>['findMany']>[0],
+    ): Promise<ModelType<M>[]> => {
+      const ret = await model.findMany(options);
+      return ret;
     },
 
     findById: async (
       id: number | string,
-      options?: Omit<Parameters<ModelDelegate['findUniqe']>[0], 'where'>,
-    ): Promise<ModelType | null> => {
-      return await model.findUnique({ where: { id }, ...options });
+      options?: Omit<Parameters<ModelDelegate<M>['findUnique']>[0], 'where'>,
+    ): Promise<ModelType<M> | null> => {
+      const ret = await model.findUnique({ where: { id }, ...options });
+      return ret;
     },
 
     findBy: async (
-      filters: Record<string, string | string[]>,
-      options?: Omit<Parameters<ModelDelegate['findMany']>[0], 'where'>,
-    ): Promise<ModelType[]> => {
-      const query = await buildQuery(filters);
-      return await model.findMany({ where: query, ...options });
+      filters: Omit<Parameters<ModelDelegate<M>['findMany']>[0], 'where'>,
+      options?: Omit<Parameters<ModelDelegate<M>['findMany']>[0], 'where'>,
+    ): Promise<ModelType<M>[]> => {
+      const query = buildQuery(filters);
+      const ret = await model.findMany({ where: query, ...options });
+      return ret;
     },
 
     insert: async (
-      data: Parameters<ModelDelegate['create']>[0]['data'],
-      options?: Omit<Parameters<ModelDelegate['create']>[0], 'data'>,
-    ): Promise<ModelType> => {
-      return await model.create({ data, ...options });
+      data: Parameters<ModelDelegate<M>['create']>[0]['data'],
+      options?: Omit<Parameters<ModelDelegate<M>['create']>[0], 'data'>,
+    ): Promise<ModelType<M>> => {
+      const ret = await model.create({ data, ...options });
+      return ret;
     },
 
     patch: async (
       id: number | string,
-      data: Parameters<ModelDelegate['update']>[0]['data'],
-      options?: Omit<Parameters<ModelDelegate['update']>[0], 'data' | 'where'>,
-    ): Promise<ModelType> => {
-      return await model.update({
+      data: Parameters<ModelDelegate<M>['update']>[0]['data'],
+      options?: Omit<
+        Parameters<ModelDelegate<M>['update']>[0],
+        'data' | 'where'
+      >,
+    ): Promise<ModelType<M>> => {
+      const ret = await model.update({
         where: { id },
         data,
         ...options,
       });
+      return ret;
     },
 
     deleteOne: async (
       id: number | string,
-      options?: Omit<Parameters<ModelDelegate['delete']>[0], 'where'>,
-    ): Promise<ModelType> => {
-      return await model.delete({ where: { id }, ...options });
+      options?: Omit<Parameters<ModelDelegate<M>['delete']>[0], 'where'>,
+    ): Promise<ModelType<M>> => {
+      const ret = await model.delete({ where: { id }, ...options });
+      return ret;
     },
   };
 }

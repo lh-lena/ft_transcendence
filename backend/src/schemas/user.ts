@@ -2,7 +2,7 @@ import { z } from 'zod/v4';
 
 //define user schema
 const userIn = {
-  email: z.string().email(),
+  email: z.email(),
   username: z.string(),
   password_hash: z.string(),
   is_2fa_enabled: z.boolean().optional(),
@@ -12,18 +12,26 @@ const userIn = {
 const userGen = {
   id: z.number(),
   gamePlayed: z.any().optional(),
-  created_at: z.string(),
-  updated_at: z.string(),
+  createdAt: z.preprocess(
+    (arg) =>
+      typeof arg === 'string' || arg instanceof Date
+        ? new Date(arg)
+        : undefined,
+    z.date(),
+  ),
+  updatedAt: z.preprocess(
+    (arg) =>
+      typeof arg === 'string' || arg instanceof Date
+        ? new Date(arg)
+        : undefined,
+    z.date(),
+  ),
 };
 
 export const userBase = z.object({
   ...userGen,
   ...userIn,
 });
-//const userSchema = userBase.meta( { $id: "user" } )
-//
-//export const userArrayBase = z.array( userBase )
-//const userArraySchema = userArrayBase.meta( { $id: "userArray" } )
 
 //define schema for POST
 const userCreateSchema = z
@@ -72,7 +80,6 @@ const userResponseArraySchema = userResponseArrayBase.meta({
 
 //export schemas
 export const userSchemas = [
-  //  userSchema,
   userCreateSchema,
   userUpdateSchema,
   userDeleteSchema,
@@ -83,7 +90,7 @@ export const userSchemas = [
 ];
 
 //export types
-export type user = z.infer<typeof userIn>;
+export type user = z.infer<typeof userBase>;
 export type userCreateInput = z.infer<typeof userCreateSchema>;
 export type userUpdateInput = z.infer<typeof userUpdateSchema>;
 export type userIdInput = z.infer<typeof userIdSchema>;

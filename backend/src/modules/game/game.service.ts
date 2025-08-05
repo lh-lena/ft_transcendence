@@ -1,5 +1,5 @@
 import { gameMakingClass } from './game.class';
-import { game } from '../../schemas/game';
+import { game, gameCreateInput } from '../../schemas/game';
 
 import { NotFoundError } from '../../utils/error';
 
@@ -19,7 +19,7 @@ export async function getAllorFilteredgame(filters?: Partial<game>) {
   return game;
 }
 
-export async function getgameById(id: gameIdInput) {
+export async function getgameById(id: string) {
   const game = gamemaker.findById(id);
   if (!game) throw new NotFoundError(`game with ${id} not found`);
 
@@ -32,25 +32,26 @@ export async function creategame(data: gameCreateInput) {
   return ret;
 }
 
-export async function updategame(id: gameIdInput, data: gameUpdateInput) {
-  const game = gamemaker.patchgame(id, data);
-
-  if (!game) throw new NotFoundError(`game with ${id} not found`);
-
-  return game;
-}
-
-export async function deleteOnegame(id: gameIdInput) {
-  await getgameById(id);
-
-  gamemaker.deleteOne(id);
-  return { message: `game ${id} deleted successfulyy` };
-}
-
-export async function joingame(id: gameIdInput, input: gameCreateInput) {
+export async function joingame(id: string, input: gameCreateInput) {
   await getgameById(id);
 
   const game = await gamemaker.join(id, input);
   if (!game) throw new NotFoundError(`game with ${id} not found`);
   return game;
 }
+
+//unused
+//export async function updategame(id: string, data: gameUpdateInput) {
+//  const game = gamemaker.patchgame(id, data);
+//
+//  if (!game) throw new NotFoundError(`game with ${id} not found`);
+//
+//  return game;
+//}
+
+//export async function deleteOnegame(id: string) {
+//  await getgameById(id);
+//
+//  gamemaker.deleteOne(id);
+//  return { message: `game ${id} deleted successfulyy` };
+//}

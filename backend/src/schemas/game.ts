@@ -20,7 +20,15 @@ const gameBase = z.object({
   mode: gameModeBase,
   status: gameStatusBase,
   visibility: gameVisibilityBase,
-  createAt: z.string().optional(),
+  createdAt: z
+    .preprocess(
+      (arg) =>
+        typeof arg === 'string' || arg instanceof Date
+          ? new Date(arg)
+          : undefined,
+      z.date(),
+    )
+    .optional(),
 });
 const gameSchema = gameBase.meta({ $id: 'game' });
 const gameArraySchema = z.array(gameBase).meta({ $id: 'gameArray' });
@@ -36,7 +44,7 @@ const gameCreateSchema = gameCreateBase.meta({ $id: 'gameCreate' });
 
 //schemas for GET
 export const gameIdBase = z.object({
-  id: z.string().uuid(),
+  id: z.uuid(),
 });
 export const gameIdSchema = gameIdBase.meta({ $id: 'gameId' });
 
@@ -61,11 +69,9 @@ export const gameSchemas = [
 ];
 
 //export types
+export type game = z.infer<typeof gameSchema>;
 export type gameCreateInput = z.infer<typeof gameCreateSchema>;
 export type gameIdInput = z.infer<typeof gameIdSchema>;
 export type gameQueryInput = z.infer<typeof gameQuerySchema>;
 export type gameResponseType = z.infer<typeof gameResponseSchema>;
 export type gameResponseArrayType = z.infer<typeof gameResponseArraySchema>;
-
-export type gameCreate = z.infer<typeof gameCreateSchema>;
-export type game = z.infer<typeof gameSchema>;

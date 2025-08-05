@@ -22,11 +22,11 @@ type prismaFilterValue =
   | string
   | number
   | null
-  | PrismaFilterObject
-  | PrismaFilterValue[];
+  | prismaFilterObject
+  | prismaFilterValue[];
 
 interface prismaFilterObject {
-  [key: string]: PrismafilterValue;
+  [key: string]: prismaFilterValue;
 }
 
 function parseValue(

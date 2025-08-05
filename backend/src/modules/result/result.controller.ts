@@ -3,6 +3,8 @@ import type {} from '../../schemas/result';
 import * as resultService from './result.service';
 
 import {
+  resultCreateInput,
+  resultQueryInput,
   resultResponseType,
   resultResponseArrayType,
 } from '../../schemas/result';
@@ -14,31 +16,16 @@ export const resultController = {
     return ret;
   },
 
-  //update result
-  async update(
-    id: resultIdInput,
-    input: resultUpdateInput,
-  ): Promise<resultResponseType> {
-    const ret = await resultService.update(id, input);
-    return ret;
-  },
-
   //controller for result get All or by Id
   async getAllorFiltered(
     query: resultQueryInput,
   ): Promise<resultResponseArrayType> {
-    const ret = await resultService.getQuery(query);
+    const ret = await resultService.getAllorFiltered(query);
     return ret;
   },
 
-  async getById(id: resultIdInput): Promise<resultResponseType | null> {
+  async getById(id: number): Promise<resultResponseType | null> {
     const ret = await resultService.getById(id);
-    return ret;
-  },
-
-  //delete result
-  async deleteOne(id: resultIdInput): Promise<{ message: string }> {
-    const ret = await resultService.deleteOne(id);
     return ret;
   },
 };

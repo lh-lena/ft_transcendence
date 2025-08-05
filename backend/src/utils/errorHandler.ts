@@ -37,7 +37,7 @@ export function errorHandler(error: FastifyError | Error, reply: FastifyReply) {
   }
 
   if (
-    error.statusCode &&
+    'statusCode' in error &&
     error.statusCode === 404 &&
     !('validation' in error)
   ) {

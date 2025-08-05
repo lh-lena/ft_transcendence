@@ -4,15 +4,15 @@ import { gamePlayedBase, gamePlayedQueryBase } from './gamePlayed';
 //define the possible statie
 const resultStatusBase = z.enum([
   'finished',
-  'cancelled',
-  'cancelled_server_error',
+  'cancled',
+  'cancled_server_error',
 ]);
 const resultStatusSchema = resultStatusBase.meta({ $id: 'resultStatus' });
 
 //define basic object for input
 export const resultBase = z.object({
   id: z.number().int().optional(),
-  gameId: z.string().uuid(),
+  gameId: z.uuid(),
   scorePlayer1: z.number().optional(),
   scorePlayer2: z.number().optional(),
   winnerId: z.number().nullable(),
@@ -20,14 +20,26 @@ export const resultBase = z.object({
   player1Username: z.string().nullable(),
   player2Username: z.string().nullable(),
   status: resultStatusBase,
-  startedAt: z.string(),
-  finishedAt: z.string(),
+  startedAt: z.preprocess(
+    (arg) =>
+      typeof arg === 'string' || arg instanceof Date
+        ? new Date(arg)
+        : undefined,
+    z.date(),
+  ),
+  finishedAt: z.preprocess(
+    (arg) =>
+      typeof arg === 'string' || arg instanceof Date
+        ? new Date(arg)
+        : undefined,
+    z.date(),
+  ),
 });
 
 //define schema for response
 const resultResponseBase = z.object({
   id: z.number(),
-  gameId: z.string().uuid(),
+  gameId: z.uuid(),
   status: resultStatusBase,
   startedAt: z.string(),
   finishedAt: z.string(),
