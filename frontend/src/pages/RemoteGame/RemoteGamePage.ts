@@ -203,8 +203,11 @@ export class VsPlayerGamePage {
           this.startGameHook();
         break;
       }
-      case "game_update":
-        this.game?.updateGameStateFromServer(data);
+      case "game_update": {
+        const gameUpdateData = data as ServerMessageInterface<"game_update">;
+        this.game?.updateGameStateFromServer(gameUpdateData);
+        break;
+      }
     }
   }
 }
