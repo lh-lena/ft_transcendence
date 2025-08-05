@@ -44,40 +44,47 @@ export default function authService(app: FastifyInstance) {
       `[auth-service]: Attempting client verification for origin: ${info.origin}, secure: ${info.secure}`,
     );
     try {
-      if (info.origin && !isAllowedOrigin(info.origin)) {
-        app.log.warn(
-          `[auth-service]: Connection rejected - Forbidden Origin: ${info.origin}`,
-        );
-        return false;
-      }
+      // if (info.origin && !isAllowedOrigin(info.origin)) {
+      //   app.log.warn(
+      //     `[auth-service]: Connection rejected - Forbidden Origin: ${info.origin}`,
+      //   );
+      //   return false;
+      // }
 
-      if (!info.secure && !info.origin.includes('127.0.0.1')) {
-        app.log.warn(
-          '[auth-service]: Connection rejected - Only secure (WSS) connections are allowed.',
-        );
-        return false;
-      }
+      // ALEC TESTING COMMENTED OUT
+      // if (!info.secure && !info.origin.includes('127.0.0.1')) {
+      //   app.log.warn(
+      //     '[auth-service]: Connection rejected - Only secure (WSS) connections are allowed.',
+      //   );
+      //   return false;
+      // }
 
-      const token = extractTokenFromRequest(info);
-      if (!token) {
-        app.log.warn(
-          '[auth-service] Connection rejected - No authentication token provided',
-        );
-        return false;
-      }
+      // const token = extractTokenFromRequest(info);
+      // if (!token) {
+      //   app.log.warn(
+      //     '[auth-service] Connection rejected - No authentication token provided',
+      //   );
+      //   return false;
+      // }
 
-      const user = await validateUser(token);
-      if (!user) {
-        app.log.debug(
-          '[auth-service]: Connection rejected: Invalid token or expired authentication credentials.',
-        );
-        return false;
-      }
+      const user: User = {
+        userId: 1,
+        username: 'n/a',
+        userAlias: 'n/a'
+      };
+      // drop in ALEC
 
-      (info.req.socket as any)._user = user;
-      app.log.debug(
-        `[auth-service]: Finished verification for user ${user.userId}`,
-      );
+      // if (!user) {
+      //   app.log.debug(
+      //     '[auth-service]: Connection rejected: Invalid token or expired authentication credentials.',
+      //   );
+      //   return false;
+      // }
+
+      // (info.req.socket as any)._user = user;
+      // app.log.debug(
+      //   `[auth-service]: Finished verification for user ${user.userId}`,
+      // );
       return true;
     } catch (error) {
       app.log.debug('[auth-service]: Error verifying client:', error);

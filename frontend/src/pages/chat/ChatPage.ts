@@ -8,7 +8,8 @@ import { sampleChatHistory } from '../../constants/backend';
 
 export class ChatPage {
     private container;
-    private clickedContact: HTMLDivElement;
+    private clickedContact!: HTMLDivElement;
+    private bottomBar: HTMLDivElement;
 
     constructor (private router: Router) {
         this.container = document.createElement('div');
@@ -68,9 +69,13 @@ export class ChatPage {
 
         // input at bottom
         const inputBox = document.createElement('div');
-        inputBox.className = 'flex flex-row gap-2 w-full mt-auto';
+        inputBox.className = 'flex flex-row gap-2 w-full mt-auto pt-2';
+        const actionButton = document.createElement('button');
+        actionButton.className = 'btn items-center justify-center w-1/10'
+        actionButton.innerText = '+';
+        inputBox.appendChild(actionButton);
         const inputMessage = document.createElement('input')
-        inputMessage.className = 'w-4/5'
+        inputMessage.className = 'w-4/5 rounded'
         inputMessage.type = 'text';
         inputMessage.style.paddingLeft = '0.5em';
         inputMessage.placeholder = 'message';
@@ -80,7 +85,10 @@ export class ChatPage {
 
         inputBox.appendChild(inputMessage);
         inputBox.appendChild(sendButton);
-        chatPanel.appendChild(inputBox);
+        this.bottomBar = inputBox;
+        chatPanel.appendChild(this.bottomBar);
+        // set input box as initial buttom bar
+        
 
         // window
         const windowComponent = new Window({
@@ -96,6 +104,10 @@ export class ChatPage {
     
     public mount(parent: HTMLElement): void {
         parent.appendChild(this.container);
+    }
+
+    private toggleInvitePrompt(): void {
+
     }
 
     private onClickTest(contact: HTMLDivElement): void {
