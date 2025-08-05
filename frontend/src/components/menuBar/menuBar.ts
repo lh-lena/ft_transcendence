@@ -1,4 +1,4 @@
-import { Router } from '../../router'
+import { Router } from "../../router";
 
 export interface MenuBarItem {
   label: string;
@@ -15,45 +15,46 @@ export interface MenuBarItem {
 export class MenuBar {
   router: Router;
   menuBarItems: MenuBarItem[];
+  skipThis: string | undefined;
 
   static defaultMenuBarItems: MenuBarItem[] = [
     {
-      label: 'start Game',
+      label: "start Game",
       items: [
-        { label: 'Local Game', href: '/local' },
-        { label: 'Vs AI', href: '/vs-ai' },
-        { label: 'Vs Player', href: '/vs-player' },
-        { label: 'Tournament', href: '/tournament' }
-      ]
+        { label: "Local Game", href: "/local" },
+        { label: "Vs AI", href: "/vs-ai" },
+        { label: "Vs Player", href: "/vs-player" },
+        { label: "Tournament", href: "/tournament" },
+      ],
     },
-    { label: 'profile', href: '/profile' },
-    { label: 'settings', href: '/settings' },
-    { label: 'chat', href: '/chat' },
-    { label: 'leaderboard', href: '/leaderboard' },
-    { label: 'logout', href: '/logout' }
+    { label: "profile", href: "/profile" },
+    { label: "settings", href: "/settings" },
+    { label: "chat", href: "/chat" },
+    { label: "leaderboard", href: "/leaderboard" },
+    { label: "logout", href: "/logout" },
   ];
 
-  constructor(router: Router, private skipThis?: string) {
+  constructor(router: Router, skipThis?: string) {
     this.router = router;
+    this.skipThis = skipThis;
     this.menuBarItems = MenuBar.defaultMenuBarItems.slice();
   }
 
   render(): HTMLElement {
-    const ul = document.createElement('ul');
-    ul.setAttribute('role', 'menu-bar');
+    const ul = document.createElement("ul");
+    ul.setAttribute("role", "menu-bar");
 
     this.menuBarItems.forEach((menu: MenuBarItem) => {
-      if (this.skipThis && menu.label == this.skipThis)
-        return;
-      const li = document.createElement('li');
-      li.setAttribute('role', 'menu-item');
-      li.setAttribute('tabindex', '0');
+      if (this.skipThis && menu.label == this.skipThis) return;
+      const li = document.createElement("li");
+      li.setAttribute("role", "menu-item");
+      li.setAttribute("tabindex", "0");
 
       // Single item (no dropdown)
       if (!menu.items || menu.items.length === 0) {
-        li.setAttribute('aria-haspopup', 'false');
+        li.setAttribute("aria-haspopup", "false");
         if (menu.href) {
-          const a = document.createElement('a');
+          const a = document.createElement("a");
           a.textContent = menu.label;
           a.href = menu.href;
           if (menu.style) a.className = menu.style;
@@ -67,24 +68,24 @@ export class MenuBar {
       }
 
       // Dropdown menu
-      li.setAttribute('aria-haspopup', 'true');
+      li.setAttribute("aria-haspopup", "true");
       li.textContent = menu.label;
       if (menu.style) li.className = menu.style;
 
-      const subUl = document.createElement('ul');
-      subUl.setAttribute('role', 'menu');
+      const subUl = document.createElement("ul");
+      subUl.setAttribute("role", "menu");
 
       menu.items.forEach((item) => {
-        const subLi = document.createElement('li');
-        subLi.setAttribute('role', 'menu-item');
-        if (item.divider) subLi.classList.add('divider');
+        const subLi = document.createElement("li");
+        subLi.setAttribute("role", "menu-item");
+        if (item.divider) subLi.classList.add("divider");
         if (item.style) subLi.className = item.style;
-        const a = document.createElement('a');
+        const a = document.createElement("a");
         a.textContent = item.label;
         if (item.href) {
           a.href = item.href;
         } else {
-          a.href = '#menu';
+          a.href = "#menu";
         }
         subLi.appendChild(a);
         subUl.appendChild(subLi);
