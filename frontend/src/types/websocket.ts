@@ -78,7 +78,6 @@ interface GameResult {
     finishedAt: string;
 }
 
-
 // interacting with websocket
 
 export interface WsClientMessage {
@@ -100,4 +99,16 @@ export interface WsServerBroadcast {
     'chat_message': ChatMessage;
     'notification': NotificationPayload;
     'error': { message: string };
+}
+
+// Add this generic interface after WsEventPayload
+export interface ClientMessageInterface<T extends keyof WsClientMessage> {
+    event: T;
+    payload: WsClientMessage[T];
+}
+
+// Add this generic interface after WsEventPayload
+export interface ServerMessageInterface<T extends keyof WsServerBroadcast> {
+    event: T;
+    payload: WsServerBroadcast[T];
 }

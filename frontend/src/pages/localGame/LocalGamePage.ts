@@ -98,10 +98,6 @@ export class LocalGamePage {
         }
     }
 
-    private handleBackClick(): void {
-        this.router.navigateBack();
-    }
-
     public mount(parent: HTMLElement): void {
         parent.appendChild(this.element);
     }

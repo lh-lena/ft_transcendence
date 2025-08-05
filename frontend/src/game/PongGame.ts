@@ -171,7 +171,6 @@ export class PongGame {
         }
         // if game is paused return 
         if (this.gameState.status !== GameStatus.PLAYING) {
-            console.log("here?")
             this.hideGamePieces();
             return;
         }

@@ -1,28 +1,33 @@
 import { Router } from '../../router';
 import { PongGame } from '../../game';
-//import { Countdown } from '../../components/countdown'
+import { Countdown } from '../../components/countdown'
 import { GameState, GameStatus } from '../../types'
 import { ScoreBar } from '../../components/scoreBar'
 import { generateProfilePrint } from '../../utils/generateProfilePrint'
+import { Loading } from '../../components/loading';
 
 import { Menu } from '../../components/menu'
 
 // TODO-BACKEND switch out for backend data cached on merge
 import { userStore } from '../../constants/backend'
 
-// web socket
-// import { WsServerBroadcast, WsClientMessage } from '../../types/websocket';
-// import { websocketUrl } from '../../constants/websocket';
+//web socket
+import { WsServerBroadcast, ClientMessageInterface, ServerMessageInterface, WsClientMessage } from '../../types/websocket';
+import { websocketUrl } from '../../constants/websocket';
+
+// test consts for websocket dev
+const DEV_GAMEID = 'test-game-1';
 
 export class VsPlayerGamePage {
-    private element: HTMLElement;
+    private main: HTMLElement;
     private game: PongGame | null = null;
     private gameState: GameState;
-    // private countdown: Countdown;
+    private countdown: Countdown;
     private scoreBar!: ScoreBar;
     private menu: Menu | null = null;
     private gameContainer: HTMLElement | null = null;
     private websocket: WebSocket | null = null;
+    private loadingOverlay: Loading;
 
     constructor(private router: Router) {
 
@@ -35,21 +40,23 @@ export class VsPlayerGamePage {
             playerB: {username:  userStore.username , score: 0, color: userStore.color, colorMap: userStore.colorMap},
         }
 
-        this.element = document.createElement('div');
-        this.element.className = 'sys-window flex flex-col gap-1 w-full min-h-full items-center justify-center bg-[#0400FF]';
+        this.main = document.createElement('div');
+        this.main.className = 'sys-window flex flex-col gap-1 w-full min-h-full items-center justify-center bg-[#0400FF]';
 
-        // initialize web socket
-        // this.initializeWebSocket();
-        // initialize game
+        // initialize Countdown
+        this.countdown = new Countdown();
+        // mount Countdown
+        this.countdown.mount(this.main);
+        
+        // grab data from backend
+        // get web socket before countdown
+        this.initializeWebSocket();
+
+        this.loadingOverlay = new Loading("waiting for opponent");
+        this.main.appendChild(this.loadingOverlay.getElement());
+
+        // set up web socket and grab data
         this.initializeGame();
-
-        // Initialize Countdown
-        // this.countdown = new Countdown();
-        // Mount Countdown
-        // this.countdown.mount(this.element);
-        // Start Countdown and proceed to game after it finishes
-        // this.countdown.start(() => {
-             // Initialize game after countdown
     }
 
     private initializeGame(): void {
@@ -63,9 +70,9 @@ export class VsPlayerGamePage {
         );
 
         this.scoreBar = new ScoreBar(this.gameState);
-        this.scoreBar.mount(this.element);
+        this.scoreBar.mount(this.main);
 
-        this.element.appendChild(this.gameContainer);
+        this.main.appendChild(this.gameContainer);
         this.game.mount(this.gameContainer);
 
     }
@@ -101,77 +108,86 @@ export class VsPlayerGamePage {
     private checkPauseStatus(): void {
         if (this.gameState.status === GameStatus.PAUSED) {
             this.showPauseOverlay();
+            // send pause to websocket
+            const gamePauseMessage: ClientMessageInterface<'game_pause'> = {
+                event: 'game_pause',
+                payload: { gameId: DEV_GAMEID }
+            };
+            this.sendMessage(gamePauseMessage)
         } else {
             this.hidePauseOverlay();
         }
     }
 
-    private handleBackClick(): void {
-        this.router.navigateBack();
-    }
-
     public mount(parent: HTMLElement): void {
-        parent.appendChild(this.element);
+        parent.appendChild(this.main);
     }
 
     public unmount(): void {
-        this.element.remove();
+        this.main.remove();
     }
 
-    // // web socket
-    // private initializeWebSocket(): void {
-    //     const DEVMODE = true;
+    // web socket
+    private initializeWebSocket(): void {
         
-    //     const wsUrl = websocketUrl;
+        const wsUrl = websocketUrl;
 
-    //     if (DEVMODE)
-    //         this.websocket = new MockWebSocket(wsUrl) as any;
-    //     else
-    //         this.websocket = new WebSocket(wsUrl);
+        this.websocket = new WebSocket(wsUrl);
 
-    //     this.websocket.onopen = () => {
-    //         console.log('WebSocket connected');
-    //         // Send initial connection message
-    //         this.sendMessage({
-    //             'game_start': { gameId: 'your-game-id-here' }
-    //         });
-    //     };
+        const gameStartMessage: ClientMessageInterface<'game_start'> = {
+            event: 'game_start',
+            payload: { gameId: DEV_GAMEID }
+        };
 
-    //     this.websocket.onmessage = (event) => {
-    //         try {
-    //             const data = JSON.parse(event.data);
-    //             this.handleWebSocketMessage(data);
-    //         } catch (error) {
-    //             console.error('Error parsing WebSocket message:', error);
-    //         }
-    //     };
+        this.websocket.onopen = () => {
+            console.log('WebSocket connected');
+            // Send initial connection message
+            this.sendMessage(gameStartMessage)
+        };
 
-    //     this.websocket.onclose = (event) => {
-    //         console.log('WebSocket connection closed:', event.code, event.reason);
-    //         // Optionally implement reconnection logic here
-    //     };
+        this.websocket.onmessage = (event) => {
+            try {
+                const data = JSON.parse(event.data);
+                this.handleWebSocketMessage(data);
+            } catch (error) {
+                console.error('Error parsing WebSocket message:', error);
+            }
+        };
 
-    //     this.websocket.onerror = (error) => {
-    //         console.error('WebSocket error:', error);
-    //     };
-    // }
+        this.websocket.onclose = (event) => {
+            console.log('WebSocket connection closed:', event.code, event.reason);
+            // Optionally implement reconnection logic here
+        };
 
-    // private sendMessage<K extends keyof WsClientMessage>(
-    //     payload: WsClientMessage[K]
-    // ): void {
-    //     if (this.websocket && this.websocket.readyState === WebSocket.OPEN) {
-    //         const message = { event, payload };
-    //         this.websocket.send(JSON.stringify(message));
-    //     } else {
-    //         console.warn('WebSocket is not open. Message not sent:', { event, payload });
-    //     }
-    // }
+        this.websocket.onerror = (error) => {
+            console.error('WebSocket error:', error);
+        };
+    }
 
-    // // Handle incoming WebSocket messages
-    // private handleWebSocketMessage(data: WsServerBroadcast): void {
-    //     // Implement your logic here to handle different message types
-    //     console.log('Received WebSocket message:', data);
-    //     // Example: update game state, scores, etc. based on data
-    // }
+    private sendMessage<T extends keyof WsClientMessage>(message: ClientMessageInterface<T>): void {        
+        if (this.websocket && this.websocket.readyState === WebSocket.OPEN) {
+            this.websocket.send(JSON.stringify(message));   
+        }
+        else {
+            console.warn('WebSocket is not open. Message not sent:', { message });
+        }
+    }
+
+    private countdownHook(message: string): void {
+        console.log('trying to change text');
+        this.loadingOverlay.changeText(message);
+    }
+
+    // Handle incoming WebSocket messages
+    private handleWebSocketMessage<T extends keyof WsServerBroadcast>(data: ServerMessageInterface<T>): void {
+        // Implement your logic here to handle different message types
+        console.log('Received WebSocket message:', data);
+        // Example: update game state, scores, etc. based on data
+        // if (data.error) this.toggleErrorScreen(data.error.message)
+        if (data.event == 'countdown_update'){
+            const countdownData = data as ServerMessageInterface<'countdown_update'>;
+            this.countdownHook(countdownData.payload.message);
+        }
+    }
 
 }
