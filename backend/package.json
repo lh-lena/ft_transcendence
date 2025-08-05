@@ -2,36 +2,28 @@
   "name": "ft_transcendence_backend",
   "version": "1.0.0",
   "scripts": {
-    "dev": "tsx watch src/server.ts",
-    "lint": "eslint . --ext .ts,.tsx",
-    "format:check": "prettier --check \"src/**/*.{ts,tsx}\"",
-    "build": "tsc"
+    "dev": "tsx watch src/server.ts"
   },
   "dependencies": {
     "@fastify/autoload": "^6.3.1",
     "@fastify/cors": "^8.5.0",
     "@fastify/swagger": "^8.15.0",
     "@fastify/swagger-ui": "^2.1.0",
+    "@prisma/client": "^6.12.0",
     "better-sqlite3": "^9.1.1",
     "env-schema": "^6.0.1",
     "fastify": "^4.29.1",
     "fastify-plugin": "^5.0.1",
-    "fastify-zod": "^1.4.0",
+    "pino-pretty": "^13.0.0",
     "uuid": "^11.1.0",
     "zod": "^3.25.76"
   },
   "devDependencies": {
-    "@types/jest": "^30.0.0",
     "@types/node": "^20.0.0",
-    "@types/supertest": "^6.0.3",
-    "cross-env": "^7.0.3",
     "dotenv": "^17.2.0",
     "fastify-cors": "^6.0.3",
-    "jest": "^30.0.4",
-    "knex": "^3.1.0",
+    "prisma": "^6.12.0",
     "sqlite3": "^5.1.7",
-    "supertest": "^7.1.3",
-    "ts-jest": "^29.4.0",
     "tsx": "^3.14.0",
     "typescript": "^5.8.3"
   }
