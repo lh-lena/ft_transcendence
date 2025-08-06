@@ -197,16 +197,13 @@ export class PongGame {
     }
 
     // only handle w and s if its a local game
-    if (this.gameMode == "local") {
-      // --- Paddle Movement ---
-      if (this.keys["w"]) {
-        this.paddleA.y -= this.paddleA.speed * dt;
-      }
-      if (this.keys["s"]) {
-        this.paddleA.y += this.paddleA.speed * dt;
-      }
+    // --- Paddle Movement ---
+    if (this.keys["w"]) {
+      this.paddleA.y -= this.paddleA.speed * dt;
     }
-
+    if (this.keys["s"]) {
+      this.paddleA.y += this.paddleA.speed * dt;
+    }
     // ws server stuff
     if (this.keys["ArrowUp"]) {
       this.paddleB.y -= this.paddleB.speed * dt;

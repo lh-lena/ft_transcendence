@@ -38,6 +38,17 @@ export class PausePlay {
     this.button.appendChild(icon);
   }
 
+  public toggleIsPlaying(bool: boolean): void {
+    this.isPlaying = bool;
+    this.gameState.status = this.isPlaying
+      ? GameStatus.PLAYING
+      : GameStatus.PAUSED;
+    this.renderIcon();
+    if (this.onPauseStatusChange) {
+      this.onPauseStatusChange();
+    }
+  }
+
   private playSVG(): string {
     // Play icon SVG
     return `<svg width="16" height="16" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><polygon points="8,6 26,16 8,26" fill="#000"/></svg>`;

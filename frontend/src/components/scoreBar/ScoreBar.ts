@@ -8,7 +8,7 @@ export class ScoreBar {
   private playerBContainer: HTMLElement;
   private scoreA: HTMLElement;
   private scoreB: HTMLElement;
-  private pausePlay: PausePlay;
+  public pausePlay: PausePlay;
   private gameState: GameState;
 
   constructor(gameState: GameState) {

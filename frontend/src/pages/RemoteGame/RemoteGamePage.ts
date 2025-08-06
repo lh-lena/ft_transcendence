@@ -28,11 +28,13 @@ export class VsPlayerGamePage {
   private game: PongGame | null = null;
   private gameState: GameState;
   private scoreBar!: ScoreBar;
-  private menu: Menu | null = null;
+  private menuPause: Menu | null = null;
   private gameContainer: HTMLElement | null = null;
   private websocket: WebSocket | null = null;
   private loadingOverlay: Loading;
   private router: Router;
+  private lastGameStatus: GameStatus | null = null;
+  private pauseCountdown!: HTMLElement;
 
   constructor(router: Router) {
     this.router = router;
@@ -56,9 +58,10 @@ export class VsPlayerGamePage {
 
     // grab data from backend
     // get web socket before countdown
+    this.loadingOverlay = new Loading("connecting to server");
     this.initializeWebSocket();
 
-    this.loadingOverlay = new Loading("waiting for opponent");
+    this.loadingOverlay.changeText("waiting for opponent");
     this.main.appendChild(this.loadingOverlay.getElement());
 
     // set up web socket and grab data
@@ -86,36 +89,56 @@ export class VsPlayerGamePage {
 
   private showPauseOverlay(): void {
     this.game?.hideGamePieces();
-    if (this.gameContainer && !this.menu) {
+    if (this.gameContainer && !this.menuPause) {
+      const menuPauseDiv = document.createElement("div");
+      menuPauseDiv.className = "flex flex-col gap-5";
       // Create and mount menu to game container instead of main element
       const menuItems = [{ name: "quit", link: "/profile" }];
-      this.menu = new Menu(this.router, menuItems);
-      this.menu.mount(this.gameContainer);
+      this.menuPause = new Menu(this.router, menuItems);
+      this.pauseCountdown = document.createElement("h1");
+      this.pauseCountdown.innerText = "paused for: 60s";
+      this.pauseCountdown.className = "text-white text text-center";
+      menuPauseDiv.appendChild(this.pauseCountdown);
+      this.menuPause.mount(menuPauseDiv);
+      this.gameContainer.appendChild(menuPauseDiv);
       // Add overlay styling to menu element
-      const menuElement = this.menu.menuElement;
-      menuElement.style.position = "absolute";
-      menuElement.style.top = "50%";
-      menuElement.style.left = "50%";
-      menuElement.style.transform = "translate(-50%, -50%)";
-      menuElement.style.zIndex = "1000";
+      menuPauseDiv.style.position = "absolute";
+      menuPauseDiv.style.top = "50%";
+      menuPauseDiv.style.left = "50%";
+      menuPauseDiv.style.transform = "translate(-50%, -50%)";
+      menuPauseDiv.style.zIndex = "1000";
     }
   }
 
   private hidePauseOverlay(): void {
     this.game?.showGamePieces();
     // Unmount menu before removing overlay
-    if (this.menu) {
-      this.menu.unmount();
-      this.menu = null;
+    if (this.menuPause) {
+      this.menuPause.unmount();
+      this.menuPause = null;
     }
   }
 
   private checkPauseStatus(): void {
-    if (this.gameState.status === GameStatus.PAUSED) {
-      this.showPauseOverlay();
-      // send pause to websocket
-    } else {
-      this.hidePauseOverlay();
+    // Only send messages when status actually changes
+    if (this.gameState.status !== this.lastGameStatus) {
+      if (this.gameState.status === GameStatus.PAUSED) {
+        this.showPauseOverlay();
+        const game_pause: ClientMessageInterface<"game_pause"> = {
+          event: "game_pause",
+          payload: { gameId: DEV_GAMEID },
+        };
+        this.sendMessage(game_pause);
+      } else if (this.lastGameStatus === GameStatus.PAUSED) {
+        this.hidePauseOverlay();
+        const game_resume: ClientMessageInterface<"game_resume"> = {
+          event: "game_resume",
+          payload: { gameId: DEV_GAMEID },
+        };
+        this.sendMessage(game_resume);
+      }
+      // Update the last known status
+      this.lastGameStatus = this.gameState.status;
     }
   }
 
@@ -139,7 +162,6 @@ export class VsPlayerGamePage {
     };
 
     this.websocket.onopen = () => {
-      console.log("WebSocket connected");
       // Send initial connection message
       this.sendMessage(gameStartMessage);
     };
@@ -174,8 +196,9 @@ export class VsPlayerGamePage {
   }
 
   private countdownHook(message: string): void {
-    console.log("trying to change text");
-    this.loadingOverlay.changeText(message);
+    if (this.gameState.status == GameStatus.PAUSED)
+      this.pauseCountdown.innerText = "game resumes in: " + message;
+    else this.loadingOverlay.changeText(message);
   }
 
   private startGameHook(): void {
@@ -208,6 +231,23 @@ export class VsPlayerGamePage {
         this.game?.updateGameStateFromServer(gameUpdateData);
         break;
       }
+      case "game_pause": {
+        this.gameState.status = GameStatus.PAUSED;
+        this.scoreBar.pausePlay.toggleIsPlaying(false);
+        break;
+      }
+      case "game_resume": {
+        this.gameState.status = GameStatus.PLAYING;
+        this.scoreBar.pausePlay.toggleIsPlaying(true);
+        break;
+      }
     }
+  }
+
+  private updateOnPlayerInput(): void {
+    const game_update: ClientMessageInterface<"game_update"> = {
+      event: "game_update",
+      payload: { gameId: DEV_GAMEID },
+    };
   }
 }
