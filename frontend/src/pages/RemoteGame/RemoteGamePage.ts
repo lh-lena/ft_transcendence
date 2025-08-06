@@ -35,6 +35,7 @@ export class VsPlayerGamePage {
   private router: Router;
   private lastGameStatus: GameStatus | null = null;
   private pauseCountdown!: HTMLElement;
+  private pauseIntervalId: number | null = null;
 
   constructor(router: Router) {
     this.router = router;
@@ -108,10 +109,35 @@ export class VsPlayerGamePage {
       menuPauseDiv.style.transform = "translate(-50%, -50%)";
       menuPauseDiv.style.zIndex = "1000";
     }
+
+    this.startCountdownTimer(60);
+  }
+
+  private startCountdownTimer(seconds: number): void {
+    let timeLeft = seconds;
+    this.pauseCountdown.innerText = `paused for: ${timeLeft}s`;
+    this.pauseIntervalId = window.setInterval(() => {
+      timeLeft--;
+      if (timeLeft > 0) {
+        this.pauseCountdown.innerText = `paused for: ${timeLeft}s`;
+      } else {
+        this.pauseCountdown.innerText = "Game resuming...";
+        this.clearPauseCountdown();
+        // Optionally auto-resume the game here if needed
+      }
+    }, 1000);
+  }
+
+  private clearPauseCountdown(): void {
+    if (this.pauseIntervalId) {
+      clearInterval(this.pauseIntervalId);
+      this.pauseIntervalId = null;
+    }
   }
 
   private hidePauseOverlay(): void {
     this.game?.showGamePieces();
+    this.clearPauseCountdown();
     // Unmount menu before removing overlay
     if (this.menuPause) {
       this.menuPause.unmount();
@@ -148,6 +174,7 @@ export class VsPlayerGamePage {
 
   public unmount(): void {
     this.main.remove();
+    this.clearPauseCountdown();
   }
 
   // web socket
@@ -196,9 +223,10 @@ export class VsPlayerGamePage {
   }
 
   private countdownHook(message: string): void {
-    if (this.gameState.status == GameStatus.PAUSED)
+    if (this.gameState.status == GameStatus.PAUSED) {
       this.pauseCountdown.innerText = "game resumes in: " + message;
-    else this.loadingOverlay.changeText(message);
+      if (message == "GO!") this.pauseCountdown.innerText = message;
+    } else this.loadingOverlay.changeText(message);
   }
 
   private startGameHook(): void {
@@ -244,10 +272,10 @@ export class VsPlayerGamePage {
     }
   }
 
-  private updateOnPlayerInput(): void {
-    const game_update: ClientMessageInterface<"game_update"> = {
-      event: "game_update",
-      payload: { gameId: DEV_GAMEID },
-    };
-  }
+  // private updateOnPlayerInput(): void {
+  //   const game_update: ClientMessageInterface<"game_update"> = {
+  //     event: "game_update",
+  //     payload: { gameId: DEV_GAMEID },
+  //   };
+  // }
 }
