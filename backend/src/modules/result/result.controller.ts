@@ -5,6 +5,7 @@ import * as resultService from './result.service';
 import {
   resultCreateInput,
   resultQueryInput,
+  resultIdInput,
   resultResponseType,
   resultResponseArrayType,
 } from '../../schemas/result';
@@ -24,7 +25,7 @@ export const resultController = {
     return ret;
   },
 
-  async getById(id: number): Promise<resultResponseType | null> {
+  async getById(id: resultIdInput): Promise<resultResponseType> {
     const ret = await resultService.getById(id);
     return ret;
   },

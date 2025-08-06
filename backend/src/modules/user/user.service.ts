@@ -1,16 +1,26 @@
 import { createCrud } from '../../utils/prismaCrudGenerator';
 import { NotFoundError, ConflictError } from '../../utils/error';
+import { prisma } from '../../plugins/001_prisma';
 import { Prisma } from '@prisma/client';
 
-const userModel = createCrud('user');
+const userModel = createCrud(prisma.user);
 const options = { include: { gamePlayed: true } };
 
-import { user, userCreateInput, userUpdateInput } from '../../schemas/user';
+import {
+  userIdInput,
+  userQueryInput,
+  userCreateInput,
+  userUpdateInput,
+  userResponseType,
+  userResponseArrayType,
+} from '../../schemas/user';
 
-export async function getQuery(filters?: Partial<user>) {
+export async function getQuery(
+  filters?: userQueryInput,
+): Promise<userResponseArrayType> {
   let ret;
 
-  if (Object.keys(filters).length === 0) {
+  if (!filters) {
     ret = await userModel.findAll(options);
   } else {
     ret = await userModel.findBy(filters, options);
@@ -21,15 +31,15 @@ export async function getQuery(filters?: Partial<user>) {
   return ret;
 }
 
-export async function getById(id: number) {
-  const ret = await userModel.findById(id);
+export async function getById(id: userIdInput): Promise<userResponseType> {
+  const ret = await userModel.findById(id.id);
 
   if (!ret) throw new NotFoundError(`user with ${id} not found`);
 
   return ret;
 }
 
-export async function create(data: userCreateInput) {
+export async function create(data: userCreateInput): Promise<userResponseType> {
   try {
     const ret = await userModel.insert(data);
     return ret;
@@ -44,9 +54,12 @@ export async function create(data: userCreateInput) {
   }
 }
 
-export async function update(id: number, data: userUpdateInput) {
+export async function update(
+  id: userIdInput,
+  data: userUpdateInput,
+): Promise<userResponseType> {
   try {
-    const ret = await userModel.patch(id, data);
+    const ret = await userModel.patch(id.id, data);
     if (!ret) throw new NotFoundError(`user with ${id} not found`);
     return ret;
   } catch (err: unknown) {
@@ -66,11 +79,11 @@ export async function update(id: number, data: userUpdateInput) {
   }
 }
 
-export async function deleteOne(id: number) {
+export async function deleteOne(id: userIdInput): Promise<string> {
   try {
-    const ret = await userModel.deleteOne(id);
+    const ret = await userModel.deleteOne(id.id);
     if (!ret) throw new NotFoundError(`user with ${id} not found`);
-    return { message: `user ${id} deleted successfulyy` };
+    return `user ${id} deleted successfulyy`;
   } catch (err: unknown) {
     if (
       err instanceof Prisma.PrismaClientKnownRequestError &&

@@ -8,11 +8,18 @@ import {
   userQueryInput,
   userCreateInput,
   userUpdateInput,
+  userIdInput,
 } from '../schemas/user';
 
 const userRoutes = async (server: FastifyInstance) => {
   server.register(
-    crudRoutes<user, userQueryInput, userCreateInput, userUpdateInput>(),
+    crudRoutes<
+      user,
+      userQueryInput,
+      userCreateInput,
+      userUpdateInput,
+      userIdInput
+    >(),
     {
       basePath: '/api/user',
       entityName: 'user',

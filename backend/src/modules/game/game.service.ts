@@ -1,17 +1,25 @@
 import { gameMakingClass } from './game.class';
-import { game, gameCreateInput } from '../../schemas/game';
+import {
+  gameCreateInput,
+  gameQueryInput,
+  gameIdInput,
+  gameResponseType,
+  gameResponseArrayType,
+} from '../../schemas/game';
 
 import { NotFoundError } from '../../utils/error';
 
 const gamemaker = new gameMakingClass();
 
-export async function getAllorFilteredgame(filters?: Partial<game>) {
-  let game;
+export async function getAllorFilteredgame(
+  filters?: gameQueryInput,
+): Promise<gameResponseArrayType> {
+  let game = [];
 
   if (!filters) {
-    game = gamemaker.findAll();
+    game = await gamemaker.findAll();
   } else {
-    game = gamemaker.findFiltered(filters);
+    game = await gamemaker.findFiltered(filters);
   }
   if (!game || game.length === 0) {
     throw new NotFoundError('No games found');
@@ -19,39 +27,28 @@ export async function getAllorFilteredgame(filters?: Partial<game>) {
   return game;
 }
 
-export async function getgameById(id: string) {
-  const game = gamemaker.findById(id);
+export async function getgameById(id: gameIdInput): Promise<gameResponseType> {
+  const game = await gamemaker.findById(id);
   if (!game) throw new NotFoundError(`game with ${id} not found`);
 
   return game;
 }
 
-export async function creategame(data: gameCreateInput) {
+export async function creategame(
+  data: gameCreateInput,
+): Promise<gameResponseType> {
   const ret = await gamemaker.insert(data);
 
   return ret;
 }
 
-export async function joingame(id: string, input: gameCreateInput) {
+export async function joingame(
+  id: gameIdInput,
+  input: gameCreateInput,
+): Promise<gameResponseType> {
   await getgameById(id);
 
   const game = await gamemaker.join(id, input);
   if (!game) throw new NotFoundError(`game with ${id} not found`);
   return game;
 }
-
-//unused
-//export async function updategame(id: string, data: gameUpdateInput) {
-//  const game = gamemaker.patchgame(id, data);
-//
-//  if (!game) throw new NotFoundError(`game with ${id} not found`);
-//
-//  return game;
-//}
-
-//export async function deleteOnegame(id: string) {
-//  await getgameById(id);
-//
-//  gamemaker.deleteOne(id);
-//  return { message: `game ${id} deleted successfulyy` };
-//}

@@ -5,15 +5,16 @@ export interface CrudRoutesOptions<
   TQuery = unknown,
   TCreate = unknown,
   TUpdate = unknown,
+  TId = unknown,
 > {
   basePath: string;
   entityName: string;
   controller: {
     getAllorFiltered?: (query: TQuery) => Promise<TEntity[]>;
-    getById?: (id: number | string) => Promise<TEntity>;
+    getById?: (id: TId) => Promise<TEntity>;
     create?: (body: TCreate) => Promise<TEntity>;
-    update?: (id: number | string, body: TUpdate) => Promise<TEntity>;
-    deleteOne?: (id: number | string) => Promise<{ success: boolean }>;
+    update?: (id: TId, body: TUpdate) => Promise<TEntity>;
+    deleteOne?: (id: TId) => Promise<{ success: boolean }>;
   };
   routes?: Array<'getAll' | 'getById' | 'create' | 'update' | 'delete'>;
 }
@@ -22,19 +23,19 @@ export interface GetAll<TQuery> extends RouteGenericInterface {
   Querystring: TQuery;
 }
 
-export interface GetById extends RouteGenericInterface {
-  Params: { id: number | string };
+export interface GetById<TId> extends RouteGenericInterface {
+  Params: TId;
 }
 
 export interface Create<TCreate> extends RouteGenericInterface {
   Body: TCreate;
 }
 
-export interface Update<TUpdate> extends RouteGenericInterface {
-  Params: { id: number | string };
+export interface Update<TId, TUpdate> extends RouteGenericInterface {
+  Params: TId;
   Body: TUpdate;
 }
 
-export interface Delete extends RouteGenericInterface {
-  Params: { id: number | string };
+export interface Delete<TId> extends RouteGenericInterface {
+  Params: TId;
 }

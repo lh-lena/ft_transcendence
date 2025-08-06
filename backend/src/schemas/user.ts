@@ -95,3 +95,5 @@ export type userCreateInput = z.infer<typeof userCreateSchema>;
 export type userUpdateInput = z.infer<typeof userUpdateSchema>;
 export type userIdInput = z.infer<typeof userIdSchema>;
 export type userQueryInput = z.infer<typeof userQuerySchema>;
+export type userResponseType = z.infer<typeof userResponseSchema>;
+export type userResponseArrayType = z.infer<typeof userResponseArraySchema>;

@@ -33,7 +33,7 @@ export const userController = {
     return ret;
   },
 
-  async getById(id: userIdInput): Promise<userResponseType | null> {
+  async getById(id: userIdInput): Promise<userResponseType> {
     const ret = await userService.getById(id);
     return ret;
   },
@@ -41,6 +41,6 @@ export const userController = {
   //delete user
   async deleteOne(id: userIdInput): Promise<{ message: string }> {
     const ret = await userService.deleteOne(id);
-    return ret;
+    return { message: ret };
   },
 };

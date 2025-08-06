@@ -1,4 +1,4 @@
-import { FastifyInstance } from 'fastify';
+import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import fp from 'fastify-plugin';
 
 const healthRoute = async (server: FastifyInstance) => {
@@ -10,7 +10,7 @@ const healthRoute = async (server: FastifyInstance) => {
       },
       summary: 'Health Check',
     },
-    handler: async (request, reply) => {
+    handler: async (_request: FastifyRequest, reply: FastifyReply) => {
       let dbStatus = 'down';
 
       try {

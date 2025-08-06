@@ -9,8 +9,9 @@ const crudRoutes =
     TQuery = unknown,
     TCreate = unknown,
     TUpdate = unknown,
+    TId = unknown,
   >(): FastifyPluginAsync<
-    crudDefines.CrudRoutesOptions<TEntity, TQuery, TCreate, TUpdate>
+    crudDefines.CrudRoutesOptions<TEntity, TQuery, TCreate, TUpdate, TId>
   > =>
   async (server: FastifyInstance, options) => {
     const {

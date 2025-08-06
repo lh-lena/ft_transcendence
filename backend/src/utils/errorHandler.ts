@@ -1,4 +1,4 @@
-import { FastifyError, FastifyReply } from 'fastify';
+import { FastifyError, FastifyRequest, FastifyReply } from 'fastify';
 import { ZodError } from 'zod';
 import {
   AppError,
@@ -12,11 +12,15 @@ function hasValidationError(error: unknown): error is { validation: unknown } {
   return typeof error === 'object' && error !== null && 'validation' in error;
 }
 
-export function errorHandler(error: FastifyError | Error, reply: FastifyReply) {
+export function errorHandler(
+  error: FastifyError,
+  _request: FastifyRequest,
+  reply: FastifyReply,
+) {
   console.log(`Error occurred: ${error.message}`);
 
   if (error instanceof AppError) {
-    return reply.code(error.statusCode).send({
+    return reply.code(error.statusCode ? error.statusCode : 500).send({
       error: error.code,
       message: error.message,
     });

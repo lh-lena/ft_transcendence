@@ -1,16 +1,18 @@
+import { prisma } from '../../plugins/001_prisma';
 import { Prisma } from '@prisma/client';
 import { createCrud } from '../../utils/prismaCrudGenerator';
 
 import { NotFoundError, ConflictError } from '../../utils/error';
 
 import {
-  result,
+  resultQueryInput,
+  resultIdInput,
   resultCreateInput,
   resultResponseType,
   resultResponseArrayType,
 } from '../../schemas/result';
 
-const resultModel = createCrud('result');
+const resultModel = createCrud(prisma.result);
 const options = { include: { gamePlayed: { include: { user: true } } } };
 
 async function transformData(
@@ -58,7 +60,7 @@ async function transformData(
 }
 
 export async function getAllorFiltered(
-  filters?: Partial<result>,
+  filters?: resultQueryInput,
 ): Promise<resultResponseArrayType> {
   let ret;
 
@@ -73,8 +75,8 @@ export async function getAllorFiltered(
   return ret;
 }
 
-export async function getById(id: number): Promise<resultResponseType> {
-  const ret = await resultModel.findById(id, options);
+export async function getById(id: resultIdInput): Promise<resultResponseType> {
+  const ret = await resultModel.findById(id.id, options);
   if (!ret) throw new NotFoundError(`result with ${id} not found`);
 
   return ret;

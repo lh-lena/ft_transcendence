@@ -12,6 +12,9 @@
     "module": "commonjs",
     "incremental": true
   },
-  "include": ["src/**/*.ts", "test/**/*.ts"]
+  "include": [
+    "src/**/*.ts", 
+    "src/types/fastify.d.ts"
+  ]
 }
 

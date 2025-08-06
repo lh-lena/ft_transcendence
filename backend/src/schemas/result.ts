@@ -81,6 +81,7 @@ export const resultSchemas = [
 
 export type result = z.infer<typeof resultBase>;
 export type resultQueryInput = z.infer<typeof resultQuerySchema>;
+export type resultIdInput = z.infer<typeof resultIdSchema>;
 export type resultCreateInput = z.infer<typeof resultCreateSchema>;
 export type resultResponseType = z.infer<typeof resultResponseSchema>;
 export type resultResponseArrayType = z.infer<typeof resultResponseArraySchema>;

@@ -5,6 +5,7 @@ import type {
   gameQueryInput,
   gameResponseType,
   gameResponseArrayType,
+  gameIdInput,
 } from '../../schemas/game';
 
 export const gameController = {
@@ -17,36 +18,20 @@ export const gameController = {
   //controller for game get All or by Id
   async getAllorFiltered(
     query: gameQueryInput,
-  ): Promise<gameResponseArrayType | null> {
+  ): Promise<gameResponseArrayType> {
     const ret = await gameService.getAllorFilteredgame(query);
     return ret;
   },
 
-  async getById(id: string): Promise<gameResponseType | null> {
+  async getById(id: gameIdInput): Promise<gameResponseType> {
     const ret = await gameService.getgameById(id);
     return ret;
   },
 
   async join(
-    id: string,
+    id: gameIdInput,
     input: gameCreateInput,
-  ): Promise<gameResponseType | null> {
+  ): Promise<gameResponseType> {
     return await gameService.joingame(id, input);
   },
 };
-
-//unused
-//update game
-//  async update(
-//    id: string,
-//    input: gameUpdateInput,
-//  ): Promise<gameResponseType | undefined> {
-//    const ret = await gameService.updategame(id, input);
-//    return ret;
-//  },
-//delete game
-//  async deleteOne(id: string): Promise<{ message: string }> {
-//    const ret = gameService.deleteOnegame(id);
-//    return ret;
-//    return { message: 'Match deleted' };
-//  },

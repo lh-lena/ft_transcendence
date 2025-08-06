@@ -3,11 +3,17 @@ import { z } from 'zod/v4';
 
 import { getById as userGetById } from '../user/user.service';
 import { userBase } from '../../schemas/user';
+
+import { NotFoundError } from '../../utils/error';
+
 type user = z.infer<typeof userBase>;
 
 import {
   game,
+  gameIdInput,
   gameCreateInput,
+  gameQueryInput,
+  gameResponseType,
   gameResponseArrayType,
 } from '../../schemas/game';
 
@@ -15,7 +21,10 @@ export class gameMakingClass {
   private activeMatches: game[] = [];
 
   //check if two players are ready and game them ( can add gameing logic later )
-  private tryMultiMatch(req: gameCreateInput, user: user): game {
+  private async tryMultiMatch(
+    req: gameCreateInput,
+    user: user,
+  ): Promise<gameResponseType> {
     let game = this.activeMatches.find(
       (m) => m.status === 'waiting' && m.visibility === 'public',
     );
@@ -42,11 +51,11 @@ export class gameMakingClass {
     return game;
   }
 
-  findAll() {
+  async findAll() {
     return this.activeMatches as gameResponseArrayType;
   }
 
-  findFiltered(query: Partial<game>) {
+  async findFiltered(query: gameQueryInput): Promise<gameResponseArrayType> {
     return this.activeMatches.filter((item) =>
       Object.entries(query).every(
         ([key, value]) => item[key as keyof game] === value,
@@ -54,13 +63,14 @@ export class gameMakingClass {
     );
   }
 
-  findById(gameId: string): game | undefined {
-    const game = this.activeMatches.find((m) => m.gameId === gameId);
+  async findById(gameId: gameIdInput): Promise<gameResponseType> {
+    const game = this.activeMatches.find((m) => m.gameId === gameId.id);
+    if (!game) throw new NotFoundError(`game with ${gameId} not found`);
     return game;
   }
 
-  async insert(req: gameCreateInput): Promise<game> {
-    const user = await userGetById(Number(req.userId));
+  async insert(req: gameCreateInput): Promise<gameResponseType> {
+    const user = await userGetById({ id: req.userId });
     if (!user) throw new Error('User not found');
 
     const game = this.activeMatches.find((m) =>
@@ -92,35 +102,18 @@ export class gameMakingClass {
     }
   }
 
-  patchgame(gameId: string, update: Partial<game>): game | undefined {
-    const game = this.findById(gameId);
+  async join(
+    gameId: gameIdInput,
+    req: gameCreateInput,
+  ): Promise<gameResponseType> {
+    const game = await this.findById(gameId);
+    if (!game) throw new NotFoundError(`game ${gameId.id} not found`);
 
-    console.log(game);
+    const user = await userGetById({ id: req.userId });
+    if (!user) throw new NotFoundError('User ${req.userId} not found');
 
-    if (!game) {
-      return undefined;
-    }
-
-    Object.assign(game, update);
-
-    return game;
-  }
-
-  deleteOne(gameId: string): void {
-    const index = this.activeMatches.findIndex((m) => m.gameId === gameId);
-
-    if (index !== -1) this.activeMatches.splice(index, 1);
-  }
-
-  async join(gameId: string, req: gameCreateInput): Promise<game | undefined> {
-    const game = this.findById(gameId);
-    console.log(game);
-    if (game === undefined) return undefined;
-
-    const user = await userGetById(Number(req.userId));
-    if (!user) throw new Error('User not found');
-
-    if (game.players.length !== 1) return undefined;
+    if (game.players.length !== 1)
+      throw new Error(`game ${gameId.id} is already full`);
 
     game.players.push(user);
     game.status = 'playing';
