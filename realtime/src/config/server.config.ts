@@ -60,8 +60,8 @@ const config: Config = {
       pauseTimeout: process.env.WS_PAUSE_TIMEOUT
         ? parseInt(process.env.WS_PAUSE_TIMEOUT, 10)
         : 60_000,
-      backendUrl: process.env.BACKEND_URL || 'https://127.0.0.1:8080',
-      authUrl: process.env.AUTH_URL || 'https://127.0.0.1:8082',
+      backendUrl: process.env.BACKEND_URL || 'http://127.0.0.1:8081',
+      authUrl: process.env.AUTH_URL || 'http://127.0.0.1:8081',
       allowedOrigins: [
         ...(process.env.ALLOWED_ORIGINS
           ? process.env.ALLOWED_ORIGINS.split(',')

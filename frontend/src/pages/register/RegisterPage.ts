@@ -6,8 +6,10 @@ export class RegisterPage {
   private main: HTMLElement;
   private menu: Menu;
   private pongButton: PongButton;
+  private router: Router;
 
-  constructor(private router: Router) {
+  constructor(router: Router) {
+    this.router = router;
     this.main = document.createElement("div");
     this.main.className =
       "flex flex-col w-full min-h-full gap-5 justify-center text-xl items-center bg-[#0400FF]";

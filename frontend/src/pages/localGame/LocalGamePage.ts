@@ -12,6 +12,7 @@ import { userStore } from "../../constants/backend";
 
 export class LocalGamePage {
   private element: HTMLElement;
+  private router: Router;
   private game: PongGame | null = null;
   private gameState: GameState;
   private countdown: Countdown;
@@ -20,12 +21,14 @@ export class LocalGamePage {
   private menu: Menu | null = null;
   private gameContainer: HTMLElement | null = null;
 
-  constructor(private router: Router) {
+  constructor(router: Router) {
+    this.router = router;
     // for player A
     const { color, colorMap } = generateProfilePrint();
 
     this.gameState = {
       status: GameStatus.PLAYING,
+      previousStatus: GameStatus.PLAYING,
       playerA: { username: "left", score: 0, color: color, colorMap: colorMap },
       playerB: {
         username: userStore.username,
@@ -105,14 +108,22 @@ export class LocalGamePage {
     }
 
     // pause play stuff
-    console.log("parent: " + this.gameState.status);
-    // implement a previous status and current status so we arent doing this every time we run the callback
-    if (this.gameState.status == GameStatus.PLAYING) {
+    // playing
+    if (
+      this.gameState.status == GameStatus.PLAYING &&
+      this.gameState.previousStatus == GameStatus.PAUSED
+    ) {
       this.game?.showGamePieces();
       this.hidePauseOverlay();
-    } else if (this.gameState.status == GameStatus.PAUSED) {
+      this.gameState.previousStatus = GameStatus.PLAYING;
+      // paused
+    } else if (
+      this.gameState.status == GameStatus.PAUSED &&
+      this.gameState.previousStatus == GameStatus.PLAYING
+    ) {
       this.game?.hideGamePieces();
       this.showPauseOverlay();
+      this.gameState.previousStatus = GameStatus.PAUSED;
     }
   }
 

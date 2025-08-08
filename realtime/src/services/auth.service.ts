@@ -51,7 +51,7 @@ export default function authService(app: FastifyInstance) {
       //   return false;
       // }
 
-      // ALEC TESTING COMMENTED OUT
+
       // if (!info.secure && !info.origin.includes('127.0.0.1')) {
       //   app.log.warn(
       //     '[auth-service]: Connection rejected - Only secure (WSS) connections are allowed.',
@@ -68,20 +68,29 @@ export default function authService(app: FastifyInstance) {
       // }
 
       const user: User = {
-        userId: 1,
+        userId: 0,
         username: 'n/a',
         userAlias: 'n/a'
       };
-      // drop in ALEC
 
-      // if (!user) {
-      //   app.log.debug(
-      //     '[auth-service]: Connection rejected: Invalid token or expired authentication credentials.',
-      //   );
-      //   return false;
-      // }
+      if (info.origin.endsWith('3000')) {
+        const userOne = user;
+        userOne.userId = 0;
+      }
 
-      // (info.req.socket as any)._user = user;
+      if (info.origin.endsWith('3001')) {
+        const userOne = user;
+        userOne.userId = 1;
+      }
+
+      if (!user) {
+        app.log.debug(
+          '[auth-service]: Connection rejected: Invalid token or expired authentication credentials.',
+        );
+        return false;
+      }
+
+      (info.req.socket as any)._user = user;
       // app.log.debug(
       //   `[auth-service]: Finished verification for user ${user.userId}`,
       // );

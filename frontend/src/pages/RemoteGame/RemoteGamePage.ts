@@ -28,14 +28,12 @@ export class VsPlayerGamePage {
   private game: PongGame | null = null;
   private gameState: GameState;
   private scoreBar!: ScoreBar;
-  private menuPause: Menu | null = null;
+  private menuPauseDiv: HTMLDivElement | null = null;
   private gameContainer: HTMLElement | null = null;
   private websocket: WebSocket | null = null;
   private loadingOverlay: Loading;
   private router: Router;
-  private lastGameStatus: GameStatus | null = null;
   private pauseCountdown!: HTMLElement;
-  private pauseIntervalId: number | null = null;
 
   constructor(router: Router) {
     this.router = router;
@@ -44,6 +42,7 @@ export class VsPlayerGamePage {
 
     this.gameState = {
       status: GameStatus.PLAYING,
+      previousStatus: GameStatus.PLAYING,
       playerA: { username: "left", score: 0, color: color, colorMap: colorMap },
       playerB: {
         username: userStore.username,
@@ -51,6 +50,7 @@ export class VsPlayerGamePage {
         color: userStore.color,
         colorMap: userStore.colorMap,
       },
+      blockedPlayButton: false,
     };
 
     this.main = document.createElement("div");
@@ -80,7 +80,9 @@ export class VsPlayerGamePage {
       "remote",
     );
 
-    this.scoreBar = new ScoreBar(this.gameState, this.gameStateCallback);
+    this.scoreBar = new ScoreBar(this.gameState, () =>
+      this.gameStateCallback(),
+    );
     this.scoreBar.mount(this.main);
 
     this.main.appendChild(this.gameContainer);
@@ -89,89 +91,74 @@ export class VsPlayerGamePage {
 
   private showPauseOverlay(): void {
     this.game?.hideGamePieces();
-    if (this.gameContainer && !this.menuPause) {
-      const menuPauseDiv = document.createElement("div");
-      menuPauseDiv.className = "flex flex-col gap-5";
+    if (this.gameContainer && !this.menuPauseDiv) {
+      this.menuPauseDiv = document.createElement("div");
+      this.menuPauseDiv.className = "flex flex-col gap-5";
       // Create and mount menu to game container instead of main element
       const menuItems = [{ name: "quit", link: "/profile" }];
-      this.menuPause = new Menu(this.router, menuItems);
+      const menuPause = new Menu(this.router, menuItems);
       this.pauseCountdown = document.createElement("h1");
-      this.pauseCountdown.innerText = "paused for: 60s";
+      this.pauseCountdown.innerText = "paused for: [X]s";
       this.pauseCountdown.className = "text-white text text-center";
-      menuPauseDiv.appendChild(this.pauseCountdown);
-      this.menuPause.mount(menuPauseDiv);
-      this.gameContainer.appendChild(menuPauseDiv);
+      this.menuPauseDiv.appendChild(this.pauseCountdown);
+      menuPause.mount(this.menuPauseDiv);
+      this.gameContainer.appendChild(this.menuPauseDiv);
       // Add overlay styling to menu element
-      menuPauseDiv.style.position = "absolute";
-      menuPauseDiv.style.top = "50%";
-      menuPauseDiv.style.left = "50%";
-      menuPauseDiv.style.transform = "translate(-50%, -50%)";
-      menuPauseDiv.style.zIndex = "1000";
-    }
-
-    this.startCountdownTimer(60);
-  }
-
-  private gameStateCallback(): void {
-    // update score bar on hook
-    this.scoreBar.updateScores(
-      this.gameState.playerA.score,
-      this.gameState.playerB.score,
-    );
-  }
-
-  private startCountdownTimer(seconds: number): void {
-    let timeLeft = seconds;
-    this.pauseCountdown.innerText = `paused for: ${timeLeft}s`;
-    this.pauseIntervalId = window.setInterval(() => {
-      timeLeft--;
-      if (timeLeft > 0) {
-        this.pauseCountdown.innerText = `paused for: ${timeLeft}s`;
-      } else {
-        this.pauseCountdown.innerText = "Game resuming...";
-        this.clearPauseCountdown();
-        // Optionally auto-resume the game here if needed
-      }
-    }, 1000);
-  }
-
-  private clearPauseCountdown(): void {
-    if (this.pauseIntervalId) {
-      clearInterval(this.pauseIntervalId);
-      this.pauseIntervalId = null;
+      this.menuPauseDiv.style.position = "absolute";
+      this.menuPauseDiv.style.top = "50%";
+      this.menuPauseDiv.style.left = "50%";
+      this.menuPauseDiv.style.transform = "translate(-50%, -50%)";
+      this.menuPauseDiv.style.zIndex = "1000";
     }
   }
 
   private hidePauseOverlay(): void {
     this.game?.showGamePieces();
-    this.clearPauseCountdown();
     // Unmount menu before removing overlay
-    if (this.menuPause) {
-      this.menuPause.unmount();
-      this.menuPause = null;
+    if (this.menuPauseDiv) {
+      this.gameContainer?.removeChild(this.menuPauseDiv);
+      this.menuPauseDiv = null;
     }
   }
 
-  private checkPauseStatus(): void {
-    // Only send messages when status actually changes
-    if (this.gameState.status !== this.lastGameStatus) {
-      if (this.gameState.status === GameStatus.PAUSED) {
-        this.showPauseOverlay();
-        const game_pause: ClientMessageInterface<"game_pause"> = {
-          event: "game_pause",
-          payload: { gameId: DEV_GAMEID },
-        };
-        this.sendMessage(game_pause);
-      } else if (this.lastGameStatus === GameStatus.PAUSED) {
-        this.hidePauseOverlay();
-        const game_resume: ClientMessageInterface<"game_resume"> = {
-          event: "game_resume",
-          payload: { gameId: DEV_GAMEID },
-        };
-        this.sendMessage(game_resume);
-      }
-      // Update the last known status
-      this.lastGameStatus = this.gameState.status;
+  private gameStateCallback(): void {
+    // update score bar on hook
+    if (this.scoreBar) {
+      this.scoreBar.updateScores(
+        this.gameState.playerA.score,
+        this.gameState.playerB.score,
+      );
+    }
+
+    // pause play stuff
+    // playing
+    if (
+      this.gameState.status == GameStatus.PLAYING &&
+      this.gameState.previousStatus == GameStatus.PAUSED
+    ) {
+      this.game?.showGamePieces();
+      this.hidePauseOverlay();
+      this.gameState.previousStatus = GameStatus.PLAYING;
+      // send game resume to ws
+      const game_resume: ClientMessageInterface<"game_resume"> = {
+        event: "game_resume",
+        payload: { gameId: DEV_GAMEID },
+      };
+      this.sendMessage(game_resume);
+      // paused
+    } else if (
+      this.gameState.status == GameStatus.PAUSED &&
+      this.gameState.previousStatus == GameStatus.PLAYING
+    ) {
+      this.game?.hideGamePieces();
+      this.showPauseOverlay();
+      // send game pause to ws
+      this.gameState.previousStatus = GameStatus.PAUSED;
+      const game_pause: ClientMessageInterface<"game_pause"> = {
+        event: "game_pause",
+        payload: { gameId: DEV_GAMEID },
+      };
+      this.sendMessage(game_pause);
     }
   }
 
@@ -181,7 +168,6 @@ export class VsPlayerGamePage {
 
   public unmount(): void {
     this.main.remove();
-    this.clearPauseCountdown();
   }
 
   // web socket
@@ -259,6 +245,7 @@ export class VsPlayerGamePage {
         const notificationData = data as ServerMessageInterface<"notification">;
         if (notificationData.payload.message == "Game started!")
           this.startGameHook();
+        // in the case game is starting again after pause
         break;
       }
       case "game_update": {
@@ -268,12 +255,14 @@ export class VsPlayerGamePage {
       }
       case "game_pause": {
         this.gameState.status = GameStatus.PAUSED;
-        this.scoreBar.pausePlay.toggleIsPlaying(false);
+        this.gameState.blockedPlayButton = true;
+        this.gameStateCallback();
         break;
       }
       case "game_resume": {
         this.gameState.status = GameStatus.PLAYING;
-        this.scoreBar.pausePlay.toggleIsPlaying(true);
+        this.gameState.blockedPlayButton = false;
+        this.gameStateCallback();
         break;
       }
     }

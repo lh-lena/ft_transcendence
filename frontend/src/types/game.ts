@@ -35,8 +35,10 @@ export interface Player {
 
 export interface GameState {
   status: GameStatus;
+  previousStatus: GameStatus;
   playerA: Player;
   playerB: Player;
+  blockedPlayButton: boolean;
 }
 
 export const CANVAS_DEFAULTS = {

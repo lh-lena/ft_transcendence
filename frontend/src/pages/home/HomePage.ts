@@ -6,8 +6,10 @@ export class HomePage {
   private main: HTMLElement;
   private menu: Menu;
   private pongButton: PongButton;
+  private router: Router;
 
-  constructor(private router: Router) {
+  constructor(router: Router) {
+    this.router = router;
     this.main = document.createElement("div");
     this.main.className =
       "flex flex-col gap-5 w-full min-h-full justify-center items-center bg-[#0400FF]";

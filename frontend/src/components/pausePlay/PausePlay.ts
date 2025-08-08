@@ -13,6 +13,7 @@ export class PausePlay {
       "btn flex items-center justify-center w-8 h-8 bg-white duration-150";
     this.renderIcon();
     this.button.addEventListener("click", () => {
+      if (this.gameState.blockedPlayButton) return;
       this.gameState.status =
         this.gameState.status === GameStatus.PLAYING
           ? GameStatus.PAUSED
