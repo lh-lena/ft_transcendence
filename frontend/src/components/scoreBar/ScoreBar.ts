@@ -10,9 +10,11 @@ export class ScoreBar {
   private scoreB: HTMLElement;
   public pausePlay: PausePlay;
   private gameState: GameState;
+  private gameStateCallbackParent: () => void;
 
-  constructor(gameState: GameState) {
+  constructor(gameState: GameState, gameStateCallbackParent: () => void) {
     this.gameState = gameState;
+    this.gameStateCallbackParent = gameStateCallbackParent;
     this.element = document.createElement("div");
     this.element.className =
       "flex flex-row justify-between w-[880px] items-center";
@@ -33,7 +35,9 @@ export class ScoreBar {
     this.element.appendChild(this.playerAContainer);
 
     // Pause/Play button
-    this.pausePlay = new PausePlay(this.gameState);
+    this.pausePlay = new PausePlay(this.gameState, () =>
+      this.gameStateCallbackParent(),
+    );
     this.pausePlay.mount(this.element);
 
     // Player B profile and score

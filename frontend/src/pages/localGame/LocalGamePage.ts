@@ -56,12 +56,13 @@ export class LocalGamePage {
     // create game instance before score bar so we can pass game (need for pausing) into scorebar
     this.game = new PongGame(
       this.gameState,
+      () => this.gameStateCallback(),
       "local",
-      (scoreA, scoreB) => this.scoreBar.updateScores(scoreA, scoreB),
-      () => this.checkPauseStatus(),
     );
 
-    this.scoreBar = new ScoreBar(this.gameState);
+    this.scoreBar = new ScoreBar(this.gameState, () =>
+      this.gameStateCallback(),
+    );
     this.scoreBar.mount(this.element);
 
     this.element.appendChild(this.gameContainer);
@@ -94,11 +95,24 @@ export class LocalGamePage {
     }
   }
 
-  private checkPauseStatus(): void {
-    if (this.gameState.status === GameStatus.PAUSED) {
-      this.showPauseOverlay();
-    } else {
+  private gameStateCallback(): void {
+    // update score bar on hook
+    if (this.scoreBar) {
+      this.scoreBar.updateScores(
+        this.gameState.playerA.score,
+        this.gameState.playerB.score,
+      );
+    }
+
+    // pause play stuff
+    console.log("parent: " + this.gameState.status);
+    // implement a previous status and current status so we arent doing this every time we run the callback
+    if (this.gameState.status == GameStatus.PLAYING) {
+      this.game?.showGamePieces();
       this.hidePauseOverlay();
+    } else if (this.gameState.status == GameStatus.PAUSED) {
+      this.game?.hideGamePieces();
+      this.showPauseOverlay();
     }
   }
 

@@ -76,12 +76,11 @@ export class VsPlayerGamePage {
     // create game instance before score bar so we can pass game (need for pausing) into scorebar
     this.game = new PongGame(
       this.gameState,
+      () => this.gameStateCallback(),
       "remote",
-      (scoreA, scoreB) => this.scoreBar.updateScores(scoreA, scoreB),
-      () => this.checkPauseStatus(),
     );
 
-    this.scoreBar = new ScoreBar(this.gameState);
+    this.scoreBar = new ScoreBar(this.gameState, this.gameStateCallback);
     this.scoreBar.mount(this.main);
 
     this.main.appendChild(this.gameContainer);
@@ -111,6 +110,14 @@ export class VsPlayerGamePage {
     }
 
     this.startCountdownTimer(60);
+  }
+
+  private gameStateCallback(): void {
+    // update score bar on hook
+    this.scoreBar.updateScores(
+      this.gameState.playerA.score,
+      this.gameState.playerB.score,
+    );
   }
 
   private startCountdownTimer(seconds: number): void {

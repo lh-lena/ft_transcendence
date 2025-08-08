@@ -8,19 +8,16 @@ import {
   CANVAS_DEFAULTS,
 } from "../types";
 
-import {
-  WsServerBroadcast,
-  ServerMessageInterface,
-} from "../types/websocket";
+import { ServerMessageInterface } from "../types/websocket";
 
 export class PongGame {
   private canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
-  private onScoreUpdate!: (_scoreA: number, _scoreB: number) => void;
   private gameState: GameState;
   private lastFrameTime: number = performance.now();
   private bgColor: string;
   private gameMode: string;
+  private gameStateCallBackParent: () => void;
 
   // added ! so they dont need to be initialized directly in the constructor
   private ball!: Ball;
@@ -32,24 +29,14 @@ export class PongGame {
   private animationFrameId: number | null = null;
   private windowElement: HTMLDivElement;
 
-  private pauseCallback?: () => void;
-
   constructor(
     gameState: GameState,
+    gameStateCallbackParent: () => void,
     gameMode: string,
-    onScoreUpdate?: (_scoreA: number, _scoreB: number) => void,
-    pauseCallback?: () => void,
   ) {
     this.gameState = gameState;
+    this.gameStateCallBackParent = gameStateCallbackParent;
     this.gameMode = gameMode;
-    // score callback for localGamePage
-    if (onScoreUpdate) {
-      this.onScoreUpdate = onScoreUpdate;
-    }
-    // pause call back for localGamePage
-    if (pauseCallback) {
-      this.pauseCallback = pauseCallback;
-    }
     // Create window structure
     this.windowElement = document.createElement("div");
     this.windowElement.className = "window border-2";
@@ -110,12 +97,6 @@ export class PongGame {
       this.ball.dx = Math.random() < 0.5 ? 6 : -6;
       this.ball.dy = Math.random() < 0.5 ? 1 : -1;
       this.ball.v = BALL_DEFAULTS.v;
-    }
-  }
-
-  private notifyScoreUpdate(): void {
-    if (this.onScoreUpdate) {
-      this.onScoreUpdate(this.paddleA.score, this.paddleB.score);
     }
   }
 
@@ -186,13 +167,8 @@ export class PongGame {
   }
 
   private updateGameState(dt: number): void {
-    // callback to update pause play in localGamePage
-    if (this.pauseCallback) {
-      this.pauseCallback();
-    }
     // if game is paused return
     if (this.gameState.status !== GameStatus.PLAYING) {
-      this.hideGamePieces();
       return;
     }
 
@@ -242,14 +218,14 @@ export class PongGame {
 
       // --- Ball Collision: Left/Right Walls (Scoring) ---
       if (this.ball.x <= 0) {
-        this.paddleB.score += 1;
-        this.notifyScoreUpdate();
+        this.gameState.playerB.score += 1;
+        this.gameStateCallback();
         this.setInitialGameLayout();
         return;
       }
       if (this.ball.x >= this.canvas.width - this.ball.size) {
-        this.paddleA.score += 1;
-        this.notifyScoreUpdate();
+        this.gameState.playerA.score += 1;
+        this.gameStateCallback();
         this.setInitialGameLayout();
         return;
       }
@@ -306,6 +282,10 @@ export class PongGame {
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     this.drawBall();
     this.drawPaddles();
+  }
+
+  private gameStateCallback(): void {
+    this.gameStateCallBackParent();
   }
 
   public mount(parent: HTMLElement): void {
