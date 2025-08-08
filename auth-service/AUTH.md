@@ -12,6 +12,7 @@ This service provides secure user registration and login using Argon2 password h
 `POST /api/auth/register`
 
 **Request Body:**
+
 ```json
 {
   "email": "user@example.com",
@@ -22,11 +23,13 @@ This service provides secure user registration and login using Argon2 password h
 
 **Success Response:**
 `201 Created`
+
 ```json
 { "message": "User registered successfully." }
 ```
 
 **Possible Errors:**
+
 - `400 Bad Request` – Missing or invalid fields
 - `409 Conflict` – Email or username already in use
 - `500 Internal Server Error` – Server error
@@ -39,6 +42,7 @@ This service provides secure user registration and login using Argon2 password h
 `POST /api/auth/login`
 
 **Request Body:**
+
 ```json
 {
   "email": "user@example.com",
@@ -48,11 +52,13 @@ This service provides secure user registration and login using Argon2 password h
 
 **Success Response:**
 `200 OK`
+
 ```json
 { "token": "<jwt_token>" }
 ```
 
 **Possible Errors:**
+
 - `400 Bad Request` – Missing fields
 - `401 Unauthorized` – Invalid credentials
 
@@ -90,6 +96,7 @@ This service provides secure user registration and login using Argon2 password h
 `Authorization: Bearer <jwt_token>`
 
 **Success Response:**
+
 ```json
 {
   "user": {
@@ -102,7 +109,9 @@ This service provides secure user registration and login using Argon2 password h
   }
 }
 ```
+
 **Possible Errors:**
+
 - `401 Unauthorized` – Missing or invalid token
 
 ---
