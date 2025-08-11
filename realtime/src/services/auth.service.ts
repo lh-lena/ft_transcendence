@@ -80,7 +80,7 @@ export default function authService(app: FastifyInstance) {
       );
       return true;
     } catch (error) {
-      app.log.debug('[auth-service]: Error verifying client:', error);
+      app.log.debug(`[auth-service]: Error verifying client: ${error}`);
       return false;
     }
   }
