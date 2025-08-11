@@ -1,11 +1,16 @@
 // src/types/fastify.d.ts
 import 'fastify';
 import { PrismaClient } from '@prisma/client';
-import { schema } from '../plugins/000_config';
 
 declare module 'fastify' {
   interface FastifyInstance {
     prisma: PrismaClient;
-    config: typeof schema;
+    config: {
+      PORT: string;
+      HOST: string;
+      ALLOWED_ORIGINS: string;
+      ALLOWED_METHODS: string;
+      DATABASE_URL: string;
+    };
   }
 }

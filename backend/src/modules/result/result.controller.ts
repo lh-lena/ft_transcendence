@@ -21,7 +21,7 @@ export const resultController = {
   async getAllorFiltered(
     query: resultQueryInput,
   ): Promise<resultResponseArrayType> {
-    const ret = await resultService.getAllorFiltered(query);
+    const ret = await resultService.getQuery(query);
     return ret;
   },
 

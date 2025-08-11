@@ -41,9 +41,8 @@ model gamePlayed {
   game            result @relation(fields: [gameResultId], references: [id])
   gameResultId    Int
 
-  score           Int?
-  isWinner        Boolean?
-  isAi            Boolean?
+  score          Int?
+  isWinner       Boolean?
 }
 
 enum GameStatus {

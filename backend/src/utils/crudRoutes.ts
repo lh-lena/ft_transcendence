@@ -54,10 +54,11 @@ const crudRoutes =
           summary: `Get ${entityName} by ID`,
         },
         handler: async (
-          request: FastifyRequest<crudDefines.GetById>,
+          request: FastifyRequest<crudDefines.GetById<TId>>,
           reply: FastifyReply,
         ) => {
-          const ret = await controller.getById!(request.params.id);
+          const id = request.params as TId;
+          const ret = await controller.getById!(id);
 
           return reply.code(200).send(ret);
         },
@@ -99,10 +100,10 @@ const crudRoutes =
           summary: `Update ${entityName} by ID`,
         },
         handler: async (
-          request: FastifyRequest<crudDefines.Update<TUpdate>>,
+          request: FastifyRequest<crudDefines.Update<TId, TUpdate>>,
           reply: FastifyReply,
         ) => {
-          const id = request.params.id;
+          const id = request.params as TId;
           const body = request.body as TUpdate;
           const ret = await controller.update!(id, body);
 
@@ -122,10 +123,11 @@ const crudRoutes =
           summary: `Delete ${entityName} by ID`,
         },
         handler: async (
-          request: FastifyRequest<crudDefines.Delete>,
+          request: FastifyRequest<crudDefines.Delete<TId>>,
           reply: FastifyReply,
         ) => {
-          const ret = await controller.deleteOne!(request.params.id);
+          const id = request.params as TId;
+          const ret = await controller.deleteOne!(id);
 
           return reply.code(200).send(ret);
         },

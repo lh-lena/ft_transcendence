@@ -14,19 +14,29 @@ export const schema = {
     'ALLOWED_METHODS',
   ],
   properties: {
-    PORT: { type: 'string', default: '8080' },
-    HOST: { type: 'string', default: '0.0.0.0' },
+    PORT: { type: 'string' },
+    HOST: { type: 'string' },
     DATABASE_URL: { type: 'string' },
-    ALLOWED_ORIGINS: { type: 'string', default: '' },
-    ALLOWED_METHODS: { type: 'string', default: '' },
+    ALLOWED_ORIGINS: { type: 'string' },
+    ALLOWED_METHODS: { type: 'string' },
   },
 };
+
+export interface Config {
+  PORT: string;
+  HOST: string;
+  DATABASE_URL: string;
+  ALLOWED_ORIGINS: string;
+  ALLOWED_METHODS: string;
+}
 
 //load and check env variables
 const configPlugin = async (server: FastifyInstance) => {
   dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
-  const config = envSchema({ schema });
+  const config = envSchema<Config>({ schema });
+
+  console.log(config);
 
   server.decorate('config', config);
 };

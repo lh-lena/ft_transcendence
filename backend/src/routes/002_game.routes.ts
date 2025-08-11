@@ -14,7 +14,7 @@ import {
 
 const gameRoutes = async (server: FastifyInstance) => {
   server.register(
-    crudRoutes<game, gameQueryInput, gameCreateInput, gameIdInput>(),
+    crudRoutes<game, gameQueryInput, gameCreateInput, null, gameIdInput>(),
     {
       basePath: '/api/game',
       entityName: 'game',
@@ -39,7 +39,7 @@ const gameRoutes = async (server: FastifyInstance) => {
     ) => {
       const id = request.params.id;
       const body = request.body as gameCreateInput;
-      const ret = await gameController.join(id, body);
+      const ret = await gameController.join({ id: id }, body);
 
       return reply.code(200).send(ret);
     },

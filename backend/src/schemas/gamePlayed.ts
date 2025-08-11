@@ -8,7 +8,6 @@ export const gamePlayedBase = z.object({
   user: userBase,
   score: z.number(),
   isWinner: z.boolean(),
-  isAi: z.boolean(),
 });
 const gamePlayedSchema = gamePlayedBase.meta({ $id: 'gamePlayed' });
 
@@ -23,7 +22,6 @@ export const gamePlayedQueryBase = gamePlayedBase
     userId: z.coerce.number().optional(),
     user: userQueryBase.optional(),
     isWinner: z.coerce.boolean().optional(),
-    isAi: z.coerce.boolean().optional(),
   })
   .partial();
 const gamePlayedQuerySchema = gamePlayedQueryBase.meta({
@@ -35,3 +33,5 @@ export const gamePlayedSchemas = [
   gamePlayedArraySchema,
   gamePlayedQuerySchema,
 ];
+
+export type gamePlayedType = z.infer<typeof gamePlayedBase>;

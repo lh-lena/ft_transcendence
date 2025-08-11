@@ -41,8 +41,8 @@ const resultResponseBase = z.object({
   id: z.number(),
   gameId: z.uuid(),
   status: resultStatusBase,
-  startedAt: z.string(),
-  finishedAt: z.string(),
+  startedAt: z.iso.datetime(),
+  finishedAt: z.iso.datetime(),
   gamePlayed: z.array(gamePlayedBase),
 });
 const resultResponseSchema = resultResponseBase.meta({ $id: 'resultResponse' });

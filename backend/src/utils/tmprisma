@@ -7,13 +7,10 @@ const modelMap = {
 };
 
 type ModelName = keyof typeof modelMap;
-
 type ModelDelegate<M extends ModelName> = (typeof modelMap)[M];
-
 type ModelType<M extends ModelName> = Awaited<
   ReturnType<ModelDelegate<M>['findUnique']>
 >;
-
 type WhereType<M extends ModelName> = Parameters<
   ModelDelegate<M>['findUnique']
 >[0]['where'];

@@ -39,8 +39,8 @@ export const userController = {
   },
 
   //delete user
-  async deleteOne(id: userIdInput): Promise<{ message: string }> {
-    const ret = await userService.deleteOne(id);
-    return { message: ret };
+  async deleteOne(id: userIdInput): Promise<{ success: boolean }> {
+    await userService.deleteOne(id);
+    return { success: true };
   },
 };

@@ -1,9 +1,7 @@
-import { createCrud } from '../../utils/prismaCrudGenerator';
+import { userCrud as userModel } from './user.crud';
 import { NotFoundError, ConflictError } from '../../utils/error';
-import { prisma } from '../../plugins/001_prisma';
 import { Prisma } from '@prisma/client';
 
-const userModel = createCrud(prisma.user);
 const options = { include: { gamePlayed: true } };
 
 import {
@@ -79,11 +77,13 @@ export async function update(
   }
 }
 
-export async function deleteOne(id: userIdInput): Promise<string> {
+export async function deleteOne(
+  id: userIdInput,
+): Promise<{ success: boolean }> {
   try {
     const ret = await userModel.deleteOne(id.id);
     if (!ret) throw new NotFoundError(`user with ${id} not found`);
-    return `user ${id} deleted successfulyy`;
+    return { success: true };
   } catch (err: unknown) {
     if (
       err instanceof Prisma.PrismaClientKnownRequestError &&

@@ -1,8 +1,9 @@
-import { prisma } from '../../plugins/001_prisma';
+import { resultCrud as resultModel } from './result.crud';
 import { Prisma } from '@prisma/client';
-import { createCrud } from '../../utils/prismaCrudGenerator';
 
 import { NotFoundError, ConflictError } from '../../utils/error';
+
+import { transformInput, transformOutput } from './result.helper';
 
 import {
   resultQueryInput,
@@ -12,80 +13,41 @@ import {
   resultResponseArrayType,
 } from '../../schemas/result';
 
-const resultModel = createCrud(prisma.result);
-const options = { include: { gamePlayed: { include: { user: true } } } };
-
-async function transformData(
-  data: resultCreateInput,
-): Promise<Prisma.resultCreateInput> {
-  const gamePlayed = [];
-
-  if (data.winnerId !== null && data.winnerId !== -1) {
-    gamePlayed.push({
-      user: { connect: { id: data.winnerId } },
-      score: data.scorePlayer1,
-      isWinner: true,
-      isAi: false,
-    });
-  } else if (data.winnerId === -1) {
-    gamePlayed.push({
-      score: data.scorePlayer1,
-      isWinner: true,
-      isAi: true,
-    });
-  }
-
-  if (data.loserId !== null && data.loserId !== -1) {
-    gamePlayed.push({
-      user: { connect: { id: data.loserId } },
-      score: data.scorePlayer2,
-      isWinner: false,
-      isAi: false,
-    });
-  } else if (data.loserId === -1) {
-    gamePlayed.push({
-      score: data.scorePlayer2,
-      isWinner: false,
-      isAi: true,
-    });
-  }
-
-  return {
-    gameId: data.gameId,
-    status: data.status,
-    startedAt: new Date(data.startedAt).toISOString(),
-    finishedAt: new Date(data.finishedAt).toISOString(),
-    gamePlayed: { create: gamePlayed },
-  };
-}
-
-export async function getAllorFiltered(
+export async function getQuery(
   filters?: resultQueryInput,
 ): Promise<resultResponseArrayType> {
   let ret;
 
   if (!filters) {
-    ret = await resultModel.findAll(options);
+    ret = await resultModel.findAll();
   } else {
-    ret = await resultModel.findBy(filters, options);
+    ret = await resultModel.findBy(filters);
   }
   if (!ret || ret.length === 0) {
     throw new NotFoundError('No result found');
   }
-  return ret;
+
+  const transformedRet = await Promise.all(
+    ret.map((ret) => transformOutput(ret)),
+  );
+
+  return transformedRet;
 }
 
 export async function getById(id: resultIdInput): Promise<resultResponseType> {
-  const ret = await resultModel.findById(id.id, options);
+  const ret = await resultModel.findById(id.id);
+
   if (!ret) throw new NotFoundError(`result with ${id} not found`);
 
-  return ret;
+  const transformedRet = await transformOutput(ret);
+
+  return transformedRet;
 }
 
 export async function create(
   data: resultCreateInput,
 ): Promise<resultResponseType> {
-  const prismaData = await transformData(data);
+  const prismaData = await transformInput(data);
   let ret;
 
   try {
@@ -95,11 +57,13 @@ export async function create(
       throw new NotFoundError(`result not found`);
     }
 
-    ret = await resultModel.findById(ret.id, options);
+    ret = await resultModel.findById(ret.id);
 
     if (!ret) {
       throw new NotFoundError(`result not found`);
     }
+
+    //const transformedRet = await transformOutput(ret);
 
     return ret;
   } catch (err: unknown) {

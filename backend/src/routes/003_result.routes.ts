@@ -13,7 +13,13 @@ import {
 
 const resultRoutes = async (server: FastifyInstance) => {
   server.register(
-    crudRoutes<result, resultQueryInput, resultCreateInput, resultIdInput>(),
+    crudRoutes<
+      result,
+      resultQueryInput,
+      resultCreateInput,
+      null,
+      resultIdInput
+    >(),
     {
       basePath: '/api/result',
       entityName: 'result',
