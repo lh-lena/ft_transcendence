@@ -1,33 +1,70 @@
 import { prisma } from '../../plugins/001_prisma';
-import { Prisma, result } from '@prisma/client';
+import { Prisma } from '@prisma/client';
+import {
+  resultResponseSchema,
+  resultResponseArraySchema,
+  resultResponseType,
+  resultResponseArrayType,
+} from '../../schemas/result';
 
 const options = { include: { gamePlayed: { include: { user: true } } } };
 
 export const resultCrud = {
-  findAll: async (options?: Prisma.resultFindManyArgs): Promise<result[]> => {
-    return await prisma.result.findMany(options);
+  findAll: async (): Promise<resultResponseArrayType> => {
+    const ret = await prisma.result.findMany(options);
+
+    if (ret) return resultResponseArraySchema.parse(ret);
+
+    return ret;
   },
 
-  findById: async (id: number): Promise<result | null> => {
-    return await prisma.result.findUnique({ where: { id }, ...options });
+  findById: async (id: number): Promise<resultResponseType | null> => {
+    const ret = await prisma.result.findUnique({ where: { id }, ...options });
+
+    if (ret) return resultResponseSchema.parse(ret);
+
+    return ret;
   },
 
-  findBy: async (where: Prisma.resultWhereInput): Promise<result[]> => {
-    return await prisma.result.findMany({ where, ...options });
+  findBy: async (
+    where: Prisma.resultWhereInput,
+  ): Promise<resultResponseArrayType> => {
+    console.log(where);
+    const ret = await prisma.result.findMany({ where, ...options });
+    console.log(ret);
+
+    if (ret) return resultResponseArraySchema.parse(ret);
+
+    return ret;
   },
 
-  insert: async (data: Prisma.resultCreateInput): Promise<result> => {
-    return await prisma.result.create({ data, ...options });
+  insert: async (
+    data: Prisma.resultCreateInput,
+  ): Promise<resultResponseType> => {
+    console.log(data);
+
+    const ret = await prisma.result.create({ data, ...options });
+
+    if (ret) return resultResponseSchema.parse(ret);
+
+    return ret;
   },
 
   patch: async (
     id: number,
     data: Prisma.resultUpdateInput,
-  ): Promise<result> => {
-    return await prisma.result.update({ where: { id }, data, ...options });
+  ): Promise<resultResponseType> => {
+    const ret = await prisma.result.update({ where: { id }, data, ...options });
+
+    if (ret) return resultResponseSchema.parse(ret);
+
+    return ret;
   },
 
-  deleteOne: async (id: number): Promise<result> => {
-    return await prisma.result.delete({ where: { id }, ...options });
+  deleteOne: async (id: number): Promise<{ success: true | false }> => {
+    const ret = await prisma.result.delete({ where: { id }, ...options });
+
+    if (ret) return { success: true };
+    else return { success: false };
   },
 };

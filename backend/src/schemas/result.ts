@@ -1,5 +1,6 @@
 import { z } from 'zod/v4';
 import { gamePlayedBase, gamePlayedQueryBase } from './gamePlayed';
+import { dtString } from './basics';
 
 //define the possible statie
 const resultStatusBase = z.enum([
@@ -20,20 +21,8 @@ export const resultBase = z.object({
   player1Username: z.string().nullable(),
   player2Username: z.string().nullable(),
   status: resultStatusBase,
-  startedAt: z.preprocess(
-    (arg) =>
-      typeof arg === 'string' || arg instanceof Date
-        ? new Date(arg)
-        : undefined,
-    z.date(),
-  ),
-  finishedAt: z.preprocess(
-    (arg) =>
-      typeof arg === 'string' || arg instanceof Date
-        ? new Date(arg)
-        : undefined,
-    z.date(),
-  ),
+  startedAt: dtString,
+  finishedAt: dtString,
 });
 
 //define schema for response
@@ -41,14 +30,18 @@ const resultResponseBase = z.object({
   id: z.number(),
   gameId: z.uuid(),
   status: resultStatusBase,
-  startedAt: z.iso.datetime(),
-  finishedAt: z.iso.datetime(),
-  gamePlayed: z.array(gamePlayedBase),
+  startedAt: dtString,
+  finishedAt: dtString,
+  get gamePlayed() {
+    return z.array(gamePlayedBase);
+  },
 });
-const resultResponseSchema = resultResponseBase.meta({ $id: 'resultResponse' });
+export const resultResponseSchema = resultResponseBase.meta({
+  $id: 'resultResponse',
+});
 
 const resultResponseArrayBase = z.array(resultResponseBase);
-const resultResponseArraySchema = resultResponseArrayBase.meta({
+export const resultResponseArraySchema = resultResponseArrayBase.meta({
   $id: 'resultResponseArray',
 });
 

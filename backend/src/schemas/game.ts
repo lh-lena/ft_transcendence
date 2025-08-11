@@ -1,5 +1,6 @@
 import { z } from 'zod/v4';
 import { userBase } from './user';
+import { dtString } from './basics';
 
 //define game mode
 export const gameModeBase = z.enum(['pvp_remote', 'pvp_ai', 'tournament']);
@@ -20,15 +21,7 @@ const gameBase = z.object({
   mode: gameModeBase,
   status: gameStatusBase,
   visibility: gameVisibilityBase,
-  createdAt: z
-    .preprocess(
-      (arg) =>
-        typeof arg === 'string' || arg instanceof Date
-          ? new Date(arg)
-          : undefined,
-      z.date(),
-    )
-    .optional(),
+  createdAt: dtString.optional(),
 });
 const gameSchema = gameBase.meta({ $id: 'game' });
 const gameArraySchema = z.array(gameBase).meta({ $id: 'gameArray' });

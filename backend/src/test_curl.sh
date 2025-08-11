@@ -32,12 +32,22 @@ curl -X POST \
   -H 'accept: application/json' \
   -H 'Content-Type: application/json' \
   -d '{
-  "userId": 293,
+  "userId": 2,
   "mode": "pvp_remote",
   "matchId": "string",
   "visibility": "public"
 }'
 
+curl -X POST \
+  'http://[::1]:8080/api/game' \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "userId": 1,
+  "mode": "pvp_remote",
+  "matchId": "string",
+  "visibility": "public"
+}'
 curl -X POST \
   'http://[::1]:8080/api/match' \
   -H 'accept: application/json' \
@@ -98,11 +108,11 @@ curl -X POST \
   -H 'accept: application/json' \
   -H 'Content-Type: application/json' \
   -d '{
-  "gameId": "a3325abd-bb5c-486b-9f5b-184d16bf2c3d",
+  "gameId": "a3325abd-bb5c-586b-9f5b-184d16bf2c3d",
   "scorePlayer1": "2",
   "scorePlayer2": "8",
-  "winnerId": 1,
-  "loserId": 2,
+  "winnerId": 2,
+  "loserId": 1,
   "player1Username": "alec",
   "player2Username": "moschi",
   "status":   "finished",

@@ -2,7 +2,7 @@ import { userCrud as userModel } from './user.crud';
 import { NotFoundError, ConflictError } from '../../utils/error';
 import { Prisma } from '@prisma/client';
 
-const options = { include: { gamePlayed: true } };
+import { transformQuery } from '../../utils/crudQueryBuilder';
 
 import {
   userIdInput,
@@ -19,9 +19,10 @@ export async function getQuery(
   let ret;
 
   if (!filters) {
-    ret = await userModel.findAll(options);
+    ret = await userModel.findAll();
   } else {
-    ret = await userModel.findBy(filters, options);
+    const query = transformQuery(filters);
+    ret = await userModel.findBy(query);
   }
   if (!ret || ret.length === 0) {
     throw new NotFoundError('No user found');
@@ -77,9 +78,7 @@ export async function update(
   }
 }
 
-export async function deleteOne(
-  id: userIdInput,
-): Promise<{ success: boolean }> {
+export async function deleteOne(id: userIdInput): Promise<{ success: true }> {
   try {
     const ret = await userModel.deleteOne(id.id);
     if (!ret) throw new NotFoundError(`user with ${id} not found`);

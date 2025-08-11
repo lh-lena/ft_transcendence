@@ -42,7 +42,7 @@ export class gameMakingClass {
         visibility: req.visibility,
         mode: 'pvp_remote',
         status: 'waiting',
-        createdAt: new Date(),
+        createdAt: new Date().toISOString(),
       };
 
       this.activeMatches.push(game);
@@ -93,7 +93,7 @@ export class gameMakingClass {
         mode: req.mode,
         status: 'playing',
         visibility: 'private',
-        createdAt: new Date(),
+        createdAt: new Date().toISOString(),
       };
 
       console.log(game);

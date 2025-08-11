@@ -1,6 +1,7 @@
 import { z } from 'zod/v4';
+import { dtString } from './basics';
+import { gamePlayedShallow } from './gamePlayed';
 
-//define user schema
 const userIn = {
   email: z.email(),
   username: z.string(),
@@ -11,26 +12,21 @@ const userIn = {
 
 const userGen = {
   id: z.number(),
-  gamePlayed: z.any().optional(),
-  createdAt: z.preprocess(
-    (arg) =>
-      typeof arg === 'string' || arg instanceof Date
-        ? new Date(arg)
-        : undefined,
-    z.date(),
-  ),
-  updatedAt: z.preprocess(
-    (arg) =>
-      typeof arg === 'string' || arg instanceof Date
-        ? new Date(arg)
-        : undefined,
-    z.date(),
-  ),
+  createdAt: dtString,
+  updatedAt: dtString,
 };
+
+export const userShallow = z.object({
+  ...userIn,
+  ...userGen,
+});
 
 export const userBase = z.object({
   ...userGen,
   ...userIn,
+  get gamePlayed(): z.ZodNullable<z.ZodArray<typeof gamePlayedShallow>> {
+    return z.nullable(z.array(gamePlayedShallow));
+  },
 });
 
 //define schema for POST
@@ -61,20 +57,31 @@ export const userIdBase = z.object({
 });
 const userIdSchema = userIdBase.meta({ $id: 'userId' });
 
-export const userQueryBase = userBase
-  .extend({
-    id: z.coerce.number().optional(),
-    is_2fa_enabled: z.coerce.boolean().optional(),
-  })
-  .partial();
+export const userQueryBase = z.lazy(() =>
+  z
+    .object({
+      email: z.email().optional(),
+      username: z.string().optional(),
+      password_hash: z.string().optional(),
+      is_2fa_enabled: z.coerce.boolean().optional(),
+      twofa_secret: z.string().nullable().optional(),
+      id: z.coerce.number().optional(),
+      createdAt: dtString.optional(),
+      updatedAt: dtString.optional(),
+      gamePlayed: z.array(gamePlayedShallow).optional(),
+    })
+    .partial(),
+);
 const userQuerySchema = userQueryBase.meta({ $id: 'userQuery' });
 
 //define schemas for responses
 const userResponseBase = userBase;
-const userResponseSchema = userResponseBase.meta({ $id: 'userResponse' });
+export const userResponseSchema = userResponseBase.meta({
+  $id: 'userResponse',
+});
 
 const userResponseArrayBase = z.array(userResponseBase);
-const userResponseArraySchema = userResponseArrayBase.meta({
+export const userResponseArraySchema = userResponseArrayBase.meta({
   $id: 'userResponseArray',
 });
 
@@ -90,7 +97,7 @@ export const userSchemas = [
 ];
 
 //export types
-export type user = z.infer<typeof userBase>;
+export type userType = z.infer<typeof userBase>;
 export type userCreateInput = z.infer<typeof userCreateSchema>;
 export type userUpdateInput = z.infer<typeof userUpdateSchema>;
 export type userIdInput = z.infer<typeof userIdSchema>;

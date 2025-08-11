@@ -1,4 +1,8 @@
 import { gameMakingClass } from './game.class';
+import { NotFoundError } from '../../utils/error';
+
+import { transformQuery } from '../../utils/crudQueryBuilder';
+
 import {
   gameCreateInput,
   gameQueryInput,
@@ -6,8 +10,6 @@ import {
   gameResponseType,
   gameResponseArrayType,
 } from '../../schemas/game';
-
-import { NotFoundError } from '../../utils/error';
 
 const gamemaker = new gameMakingClass();
 
@@ -19,7 +21,8 @@ export async function getAllorFilteredgame(
   if (!filters) {
     game = await gamemaker.findAll();
   } else {
-    game = await gamemaker.findFiltered(filters);
+    const query = transformQuery(filters);
+    game = await gamemaker.findFiltered(query);
   }
   if (!game || game.length === 0) {
     throw new NotFoundError('No games found');

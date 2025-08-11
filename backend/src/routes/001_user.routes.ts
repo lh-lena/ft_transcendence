@@ -4,7 +4,7 @@ import fp from 'fastify-plugin';
 import crudRoutes from '../utils/crudRoutes';
 import { userController } from '../modules/user/user.controller';
 import {
-  user,
+  userType,
   userQueryInput,
   userCreateInput,
   userUpdateInput,
@@ -14,7 +14,7 @@ import {
 const userRoutes = async (server: FastifyInstance) => {
   server.register(
     crudRoutes<
-      user,
+      userType,
       userQueryInput,
       userCreateInput,
       userUpdateInput,

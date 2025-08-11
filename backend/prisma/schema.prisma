@@ -20,7 +20,7 @@ model user {
   password_hash   String
   is_2fa_enabled  Boolean @default(false)
   twofa_secret    String?
-  gamePlayed      gamePlayed[]
+  gamePlayed      gamePlayed[] 
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
   }

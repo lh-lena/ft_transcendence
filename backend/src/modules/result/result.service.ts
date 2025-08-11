@@ -3,7 +3,8 @@ import { Prisma } from '@prisma/client';
 
 import { NotFoundError, ConflictError } from '../../utils/error';
 
-import { transformInput, transformOutput } from './result.helper';
+import { transformInput } from './result.helper';
+import { transformQuery } from '../../utils/crudQueryBuilder';
 
 import {
   resultQueryInput,
@@ -21,17 +22,14 @@ export async function getQuery(
   if (!filters) {
     ret = await resultModel.findAll();
   } else {
-    ret = await resultModel.findBy(filters);
+    const query = transformQuery(filters);
+    ret = await resultModel.findBy(query);
   }
   if (!ret || ret.length === 0) {
     throw new NotFoundError('No result found');
   }
 
-  const transformedRet = await Promise.all(
-    ret.map((ret) => transformOutput(ret)),
-  );
-
-  return transformedRet;
+  return ret;
 }
 
 export async function getById(id: resultIdInput): Promise<resultResponseType> {
@@ -39,9 +37,7 @@ export async function getById(id: resultIdInput): Promise<resultResponseType> {
 
   if (!ret) throw new NotFoundError(`result with ${id} not found`);
 
-  const transformedRet = await transformOutput(ret);
-
-  return transformedRet;
+  return ret;
 }
 
 export async function create(
@@ -62,8 +58,6 @@ export async function create(
     if (!ret) {
       throw new NotFoundError(`result not found`);
     }
-
-    //const transformedRet = await transformOutput(ret);
 
     return ret;
   } catch (err: unknown) {

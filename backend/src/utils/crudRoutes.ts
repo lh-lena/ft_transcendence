@@ -117,7 +117,7 @@ const crudRoutes =
         schema: {
           params: { $ref: `${entityName}Id` },
           response: {
-            200: { $ref: `${entityName}Delete` },
+            200: { success: true },
             404: { $ref: `NotFound` },
           },
           summary: `Delete ${entityName} by ID`,

@@ -5,7 +5,7 @@ import crudRoutes from '../utils/crudRoutes';
 import { resultController } from '../modules/result/result.controller';
 
 import {
-  result,
+  resultResponseType,
   resultQueryInput,
   resultCreateInput,
   resultIdInput,
@@ -14,7 +14,7 @@ import {
 const resultRoutes = async (server: FastifyInstance) => {
   server.register(
     crudRoutes<
-      result,
+      resultResponseType,
       resultQueryInput,
       resultCreateInput,
       null,
