@@ -8,15 +8,14 @@ import { matchController } from '../modules/match/match.controller';
 
 import { responseRefSchemas } from '../modules/response/response.schema';
 
-const matchRoutes = async ( server: FastifyInstance ) => {
-  
-  server.register( crudRoutes, {
+const matchRoutes = async (server: FastifyInstance) => {
+  server.register(crudRoutes, {
     basePath: '/api/match',
     entityName: 'match',
     controller: matchController,
   });
 
-  server.post( '/api/match/join/:id', {
+  server.post('/api/match/join/:id', {
     schema: {
       params: { $ref: 'matchId' },
       body: { $ref: 'matchCreate' },
@@ -26,14 +25,12 @@ const matchRoutes = async ( server: FastifyInstance ) => {
       },
       summary: 'Join a private match',
     },
-    handler: async ( request, reply ) => {
-      
-      const ret = await matchController.join( request.params.id, request.body );
+    handler: async (request, reply) => {
+      const ret = await matchController.join(request.params.id, request.body);
 
-      return reply.code( 200 ).send( ret );
-    }
+      return reply.code(200).send(ret);
+    },
   });
+};
 
-}
-
-export default fp( matchRoutes );
+export default fp(matchRoutes);

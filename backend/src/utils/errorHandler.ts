@@ -6,10 +6,9 @@ import { ZodError } from 'zod';
 export function errorHandler(
   error: FastifyError | Error,
   request: FastifyRequest,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
-
-  console.log( `Error occurred: ${error.message}, ${error.statusCode }` );
+  console.log(`Error occurred: ${error.message}, ${error.statusCode}`);
 
   if (error instanceof AppError) {
     return reply.code(error.statusCode).send({
@@ -42,7 +41,7 @@ export function errorHandler(
     });
   }
 
-  console.log(error); 
+  console.log(error);
 
   return reply.code(500).send({
     error: 'INTERNAL_ERROR',

@@ -64,7 +64,7 @@ export function setupGracefulShutdown(
   // });
 
   process.on('unhandledRejection', (reason, promise) => {
-    app.log.fatal('Unhandled Rejection at:', promise, 'reason:', reason);
+    app.log.fatal(`Unhandled Rejection at: ${promise}, reason: ${reason}`);
     if (!shutdownInProgress) {
       gracefulShutdown('UNHANDLED_REJECTION');
     }

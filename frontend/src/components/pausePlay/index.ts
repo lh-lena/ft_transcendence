@@ -1,1 +1,1 @@
-export * from './PausePlay'
+export * from './PausePlay';
