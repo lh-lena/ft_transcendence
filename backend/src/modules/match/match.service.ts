@@ -43,7 +43,7 @@ export async function removematch(id: matchIdInput) {
   await getmatchById(id);
 
   matchmaker.remove(id);
-  return { message: `match ${id} deleted successfulyy` };
+  return { message: `match ${id} deleted successfully` };
 }
 
 export async function joinmatch(id: matchIdInput, input: matchCreateInput) {
