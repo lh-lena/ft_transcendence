@@ -59,7 +59,7 @@ export async function removeuser(id: number) {
   try {
     const user = await userModel.remove(id);
     if (!user) throw new NotFoundError(`user with ${id} not found`);
-    return { message: `user ${id} deleted successfulyy` };
+    return { message: `user ${id} deleted successfully` };
   } catch (err: any) {
     if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2025') {
       throw new NotFoundError(`user with ${id} not found`);
