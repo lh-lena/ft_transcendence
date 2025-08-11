@@ -1,39 +1,39 @@
 export class Router {
-    private routes: Map<string, () => void>;
+  private routes: Map<string, () => void>;
 
-    constructor() {
-        this.routes = new Map();
+  constructor() {
+    this.routes = new Map();
 
-        // Handle browser back/forward buttons
-        window.addEventListener('popstate', () => {
-            this.handleRoute(window.location.pathname);
-        });
+    // Handle browser back/forward buttons
+    window.addEventListener('popstate', () => {
+      this.handleRoute(window.location.pathname);
+    });
+  }
+
+  public add(path: string, callback: () => void): void {
+    this.routes.set(path, callback);
+  }
+
+  public navigate(path: string): void {
+    window.history.pushState({}, '', path);
+    this.handleRoute(path);
+  }
+
+  public navigateBack(): void {
+    window.history.back();
+  }
+
+  private handleRoute(path: string): void {
+    const callback = this.routes.get(path);
+    if (callback) {
+      callback();
+    } else {
+      // Handle 404 or redirect to home
+      this.navigate('/');
     }
+  }
 
-    public add(path: string, callback: () => void): void {
-        this.routes.set(path, callback);
-    }
-
-    public navigate(path: string): void {
-        window.history.pushState({}, '', path);
-        this.handleRoute(path);
-    }
-
-    public navigateBack(): void {
-        window.history.back();
-    }
-
-    private handleRoute(path: string): void {
-        const callback = this.routes.get(path);
-        if (callback) {
-            callback();
-        } else {
-            // Handle 404 or redirect to home
-            this.navigate('/');
-        }
-    }
-
-    public init(): void {
-        this.handleRoute(window.location.pathname);
-    }
+  public init(): void {
+    this.handleRoute(window.location.pathname);
+  }
 }

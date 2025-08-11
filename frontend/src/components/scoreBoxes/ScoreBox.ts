@@ -1,7 +1,7 @@
 export class ScoreBox {
   private element: HTMLElement;
 
-  constructor(playerName: string, result: string){
+  constructor(playerName: string, result: string) {
     this.element = document.createElement('div');
     this.element.className = 'standard-dialog w-[300px] h-20';
 
