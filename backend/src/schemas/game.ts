@@ -1,5 +1,5 @@
 import { z } from 'zod/v4';
-import { userBase } from './user';
+import { userResponseBase } from './user';
 import { dtString } from './basics';
 
 //define game mode
@@ -17,7 +17,7 @@ const gameVisibilityBase = z.enum(['public', 'private']);
 //game object
 const gameBase = z.object({
   gameId: z.string(),
-  players: z.array(userBase),
+  players: z.array(userResponseBase),
   mode: gameModeBase,
   status: gameStatusBase,
   visibility: gameVisibilityBase,

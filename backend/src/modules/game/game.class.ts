@@ -2,11 +2,11 @@ import { v4 as uuidv4 } from 'uuid';
 import { z } from 'zod/v4';
 
 import { getById as userGetById } from '../user/user.service';
-import { userBase } from '../../schemas/user';
+import { userResponseBase } from '../../schemas/user';
 
 import { NotFoundError } from '../../utils/error';
 
-type user = z.infer<typeof userBase>;
+type user = z.infer<typeof userResponseBase>;
 
 import {
   game,

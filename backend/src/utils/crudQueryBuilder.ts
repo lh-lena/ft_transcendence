@@ -3,6 +3,8 @@ export function transformQuery<T extends Record<string, unknown>>(
 ): Record<string, unknown> {
   const result: Record<string, unknown> = {};
 
+  console.log('Query after builder', result);
+
   Object.keys(query).forEach((key) => {
     const parts = key.split('.');
     let current: Record<string, unknown> = result;
@@ -18,6 +20,8 @@ export function transformQuery<T extends Record<string, unknown>>(
       }
     });
   });
+
+  console.log('Query after builder', result);
 
   return result;
 }

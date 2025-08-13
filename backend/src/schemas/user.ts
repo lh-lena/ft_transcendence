@@ -1,6 +1,10 @@
 import { z } from 'zod/v4';
 import { dtString } from './basics';
-import { gamePlayedShallow } from './gamePlayed';
+import {
+  gamePlayedBase,
+  gamePlayedQueryBase,
+  gamePlayedResponseBase,
+} from './gamePlayed';
 
 const userIn = {
   email: z.email(),
@@ -14,19 +18,12 @@ const userGen = {
   id: z.number(),
   createdAt: dtString,
   updatedAt: dtString,
+  gamePlayed: z.array(gamePlayedBase).optional(),
 };
-
-export const userShallow = z.object({
-  ...userIn,
-  ...userGen,
-});
 
 export const userBase = z.object({
   ...userGen,
   ...userIn,
-  get gamePlayed(): z.ZodNullable<z.ZodArray<typeof gamePlayedShallow>> {
-    return z.nullable(z.array(gamePlayedShallow));
-  },
 });
 
 //define schema for POST
@@ -57,25 +54,19 @@ export const userIdBase = z.object({
 });
 const userIdSchema = userIdBase.meta({ $id: 'userId' });
 
-export const userQueryBase = z.lazy(() =>
-  z
-    .object({
-      email: z.email().optional(),
-      username: z.string().optional(),
-      password_hash: z.string().optional(),
-      is_2fa_enabled: z.coerce.boolean().optional(),
-      twofa_secret: z.string().nullable().optional(),
-      id: z.coerce.number().optional(),
-      createdAt: dtString.optional(),
-      updatedAt: dtString.optional(),
-      gamePlayed: z.array(gamePlayedShallow).optional(),
-    })
-    .partial(),
-);
+const userQueryBase = z.object({
+  id: z.coerce.number().optional(),
+  email: z.email().optional(),
+  username: z.string().optional(),
+  is_2fa_enabled: z.boolean().optional(),
+  gamePlayed: gamePlayedQueryBase.optional(),
+});
 const userQuerySchema = userQueryBase.meta({ $id: 'userQuery' });
 
 //define schemas for responses
-const userResponseBase = userBase;
+export const userResponseBase = userBase.extend({
+  gamePlayed: z.array(gamePlayedResponseBase).optional(),
+});
 export const userResponseSchema = userResponseBase.meta({
   $id: 'userResponse',
 });

@@ -33,6 +33,7 @@ export const userCrud = {
   ): Promise<userResponseArrayType> => {
     const ret = await prisma.user.findMany({ where, ...options });
 
+    console.log(ret);
     if (ret) return userResponseArraySchema.parse(ret);
 
     return ret;

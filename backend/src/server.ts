@@ -2,6 +2,7 @@ import Fastify from 'fastify';
 import AutoLoad from '@fastify/autoload';
 
 import Path from 'path';
+import qs from 'qs';
 import { errorHandler } from './utils/errorHandler';
 
 //test
@@ -10,6 +11,7 @@ import { errorHandler } from './utils/errorHandler';
 export async function buildServer() {
   //build fastify instance
   const server = Fastify({
+    querystringParser: (str) => qs.parse(str),
     logger: {
       transport: {
         target: 'pino-pretty',

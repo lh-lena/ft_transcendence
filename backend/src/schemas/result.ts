@@ -1,5 +1,5 @@
 import { z } from 'zod/v4';
-import { gamePlayedBase, gamePlayedQueryBase } from './gamePlayed';
+import { gamePlayedResponseBase, gamePlayedQueryBase } from './gamePlayed';
 import { dtString } from './basics';
 
 //define the possible statie
@@ -32,9 +32,7 @@ const resultResponseBase = z.object({
   status: resultStatusBase,
   startedAt: dtString,
   finishedAt: dtString,
-  get gamePlayed() {
-    return z.array(gamePlayedBase);
-  },
+  gamePlayed: z.array(z.lazy(() => gamePlayedResponseBase)).optional(),
 });
 export const resultResponseSchema = resultResponseBase.meta({
   $id: 'resultResponse',
@@ -54,7 +52,7 @@ const resultIdSchema = resultIdBase.meta({ $id: 'resultId' });
 const resultQueryBase = resultResponseBase
   .extend({
     id: z.coerce.number().optional(),
-    gamePlayed: z.array(gamePlayedQueryBase).optional(),
+    gamePlayed: z.array(z.lazy(() => gamePlayedQueryBase)).optional(),
   })
   .partial();
 const resultQuerySchema = resultQueryBase.meta({ $id: 'resultQuery' });

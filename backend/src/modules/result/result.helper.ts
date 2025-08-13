@@ -9,6 +9,7 @@ export async function transformInput(
   if (data.winnerId !== null && data.winnerId !== -1) {
     gamePlayed.push({
       user: { connect: { id: data.winnerId } },
+      userId: data.winnerId,
       score: data.scorePlayer1 ? data.scorePlayer1 : -1,
       isWinner: true,
     });
@@ -17,6 +18,7 @@ export async function transformInput(
   if (data.loserId !== null && data.loserId !== -1) {
     gamePlayed.push({
       user: { connect: { id: data.loserId } },
+      userId: data.loserId,
       score: data.scorePlayer2 ? data.scorePlayer2 : -1,
       isWinner: false,
     });
