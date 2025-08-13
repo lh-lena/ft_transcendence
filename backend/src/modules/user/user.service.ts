@@ -1,95 +1,58 @@
-import { userCrud as userModel } from './user.crud';
+import { userModel } from './user.crud';
 import { NotFoundError, ConflictError } from '../../utils/error';
-import { Prisma } from '@prisma/client';
+import { Prisma, user } from '@prisma/client';
 
 import { transformQuery } from '../../utils/crudQueryBuilder';
 
-import {
-  userIdInput,
-  userQueryInput,
-  userCreateInput,
-  userUpdateInput,
-  userResponseType,
-  userResponseArrayType,
-} from '../../schemas/user';
+export const userService = {
+  async create(data: Prisma.userCreateInput): Promise<user> {
+    try {
+      const ret = await userModel.insert(data);
+      return ret;
+    } catch (err: unknown) {
+      if (err.code === 'P2002') {
+        throw new ConflictError(`user already exists`);
+      }
+      throw err;
+    }
+  },
 
-export async function getQuery(
-  filters?: userQueryInput,
-): Promise<userResponseArrayType> {
-  let ret;
+  async update(id: number, data: Prisma.userUpdateInput): Promise<user> {
+    try {
+      return await userModel.patch(id, data);
+    } catch (err: unknown) {
+      if (err.code === 'P2002') {
+        throw new ConflictError(`user already exists`);
+      }
+      if (err.code === 'P2025') {
+        throw new NotFoundError(`user with ${id} not found`);
+      }
+      throw err;
+    }
+  },
 
-  if (!filters) {
-    ret = await userModel.findAll();
-  } else {
-    const query = transformQuery(filters);
-    ret = await userModel.findBy(query);
-  }
-  if (!ret || ret.length === 0) {
-    throw new NotFoundError('No user found');
-  }
-  return ret;
-}
+  async getQuery(query?: Prisma.userWhereInput): Promise<user[]> {
+    const ret = query
+      ? await userModel.findBy(transformQuery(query))
+      : await userModel.findAll();
 
-export async function getById(id: userIdInput): Promise<userResponseType> {
-  const ret = await userModel.findById(id.id);
-
-  if (!ret) throw new NotFoundError(`user with ${id} not found`);
-
-  return ret;
-}
-
-export async function create(data: userCreateInput): Promise<userResponseType> {
-  try {
-    const ret = await userModel.insert(data);
+    if (ret.length === 0) {
+      throw new NotFoundError('No user found');
+    }
     return ret;
-  } catch (err: unknown) {
-    if (
-      err instanceof Prisma.PrismaClientKnownRequestError &&
-      err.code === 'P2002'
-    ) {
-      throw new ConflictError(`user already exists`);
-    }
-    throw err;
-  }
-}
+  },
 
-export async function update(
-  id: userIdInput,
-  data: userUpdateInput,
-): Promise<userResponseType> {
-  try {
-    const ret = await userModel.patch(id.id, data);
+  async getById(id: number): Promise<user> {
+    const ret = await userModel.findById(id);
+
     if (!ret) throw new NotFoundError(`user with ${id} not found`);
+
     return ret;
-  } catch (err: unknown) {
-    if (
-      err instanceof Prisma.PrismaClientKnownRequestError &&
-      err.code === 'P2002'
-    ) {
-      throw new ConflictError(`user already exists`);
-    }
-    if (
-      err instanceof Prisma.PrismaClientKnownRequestError &&
-      err.code === 'P2025'
-    ) {
-      throw new NotFoundError(`user with ${id} not found`);
-    }
-    throw err;
-  }
-}
+  },
 
-export async function deleteOne(id: userIdInput): Promise<{ success: true }> {
-  try {
-    const ret = await userModel.deleteOne(id.id);
-    if (!ret) throw new NotFoundError(`user with ${id} not found`);
-    return { success: true };
-  } catch (err: unknown) {
-    if (
-      err instanceof Prisma.PrismaClientKnownRequestError &&
-      err.code === 'P2025'
-    ) {
-      throw new NotFoundError(`user with ${id} not found`);
+  async deleteOne(id: number): Promise<void> {
+      const ret = await userModel.deleteOne(id);
+      if (!ret) throw new NotFoundError(`user with ${id} not found`);
     }
-    throw err;
   }
-}
+};
