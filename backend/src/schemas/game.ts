@@ -33,7 +33,7 @@ const gameCreateBase = z.object({
   visibility: gameVisibilityBase,
   aiDifficulty: aiDifficultyBase.optional(),
 });
-const gameCreateSchema = gameCreateBase.meta({ $id: 'gameCreate' });
+export const gameCreateSchema = gameCreateBase.meta({ $id: 'gameCreate' });
 
 //schemas for GET
 export const gameIdBase = z.object({

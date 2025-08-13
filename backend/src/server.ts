@@ -5,8 +5,6 @@ import Path from 'path';
 import qs from 'qs';
 import { errorHandler } from './utils/errorHandler';
 
-//test
-
 //build server
 export async function buildServer() {
   //build fastify instance
@@ -46,7 +44,6 @@ export async function buildServer() {
   return server;
 }
 
-//start server
 async function start() {
   try {
     const server = await buildServer();

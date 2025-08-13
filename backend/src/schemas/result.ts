@@ -58,7 +58,7 @@ const resultQueryBase = resultResponseBase
 const resultQuerySchema = resultQueryBase.meta({ $id: 'resultQuery' });
 
 //define schema for POST
-const resultCreateSchema = resultBase.meta({ $id: 'resultCreate' });
+export const resultCreateSchema = resultBase.meta({ $id: 'resultCreate' });
 
 //export schemas
 export const resultSchemas = [

@@ -27,7 +27,7 @@ export const userBase = z.object({
 });
 
 //define schema for POST
-const userCreateSchema = z
+export const userCreateSchema = z
   .object({
     ...userIn,
   })
