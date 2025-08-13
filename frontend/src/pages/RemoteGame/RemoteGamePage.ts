@@ -98,7 +98,7 @@ export class VsPlayerGamePage {
       const menuItems = [{ name: "quit", link: "/profile" }];
       const menuPause = new Menu(this.router, menuItems);
       this.pauseCountdown = document.createElement("h1");
-      this.pauseCountdown.innerText = "paused for: [X]s";
+      this.pauseCountdown.innerText = "paused";
       this.pauseCountdown.className = "text-white text text-center";
       this.menuPauseDiv.appendChild(this.pauseCountdown);
       menuPause.mount(this.menuPauseDiv);
@@ -136,6 +136,7 @@ export class VsPlayerGamePage {
       this.gameState.status == GameStatus.PLAYING &&
       this.gameState.previousStatus == GameStatus.PAUSED
     ) {
+      this.scoreBar.pausePlay.toggleIsPlaying(true);
       this.game?.showGamePieces();
       this.hidePauseOverlay();
       this.gameState.previousStatus = GameStatus.PLAYING;
@@ -150,6 +151,7 @@ export class VsPlayerGamePage {
       this.gameState.status == GameStatus.PAUSED &&
       this.gameState.previousStatus == GameStatus.PLAYING
     ) {
+      this.scoreBar.pausePlay.toggleIsPlaying(false);
       this.game?.hideGamePieces();
       this.showPauseOverlay();
       // send game pause to ws
@@ -222,10 +224,6 @@ export class VsPlayerGamePage {
     } else this.loadingOverlay.changeText(message);
   }
 
-  private startGameHook(): void {
-    this.loadingOverlay.hide();
-  }
-
   // Handle incoming WebSocket messages
   private handleWebSocketMessage<T extends keyof WsServerBroadcast>(
     data: ServerMessageInterface<T>,
@@ -244,7 +242,7 @@ export class VsPlayerGamePage {
       case "notification": {
         const notificationData = data as ServerMessageInterface<"notification">;
         if (notificationData.payload.message == "Game started!")
-          this.startGameHook();
+          this.loadingOverlay.hide();
         // in the case game is starting again after pause
         break;
       }

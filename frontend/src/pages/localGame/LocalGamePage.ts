@@ -30,6 +30,7 @@ export class LocalGamePage {
       status: GameStatus.PLAYING,
       previousStatus: GameStatus.PLAYING,
       playerA: { username: "left", score: 0, color: color, colorMap: colorMap },
+      blockedPlayButton: false,
       playerB: {
         username: userStore.username,
         score: 0,
