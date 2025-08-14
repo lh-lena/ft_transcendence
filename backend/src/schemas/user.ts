@@ -33,7 +33,11 @@ const userId = z.object({ id: z.number() }).meta({ $id: 'userId' });
 export const userQueryBase = userBase
   .extend({
     id: z.coerce.number().optional(),
-    gamePlayed: z.object({ some: sharedGamePlayedQueryBase }).optional(),
+    gamePlayed: z
+      .object({
+        some: sharedGamePlayedQueryBase.optional(),
+      })
+      .optional(),
   })
   .partial();
 const userQuery = userQueryBase.meta({ $id: 'userQuery' });
