@@ -1,12 +1,11 @@
 import { v4 as uuidv4 } from 'uuid';
-import { transformUser } from './game.helper';
 
-import { userService } from '../user/user.service';
+import { userController } from '../user/user.controller';
 import type { userType } from '../../schemas/user';
 
 import { NotFoundError } from '../../utils/error';
 
-import {
+import type {
   game,
   gameIdInput,
   gameCreateInput,
@@ -68,7 +67,7 @@ export class gameMakingClass {
   }
 
   async insert(req: gameCreateInput): Promise<gameResponseType> {
-    const user = await transformUser(await userService.getById(req.userId));
+    const user = await userController.getById(req.userId);
     if (!user) throw new Error('User not found');
 
     const game = this.activeMatches.find((m) =>
@@ -107,7 +106,7 @@ export class gameMakingClass {
     const game = await this.findById(gameId);
     if (!game) throw new NotFoundError(`game ${gameId.id} not found`);
 
-    const user = await transformUser(await userService.getById(req.userId));
+    const user = await userController.getById(req.userId);
     if (!user) throw new NotFoundError('User ${req.userId} not found');
 
     if (game.players.length !== 1)

@@ -1,5 +1,5 @@
 import { z } from 'zod/v4';
-import { userBase } from './user';
+import { userBase, userQueryBase } from './user';
 import { dtString } from './basics';
 
 //define game mode
@@ -15,7 +15,7 @@ const aiDifficultyBase = z.enum(['easy', 'medium', 'hard']);
 const gameVisibilityBase = z.enum(['public', 'private']);
 
 //game object
-const gameBase = z.object({
+export const gameBase = z.object({
   gameId: z.string(),
   players: z.array(userBase),
   mode: gameModeBase,
@@ -23,8 +23,6 @@ const gameBase = z.object({
   visibility: gameVisibilityBase,
   createdAt: dtString.optional(),
 });
-const gameSchema = gameBase.meta({ $id: 'game' });
-const gameArraySchema = z.array(gameBase).meta({ $id: 'gameArray' });
 
 //schemas for POST
 const gameCreateBase = z.object({
@@ -33,38 +31,36 @@ const gameCreateBase = z.object({
   visibility: gameVisibilityBase,
   aiDifficulty: aiDifficultyBase.optional(),
 });
-export const gameCreateSchema = gameCreateBase.meta({ $id: 'gameCreate' });
+export const gameCreate = gameCreateBase.meta({ $id: 'gameCreate' });
 
 //schemas for GET
 export const gameIdBase = z.object({
   id: z.uuid(),
 });
-export const gameIdSchema = gameIdBase.meta({ $id: 'gameId' });
+export const gameId = gameIdBase.meta({ $id: 'gameId' });
 
-const gameQuerySchema = gameBase.partial().meta({ $id: 'gameQuery' });
+const gameQueryBase = gameBase
+  .extend({ players: z.object({ some: userQueryBase }).optional() })
+  .partial();
+const gameQuery = gameQueryBase.meta({ $id: 'gameQuery' });
 
 //schemas for response
-const gameResponseSchema = gameBase.meta({ $id: 'gameResponse' });
-const gameResponseArrayBase = z.array(gameBase);
-const gameResponseArraySchema = gameResponseArrayBase.meta({
-  $id: 'gameResponseArray',
-});
+const gameResponse = gameBase.meta({ $id: 'gameResponse' });
+const gameResponseArray = z.array(gameBase).meta({ $id: 'gameResponseArray' });
 
 //export schemas
 export const gameSchemas = [
-  gameSchema,
-  gameArraySchema,
-  gameCreateSchema,
-  gameResponseSchema,
-  gameResponseArraySchema,
-  gameIdSchema,
-  gameQuerySchema,
+  gameCreate,
+  gameResponse,
+  gameResponseArray,
+  gameId,
+  gameQuery,
 ];
-
-//export types
-export type game = z.infer<typeof gameSchema>;
-export type gameCreateInput = z.infer<typeof gameCreateSchema>;
-export type gameIdInput = z.infer<typeof gameIdSchema>;
-export type gameQueryInput = z.infer<typeof gameQuerySchema>;
-export type gameResponseType = z.infer<typeof gameResponseSchema>;
-export type gameResponseArrayType = z.infer<typeof gameResponseArraySchema>;
+//
+////export types
+export type game = z.infer<typeof gameBase>;
+export type gameCreateInput = z.infer<typeof gameCreate>;
+export type gameIdInput = z.infer<typeof gameId>;
+export type gameQueryInput = z.infer<typeof gameQuery>;
+export type gameResponseType = z.infer<typeof gameResponse>;
+export type gameResponseArrayType = z.infer<typeof gameResponseArray>;

@@ -8,10 +8,9 @@ const resultStatusBase = z.enum([
   'cancled',
   'cancled_server_error',
 ]);
-const resultStatusSchema = resultStatusBase.meta({ $id: 'resultStatus' });
 
 //define basic object for input
-export const resultInputBase = z.object({
+const resultInputBase = z.object({
   id: z.number().int().optional(),
   gameId: z.uuid(),
   scorePlayer1: z.number(),
@@ -24,8 +23,9 @@ export const resultInputBase = z.object({
   startedAt: dtString,
   finishedAt: dtString,
 });
+const resultCreate = resultInputBase.meta({ $id: 'resultCreate' });
 
-//define schema for response
+//result base
 export const resultBase = z.object({
   id: z.number(),
   gameId: z.uuid(),
@@ -35,21 +35,12 @@ export const resultBase = z.object({
   gamePlayed: z.array(sharedGamePlayedBase).optional(),
 });
 
-const resultResponseBase = resultBase;
-export const resultResponseSchema = resultResponseBase.meta({
-  $id: 'resultResponse',
-});
-
-const resultResponseArrayBase = z.array(resultResponseBase);
-export const resultResponseArraySchema = resultResponseArrayBase.meta({
-  $id: 'resultResponseArray',
-});
-
 //define schema for GET
-const resultIdBase = z.object({
-  id: z.number(),
-});
-const resultIdSchema = resultIdBase.meta({ $id: 'resultId' });
+const resultId = z
+  .object({
+    id: z.number(),
+  })
+  .meta({ $id: 'resultId' });
 
 const resultQueryBase = z.object({
   id: z.coerce.number().optional(),
@@ -58,25 +49,23 @@ const resultQueryBase = z.object({
   finishedAt: dtString.optional(),
   gamePlayed: z.object({ some: sharedGamePlayedQueryBase }).optional(),
 });
-const resultQuerySchema = resultQueryBase.meta({ $id: 'resultQuery' });
+const resultQuery = resultQueryBase.meta({ $id: 'resultQuery' });
 
-//define schema for POST
-export const resultCreateSchema = resultInputBase.meta({ $id: 'resultCreate' });
-
+//schemas for response
+const resultResponse = resultBase.meta({ $id: 'resultResponse' });
+const resultResponseArray = z
+  .array(resultBase)
+  .meta({ $id: 'resultResponseArray' });
 //export schemas
 export const resultSchemas = [
-  resultStatusSchema,
-  resultCreateSchema,
-  resultQuerySchema,
-  resultIdSchema,
-  resultResponseSchema,
-  resultResponseArraySchema,
+  //  resultStatusSchema,
+  resultCreate,
+  resultQuery,
+  resultId,
+  resultResponse,
+  resultResponseArray,
 ];
-
+//
 export type resultType = z.infer<typeof resultBase>;
-export type resultInputType = z.infer<typeof resultInputBase>;
-export type resultQueryInput = z.infer<typeof resultQuerySchema>;
-export type resultIdInput = z.infer<typeof resultIdSchema>;
-export type resultCreateInput = z.infer<typeof resultCreateSchema>;
-export type resultResponseType = z.infer<typeof resultResponseSchema>;
-export type resultResponseArrayType = z.infer<typeof resultResponseArraySchema>;
+export type resultCreateInput = z.infer<typeof resultCreate>;
+export type resultQueryInput = z.infer<typeof resultQuery>;

@@ -1,12 +1,12 @@
 import { Prisma } from '@prisma/client';
 import { resultService } from './result.service';
 
-import type { resultType, resultInputType } from '../../schemas/result';
+import type { resultType, resultCreateInput } from '../../schemas/result';
 import { transformResult } from './result.helper';
 
 export const resultController = {
   //controller to create an result
-  async create(data: resultInputType): Promise<resultType> {
+  async create(data: resultCreateInput): Promise<resultType> {
     const ret = await resultService.create(data);
     return transformResult(ret);
   },
