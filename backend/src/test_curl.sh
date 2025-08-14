@@ -12,9 +12,9 @@ curl -X POST http://[::1]:8080/api/user \
 curl -X POST http://[::1]:8080/api/user \
   -H "Content-Type: application/json" \
   -d '{
-    "email": "jane@example.com",
+    "email": "jane2@example.com",
     "password_hash": "hashed_password",
-    "username": "Janesen"
+    "username": "Janesen2"
   }'
 
 curl -X PATCH http://localhost:8080/api/game/user/29369 \

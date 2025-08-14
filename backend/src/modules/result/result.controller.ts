@@ -1,32 +1,26 @@
-import type {} from '../../schemas/result';
+import { Prisma } from '@prisma/client';
+import { resultService } from './result.service';
 
-import * as resultService from './result.service';
-
-import {
-  resultCreateInput,
-  resultQueryInput,
-  resultIdInput,
-  resultResponseType,
-  resultResponseArrayType,
-} from '../../schemas/result';
+import type { resultType, resultInputType } from '../../schemas/result';
+import { transformResult } from './result.helper';
 
 export const resultController = {
   //controller to create an result
-  async create(input: resultCreateInput): Promise<resultResponseType> {
-    const ret = await resultService.create(input);
-    return ret;
+  async create(data: resultInputType): Promise<resultType> {
+    const ret = await resultService.create(data);
+    return transformResult(ret);
   },
 
   //controller for result get All or by Id
   async getAllorFiltered(
-    query: resultQueryInput,
-  ): Promise<resultResponseArrayType> {
+    query?: Prisma.resultWhereInput,
+  ): Promise<resultType[]> {
     const ret = await resultService.getQuery(query);
-    return ret;
+    return Promise.all(ret.map((r) => transformResult(r)));
   },
 
-  async getById(id: resultIdInput): Promise<resultResponseType> {
+  async getById(id: number): Promise<resultType> {
     const ret = await resultService.getById(id);
-    return ret;
+    return transformResult(ret);
   },
 };

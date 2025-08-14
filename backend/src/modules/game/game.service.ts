@@ -3,7 +3,7 @@ import { NotFoundError } from '../../utils/error';
 
 import { transformQuery } from '../../utils/crudQueryBuilder';
 
-import {
+import type {
   gameCreateInput,
   gameQueryInput,
   gameIdInput,

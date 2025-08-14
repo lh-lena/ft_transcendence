@@ -1,28 +1,21 @@
-import { Prisma } from '@prisma/client';
-import { resultCreateInput } from '../../schemas/result';
+import { Prisma, result } from '@prisma/client';
+import type { resultType, resultInputType } from '../../schemas/result';
 
 export async function transformInput(
-  data: resultCreateInput,
+  data: resultInputType,
 ): Promise<Prisma.resultCreateInput> {
-  const gamePlayed = [];
+  const gamePlayed: Prisma.gamePlayedCreateWithoutResultInput[] = [];
 
-  if (data.winnerId !== null && data.winnerId !== -1) {
+  const addPlayer = (userId: number, score: number, isWinner: boolean) => {
     gamePlayed.push({
-      user: { connect: { id: data.winnerId } },
-      userId: data.winnerId,
-      score: data.scorePlayer1 ? data.scorePlayer1 : -1,
-      isWinner: true,
+      user: { connect: { id: userId } },
+      score: score,
+      isWinner,
     });
-  }
+  };
 
-  if (data.loserId !== null && data.loserId !== -1) {
-    gamePlayed.push({
-      user: { connect: { id: data.loserId } },
-      userId: data.loserId,
-      score: data.scorePlayer2 ? data.scorePlayer2 : -1,
-      isWinner: false,
-    });
-  }
+  addPlayer(data.winnerId, data.scorePlayer1, true);
+  addPlayer(data.loserId, data.scorePlayer2, false);
 
   return {
     gameId: data.gameId,
@@ -30,5 +23,13 @@ export async function transformInput(
     startedAt: new Date(data.startedAt),
     finishedAt: new Date(data.finishedAt),
     gamePlayed: { create: gamePlayed },
+  };
+}
+
+export async function transformResult(result: result): Promise<resultType> {
+  return {
+    ...result,
+    startedAt: result.startedAt.toISOString(),
+    finishedAt: result.finishedAt.toISOString(),
   };
 }

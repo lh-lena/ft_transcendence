@@ -1,32 +1,36 @@
-import { Prisma, user } from '@prisma/client';
-import * as userService from './user.service';
+import { Prisma } from '@prisma/client';
+import type { userType } from '../../schemas/user';
+
+import { userService } from './user.service';
+import { transformUser } from './user.helper';
 
 export const userController = {
   //controller to create an user
-  async create(data: Prisma.userCreateInput): Promise<user> {
+  async create(data: Prisma.userCreateInput): Promise<userType> {
     const ret = await userService.create(data);
-    return ret;
+    return await transformUser(ret);
   },
 
   //update user
-  async update(id: number, data: Prisma.userUpdateInput): Promise<user> {
+  async update(id: number, data: Prisma.userUpdateInput): Promise<userType> {
     const ret = await userService.update(id, data);
-    return ret;
+    return await transformUser(ret);
   },
 
   //controller for user get All or by Id
-  async getAllorFiltered(query?: Prisma.userWhereInput): Promise<user[]> {
+  async getAllorFiltered(query?: Prisma.userWhereInput): Promise<userType[]> {
     const ret = await userService.getQuery(query);
-    return ret;
+    return Promise.all(ret.map((user) => transformUser(user)));
   },
 
-  async getById(id: number): Promise<user> {
+  async getById(id: number): Promise<userType> {
     const ret = await userService.getById(id);
-    return ret;
+    return await transformUser(ret);
   },
 
   //delete user
-  async deleteOne(id: userIdInput): Promise<void> {
-    return userService.deleteOne(id);
+  async deleteOne(id: number): Promise<{ success: boolean }> {
+    await userService.deleteOne(id);
+    return { success: true };
   },
 };

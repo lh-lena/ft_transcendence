@@ -17,7 +17,7 @@ export const gameController = {
 
   //controller for game get All or by Id
   async getAllorFiltered(
-    query: gameQueryInput,
+    query?: gameQueryInput,
   ): Promise<gameResponseArrayType> {
     const ret = await gameService.getAllorFilteredgame(query);
     return ret;

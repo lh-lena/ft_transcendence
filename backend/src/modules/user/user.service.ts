@@ -10,7 +10,10 @@ export const userService = {
       const ret = await userModel.insert(data);
       return ret;
     } catch (err: unknown) {
-      if (err.code === 'P2002') {
+      if (
+        err instanceof Prisma.PrismaClientKnownRequestError &&
+        err.code === 'P2002'
+      ) {
         throw new ConflictError(`user already exists`);
       }
       throw err;
@@ -21,10 +24,16 @@ export const userService = {
     try {
       return await userModel.patch(id, data);
     } catch (err: unknown) {
-      if (err.code === 'P2002') {
+      if (
+        err instanceof Prisma.PrismaClientKnownRequestError &&
+        err.code === 'P2002'
+      ) {
         throw new ConflictError(`user already exists`);
       }
-      if (err.code === 'P2025') {
+      if (
+        err instanceof Prisma.PrismaClientKnownRequestError &&
+        err.code === 'P2025'
+      ) {
         throw new NotFoundError(`user with ${id} not found`);
       }
       throw err;
@@ -51,8 +60,7 @@ export const userService = {
   },
 
   async deleteOne(id: number): Promise<void> {
-      const ret = await userModel.deleteOne(id);
-      if (!ret) throw new NotFoundError(`user with ${id} not found`);
-    }
-  }
+    const ret = await userModel.deleteOne(id);
+    if (!ret) throw new NotFoundError(`user with ${id} not found`);
+  },
 };

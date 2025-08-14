@@ -1,13 +1,10 @@
 import { z } from 'zod/v4';
+import { sharedGamePlayedBase, sharedGamePlayedQueryBase } from './shared';
 import { userBase } from './user';
 import { resultBase } from './result';
 
 export const gamePlayedBase = z.object({
-  id: z.number(),
-  userId: z.number(),
-  resultId: z.number(),
-  score: z.number(),
-  isWinner: z.boolean(),
+  ...sharedGamePlayedBase,
   get user() {
     return userBase;
   },
@@ -22,13 +19,7 @@ const gamePlayedArraySchema = gamePlayedArrayBase.meta({
   $id: 'gamePlayedArray',
 });
 
-export const gamePlayedQueryBase = z.object({
-  id: z.coerce.number().optional(),
-  userId: z.coerce.number().optional(),
-  isWinner: z.coerce.boolean().optional(),
-  score: z.coerce.number().optional(),
-  gameId: z.coerce.number().optional(),
-});
+export const gamePlayedQueryBase = sharedGamePlayedQueryBase;
 const gamePlayedQuerySchema = gamePlayedQueryBase.meta({
   $id: 'gamePlayedQuery',
 });

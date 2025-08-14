@@ -8,7 +8,6 @@ import {
   resultResponseType,
   resultQueryInput,
   resultCreateInput,
-  resultIdInput,
 } from '../schemas/result';
 
 const resultRoutes = async (server: FastifyInstance) => {
@@ -18,7 +17,7 @@ const resultRoutes = async (server: FastifyInstance) => {
       resultQueryInput,
       resultCreateInput,
       null,
-      resultIdInput
+      number
     >(),
     {
       basePath: '/api/result',

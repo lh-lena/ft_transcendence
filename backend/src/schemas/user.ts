@@ -1,10 +1,6 @@
 import { z } from 'zod/v4';
 import { dtString } from './basics';
-import {
-  gamePlayedBase,
-  gamePlayedQueryBase,
-  gamePlayedResponseBase,
-} from './gamePlayed';
+import { sharedGamePlayedBase, sharedGamePlayedQueryBase } from './shared';
 
 const userIn = {
   email: z.email(),
@@ -18,7 +14,7 @@ const userGen = {
   id: z.number(),
   createdAt: dtString,
   updatedAt: dtString,
-  gamePlayed: z.array(gamePlayedBase).optional(),
+  gamePlayed: z.array(sharedGamePlayedBase).optional(),
 };
 
 export const userBase = z.object({
@@ -59,14 +55,12 @@ const userQueryBase = z.object({
   email: z.email().optional(),
   username: z.string().optional(),
   is_2fa_enabled: z.boolean().optional(),
-  gamePlayed: gamePlayedQueryBase.optional(),
+  gamePlayed: z.object({ some: sharedGamePlayedQueryBase }).optional(),
 });
 const userQuerySchema = userQueryBase.meta({ $id: 'userQuery' });
 
 //define schemas for responses
-export const userResponseBase = userBase.extend({
-  gamePlayed: z.array(gamePlayedResponseBase).optional(),
-});
+export const userResponseBase = userBase;
 export const userResponseSchema = userResponseBase.meta({
   $id: 'userResponse',
 });

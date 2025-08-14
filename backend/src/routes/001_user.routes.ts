@@ -8,7 +8,6 @@ import {
   userQueryInput,
   userCreateInput,
   userUpdateInput,
-  userIdInput,
 } from '../schemas/user';
 
 const userRoutes = async (server: FastifyInstance) => {
@@ -18,7 +17,7 @@ const userRoutes = async (server: FastifyInstance) => {
       userQueryInput,
       userCreateInput,
       userUpdateInput,
-      userIdInput
+      number
     >(),
     {
       basePath: '/api/user',
