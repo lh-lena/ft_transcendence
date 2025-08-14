@@ -38,7 +38,11 @@ export interface GameState {
   previousStatus: GameStatus;
   playerA: Player;
   playerB: Player;
+  pauseInitiatedByMe: boolean;
   blockedPlayButton: boolean;
+  activeKey: string;
+  activePaddle: string | undefined;
+  wsPaddleSequence: number;
 }
 
 export const CANVAS_DEFAULTS = {

@@ -175,17 +175,35 @@ export class PongGame {
     // only handle w and s if its a local game
     // --- Paddle Movement ---
     if (this.keys["w"]) {
-      this.paddleA.y -= this.paddleA.speed * dt;
+      if (this.gameMode == "local") this.paddleA.y -= this.paddleA.speed * dt;
     }
     if (this.keys["s"]) {
-      this.paddleA.y += this.paddleA.speed * dt;
+      if (this.gameMode == "local") this.paddleA.y -= this.paddleA.speed * dt;;
     }
-    // ws server stuff
     if (this.keys["ArrowUp"]) {
-      this.paddleB.y -= this.paddleB.speed * dt;
+      if (this.gameMode == "remote") {
+        this.gameState.activeKey = "KEY_UP";
+        this.gameState.wsPaddleSequence++;
+        this.gameStateCallBackParent();
+      } else this.paddleB.y -= this.paddleB.speed * dt;
     }
     if (this.keys["ArrowDown"]) {
-      this.paddleB.y += this.paddleB.speed * dt;
+      if (this.gameMode == "remote") {
+        this.gameState.activeKey = "KEY_DOWN";
+        this.gameState.wsPaddleSequence++;
+        this.gameStateCallBackParent();
+      } else this.paddleB.y += this.paddleB.speed * dt;
+    }
+
+    // Only clear activeKey if it's remote mode and no keys are pressed
+    if (
+      this.gameMode == "remote" &&
+      !this.keys["w"] &&
+      !this.keys["s"] &&
+      !this.keys["ArrowUp"] &&
+      !this.keys["ArrowDown"]
+    ) {
+      this.gameState.activeKey = "";
     }
 
     // Clamp paddles within canvas
@@ -275,6 +293,9 @@ export class PongGame {
     // handle ball from server
     this.ball.x = data.payload.ball.x;
     this.ball.y = data.payload.ball.y;
+
+    this.paddleB.y = data.payload.paddleB.y;
+    console.log(data.payload.paddleB.y);
   }
 
   // game loop logic

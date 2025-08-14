@@ -1,15 +1,14 @@
 import { generateProfilePrint } from "../utils/generateProfilePrint";
 import { UserProfile } from "../types";
 
-const { color, colorMap } = generateProfilePrint(2);
-
 // all these things below were sample pieces of data i used to help me understand how to scaffold the front end
 // replacing this with actual queries to backend soon
 
+// static for testing
 export const userStore: UserProfile = {
   username: "mo",
-  color: color,
-  colorMap: colorMap,
+  color: "#D72E1D",
+  colorMap: ["#D72E1D", "#D72E1D", "#D72E1D", "#D72E1D"],
 };
 
 export const sampleScores = [

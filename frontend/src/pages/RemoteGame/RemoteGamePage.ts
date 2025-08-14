@@ -16,6 +16,7 @@ import {
   ClientMessageInterface,
   ServerMessageInterface,
   WsClientMessage,
+  Direction,
 } from "../../types/websocket";
 
 import { websocketUrl } from "../../constants/websocket";
@@ -50,7 +51,11 @@ export class VsPlayerGamePage {
         color: userStore.color,
         colorMap: userStore.colorMap,
       },
+      pauseInitiatedByMe: false,
       blockedPlayButton: false,
+      activeKey: "",
+      activePaddle: undefined,
+      wsPaddleSequence: 0,
     };
 
     this.main = document.createElement("div");
@@ -130,37 +135,79 @@ export class VsPlayerGamePage {
       );
     }
 
+    // key event handling
+    if (this.gameState.activeKey == "KEY_UP") {
+      const game_update: ClientMessageInterface<"game_update"> = {
+        event: "game_update",
+        payload: {
+          direction: Direction.UP,
+          sequence: this.gameState.wsPaddleSequence,
+        },
+      };
+      console.log("PADDLE_UP_SENT " + this.gameState.wsPaddleSequence);
+      this.sendMessage(game_update);
+    }
+
+    if (this.gameState.activeKey == "KEY_DOWN") {
+      const game_update: ClientMessageInterface<"game_update"> = {
+        event: "game_update",
+        payload: {
+          direction: Direction.DOWN,
+          sequence: this.gameState.wsPaddleSequence,
+        },
+      };
+      console.log("PADDLE_DOWN_SENT " + this.gameState.wsPaddleSequence);
+      this.sendMessage(game_update);
+    }
+
+    if (this.gameState.activeKey == "") {
+      const game_update: ClientMessageInterface<"game_update"> = {
+        event: "game_update",
+        payload: {
+          direction: Direction.STOP,
+          sequence: this.gameState.wsPaddleSequence,
+        },
+      };
+      console.log("PADDLE_DOWN_SENT " + this.gameState.wsPaddleSequence);
+      this.sendMessage(game_update);
+    }
+
     // pause play stuff
     // playing
     if (
       this.gameState.status == GameStatus.PLAYING &&
       this.gameState.previousStatus == GameStatus.PAUSED
     ) {
+      // this.gameState.blockedPlayButton = false;
       this.scoreBar.pausePlay.toggleIsPlaying(true);
-      this.game?.showGamePieces();
-      this.hidePauseOverlay();
       this.gameState.previousStatus = GameStatus.PLAYING;
-      // send game resume to ws
-      const game_resume: ClientMessageInterface<"game_resume"> = {
-        event: "game_resume",
-        payload: { gameId: DEV_GAMEID },
-      };
-      this.sendMessage(game_resume);
+      if (this.gameState.pauseInitiatedByMe == true) {
+        const game_resume: ClientMessageInterface<"game_resume"> = {
+          event: "game_resume",
+          payload: { gameId: DEV_GAMEID },
+        };
+        this.sendMessage(game_resume);
+      }
       // paused
     } else if (
       this.gameState.status == GameStatus.PAUSED &&
       this.gameState.previousStatus == GameStatus.PLAYING
     ) {
+      // this.gameState.blockedPlayButton = true;
       this.scoreBar.pausePlay.toggleIsPlaying(false);
       this.game?.hideGamePieces();
       this.showPauseOverlay();
-      // send game pause to ws
+      // send game pause to ws -> only from client who actually paused the button (otherwise we get duplicate send)
       this.gameState.previousStatus = GameStatus.PAUSED;
-      const game_pause: ClientMessageInterface<"game_pause"> = {
-        event: "game_pause",
-        payload: { gameId: DEV_GAMEID },
-      };
-      this.sendMessage(game_pause);
+      if (this.gameState.pauseInitiatedByMe == true) {
+        const game_pause: ClientMessageInterface<"game_pause"> = {
+          event: "game_pause",
+          payload: { gameId: DEV_GAMEID },
+        };
+        this.sendMessage(game_pause);
+      } else {
+        this.gameState.blockedPlayButton = true;
+      }
     }
   }
 
@@ -218,7 +265,11 @@ export class VsPlayerGamePage {
   }
 
   private countdownHook(message: string): void {
-    if (this.gameState.status == GameStatus.PAUSED) {
+    if (
+      this.gameState.status == GameStatus.PAUSED ||
+      (this.gameState.status == GameStatus.PLAYING &&
+        this.gameState.pauseInitiatedByMe == true)
+    ) {
       this.pauseCountdown.innerText = "game resumes in: " + message;
       if (message == "GO!") this.pauseCountdown.innerText = message;
     } else this.loadingOverlay.changeText(message);
@@ -228,7 +279,6 @@ export class VsPlayerGamePage {
   private handleWebSocketMessage<T extends keyof WsServerBroadcast>(
     data: ServerMessageInterface<T>,
   ): void {
-    // Implement your logic here to handle different message types
     console.log("Received WebSocket message:", data);
     // Example: update game state, scores, etc. based on data
     // if (data.error) this.toggleErrorScreen(data.error.message)
@@ -241,35 +291,31 @@ export class VsPlayerGamePage {
       }
       case "notification": {
         const notificationData = data as ServerMessageInterface<"notification">;
-        if (notificationData.payload.message == "Game started!")
+        if (notificationData.payload.message == "Game started!") {
           this.loadingOverlay.hide();
+          // added from game resume for now
+          this.gameState.status = GameStatus.PLAYING;
+          this.gameState.pauseInitiatedByMe = false;
+          this.gameState.blockedPlayButton = false;
+          this.game?.showGamePieces();
+          this.hidePauseOverlay();
+          this.gameStateCallback();
+        }
         // in the case game is starting again after pause
         break;
       }
       case "game_update": {
         const gameUpdateData = data as ServerMessageInterface<"game_update">;
         this.game?.updateGameStateFromServer(gameUpdateData);
+        if (!this.gameState.activePaddle)
+          this.gameState.activePaddle = gameUpdateData.payload.activePaddle;
         break;
       }
       case "game_pause": {
         this.gameState.status = GameStatus.PAUSED;
-        this.gameState.blockedPlayButton = true;
-        this.gameStateCallback();
-        break;
-      }
-      case "game_resume": {
-        this.gameState.status = GameStatus.PLAYING;
-        this.gameState.blockedPlayButton = false;
         this.gameStateCallback();
         break;
       }
     }
   }
-
-  // private updateOnPlayerInput(): void {
-  //   const game_update: ClientMessageInterface<"game_update"> = {
-  //     event: "game_update",
-  //     payload: { gameId: DEV_GAMEID },
-  //   };
-  // }
 }
