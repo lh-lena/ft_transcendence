@@ -18,10 +18,10 @@ const crudRoutes =
       basePath,
       entityName,
       controller,
-      routes = ['getAll', 'getById', 'create', 'update', 'delete'],
+      routes = ['getQuery', 'getById', 'create', 'update', 'delete'],
     } = options;
 
-    if (routes.includes('getAll') && controller.getAllorFiltered) {
+    if (routes.includes('getQuery') && controller.getQuery) {
       server.get(basePath, {
         schema: {
           querystring: { $ref: `${entityName}Query` },
@@ -38,7 +38,7 @@ const crudRoutes =
           console.log('Query in route before: ', request.query);
           const query = request.query as TQuery;
           console.log('Query in Route: ', query);
-          const ret = await controller.getAllorFiltered!(query);
+          const ret = await controller.getQuery!(query);
 
           return reply.code(200).send(ret);
         },

@@ -18,7 +18,7 @@ export const userController = {
   },
 
   //controller for user get All or by Id
-  async getAllorFiltered(query?: Prisma.userWhereInput): Promise<userType[]> {
+  async getQuery(query?: Prisma.userWhereInput): Promise<userType[]> {
     const ret = await userService.getQuery(query);
     return Promise.all(ret.map((user) => transformUser(user)));
   },

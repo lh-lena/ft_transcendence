@@ -59,8 +59,8 @@ export const gameSchemas = [
 //
 ////export types
 export type game = z.infer<typeof gameBase>;
-export type gameCreateInput = z.infer<typeof gameCreate>;
-export type gameIdInput = z.infer<typeof gameId>;
-export type gameQueryInput = z.infer<typeof gameQuery>;
+export type gameCreateType = z.infer<typeof gameCreate>;
+export type gameIdType = z.infer<typeof gameId>;
+export type gameQueryType = z.infer<typeof gameQuery>;
 export type gameResponseType = z.infer<typeof gameResponse>;
 export type gameResponseArrayType = z.infer<typeof gameResponseArray>;

@@ -1,15 +1,12 @@
-import Fastify from 'fastify';
+import fastify from 'fastify';
 import AutoLoad from '@fastify/autoload';
-
 import Path from 'path';
-import qs from 'qs';
+
 import { errorHandler } from './utils/errorHandler';
 
-//build server
-export async function buildServer() {
+async function build() {
   //build fastify instance
-  const server = Fastify({
-    querystringParser: (str) => qs.parse(str),
+  const server = fastify({
     logger: {
       transport: {
         target: 'pino-pretty',
@@ -20,7 +17,6 @@ export async function buildServer() {
       },
     },
   });
-  //}).withTypeProvider<ZodTypeProvider>();
 
   //  server.addHook('onRoute', (routeOptions) => {
   //   console.log('📦 Route registered:', routeOptions.method, routeOptions.url);
@@ -44,17 +40,16 @@ export async function buildServer() {
   return server;
 }
 
-async function start() {
-  try {
-    const server = await buildServer();
-    const PORT = parseInt(server.config.PORT);
+const start = async () => {
+  const server = await build();
 
-    //start listening with the instance
+  try {
+    const PORT = parseInt(server.config.PORT);
     await server.listen({ port: PORT, host: server.config.HOST });
   } catch (err) {
     console.error(err);
     process.exit(1);
   }
-}
+};
 
 start();

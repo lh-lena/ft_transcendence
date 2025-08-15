@@ -7,9 +7,9 @@ import { NotFoundError } from '../../utils/error';
 
 import type {
   game,
-  gameIdInput,
-  gameCreateInput,
-  gameQueryInput,
+  gameIdType,
+  gameCreateType,
+  gameQueryType,
   gameResponseType,
   gameResponseArrayType,
 } from '../../schemas/game';
@@ -19,7 +19,7 @@ export class gameMakingClass {
 
   //check if two players are ready and game them ( can add gameing logic later )
   private async tryMultiMatch(
-    req: gameCreateInput,
+    req: gameCreateType,
     user: userType,
   ): Promise<gameResponseType> {
     let game = this.activeMatches.find(
@@ -52,7 +52,7 @@ export class gameMakingClass {
     return this.activeMatches as gameResponseArrayType;
   }
 
-  async findFiltered(query: gameQueryInput): Promise<gameResponseArrayType> {
+  async findFiltered(query: gameQueryType): Promise<gameResponseArrayType> {
     return this.activeMatches.filter((item) =>
       Object.entries(query).every(
         ([key, value]) => item[key as keyof game] === value,
@@ -60,13 +60,13 @@ export class gameMakingClass {
     );
   }
 
-  async findById(gameId: gameIdInput): Promise<gameResponseType> {
+  async findById(gameId: gameIdType): Promise<gameResponseType> {
     const game = this.activeMatches.find((m) => m.gameId === gameId.id);
     if (!game) throw new NotFoundError(`game with ${gameId} not found`);
     return game;
   }
 
-  async insert(req: gameCreateInput): Promise<gameResponseType> {
+  async insert(req: gameCreateType): Promise<gameResponseType> {
     const user = await userController.getById(req.userId);
     if (!user) throw new Error('User not found');
 
@@ -100,8 +100,8 @@ export class gameMakingClass {
   }
 
   async join(
-    gameId: gameIdInput,
-    req: gameCreateInput,
+    gameId: gameIdType,
+    req: gameCreateType,
   ): Promise<gameResponseType> {
     const game = await this.findById(gameId);
     if (!game) throw new NotFoundError(`game ${gameId.id} not found`);

@@ -1,8 +1,8 @@
 import { Prisma, result } from '@prisma/client';
-import type { resultType, resultCreateInput } from '../../schemas/result';
+import type { resultType, resultCreateType } from '../../schemas/result';
 
 export async function transformInput(
-  data: resultCreateInput,
+  data: resultCreateType,
 ): Promise<Prisma.resultCreateInput> {
   const gamePlayed: Prisma.gamePlayedCreateWithoutResultInput[] = [];
 

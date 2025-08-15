@@ -19,20 +19,4 @@ export const resultModel = {
   insert: async (data: Prisma.resultCreateInput): Promise<result> => {
     return await prisma.result.create({ data, ...options });
   },
-
-  patch: async (
-    id: number,
-    data: Prisma.resultUpdateInput,
-  ): Promise<result> => {
-    return await prisma.result.update({ where: { id }, data, ...options });
-  },
-
-  deleteOne: async (id: number): Promise<boolean> => {
-    try {
-      await prisma.result.delete({ where: { id }, ...options });
-      return true;
-    } catch {
-      return false;
-    }
-  },
 };

@@ -7,19 +7,19 @@ import { gameController } from '../modules/game/game.controller';
 
 import {
   game,
-  gameQueryInput,
-  gameCreateInput,
-  gameIdInput,
+  gameQueryType,
+  gameCreateType,
+  gameIdType,
 } from '../schemas/game';
 
 const gameRoutes = async (server: FastifyInstance) => {
   server.register(
-    crudRoutes<game, gameQueryInput, gameCreateInput, null, gameIdInput>(),
+    crudRoutes<game, gameQueryType, gameCreateType, null, gameIdType>(),
     {
       basePath: '/api/game',
       entityName: 'game',
       controller: gameController,
-      routes: ['getAll', 'getById', 'create'],
+      routes: ['getQuery', 'getById', 'create'],
     },
   );
 
@@ -34,11 +34,11 @@ const gameRoutes = async (server: FastifyInstance) => {
       summary: 'Join a private game',
     },
     handler: async (
-      request: FastifyRequest<Update<gameIdInput, gameCreateInput>>,
+      request: FastifyRequest<Update<gameIdType, gameCreateType>>,
       reply: FastifyReply,
     ) => {
       const id = request.params.id;
-      const body = request.body as gameCreateInput;
+      const body = request.body as gameCreateType;
       const ret = await gameController.join({ id: id }, body);
 
       return reply.code(200).send(ret);

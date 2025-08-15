@@ -4,17 +4,17 @@ import { NotFoundError } from '../../utils/error';
 import { transformQuery } from '../../utils/crudQueryBuilder';
 
 import type {
-  gameCreateInput,
-  gameQueryInput,
-  gameIdInput,
+  gameCreateType,
+  gameQueryType,
+  gameIdType,
   gameResponseType,
   gameResponseArrayType,
 } from '../../schemas/game';
 
 const gamemaker = new gameMakingClass();
 
-export async function getAllorFilteredgame(
-  filters?: gameQueryInput,
+export async function getQuery(
+  filters?: gameQueryType,
 ): Promise<gameResponseArrayType> {
   let game = [];
 
@@ -30,7 +30,7 @@ export async function getAllorFilteredgame(
   return game;
 }
 
-export async function getgameById(id: gameIdInput): Promise<gameResponseType> {
+export async function getgameById(id: gameIdType): Promise<gameResponseType> {
   const game = await gamemaker.findById(id);
   if (!game) throw new NotFoundError(`game with ${id} not found`);
 
@@ -38,7 +38,7 @@ export async function getgameById(id: gameIdInput): Promise<gameResponseType> {
 }
 
 export async function creategame(
-  data: gameCreateInput,
+  data: gameCreateType,
 ): Promise<gameResponseType> {
   const ret = await gamemaker.insert(data);
 
@@ -46,8 +46,8 @@ export async function creategame(
 }
 
 export async function joingame(
-  id: gameIdInput,
-  input: gameCreateInput,
+  id: gameIdType,
+  input: gameCreateType,
 ): Promise<gameResponseType> {
   await getgameById(id);
 

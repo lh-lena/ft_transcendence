@@ -6,18 +6,18 @@ import { resultController } from '../modules/result/result.controller';
 
 import {
   resultType,
-  resultQueryInput,
-  resultCreateInput,
+  resultQueryType,
+  resultCreateType,
 } from '../schemas/result';
 
 const resultRoutes = async (server: FastifyInstance) => {
   server.register(
-    crudRoutes<resultType, resultQueryInput, resultCreateInput, null, number>(),
+    crudRoutes<resultType, resultQueryType, resultCreateType, null, number>(),
     {
       basePath: '/api/result',
       entityName: 'result',
       controller: resultController,
-      routes: ['getAll', 'getById', 'create'],
+      routes: ['getQuery', 'getById', 'create'],
     },
   );
 };

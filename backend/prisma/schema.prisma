@@ -13,36 +13,46 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// add string string map and avatar
 model user {
-  id              Int    @id @default( autoincrement() )
-  email           String @unique
-  username        String @unique
-  password_hash   String
-  is_2fa_enabled  Boolean @default(false)
-  twofa_secret    String?
-  gamePlayed      gamePlayed[] 
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  }
+  id             Int          @id @default(autoincrement())
+  email          String       @unique
+  username       String       @unique
+  password_hash  String
+  is_2fa_enabled Boolean      @default(false)
+  twofa_secret   String?
+  gamePlayed     gamePlayed[]
+  friends        friend[]     @relation("user")
+  friended       friend[]     @relation("friend")
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+}
+
+model friend {
+  id       Int  @id @default(autoincrement())
+  user     user @relation("user", fields: [userId], references: [id], onDelete: Cascade)
+  userId   Int
+  friend   user @relation("friend", fields: [friendId], references: [id], onDelete: Cascade)
+  friendId Int
+}
 
 model result {
-  id              Int @id @default( autoincrement() )
-  gameId          String @unique
-  status          GameStatus
-  startedAt       DateTime
-  finishedAt      DateTime
-  gamePlayed      gamePlayed[]
+  id         Int          @id @default(autoincrement())
+  gameId     String       @unique
+  status     GameStatus
+  startedAt  DateTime
+  finishedAt DateTime
+  gamePlayed gamePlayed[]
 }
 
 model gamePlayed {
-  id              Int @id @default( autoincrement() )
-  user            user? @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId          Int?
-  result          result? @relation(fields: [resultId], references: [id], onDelete: Cascade)
-  resultId        Int?
-
-  score          Int?
-  isWinner       Boolean?
+  id       Int      @id @default(autoincrement())
+  user     user?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId   Int?
+  result   result?  @relation(fields: [resultId], references: [id], onDelete: Cascade)
+  resultId Int?
+  score    Int?
+  isWinner Boolean?
 }
 
 enum GameStatus {
@@ -52,7 +62,7 @@ enum GameStatus {
 }
 
 enum GameMode {
-    pvp_remote
-    pvp_ai
-    tournamnet
+  pvp_remote
+  pvp_ai
+  tournamnet
 }

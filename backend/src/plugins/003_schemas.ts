@@ -6,6 +6,7 @@ import { responseRefSchemas } from '../modules/response/response.schema';
 import { userRefSchemas } from '../modules/user/user.schema';
 import { gameRefSchemas } from '../modules/game/game.schema';
 import { resultRefSchemas } from '../modules/result/result.schema';
+import { friendRefSchemas } from '../modules/friend/friend.schema';
 
 const schemaPlugin = async (server: FastifyInstance) => {
   const schemaList = [
@@ -14,6 +15,7 @@ const schemaPlugin = async (server: FastifyInstance) => {
     ...Object.values(userRefSchemas),
     ...Object.values(gameRefSchemas),
     ...Object.values(resultRefSchemas),
+    ...Object.values(friendRefSchemas),
   ];
 
   for (const schema of schemaList) {

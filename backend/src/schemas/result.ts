@@ -10,7 +10,7 @@ const resultStatusBase = z.enum([
 ]);
 
 //define basic object for input
-const resultInputBase = z.object({
+const resultTypeBase = z.object({
   id: z.number().int().optional(),
   gameId: z.uuid(),
   scorePlayer1: z.number(),
@@ -23,7 +23,7 @@ const resultInputBase = z.object({
   startedAt: dtString,
   finishedAt: dtString,
 });
-const resultCreate = resultInputBase.meta({ $id: 'resultCreate' });
+const resultCreate = resultTypeBase.meta({ $id: 'resultCreate' });
 
 //result base
 export const resultBase = z.object({
@@ -36,11 +36,7 @@ export const resultBase = z.object({
 });
 
 //define schema for GET
-const resultId = z
-  .object({
-    id: z.number(),
-  })
-  .meta({ $id: 'resultId' });
+const resultId = resultBase.pick({ id: true }).meta({ $id: 'resultId' });
 
 const resultQueryBase = z.object({
   id: z.coerce.number().optional(),
@@ -67,5 +63,5 @@ export const resultSchemas = [
 ];
 //
 export type resultType = z.infer<typeof resultBase>;
-export type resultCreateInput = z.infer<typeof resultCreate>;
-export type resultQueryInput = z.infer<typeof resultQuery>;
+export type resultCreateType = z.infer<typeof resultCreate>;
+export type resultQueryType = z.infer<typeof resultQuery>;

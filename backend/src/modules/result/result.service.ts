@@ -2,13 +2,13 @@ import { resultModel } from './result.crud';
 import { NotFoundError, ConflictError } from '../../utils/error';
 import { Prisma, result } from '@prisma/client';
 
-import { resultCreateInput } from '../../schemas/result';
+import { resultCreateType } from '../../schemas/result';
 
 import { transformInput } from './result.helper';
 import { transformQuery } from '../..//utils/crudQueryBuilder';
 
 export const resultService = {
-  async create(data: resultCreateInput): Promise<result> {
+  async create(data: resultCreateType): Promise<result> {
     const prismaData = await transformInput(data);
 
     try {

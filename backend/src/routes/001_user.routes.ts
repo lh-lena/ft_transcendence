@@ -3,27 +3,27 @@ import fp from 'fastify-plugin';
 
 import crudRoutes from '../utils/crudRoutes';
 import { userController } from '../modules/user/user.controller';
-import {
+import type {
   userType,
-  userQueryInput,
-  userCreateInput,
-  userUpdateInput,
+  userQueryType,
+  userCreateType,
+  userUpdateType,
 } from '../schemas/user';
 
 const userRoutes = async (server: FastifyInstance) => {
   server.register(
     crudRoutes<
       userType,
-      userQueryInput,
-      userCreateInput,
-      userUpdateInput,
+      userQueryType,
+      userCreateType,
+      userUpdateType,
       number
     >(),
     {
       basePath: '/api/user',
       entityName: 'user',
       controller: userController,
-      routes: ['getAll', 'getById', 'create', 'update', 'delete'],
+      routes: ['getQuery', 'getById', 'create', 'update', 'delete'],
     },
   );
 };

@@ -1,37 +1,32 @@
 import * as gameService from './game.service';
 
 import type {
-  gameCreateInput,
-  gameQueryInput,
+  gameCreateType,
+  gameQueryType,
   gameResponseType,
   gameResponseArrayType,
-  gameIdInput,
+  gameIdType,
 } from '../../schemas/game';
 
 export const gameController = {
   //controller to create an game
-  async create(input: gameCreateInput): Promise<gameResponseType> {
+  async create(input: gameCreateType): Promise<gameResponseType> {
     const ret = await gameService.creategame(input);
     return ret;
   },
 
   //controller for game get All or by Id
-  async getAllorFiltered(
-    query?: gameQueryInput,
-  ): Promise<gameResponseArrayType> {
-    const ret = await gameService.getAllorFilteredgame(query);
+  async getQuery(query?: gameQueryType): Promise<gameResponseArrayType> {
+    const ret = await gameService.getQuery(query);
     return ret;
   },
 
-  async getById(id: gameIdInput): Promise<gameResponseType> {
+  async getById(id: gameIdType): Promise<gameResponseType> {
     const ret = await gameService.getgameById(id);
     return ret;
   },
 
-  async join(
-    id: gameIdInput,
-    input: gameCreateInput,
-  ): Promise<gameResponseType> {
+  async join(id: gameIdType, input: gameCreateType): Promise<gameResponseType> {
     return await gameService.joingame(id, input);
   },
 };

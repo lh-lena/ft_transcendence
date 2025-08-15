@@ -3,19 +3,31 @@ import fp from 'fastify-plugin';
 
 import crudRoutes from '../utils/crudRoutes';
 
-import { TMPRefSchemas } from '../modules/TMP/TMP.schema';
 import { TMPController } from '../modules/TMP/TMP.controller';
+import type {
+  TMPType,
+  TMPQueryType,
+  TMPCreateType,
+  TMPUpdateType,
+  TMPIdType,
+  } from '../schemas/TMP';
 
-import { responseRefSchemas } from '../modules/response/response.schema';
 
 const TMPRoutes = async ( server: FastifyInstance ) => {
-  
-  server.register( crudRoutes, {
+  server.register( crudRoutes<
+  TMPType,
+  TMPQueryType,
+  TMPCreateType,
+  TMPUpdateType,
+  TMPIdType
+  >(),
+  {
     basePath: '/api/TMP',
     entityName: 'TMP',
     controller: TMPController,
-  });
-
-}
+    routes: ['getQuery', 'getById', 'create', 'update', 'delete'],
+    },
+  );
+};
 
 export default fp( TMPRoutes );

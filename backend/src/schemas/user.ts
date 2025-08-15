@@ -59,6 +59,6 @@ export const userSchemas = [
 //
 ////export types
 export type userType = z.infer<typeof userBase>;
-export type userCreateInput = z.infer<typeof userCreate>;
-export type userUpdateInput = z.infer<typeof userUpdate>;
-export type userQueryInput = z.infer<typeof userQuery>;
+export type userCreateType = z.infer<typeof userCreate>;
+export type userUpdateType = z.infer<typeof userUpdate>;
+export type userQueryType = z.infer<typeof userQuery>;
