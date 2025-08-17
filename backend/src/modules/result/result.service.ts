@@ -43,4 +43,12 @@ export const resultService = {
 
     return ret;
   },
+
+  async getLeaderboard(): Promise<leaderboardType> {
+    const ret = await resultModel.getLeaderboard();
+    if (ret.length === 0) {
+      throw new NotFoundError('No results found');
+    }
+    return ret;
+  },
 };

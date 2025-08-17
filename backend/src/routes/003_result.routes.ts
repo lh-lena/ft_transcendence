@@ -1,4 +1,4 @@
-import { FastifyInstance } from 'fastify';
+import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import fp from 'fastify-plugin';
 
 import crudRoutes from '../utils/crudRoutes';
@@ -20,6 +20,20 @@ const resultRoutes = async (server: FastifyInstance) => {
       routes: ['getQuery', 'getById', 'create'],
     },
   );
+
+  server.get('/api/result/leaderboard', {
+    schema: {
+      response: {
+        200: { $ref: 'leaderboard' },
+      },
+      summary: 'Get leaderboard',
+    },
+    handler: async (request: FastifyRequest, reply: FastifyReply) => {
+      const ret = await resultController.getLeaderboard();
+
+      return reply.code(200).send(ret);
+    },
+  });
 };
 
 export default fp(resultRoutes);

@@ -47,6 +47,14 @@ const resultQueryBase = z.object({
 });
 const resultQuery = resultQueryBase.meta({ $id: 'resultQuery' });
 
+//leaderboard
+const leaderboardBase = z.object({
+  id: z.number(),
+  username: z.string(),
+  wins: z.number(),
+});
+const leaderboard = z.array(leaderboardBase).meta({ $id: 'leaderboard' });
+
 //schemas for response
 const resultResponse = resultBase.meta({ $id: 'resultResponse' });
 const resultResponseArray = z
@@ -60,8 +68,10 @@ export const resultSchemas = [
   resultId,
   resultResponse,
   resultResponseArray,
+  leaderboard,
 ];
 //
 export type resultType = z.infer<typeof resultBase>;
 export type resultCreateType = z.infer<typeof resultCreate>;
 export type resultQueryType = z.infer<typeof resultQuery>;
+export type leaderboardType = z.infer<typeof leaderboard>;

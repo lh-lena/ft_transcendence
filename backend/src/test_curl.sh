@@ -108,11 +108,11 @@ curl -X POST \
   -H 'accept: application/json' \
   -H 'Content-Type: application/json' \
   -d '{
-  "gameId": "a3325abd-bb5c-586b-9f5b-184d16bf2c3d",
+  "gameId": "a2225abd-bb5c-586b-9f5b-184d16bf2c3d",
   "scorePlayer1": "2",
   "scorePlayer2": "8",
-  "winnerId": 2,
-  "loserId": 1,
+  "winnerId": 1,
+  "loserId": 2,
   "player1Username": "alec",
   "player2Username": "moschi",
   "status":   "finished",

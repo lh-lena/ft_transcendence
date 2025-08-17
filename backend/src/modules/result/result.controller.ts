@@ -1,7 +1,11 @@
 import { Prisma } from '@prisma/client';
 import { resultService } from './result.service';
 
-import type { resultType, resultCreateType } from '../../schemas/result';
+import type {
+  resultType,
+  resultCreateType,
+  leaderboardType,
+} from '../../schemas/result';
 import { transformResult } from './result.helper';
 
 export const resultController = {
@@ -20,5 +24,10 @@ export const resultController = {
   async getById(id: number): Promise<resultType> {
     const ret = await resultService.getById(id);
     return transformResult(ret);
+  },
+
+  async getLeaderboard(): Promise<leaderboardType> {
+    const ret = await resultService.getLeaderboard();
+    return ret;
   },
 };
