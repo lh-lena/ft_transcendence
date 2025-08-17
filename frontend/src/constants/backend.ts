@@ -11,6 +11,12 @@ export const userStore: UserProfile = {
   colorMap: ["#D72E1D", "#D72E1D", "#D72E1D", "#D72E1D"],
 };
 
+export const userStore2: UserProfile = {
+  username: "test",
+  color: "#06833E",
+  colorMap: ["#06833E", "#FFFFFF", "#06833E", "#FFFFFF"],
+};
+
 export const sampleScores = [
   { playerName: "Mo", score: 99 },
   { playerName: "Alex", score: 97 },

@@ -3,12 +3,11 @@ import { PongGame } from "../../game";
 import { Countdown } from "../../components/countdown";
 import { GameState, GameStatus } from "../../types";
 import { ScoreBar } from "../../components/scoreBar";
-import { generateProfilePrint } from "../../utils/generateProfilePrint";
 
 import { Menu } from "../../components/menu";
 
 // TODO-BACKEND switch out for backend data cached on merge
-import { userStore } from "../../constants/backend";
+import { userStore, userStore2 } from "../../constants/backend";
 
 export class LocalGamePage {
   private element: HTMLElement;
@@ -24,19 +23,24 @@ export class LocalGamePage {
   constructor(router: Router) {
     this.router = router;
     // for player A
-    const { color, colorMap } = generateProfilePrint();
 
     this.gameState = {
       status: GameStatus.PLAYING,
       previousStatus: GameStatus.PLAYING,
-      playerA: { username: "left", score: 0, color: color, colorMap: colorMap },
       blockedPlayButton: false,
-      playerB: {
-        username: userStore.username,
+      playerA: {
+        ...userStore,
         score: 0,
-        color: userStore.color,
-        colorMap: userStore.colorMap,
       },
+      playerB: {
+        ...userStore2,
+        score: 0,
+      },
+      pauseInitiatedByMe: false,
+      activeKey: "",
+      activePaddle: undefined,
+      previousKey: "",
+      wsPaddleSequence: 0,
     };
 
     this.element = document.createElement("div");

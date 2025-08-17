@@ -2,13 +2,12 @@ import { Router } from "../../router";
 import { PongGame } from "../../game";
 import { GameState, GameStatus } from "../../types";
 import { ScoreBar } from "../../components/scoreBar";
-import { generateProfilePrint } from "../../utils/generateProfilePrint";
 import { Loading } from "../../components/loading";
-
+import { SpectatorBar } from "../../components/spectatorBar";
 import { Menu } from "../../components/menu";
 
 // TODO-BACKEND switch out for backend data cached on merge
-import { userStore } from "../../constants/backend";
+import { userStore, userStore2 } from "../../constants/backend";
 
 //web socket
 import {
@@ -20,6 +19,7 @@ import {
 } from "../../types/websocket";
 
 import { websocketUrl } from "../../constants/websocket";
+import { ProfileAvatar } from "../../components/profileAvatar";
 
 // test consts for websocket dev
 const DEV_GAMEID = "test-game-1";
@@ -35,25 +35,27 @@ export class VsPlayerGamePage {
   private loadingOverlay: Loading;
   private router: Router;
   private pauseCountdown!: HTMLElement;
+  private menuEndDiv!: HTMLDivElement;
+  private spectatorBar: SpectatorBar;
 
   constructor(router: Router) {
     this.router = router;
-    // for player A
-    const { color, colorMap } = generateProfilePrint();
-
     this.gameState = {
       status: GameStatus.PLAYING,
       previousStatus: GameStatus.PLAYING,
-      playerA: { username: "left", score: 0, color: color, colorMap: colorMap },
-      playerB: {
-        username: userStore.username,
+      // by default we always pull logged in player (local client) into player A at beg
+      playerA: {
+        ...userStore,
         score: 0,
-        color: userStore.color,
-        colorMap: userStore.colorMap,
+      },
+      playerB: {
+        ...userStore2,
+        score: 0,
       },
       pauseInitiatedByMe: false,
       blockedPlayButton: false,
       activeKey: "",
+      previousKey: "",
       activePaddle: undefined,
       wsPaddleSequence: 0,
     };
@@ -69,9 +71,6 @@ export class VsPlayerGamePage {
 
     this.loadingOverlay.changeText("waiting for opponent");
     this.main.appendChild(this.loadingOverlay.getElement());
-
-    // set up web socket and grab data
-    this.initializeGame();
   }
 
   private initializeGame(): void {
@@ -92,6 +91,9 @@ export class VsPlayerGamePage {
 
     this.main.appendChild(this.gameContainer);
     this.game.mount(this.gameContainer);
+    // spectator bar
+    this.spectatorBar = new SpectatorBar();
+    this.spectatorBar.mount(this.main);
   }
 
   private showPauseOverlay(): void {
@@ -135,41 +137,38 @@ export class VsPlayerGamePage {
       );
     }
 
-    // key event handling
-    if (this.gameState.activeKey == "KEY_UP") {
-      const game_update: ClientMessageInterface<"game_update"> = {
-        event: "game_update",
-        payload: {
-          direction: Direction.UP,
-          sequence: this.gameState.wsPaddleSequence,
-        },
-      };
-      console.log("PADDLE_UP_SENT " + this.gameState.wsPaddleSequence);
-      this.sendMessage(game_update);
-    }
-
-    if (this.gameState.activeKey == "KEY_DOWN") {
-      const game_update: ClientMessageInterface<"game_update"> = {
-        event: "game_update",
-        payload: {
-          direction: Direction.DOWN,
-          sequence: this.gameState.wsPaddleSequence,
-        },
-      };
-      console.log("PADDLE_DOWN_SENT " + this.gameState.wsPaddleSequence);
-      this.sendMessage(game_update);
-    }
-
-    if (this.gameState.activeKey == "") {
-      const game_update: ClientMessageInterface<"game_update"> = {
-        event: "game_update",
-        payload: {
-          direction: Direction.STOP,
-          sequence: this.gameState.wsPaddleSequence,
-        },
-      };
-      console.log("PADDLE_DOWN_SENT " + this.gameState.wsPaddleSequence);
-      this.sendMessage(game_update);
+    const currentKey = this.gameState.activeKey;
+    if (currentKey != this.gameState.previousKey) {
+      // key event handling
+      if (currentKey == "KEY_UP") {
+        const game_update: ClientMessageInterface<"game_update"> = {
+          event: "game_update",
+          payload: {
+            direction: Direction.UP,
+            sequence: this.gameState.wsPaddleSequence,
+          },
+        };
+        this.sendMessage(game_update);
+      } else if (currentKey == "KEY_DOWN") {
+        const game_update: ClientMessageInterface<"game_update"> = {
+          event: "game_update",
+          payload: {
+            direction: Direction.DOWN,
+            sequence: this.gameState.wsPaddleSequence,
+          },
+        };
+        this.sendMessage(game_update);
+      } else if (currentKey == "") {
+        const game_update: ClientMessageInterface<"game_update"> = {
+          event: "game_update",
+          payload: {
+            direction: Direction.STOP,
+            sequence: this.gameState.wsPaddleSequence,
+          },
+        };
+        this.sendMessage(game_update);
+      }
+      this.gameState.previousKey = currentKey;
     }
 
     // pause play stuff
@@ -259,6 +258,7 @@ export class VsPlayerGamePage {
   ): void {
     if (this.websocket && this.websocket.readyState === WebSocket.OPEN) {
       this.websocket.send(JSON.stringify(message));
+      console.log("SENT: ", message.payload);
     } else {
       console.warn("WebSocket is not open. Message not sent:", { message });
     }
@@ -273,6 +273,35 @@ export class VsPlayerGamePage {
       this.pauseCountdown.innerText = "game resumes in: " + message;
       if (message == "GO!") this.pauseCountdown.innerText = message;
     } else this.loadingOverlay.changeText(message);
+  }
+
+  private showEndGameOverlay(): void {
+    this.game?.hideGamePieces();
+    if (this.gameContainer && !this.menuPauseDiv) {
+      this.menuEndDiv = document.createElement("div");
+      this.menuEndDiv.className = "flex flex-col gap-5 items-center";
+      // Create and mount menu to game container instead of main element
+      const menuItems = [{ name: "quit", link: "/profile" }];
+      const menuEnd = new Menu(this.router, menuItems);
+      // make a private class member in order to change with result of match
+      let avatar = new ProfileAvatar(
+        this.gameState.playerA.color,
+        this.gameState.playerA.colorMap,
+      );
+      this.menuEndDiv.appendChild(avatar.getElement());
+      let resultText = document.createElement("h1");
+      resultText.textContent = "XXX wins";
+      resultText.className = "text-white text text-center";
+      this.menuEndDiv.appendChild(resultText);
+      menuEnd.mount(this.menuEndDiv);
+      this.gameContainer.appendChild(this.menuEndDiv);
+      // Add overlay styling to menu element
+      this.menuEndDiv.style.position = "absolute";
+      this.menuEndDiv.style.top = "50%";
+      this.menuEndDiv.style.left = "50%";
+      this.menuEndDiv.style.transform = "translate(-50%, -50%)";
+      this.menuEndDiv.style.zIndex = "1000";
+    }
   }
 
   // Handle incoming WebSocket messages
@@ -307,14 +336,27 @@ export class VsPlayerGamePage {
       case "game_update": {
         const gameUpdateData = data as ServerMessageInterface<"game_update">;
         this.game?.updateGameStateFromServer(gameUpdateData);
-        if (!this.gameState.activePaddle)
+        if (!this.gameState.activePaddle) {
           this.gameState.activePaddle = gameUpdateData.payload.activePaddle;
+          // change paddle pos to paddleB if we aren't A
+          if (this.gameState.activePaddle != "paddleA") {
+            [this.gameState.playerA, this.gameState.playerB] = [
+              this.gameState.playerB,
+              this.gameState.playerA,
+            ];
+          }
+          this.initializeGame();
+        }
         break;
       }
       case "game_pause": {
         this.gameState.status = GameStatus.PAUSED;
         this.gameStateCallback();
         break;
+      }
+      case "game_ended": {
+        this.gameState.status = GameStatus.GAME_OVER;
+        this.showEndGameOverlay();
       }
     }
   }

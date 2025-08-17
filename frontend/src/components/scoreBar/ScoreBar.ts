@@ -1,7 +1,6 @@
 import { PausePlay } from "../pausePlay";
 import { GameState } from "../../types";
 import { ProfileAvatar } from "../profileAvatar";
-import { Player } from "../../types";
 
 export class ScoreBar {
   private element: HTMLElement;
@@ -16,15 +15,6 @@ export class ScoreBar {
   constructor(gameState: GameState, gameStateCallbackParent: () => void) {
     this.gameState = gameState;
     this.gameStateCallbackParent = gameStateCallbackParent;
-    let playerLeft: Player;
-    let playerRight: Player;
-    if (this.gameState.activePaddle == "paddleA") {
-      playerLeft = this.gameState.playerA;
-      playerRight = this.gameState.playerB;
-    } else {
-      playerLeft = this.gameState.playerB;
-      playerRight = this.gameState.playerA;
-    }
     this.element = document.createElement("div");
     this.element.className =
       "flex flex-row justify-between w-[880px] items-center";
@@ -33,8 +23,8 @@ export class ScoreBar {
     this.playerLeftContainer = document.createElement("div");
     this.playerLeftContainer.className = "flex flex-row items-center gap-4";
     const profileA = new ProfileAvatar(
-      playerLeft.color,
-      playerLeft.colorMap,
+      this.gameState.playerA.color,
+      this.gameState.playerA.colorMap,
     ).getElement();
     this.playerLeftContainer.appendChild(profileA);
     this.scoreA = document.createElement("h1");
@@ -59,8 +49,8 @@ export class ScoreBar {
     this.scoreB.className = "text-white";
     this.playerRightContainer.appendChild(this.scoreB);
     const profileB = new ProfileAvatar(
-      playerRight.color,
-      playerRight.colorMap,
+      this.gameState.playerB.color,
+      this.gameState.playerB.colorMap,
     ).getElement();
     this.playerRightContainer.appendChild(profileB);
     this.element.appendChild(this.playerRightContainer);

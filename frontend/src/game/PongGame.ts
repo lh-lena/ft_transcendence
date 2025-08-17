@@ -18,6 +18,9 @@ export class PongGame {
   private bgColor: string;
   private gameMode: string;
   private gameStateCallBackParent: () => void;
+  // for remote
+  private lastPaddleUpdateTime: number = 0;
+  private readonly PADDLE_UPDATE_INTERVAL = 50;
 
   // added ! so they dont need to be initialized directly in the constructor
   private ball!: Ball;
@@ -135,6 +138,14 @@ export class PongGame {
     );
   }
 
+  public swapPaddles(): void {
+    // Swap the paddle objects themselves
+    [this.paddleA, this.paddleB] = [this.paddleB, this.paddleA];
+    // Update colors from the swapped gameState
+    this.paddleA.color = this.gameState.playerA.color;
+    this.paddleB.color = this.gameState.playerB.color;
+  }
+
   private startGameLoop(): void {
     const gameLoop = (now: number) => {
       const dt = (now - this.lastFrameTime) / 1000;
@@ -172,38 +183,51 @@ export class PongGame {
       return;
     }
 
+    // message throttling
+    let now: number = performance.now();
+    let shouldSendUpdate = true;
+
+    if (this.gameMode == "remote") {
+      shouldSendUpdate =
+        now - this.lastPaddleUpdateTime >= this.PADDLE_UPDATE_INTERVAL;
+    }
+
     // only handle w and s if its a local game
-    // --- Paddle Movement ---
-    if (this.keys["w"]) {
-      if (this.gameMode == "local") this.paddleA.y -= this.paddleA.speed * dt;
+    // --- Paddle Movement LOCAL---
+    if (this.gameMode == "local") {
+      if (this.keys["w"]) {
+        this.paddleA.y -= this.paddleA.speed * dt;
+      } else if (this.keys["s"]) {
+        this.paddleA.y += this.paddleA.speed * dt;
+      } else if (this.keys["ArrowUp"]) {
+        this.paddleB.y -= this.paddleB.speed * dt;
+      } else if (this.keys["ArrowDown"]) {
+        this.paddleB.y += this.paddleB.speed * dt;
+      }
     }
-    if (this.keys["s"]) {
-      if (this.gameMode == "local") this.paddleA.y -= this.paddleA.speed * dt;;
-    }
-    if (this.keys["ArrowUp"]) {
-      if (this.gameMode == "remote") {
+
+    // remote gameplay keys
+    // --- Paddle Movement REMOTE ---
+    if (this.gameMode == "remote" && shouldSendUpdate) {
+      if (this.keys["ArrowUp"]) {
         this.gameState.activeKey = "KEY_UP";
         this.gameState.wsPaddleSequence++;
         this.gameStateCallBackParent();
-      } else this.paddleB.y -= this.paddleB.speed * dt;
-    }
-    if (this.keys["ArrowDown"]) {
-      if (this.gameMode == "remote") {
+        this.lastPaddleUpdateTime = now;
+      } else if (this.keys["ArrowDown"]) {
         this.gameState.activeKey = "KEY_DOWN";
         this.gameState.wsPaddleSequence++;
         this.gameStateCallBackParent();
-      } else this.paddleB.y += this.paddleB.speed * dt;
-    }
-
-    // Only clear activeKey if it's remote mode and no keys are pressed
-    if (
-      this.gameMode == "remote" &&
-      !this.keys["w"] &&
-      !this.keys["s"] &&
-      !this.keys["ArrowUp"] &&
-      !this.keys["ArrowDown"]
-    ) {
-      this.gameState.activeKey = "";
+        this.lastPaddleUpdateTime = now;
+      } else if (
+        !this.keys["ArrowUp"] &&
+        !this.keys["ArrowDown"] &&
+        this.gameState.activeKey !== ""
+      ) {
+        this.gameState.activeKey = "";
+        this.gameStateCallBackParent();
+        this.lastPaddleUpdateTime = now;
+      }
     }
 
     // Clamp paddles within canvas
@@ -294,8 +318,9 @@ export class PongGame {
     this.ball.x = data.payload.ball.x;
     this.ball.y = data.payload.ball.y;
 
+    console.log("NEW DATA: ", data);
     this.paddleB.y = data.payload.paddleB.y;
-    console.log(data.payload.paddleB.y);
+    this.paddleA.y = data.payload.paddleA.y;
   }
 
   // game loop logic

@@ -41,6 +41,7 @@ export interface GameState {
   pauseInitiatedByMe: boolean;
   blockedPlayButton: boolean;
   activeKey: string;
+  previousKey: string;
   activePaddle: string | undefined;
   wsPaddleSequence: number;
 }
