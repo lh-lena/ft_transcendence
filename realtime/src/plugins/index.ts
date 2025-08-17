@@ -4,6 +4,7 @@ import { websocketPlugin } from './ws.plugin.js';
 import { configPlugin } from './config.plugin.js';
 import { gamePlugin } from './game.plugin.js';
 import { eventBusPlugin } from './eventBus.plugin.js';
+import monitoringPlugin from './monitoring.plugin.js';
 
 export const registerPlugins = async (app: FastifyInstance) => {
   try {
@@ -14,6 +15,8 @@ export const registerPlugins = async (app: FastifyInstance) => {
     await app.register(authPlugin);
 
     await app.register(websocketPlugin);
+
+    await app.register(monitoringPlugin);
 
     app.register(gamePlugin);
 
