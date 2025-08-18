@@ -2,7 +2,7 @@ import { resultModel } from './result.crud';
 import { NotFoundError, ConflictError } from '../../utils/error';
 import { Prisma, result } from '@prisma/client';
 
-import { resultCreateType } from '../../schemas/result';
+import { resultCreateType, leaderboardType } from '../../schemas/result';
 
 import { transformInput } from './result.helper';
 import { transformQuery } from '../..//utils/crudQueryBuilder';

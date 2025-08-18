@@ -1,4 +1,4 @@
-import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
+import { FastifyInstance, FastifyReply } from 'fastify';
 import fp from 'fastify-plugin';
 
 import crudRoutes from '../utils/crudRoutes';
@@ -28,7 +28,7 @@ const resultRoutes = async (server: FastifyInstance) => {
       },
       summary: 'Get leaderboard',
     },
-    handler: async (request: FastifyRequest, reply: FastifyReply) => {
+    handler: async (_, reply: FastifyReply) => {
       const ret = await resultController.getLeaderboard();
 
       return reply.code(200).send(ret);
