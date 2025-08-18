@@ -7,9 +7,7 @@ const friendBase = z.object({
 });
 const friend = friendBase.meta({ $id: 'friend' });
 
-const friendCreate = friendBase
-  .omit({ id: true })
-  .meta({ $id: 'friendCreate' });
+const friendCreate = friendBase.omit({ id: true }).meta({ $id: 'friendCreate' });
 
 const friendId = friendBase.pick({ id: true }).meta({ $id: 'friendId' });
 
@@ -23,9 +21,7 @@ const friendQuery = friendBase
   .meta({ $id: 'friendQuery' });
 
 const friendResponse = friendBase.meta({ $id: 'friendResponse' });
-const friendResponseArray = z
-  .array(friendBase)
-  .meta({ $id: 'friendResponseArray' });
+const friendResponseArray = z.array(friendBase).meta({ $id: 'friendResponseArray' });
 
 export const friendSchemas = [
   friend,

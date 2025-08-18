@@ -49,13 +49,7 @@ const gameResponse = gameBase.meta({ $id: 'gameResponse' });
 const gameResponseArray = z.array(gameBase).meta({ $id: 'gameResponseArray' });
 
 //export schemas
-export const gameSchemas = [
-  gameCreate,
-  gameResponse,
-  gameResponseArray,
-  gameId,
-  gameQuery,
-];
+export const gameSchemas = [gameCreate, gameResponse, gameResponseArray, gameId, gameQuery];
 //
 ////export types
 export type game = z.infer<typeof gameBase>;

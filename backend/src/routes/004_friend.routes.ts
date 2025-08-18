@@ -13,13 +13,7 @@ import type {
 
 const friendRoutes = async (server: FastifyInstance) => {
   server.register(
-    crudRoutes<
-      friendType,
-      friendQueryType,
-      friendCreateType,
-      friendIdType,
-      number
-    >(),
+    crudRoutes<friendType, friendQueryType, friendCreateType, friendIdType, number>(),
     {
       basePath: '/api/friend',
       entityName: 'friend',

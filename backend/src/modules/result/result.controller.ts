@@ -1,11 +1,7 @@
 import { Prisma } from '@prisma/client';
 import { resultService } from './result.service';
 
-import type {
-  resultType,
-  resultCreateType,
-  leaderboardType,
-} from '../../schemas/result';
+import type { resultType, resultCreateType, leaderboardType } from '../../schemas/result';
 import { transformResult } from './result.helper';
 
 export const resultController = {

@@ -18,13 +18,8 @@ export class gameMakingClass {
   private activeMatches: game[] = [];
 
   //check if two players are ready and game them ( can add gameing logic later )
-  private async tryMultiMatch(
-    req: gameCreateType,
-    user: userType,
-  ): Promise<gameResponseType> {
-    let game = this.activeMatches.find(
-      (m) => m.status === 'waiting' && m.visibility === 'public',
-    );
+  private async tryMultiMatch(req: gameCreateType, user: userType): Promise<gameResponseType> {
+    let game = this.activeMatches.find((m) => m.status === 'waiting' && m.visibility === 'public');
 
     if (game) {
       game.players.push(user);
@@ -54,9 +49,7 @@ export class gameMakingClass {
 
   async findFiltered(query: gameQueryType): Promise<gameResponseArrayType> {
     return this.activeMatches.filter((item) =>
-      Object.entries(query).every(
-        ([key, value]) => item[key as keyof game] === value,
-      ),
+      Object.entries(query).every(([key, value]) => item[key as keyof game] === value),
     );
   }
 
@@ -70,9 +63,7 @@ export class gameMakingClass {
     const user = await userController.getById(req.userId);
     if (!user) throw new Error('User not found');
 
-    const game = this.activeMatches.find((m) =>
-      m.players.some((p) => p.id === user.id),
-    );
+    const game = this.activeMatches.find((m) => m.players.some((p) => p.id === user.id));
 
     if (game) return game;
 
@@ -99,18 +90,14 @@ export class gameMakingClass {
     }
   }
 
-  async join(
-    gameId: gameIdType,
-    req: gameCreateType,
-  ): Promise<gameResponseType> {
+  async join(gameId: gameIdType, req: gameCreateType): Promise<gameResponseType> {
     const game = await this.findById(gameId);
     if (!game) throw new NotFoundError(`game ${gameId.id} not found`);
 
     const user = await userController.getById(req.userId);
     if (!user) throw new NotFoundError('User ${req.userId} not found');
 
-    if (game.players.length !== 1)
-      throw new Error(`game ${gameId.id} is already full`);
+    if (game.players.length !== 1) throw new Error(`game ${gameId.id} is already full`);
 
     game.players.push(user);
     game.status = 'playing';

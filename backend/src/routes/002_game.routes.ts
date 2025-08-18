@@ -5,23 +5,15 @@ import { Update } from '../utils/crudDefines';
 import crudRoutes from '../utils/crudRoutes';
 import { gameController } from '../modules/game/game.controller';
 
-import {
-  game,
-  gameQueryType,
-  gameCreateType,
-  gameIdType,
-} from '../schemas/game';
+import { game, gameQueryType, gameCreateType, gameIdType } from '../schemas/game';
 
 const gameRoutes = async (server: FastifyInstance) => {
-  server.register(
-    crudRoutes<game, gameQueryType, gameCreateType, null, gameIdType>(),
-    {
-      basePath: '/api/game',
-      entityName: 'game',
-      controller: gameController,
-      routes: ['getQuery', 'getById', 'create'],
-    },
-  );
+  server.register(crudRoutes<game, gameQueryType, gameCreateType, null, gameIdType>(), {
+    basePath: '/api/game',
+    entityName: 'game',
+    controller: gameController,
+    routes: ['getQuery', 'getById', 'create'],
+  });
 
   server.post('/api/game/join/:id', {
     schema: {

@@ -44,9 +44,7 @@ const userQuery = userQueryBase.meta({ $id: 'userQuery' });
 
 //define schemas for responses
 export const userResponse = userBase.meta({ $id: 'userResponse' });
-export const userResponseArray = z
-  .array(userBase)
-  .meta({ $id: 'userResponseArray' });
+export const userResponseArray = z.array(userBase).meta({ $id: 'userResponseArray' });
 
 export const userSchemas = [
   userCreate,

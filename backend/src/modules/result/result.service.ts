@@ -15,10 +15,7 @@ export const resultService = {
       const ret = await resultModel.insert(prismaData);
       return ret;
     } catch (err: unknown) {
-      if (
-        err instanceof Prisma.PrismaClientKnownRequestError &&
-        err.code === 'P2002'
-      ) {
+      if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
         throw new ConflictError(`result already exists`);
       }
       throw err;

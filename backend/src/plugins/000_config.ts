@@ -6,13 +6,7 @@ import path from 'path';
 
 export const schema = {
   type: 'object',
-  required: [
-    'PORT',
-    'HOST',
-    'DATABASE_URL',
-    'ALLOWED_ORIGINS',
-    'ALLOWED_METHODS',
-  ],
+  required: ['PORT', 'HOST', 'DATABASE_URL', 'ALLOWED_ORIGINS', 'ALLOWED_METHODS'],
   properties: {
     PORT: { type: 'string' },
     HOST: { type: 'string' },

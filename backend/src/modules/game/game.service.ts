@@ -13,9 +13,7 @@ import type {
 
 const gamemaker = new gameMakingClass();
 
-export async function getQuery(
-  filters?: gameQueryType,
-): Promise<gameResponseArrayType> {
+export async function getQuery(filters?: gameQueryType): Promise<gameResponseArrayType> {
   let game = [];
 
   if (!filters) {
@@ -37,18 +35,13 @@ export async function getgameById(id: gameIdType): Promise<gameResponseType> {
   return game;
 }
 
-export async function creategame(
-  data: gameCreateType,
-): Promise<gameResponseType> {
+export async function creategame(data: gameCreateType): Promise<gameResponseType> {
   const ret = await gamemaker.insert(data);
 
   return ret;
 }
 
-export async function joingame(
-  id: gameIdType,
-  input: gameCreateType,
-): Promise<gameResponseType> {
+export async function joingame(id: gameIdType, input: gameCreateType): Promise<gameResponseType> {
   await getgameById(id);
 
   const game = await gamemaker.join(id, input);

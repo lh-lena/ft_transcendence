@@ -12,11 +12,7 @@ function hasValidationError(error: unknown): error is { validation: unknown } {
   return typeof error === 'object' && error !== null && 'validation' in error;
 }
 
-export function errorHandler(
-  error: FastifyError,
-  _request: FastifyRequest,
-  reply: FastifyReply,
-) {
+export function errorHandler(error: FastifyError, _request: FastifyRequest, reply: FastifyReply) {
   console.log(`Error occurred: ${error.message}`);
 
   if (error instanceof AppError) {
@@ -40,11 +36,7 @@ export function errorHandler(
     });
   }
 
-  if (
-    'statusCode' in error &&
-    error.statusCode === 404 &&
-    !('validation' in error)
-  ) {
+  if ('statusCode' in error && error.statusCode === 404 && !('validation' in error)) {
     return reply.code(404).send({
       error: 'NOT_FOUND',
       message: error.message || 'Route not found',
