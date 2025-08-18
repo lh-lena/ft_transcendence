@@ -54,10 +54,7 @@ function verifyWebSocketClient(
       }
     })
     .catch((error: Error) => {
-      app.log.error('Client verification error', {
-        error: error.message,
-        origin: info.origin,
-      });
+      app.log.error(`Client verification error: ${error.message}, origin: ${info.origin}`);
       done(false, 500, 'Internal Server Error');
     });
 }

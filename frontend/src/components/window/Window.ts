@@ -40,7 +40,7 @@ export class Window {
     this.element.appendChild(this.windowPane);
 
     // Add children
-    children.forEach(child => {
+    children.forEach((child) => {
       this.windowPane.appendChild(child);
     });
   }

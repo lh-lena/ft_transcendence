@@ -1,4 +1,4 @@
-import { Router } from '../../router'
+import { Router } from '../../router';
 
 export interface MenuBarItem {
   label: string;
@@ -23,17 +23,20 @@ export class MenuBar {
         { label: 'Local Game', href: '/local' },
         { label: 'Vs AI', href: '/vs-ai' },
         { label: 'Vs Player', href: '/vs-player' },
-        { label: 'Tournament', href: '/tournament' }
-      ]
+        { label: 'Tournament', href: '/tournament' },
+      ],
     },
     { label: 'profile', href: '/profile' },
     { label: 'settings', href: '/settings' },
     { label: 'chat', href: '/chat' },
     { label: 'leaderboard', href: '/leaderboard' },
-    { label: 'logout', href: '/logout' }
+    { label: 'logout', href: '/logout' },
   ];
 
-  constructor(router: Router, private skipThis?: string) {
+  constructor(
+    router: Router,
+    private skipThis?: string,
+  ) {
     this.router = router;
     this.menuBarItems = MenuBar.defaultMenuBarItems.slice();
   }
@@ -43,8 +46,7 @@ export class MenuBar {
     ul.setAttribute('role', 'menu-bar');
 
     this.menuBarItems.forEach((menu: MenuBarItem) => {
-      if (this.skipThis && menu.label == this.skipThis)
-        return;
+      if (this.skipThis && menu.label == this.skipThis) return;
       const li = document.createElement('li');
       li.setAttribute('role', 'menu-item');
       li.setAttribute('tabindex', '0');

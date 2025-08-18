@@ -13,128 +13,128 @@ const crudRoutes =
   >(): FastifyPluginAsync<
     crudDefines.CrudRoutesOptions<TEntity, TQuery, TCreate, TUpdate, TId>
   > =>
-  async (server: FastifyInstance, options) => {
-    const {
-      basePath,
-      entityName,
-      controller,
-      routes = ['getQuery', 'getById', 'create', 'update', 'delete'],
-    } = options;
+    async (server: FastifyInstance, options) => {
+      const {
+        basePath,
+        entityName,
+        controller,
+        routes = ['getQuery', 'getById', 'create', 'update', 'delete'],
+      } = options;
 
-    if (routes.includes('getQuery') && controller.getQuery) {
-      server.get(basePath, {
-        schema: {
-          querystring: { $ref: `${entityName}Query` },
-          response: {
-            200: { $ref: `${entityName}ResponseArray` },
-            404: { $ref: `NotFound` },
+      if (routes.includes('getQuery') && controller.getQuery) {
+        server.get(basePath, {
+          schema: {
+            querystring: { $ref: `${entityName}Query` },
+            response: {
+              200: { $ref: `${entityName}ResponseArray` },
+              404: { $ref: `NotFound` },
+            },
+            summary: `Get all or filtered ${entityName}`,
           },
-          summary: `Get all or filtered ${entityName}`,
-        },
-        handler: async (
-          request: FastifyRequest<crudDefines.GetAll<TQuery>>,
-          reply: FastifyReply,
-        ) => {
-          console.log('Query in route before: ', request.query);
-          const query = request.query as TQuery;
-          console.log('Query in Route: ', query);
-          const ret = await controller.getQuery!(query);
+          handler: async (
+            request: FastifyRequest<crudDefines.GetAll<TQuery>>,
+            reply: FastifyReply,
+          ) => {
+            console.log('Query in route before: ', request.query);
+            const query = request.query as TQuery;
+            console.log('Query in Route: ', query);
+            const ret = await controller.getQuery!(query);
 
-          return reply.code(200).send(ret);
-        },
-      });
-    }
-
-    if (routes.includes('getById') && controller.getById) {
-      server.get(`${basePath}/:id`, {
-        schema: {
-          params: { $ref: `${entityName}Id` },
-          response: {
-            200: { $ref: `${entityName}Response` },
-            404: { $ref: `NotFound` },
+            return reply.code(200).send(ret);
           },
-          summary: `Get ${entityName} by ID`,
-        },
-        handler: async (
-          request: FastifyRequest<crudDefines.GetById<TId>>,
-          reply: FastifyReply,
-        ) => {
-          const id = request.params as TId;
-          const ret = await controller.getById!(id);
+        });
+      }
 
-          return reply.code(200).send(ret);
-        },
-      });
-    }
-
-    if (routes.includes('create') && controller.create) {
-      server.post(basePath, {
-        schema: {
-          body: { $ref: `${entityName}Create` },
-          response: {
-            201: { $ref: `${entityName}Response` },
-            400: { $ref: `BadRequest` },
+      if (routes.includes('getById') && controller.getById) {
+        server.get(`${basePath}/:id`, {
+          schema: {
+            params: { $ref: `${entityName}Id` },
+            response: {
+              200: { $ref: `${entityName}Response` },
+              404: { $ref: `NotFound` },
+            },
+            summary: `Get ${entityName} by ID`,
           },
-          summary: `Create a new ${entityName}`,
-        },
-        handler: async (
-          request: FastifyRequest<crudDefines.Create<TCreate>>,
-          reply: FastifyReply,
-        ) => {
-          const body = request.body as TCreate;
-          const ret = await controller.create!(body);
+          handler: async (
+            request: FastifyRequest<crudDefines.GetById<TId>>,
+            reply: FastifyReply,
+          ) => {
+            const id = request.params as TId;
+            const ret = await controller.getById!(id);
 
-          return reply.code(201).send(ret);
-        },
-      });
-    }
-
-    if (routes.includes('update') && controller.update) {
-      server.patch(`${basePath}/:id`, {
-        schema: {
-          params: { $ref: `${entityName}Id` },
-          body: { $ref: `${entityName}Update` },
-          response: {
-            200: { $ref: `${entityName}Response` },
-            404: { $ref: `NotFound` },
-            400: { $ref: `BadRequest` },
+            return reply.code(200).send(ret);
           },
-          summary: `Update ${entityName} by ID`,
-        },
-        handler: async (
-          request: FastifyRequest<crudDefines.Update<TId, TUpdate>>,
-          reply: FastifyReply,
-        ) => {
-          const id = request.params as TId;
-          const body = request.body as TUpdate;
-          const ret = await controller.update!(id, body);
+        });
+      }
 
-          return reply.code(200).send(ret);
-        },
-      });
-    }
-
-    if (routes.includes('delete') && controller.deleteOne) {
-      server.delete(`${basePath}/:id`, {
-        schema: {
-          params: { $ref: `${entityName}Id` },
-          response: {
-            200: { success: true },
-            404: { $ref: `NotFound` },
+      if (routes.includes('create') && controller.create) {
+        server.post(basePath, {
+          schema: {
+            body: { $ref: `${entityName}Create` },
+            response: {
+              201: { $ref: `${entityName}Response` },
+              400: { $ref: `BadRequest` },
+            },
+            summary: `Create a new ${entityName}`,
           },
-          summary: `Delete ${entityName} by ID`,
-        },
-        handler: async (
-          request: FastifyRequest<crudDefines.Delete<TId>>,
-          reply: FastifyReply,
-        ) => {
-          const id = request.params as TId;
-          const ret = await controller.deleteOne!(id);
+          handler: async (
+            request: FastifyRequest<crudDefines.Create<TCreate>>,
+            reply: FastifyReply,
+          ) => {
+            const body = request.body as TCreate;
+            const ret = await controller.create!(body);
 
-          return reply.code(200).send(ret);
-        },
-      });
-    }
-  };
+            return reply.code(201).send(ret);
+          },
+        });
+      }
+
+      if (routes.includes('update') && controller.update) {
+        server.patch(`${basePath}/:id`, {
+          schema: {
+            params: { $ref: `${entityName}Id` },
+            body: { $ref: `${entityName}Update` },
+            response: {
+              200: { $ref: `${entityName}Response` },
+              404: { $ref: `NotFound` },
+              400: { $ref: `BadRequest` },
+            },
+            summary: `Update ${entityName} by ID`,
+          },
+          handler: async (
+            request: FastifyRequest<crudDefines.Update<TId, TUpdate>>,
+            reply: FastifyReply,
+          ) => {
+            const id = request.params as TId;
+            const body = request.body as TUpdate;
+            const ret = await controller.update!(id, body);
+
+            return reply.code(200).send(ret);
+          },
+        });
+      }
+
+      if (routes.includes('delete') && controller.deleteOne) {
+        server.delete(`${basePath}/:id`, {
+          schema: {
+            params: { $ref: `${entityName}Id` },
+            response: {
+              200: { success: true },
+              404: { $ref: `NotFound` },
+            },
+            summary: `Delete ${entityName} by ID`,
+          },
+          handler: async (
+            request: FastifyRequest<crudDefines.Delete<TId>>,
+            reply: FastifyReply,
+          ) => {
+            const id = request.params as TId;
+            const ret = await controller.deleteOne!(id);
+
+            return reply.code(200).send(ret);
+          },
+        });
+      }
+    };
 
 export default crudRoutes;
