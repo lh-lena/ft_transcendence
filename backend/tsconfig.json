@@ -16,8 +16,5 @@
     "strict": true,
     "isolatedModules": true
   },
-  "include": [
-    "src/**/*.ts", 
-    "src/**/*.d.ts"
-  ]
+  "include": ["src/**/*.ts", "src/**/*.d.ts"]
 }
