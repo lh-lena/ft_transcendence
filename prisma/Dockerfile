@@ -7,7 +7,6 @@ RUN npm install --verbose
 RUN npm list --depth=0
 
 COPY prisma ./prisma
-COPY .env ./
 
 RUN npm exec prisma generate
 
