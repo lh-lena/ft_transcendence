@@ -1,12 +1,9 @@
 import { z } from 'zod/v4';
 import { userBase, userQueryBase } from './user';
-import { dtString } from './basics';
+import { dtString, status } from './basics';
 
 //define game mode
 export const gameModeBase = z.enum(['pvp_remote', 'pvp_ai', 'tournament']);
-
-//define game status
-const gameStatusBase = z.enum(['waiting', 'ready', 'playing', 'finished']);
 
 //define ai diff
 const aiDifficultyBase = z.enum(['easy', 'medium', 'hard']);
@@ -19,7 +16,7 @@ export const gameBase = z.object({
   gameId: z.string(),
   players: z.array(userBase),
   mode: gameModeBase,
-  status: gameStatusBase,
+  status: status,
   visibility: gameVisibilityBase,
   createdAt: dtString.optional(),
 });

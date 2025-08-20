@@ -8,3 +8,6 @@ export const dtString = z
     z.date(),
   )
   .transform((date) => date.toISOString());
+
+//define game status
+export const status = z.enum(['waiting', 'ready', 'playing', 'finished']);
