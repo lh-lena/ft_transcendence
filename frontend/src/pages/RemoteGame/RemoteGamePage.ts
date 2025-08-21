@@ -3,7 +3,6 @@ import { PongGame } from "../../game";
 import { GameState, GameStatus } from "../../types";
 import { ScoreBar } from "../../components/scoreBar";
 import { Loading } from "../../components/loading";
-import { SpectatorBar } from "../../components/spectatorBar";
 import { Menu } from "../../components/menu";
 
 // TODO-BACKEND switch out for backend data cached on merge
@@ -36,7 +35,8 @@ export class VsPlayerGamePage {
   private router: Router;
   private pauseCountdown!: HTMLElement;
   private menuEndDiv!: HTMLDivElement;
-  private spectatorBar: SpectatorBar;
+  private endResultText!: HTMLElement;
+  // private spectatorBar!: SpectatorBar;
 
   constructor(router: Router) {
     this.router = router;
@@ -92,8 +92,8 @@ export class VsPlayerGamePage {
     this.main.appendChild(this.gameContainer);
     this.game.mount(this.gameContainer);
     // spectator bar
-    this.spectatorBar = new SpectatorBar();
-    this.spectatorBar.mount(this.main);
+    // this.spectatorBar = new SpectatorBar();
+    // this.spectatorBar.mount(this.main);
   }
 
   private showPauseOverlay(): void {
@@ -289,10 +289,10 @@ export class VsPlayerGamePage {
         this.gameState.playerA.colorMap,
       );
       this.menuEndDiv.appendChild(avatar.getElement());
-      let resultText = document.createElement("h1");
-      resultText.textContent = "XXX wins";
-      resultText.className = "text-white text text-center";
-      this.menuEndDiv.appendChild(resultText);
+      this.endResultText = document.createElement("h1");
+      this.endResultText.textContent = "XXX wins";
+      this.endResultText.className = "text-white text text-center";
+      this.menuEndDiv.appendChild(this.endResultText);
       menuEnd.mount(this.menuEndDiv);
       this.gameContainer.appendChild(this.menuEndDiv);
       // Add overlay styling to menu element
@@ -347,6 +347,15 @@ export class VsPlayerGamePage {
           }
           this.initializeGame();
         }
+        // score stuff
+        this.gameState.playerA.score = gameUpdateData.payload.paddleA.score;
+        this.gameState.playerB.score = gameUpdateData.payload.paddleB.score;
+        // this.gameStateCallback();
+        // need to refresh / change this when actual user ids exist
+        this.scoreBar.updateScores(
+          this.gameState.playerA.score,
+          this.gameState.playerB.score,
+        );
         break;
       }
       case "game_pause": {
@@ -357,6 +366,18 @@ export class VsPlayerGamePage {
       case "game_ended": {
         this.gameState.status = GameStatus.GAME_OVER;
         this.showEndGameOverlay();
+        // update score for end of game diff than during. TODO refresh on backend integration -> must use diff logic
+        const gameEndData = data as ServerMessageInterface<"game_ended">;
+        this.gameState.playerA.score = gameEndData.payload.scorePlayer1;
+        this.gameState.playerB.score = gameEndData.payload.scorePlayer2;
+        // this.gameStateCallback();
+        // need to refresh / change this when actual user ids exist
+        this.scoreBar.updateScores(
+          this.gameState.playerA.score,
+          this.gameState.playerB.score,
+        );
+        // implement actual winning logic here based on winning user id. not score. this is only temporary for now (while backend isnt synced)
+        this.endResultText.innerText = `Winner: ${this.gameState.playerA.username}`;
       }
     }
   }

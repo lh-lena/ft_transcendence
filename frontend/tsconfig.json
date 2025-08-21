@@ -14,7 +14,8 @@
     "sourceMap": true,
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "jsx": "preserve",
-    "noEmit": true
+    "noEmit": true,
+    "types": ["vite/client"],
   },
   "include": ["src/**/*"]
 }
