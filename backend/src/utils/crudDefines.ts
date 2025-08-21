@@ -39,3 +39,7 @@ export interface Update<TId, TUpdate> extends RouteGenericInterface {
 export interface Delete<TId> extends RouteGenericInterface {
   Params: TId;
 }
+
+export interface Join<TEntity> extends RouteGenericInterface {
+  Body: TEntity;
+}
