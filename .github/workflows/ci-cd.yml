@@ -218,21 +218,35 @@ jobs:
       - name: Wait for services to be healthy
         run: |
           echo "Waiting for services to be healthy..."
+          
           # Wait for backend
           ./scripts/wait-for-it.sh localhost:8080 -t 120
-          # Wait for frontend
-          ./scripts/wait-for-it.sh localhost:3000 -t 120
-          # Wait for auth service
+          
+          # Wait for frontend with health check verification
+          echo "Waiting for frontend to be healthy..."
+          for i in {1..60}; do
+            if docker inspect --format='{{.State.Health.Status}}' ft_transcendence_frontend | grep -q "healthy"; then
+              echo "Frontend is healthy!"
+              break
+            fi
+            echo "Attempt $i/60: Frontend health status: $(docker inspect --format='{{.State.Health.Status}}' ft_transcendence_frontend)"
+            if [ $i -eq 30 ]; then
+              echo "=== Frontend logs at 30 seconds ==="
+              docker logs ft_transcendence_frontend
+            fi
+            sleep 2
+          done
+          
+          # Verify frontend is truly ready
+          curl -f http://localhost:3000 || {
+            echo "Frontend health check passed but service not responding"
+            docker logs ft_transcendence_frontend
+            exit 1
+          }
+          
+          # Wait for other services
           ./scripts/wait-for-it.sh localhost:8082 -t 120
-          # Wait for nginx to be ready (HTTPS)
           ./scripts/wait-for-it.sh localhost:443 -t 120
-          
-          # Additional wait for services to stabilize
-          echo "Waiting for services to stabilize..."
-          sleep 10
-          
-          # Check if all containers are running
-          docker-compose ps
       - name: Debug frontend status
         run: |
           echo "=== Check if frontend is actually listening ==="
