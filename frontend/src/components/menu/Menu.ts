@@ -2,7 +2,7 @@ import { Router } from '../../router';
 
 export interface MenuItem {
   name: string; // Button text
-  link?: string; // optional URL link 
+  link?: string; // optional URL link
   onClick?: () => void; // optional custom callback
   style?: string;
 }
@@ -14,9 +14,13 @@ export interface MenuItem {
 export class Menu {
   private element: HTMLElement;
 
-  constructor(private router: Router, private menuItems: MenuItem[]) {
+  constructor(
+    private router: Router,
+    private menuItems: MenuItem[],
+  ) {
     this.element = document.createElement('div');
-    this.element.className = 'sys-window flex flex-col items-center justify-center w-full h-full gap-5';
+    this.element.className =
+      'sys-window flex flex-col items-center justify-center w-full h-full gap-5';
     this.createMenuContent();
   }
 
@@ -25,11 +29,11 @@ export class Menu {
   }
 
   private createMenuContent(): void {
-   this.menuItems.forEach((item) => {
+    this.menuItems.forEach((item) => {
       const button = document.createElement('button');
-      button.className = 'btn w-36'
+      button.className = 'btn w-36';
       if (item.style == 'tiny')
-        button.className = 'btn flex items-center justify-center w-8 h-8 bg-brandBlue'
+        button.className = 'btn flex items-center justify-center w-8 h-8 bg-brandBlue';
       button.textContent = item.name;
       if (item.onClick) {
         button.onclick = item.onClick;

@@ -28,7 +28,6 @@
 // );
 // `);
 
-
 // type User = {
 // 	id: number;
 // 	email: string;
@@ -212,7 +211,6 @@
 
 // start();
 
-
 import Fastify from 'fastify';
 import { hashPassword, verifyPassword } from './passwords';
 import { generateJWT } from './jwt';
@@ -252,7 +250,7 @@ server.register(fastifyOauth2, {
 server.get('/api/auth/health', async () => ({
   status: 'ok',
   service: 'auth-service',
-  message: 'Auth service running on port 8082'
+  message: 'Auth service running on port 8082',
 }));
 
 // Registration endpoint
@@ -280,8 +278,8 @@ server.post('/api/auth/register', async (request, reply) => {
   // Check if email or username already exists
   const exists = await prisma.user.findFirst({
     where: {
-      OR: [{ email }, { username }]
-    }
+      OR: [{ email }, { username }],
+    },
   });
   if (exists) {
     return reply.status(409).send({ error: 'Email or username already in use.' });
@@ -304,8 +302,8 @@ server.post('/api/auth/register', async (request, reply) => {
         username,
         password_hash,
         // Optional alias if you add it to schema
-        ...(alias && { alias })
-      }
+        ...(alias && { alias }),
+      },
     });
   } catch (err) {
     server.log.error(err);
@@ -338,7 +336,7 @@ server.post('/api/auth/login', async (request, reply) => {
     username: user.username,
     email: user.email,
     alias: (user as any).alias, // only works if alias is in schema
-    is_2fa_enabled: user.is_2fa_enabled
+    is_2fa_enabled: user.is_2fa_enabled,
   });
 
   return reply.send({ token });
@@ -370,9 +368,9 @@ server.get('/api/auth/google/callback', async (request, reply) => {
   const token = await (server as any).googleOAuth2.getAccessTokenFromAuthorizationCodeFlow(request);
 
   const userInfoRes = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
-    headers: { Authorization: `Bearer ${token.token.access_token}` }
+    headers: { Authorization: `Bearer ${token.token.access_token}` },
   });
-  const profile = await userInfoRes.json() as GoogleProfile;
+  const profile = (await userInfoRes.json()) as GoogleProfile;
 
   let user = await prisma.user.findUnique({ where: { email: profile.email } });
 
@@ -381,8 +379,8 @@ server.get('/api/auth/google/callback', async (request, reply) => {
       data: {
         email: profile.email,
         username: profile.name,
-        password_hash: '' // no password for OAuth users
-      }
+        password_hash: '', // no password for OAuth users
+      },
     });
   }
 
@@ -391,7 +389,7 @@ server.get('/api/auth/google/callback', async (request, reply) => {
     username: user.username,
     email: user.email,
     alias: (user as any).alias,
-    is_2fa_enabled: user.is_2fa_enabled
+    is_2fa_enabled: user.is_2fa_enabled,
   });
 
   reply.redirect(`http://localhost:3000/?token=${appToken}`);
@@ -413,4 +411,3 @@ const start = async () => {
 };
 
 start();
-

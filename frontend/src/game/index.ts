@@ -1,1 +1,1 @@
-export * from './PongGame'
+export * from './PongGame';

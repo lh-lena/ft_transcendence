@@ -1,0 +1,11 @@
+[project]
+id = "99185fd8-e3be-4313-91ef-5055524820af"
+
+[build]
+builder = "dockerfile"
+dockerfilePath = "./Dockerfile"
+
+[deploy]
+startCommand = "docker-compose up"
+restartPolicyType = "on-failure"
+restartPolicyMaxRetries = 3
