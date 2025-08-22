@@ -221,12 +221,15 @@ import friendsRoutes from './routes/friends';
 import fastifyMultipart from '@fastify/multipart';
 import statsRoutes from './routes/stats';
 import fastifyOauth2 from '@fastify/oauth2';
-import { PrismaClient } from '@prisma/client';
+import axios from 'axios';
+
+//axios Apiclient for backend API calls
+const apiClient = axios.create({
+  baseURL: 'http://backend:8080/api',
+  timeout: 5000,
+});
 
 const server = Fastify({ logger: true });
-
-// Prisma client pointing to backend/prisma/schema.prisma DB
-const prisma = new PrismaClient();
 
 // Register multipart plugin
 server.register(fastifyMultipart);
@@ -276,11 +279,15 @@ server.post('/api/auth/register', async (request, reply) => {
   }
 
   // Check if email or username already exists
-  const exists = await prisma.user.findFirst({
-    where: {
-      OR: [{ email }, { username }],
-    },
-  });
+  let exists;
+  try {
+    const response = await apiClient.get('/user', { params: { email: email, username: username } });
+
+    exists = response.data; // returns array -> exists[0] would be user -> check backend/api/docs
+  } catch (err) {
+    //errorhandling -> returns error -> backend:8080/api/docs
+  }
+
   if (exists) {
     return reply.status(409).send({ error: 'Email or username already in use.' });
   }
@@ -295,16 +302,14 @@ server.post('/api/auth/register', async (request, reply) => {
   }
 
   // Create user
+  let user;
   try {
-    await prisma.user.create({
-      data: {
-        email,
-        username,
-        password_hash,
-        // Optional alias if you add it to schema
-        ...(alias && { alias }),
-      },
+    const response = await apiClient.post('/user', {
+      email,
+      username,
+      //etc -> requirements in docs we need to append everything to what is needed
     });
+    user = response.data; // returns created user object
   } catch (err) {
     server.log.error(err);
     return reply.status(500).send({ error: 'Failed to create user.' });
@@ -321,7 +326,14 @@ server.post('/api/auth/login', async (request, reply) => {
     return reply.status(400).send({ error: 'Email and password are required.' });
   }
 
-  const user = await prisma.user.findUnique({ where: { email } });
+  let user;
+  try {
+    const reposense = await apiClient.get('/user', { params: { email: email } });
+    user = reposense.data[0]; // returns array -> user is first element
+  } catch (err) {
+    //handle error -> returns error -> backend:8080/api/docs
+  }
+
   if (!user) {
     return reply.status(401).send({ error: 'Invalid credentials.' });
   }
@@ -354,8 +366,9 @@ server.get('/api/auth/me', { preHandler: authMiddleware }, async (request) => {
 
 // Stats endpoint
 server.get('/api/auth/stats', async () => {
-  const count = await prisma.user.count();
-  return { userCount: count };
+  const response = await apiClient.get('/user/count');
+  //i need to add this route still but will do it soon :)
+  return { userCount: response.data };
 });
 
 // Google OAuth callback
@@ -372,16 +385,27 @@ server.get('/api/auth/google/callback', async (request, reply) => {
   });
   const profile = (await userInfoRes.json()) as GoogleProfile;
 
-  let user = await prisma.user.findUnique({ where: { email: profile.email } });
+  let user;
+  try {
+    const reposense = await apiClient.get('/user', { params: { email: profile.email } });
+    user = reposense.data[0]; // returns array -> user is first element
+  } catch (err) {
+    //handle error -> returns error -> backend:8080/api/docs
+  }
 
   if (!user) {
-    user = await prisma.user.create({
-      data: {
-        email: profile.email,
-        username: profile.name,
-        password_hash: '', // no password for OAuth users
-      },
-    });
+    let user;
+    try {
+      const response = await apiClient.post('/user', {
+        email,
+        username,
+        //etc -> requirements in docs we need to append everything to what is needed
+      });
+      user = response.data; // returns created user object
+    } catch (err) {
+      server.log.error(err);
+      return reply.status(500).send({ error: 'Failed to create user.' });
+    }
   }
 
   const appToken = generateJWT({
@@ -396,6 +420,7 @@ server.get('/api/auth/google/callback', async (request, reply) => {
 });
 
 // Pass prisma to route modules
+// same here replace prisma calls with backend api
 profileRoutes(server, prisma);
 avatarRoutes(server, prisma);
 friendsRoutes(server, prisma);
