@@ -4,22 +4,25 @@ import { FastifyInstance } from 'fastify';
 import { healthRefSchemas } from '../modules/health/health.schema';
 import { responseRefSchemas } from '../modules/response/response.schema';
 import { userRefSchemas } from '../modules/user/user.schema';
-import { matchRefSchemas } from '../modules/match/match.schema';
+import { gameRefSchemas } from '../modules/game/game.schema';
+import { resultRefSchemas } from '../modules/result/result.schema';
+import { friendRefSchemas } from '../modules/friend/friend.schema';
 
-const schemaPlugin = async ( server: FastifyInstance ) => {
-
+const schemaPlugin = async (server: FastifyInstance) => {
   const schemaList = [
-    ...Object.values( healthRefSchemas ),
-    ...Object.values( responseRefSchemas ),
-    ...Object.values( userRefSchemas ),
-    ...Object.values( matchRefSchemas ),
-  ]
+    ...Object.values(healthRefSchemas),
+    ...Object.values(responseRefSchemas),
+    ...Object.values(userRefSchemas),
+    ...Object.values(gameRefSchemas),
+    ...Object.values(resultRefSchemas),
+    ...Object.values(friendRefSchemas),
+  ];
 
-  for( const schema of schemaList ) {
-//    console.log( `Registering schema: ${schema.$id}` );
-//    console.log( schema );
-      server.addSchema( schema );
+  for (const schema of schemaList) {
+    //    console.log( `Registering schema: ${schema.$id}` );
+    //    console.log( schema );
+    server.addSchema(schema);
   }
-}
+};
 
-export default fp( schemaPlugin );
+export default fp(schemaPlugin);
