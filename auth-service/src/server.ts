@@ -224,7 +224,7 @@ import fastifyOauth2 from '@fastify/oauth2';
 import axios from 'axios';
 
 //axios Apiclient for backend API calls
-const apiClient = axios.create({
+const apiClientBackend = axios.create({
   baseURL: 'http://backend:8080/api',
   timeout: 5000,
 });
@@ -281,7 +281,9 @@ server.post('/api/auth/register', async (request, reply) => {
   // Check if email or username already exists
   let exists;
   try {
-    const response = await apiClient.get('/user', { params: { email: email, username: username } });
+    const response = await apiClientBackend.get('/user', {
+      params: { email: email, username: username },
+    });
 
     exists = response.data; // returns array -> exists[0] would be user -> check backend/api/docs
   } catch (err) {
@@ -304,7 +306,7 @@ server.post('/api/auth/register', async (request, reply) => {
   // Create user
   let user;
   try {
-    const response = await apiClient.post('/user', {
+    const response = await apiClientBackend.post('/user', {
       email,
       username,
       //etc -> requirements in docs we need to append everything to what is needed
@@ -328,7 +330,7 @@ server.post('/api/auth/login', async (request, reply) => {
 
   let user;
   try {
-    const reposense = await apiClient.get('/user', { params: { email: email } });
+    const reposense = await apiClientBackend.get('/user', { params: { email: email } });
     user = reposense.data[0]; // returns array -> user is first element
   } catch (err) {
     //handle error -> returns error -> backend:8080/api/docs
@@ -366,7 +368,7 @@ server.get('/api/auth/me', { preHandler: authMiddleware }, async (request) => {
 
 // Stats endpoint
 server.get('/api/auth/stats', async () => {
-  const response = await apiClient.get('/user/count');
+  const response = await apiClientBackend.get('/user/count');
   //i need to add this route still but will do it soon :)
   return { userCount: response.data };
 });
@@ -387,7 +389,7 @@ server.get('/api/auth/google/callback', async (request, reply) => {
 
   let user;
   try {
-    const reposense = await apiClient.get('/user', { params: { email: profile.email } });
+    const reposense = await apiClientBackend.get('/user', { params: { email: profile.email } });
     user = reposense.data[0]; // returns array -> user is first element
   } catch (err) {
     //handle error -> returns error -> backend:8080/api/docs
@@ -396,7 +398,7 @@ server.get('/api/auth/google/callback', async (request, reply) => {
   if (!user) {
     let user;
     try {
-      const response = await apiClient.post('/user', {
+      const response = await apiClientBackend.post('/user', {
         email,
         username,
         //etc -> requirements in docs we need to append everything to what is needed
@@ -421,10 +423,10 @@ server.get('/api/auth/google/callback', async (request, reply) => {
 
 // Pass prisma to route modules
 // same here replace prisma calls with backend api
-profileRoutes(server, prisma);
-avatarRoutes(server, prisma);
-friendsRoutes(server, prisma);
-statsRoutes(server, prisma);
+profileRoutes(server);
+avatarRoutes(server);
+friendsRoutes(server);
+statsRoutes(server);
 
 const start = async () => {
   try {
