@@ -42,6 +42,12 @@ export const userQueryBase = userBase
   .partial();
 const userQuery = userQueryBase.meta({ $id: 'userQuery' });
 
+const userCount = z
+  .object({
+    count: z.number(),
+  })
+  .meta({ $id: 'userCount' });
+
 //define schemas for responses
 export const userResponse = userBase.meta({ $id: 'userResponse' });
 export const userResponseArray = z.array(userBase).meta({ $id: 'userResponseArray' });
@@ -50,6 +56,7 @@ export const userSchemas = [
   userCreate,
   userUpdate,
   userId,
+  userCount,
   userQuery,
   userResponse,
   userResponseArray,

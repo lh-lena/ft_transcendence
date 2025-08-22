@@ -52,4 +52,9 @@ export const userService = {
     const ret = await userModel.deleteOne(id);
     if (!ret) throw new NotFoundError(`user with ${id} not found`);
   },
+
+  async getCount(): Promise<number> {
+    const ret = await userModel.findAll();
+    return ret.length;
+  },
 };
