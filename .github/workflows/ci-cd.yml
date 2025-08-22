@@ -59,7 +59,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y docker-compose
-          
+
       - name: Create SSL certificates for nginx
         run: |
           mkdir -p nginx/ssl
@@ -122,8 +122,11 @@ jobs:
       
       - name: Verify single command startup
         run: |
-          # Start services without monitoring profile
-          docker-compose -f docker-compose.yml -f docker-compose.ci.yml up -d
+          # Start all services except nginx first
+          docker-compose -f docker-compose.yml -f docker-compose.ci.yml up -d backend frontend realtime auth-service
+          sleep 15  # Wait for services to start
+          # Now start nginx after other services are ready
+          docker-compose -f docker-compose.yml -f docker-compose.ci.yml up -d nginx
           
           echo "Waiting for containers to initialize..."
           sleep 20
@@ -270,23 +273,22 @@ jobs:
             -out nginx/ssl/selfsigned.crt \
             -subj "/C=US/ST=State/L=City/O=Organization/CN=localhost"
       
-      - name: Create CI override
+      - name: Create CI override file
         run: |
           cat > docker-compose.ci.yml << 'EOF'
           version: '3.8'
+          
           services:
-            nginx:
-              depends_on:
-                backend:
-                  condition: service_healthy
-                frontend:
-                  condition: service_healthy
+            # Disable monitoring services only
             prometheus:
-              profiles: [monitoring]
+              profiles:
+                - monitoring
             grafana:
-              profiles: [monitoring]
+              profiles:
+                - monitoring
             nginx-exporter:
-              profiles: [monitoring]
+              profiles:
+                - monitoring
           EOF
       
       - name: Make wait-for-it.sh executable
