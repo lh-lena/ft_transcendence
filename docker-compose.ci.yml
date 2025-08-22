@@ -1,49 +1,17 @@
-
+version: '3.8'
 services:
+  # Remove health check dependencies from nginx
   nginx:
     depends_on:
-      backend:
-        condition: service_healthy
-      frontend:
-        condition: service_healthy
-      realtime:
-        condition: service_started
-      auth-service:
-        condition: service_started
-    healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
-
-  # health check for frontend
-  frontend:
-    healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-      start_period: 40s
-
-  # health check for backend
-  backend:
-    healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/api/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-      start_period: 30s
-
-  # disable monitoring services for CI
+      - backend
+      - frontend
+      - realtime
+      - auth-service
+  
+  # Disable monitoring
   prometheus:
-    profiles:
-      - monitoring
-
+    profiles: [monitoring]
   grafana:
-    profiles:
-      - monitoring
-
+    profiles: [monitoring]
   nginx-exporter:
-    profiles:
-      - monitoring
+    profiles: [monitoring]

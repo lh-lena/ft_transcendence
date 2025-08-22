@@ -54,158 +54,93 @@ jobs:
     needs: lint-format
     steps:
       - uses: actions/checkout@v3
-      
       - name: Install Docker Compose
         run: |
           sudo apt-get update
           sudo apt-get install -y docker-compose
-
-      - name: Create SSL certificates for nginx
-        run: |
-          mkdir -p nginx/ssl
-          openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
-            -keyout nginx/ssl/selfsigned.key \
-            -out nginx/ssl/selfsigned.crt \
-            -subj "/C=US/ST=State/L=City/O=Organization/CN=localhost"
-          
-          # Verify certificates were created
-          ls -la nginx/ssl/
-          echo "SSL certificates created successfully"     
-      - name: Create CI override file
-        run: |
-          cat > docker-compose.ci.yml << 'EOF'
-          version: '3.8'
-          
-          services:
-            nginx:
-              depends_on:
-                backend:
-                  condition: service_healthy
-                frontend:
-                  condition: service_healthy
-                realtime:
-                  condition: service_started
-                auth-service:
-                  condition: service_started
-            
-            frontend:
-              healthcheck:
-                test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000"]
-                interval: 5s
-                timeout: 5s
-                retries: 20
-                start_period: 40s
-            
-            backend:
-              healthcheck:
-                test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/api/health"]
-                interval: 5s
-                timeout: 5s
-                retries: 20
-                start_period: 30s
-            
-            # Disable monitoring services
-            prometheus:
-              profiles:
-                - monitoring
-            grafana:
-              profiles:
-                - monitoring
-            nginx-exporter:
-              profiles:
-                - monitoring
-          EOF
       
-      - name: Build all services (excluding monitoring)
-        run: |
-          docker-compose -f docker-compose.yml -f docker-compose.ci.yml build
+      - name: Build all services
+        run: docker-compose build
       
       - name: Verify single command startup
         run: |
-          # Start all services except nginx first
-          docker-compose -f docker-compose.yml -f docker-compose.ci.yml up -d backend frontend realtime auth-service
-          sleep 15  # Wait for services to start
-          # Now start nginx after other services are ready
-          docker-compose -f docker-compose.yml -f docker-compose.ci.yml up -d nginx
-          
+          docker-compose up -d
           echo "Waiting for containers to initialize..."
-          sleep 20
+          sleep 20  # Give more time
           
           echo "=== Container Status ==="
           docker-compose ps
           
-          # Wait for frontend with better error handling
+          echo "=== Frontend Container Logs ==="
+          docker logs ft_transcendence_frontend || true
+          
+          # Try different approaches to check frontend
+          echo "=== Checking frontend connectivity ==="
+          
+          # First check if container is running
+          if docker ps | grep -q ft_transcendence_frontend; then
+            echo "Frontend container is running"
+            
+            # Check what's listening inside the container
+            docker exec ft_transcendence_frontend sh -c "netstat -tuln 2>/dev/null || ss -tuln 2>/dev/null || echo 'No netstat/ss available'" || true
+            
+            # Try to curl from inside the container
+            docker exec ft_transcendence_frontend sh -c "curl -f http://localhost:3000 || wget -O- http://localhost:3000" || true
+          else
+            echo "Frontend container is not running!"
+            exit 1
+          fi
+          
+          # Extended wait with more attempts
           echo "Waiting for frontend to be ready..."
           for i in {1..60}; do
-            if docker-compose exec -T frontend wget --quiet --tries=1 --spider http://localhost:3000; then
+            if curl -f http://localhost:3000 2>/dev/null; then
               echo "Frontend is ready!"
               break
             fi
             echo "Attempt $i/60: Frontend not ready yet..."
             if [ $i -eq 30 ]; then
               echo "=== Frontend logs at 30 seconds ==="
-              docker logs ft_transcendence_frontend --tail=20 || true
+              docker logs ft_transcendence_frontend || true
             fi
             sleep 2
           done
           
-          # Check backend
-          echo "Checking backend..."
-          for i in {1..30}; do
-            if curl -f http://localhost:8080/api/health 2>/dev/null; then
-              echo "Backend is ready!"
-              break
-            fi
-            sleep 2
-          done
-          
-          # Check auth service
-          echo "Checking auth service..."
-          for i in {1..30}; do
-            if curl -f http://localhost:8082/api/auth/health 2>/dev/null; then
-              echo "Auth service is ready!"
-              break
-            fi
-            sleep 2
-          done
-          
-      - name: Health checks
-        run: |
-          # Frontend through nginx (the actual issue)
-          for i in {1..10}; do
-            if curl -f http://localhost 2>/dev/null; then
-              echo "Nginx -> Frontend proxy working!"
-              break
-            fi
-            echo "Attempt $i/10: Nginx proxy not ready..."
-            sleep 3
-          done
-          
-          # Final verification
-          curl -f http://localhost || {
-            echo "=== Nginx Error - Debugging ==="
-            docker logs ft_transcendence_nginx --tail=20
-            echo "=== Frontend Status ==="
-            docker logs ft_transcendence_frontend --tail=20
+          # Final check
+          curl -f http://localhost:3000 || {
+            echo "=== FINAL Frontend logs ==="
+            docker logs --tail=50 ft_transcendence_frontend
             exit 1
           }
           
+          # Continue with other checks...
+          for i in {1..30}; do
+            curl -f http://localhost:8080/api/health && break || sleep 2
+          done
+          
+          for i in {1..30}; do
+            curl -f http://localhost:8082/api/auth/health && break || sleep 2
+          done
+      - name: Health checks
+        run: |
+          # Frontend
+          curl -f http://localhost:3000 || exit 1
           # Backend
           curl -f http://localhost:8080/api/health || echo "Backend health check endpoint needed"
-          
           # Auth
           curl -f http://localhost:8082/api/auth/health || echo "Auth health check endpoint needed"
+          # WebSocket test would go here
           
       - name: Check HTTPS/WSS configuration
         run: |
           # Verify nginx SSL config
           docker-compose exec -T nginx nginx -t
           # Check if HTTPS redirect works
-          curl -I http://localhost | grep "301 Moved Permanently" || true
+          curl -I http://localhost | grep "301 Moved Permanently"
           
       - name: Stop services
         if: always()
-        run: docker-compose -f docker-compose.yml -f docker-compose.ci.yml down
+        run: docker-compose down
 
   #3: Security Scanning
   security-scan:
@@ -273,92 +208,66 @@ jobs:
             -out nginx/ssl/selfsigned.crt \
             -subj "/C=US/ST=State/L=City/O=Organization/CN=localhost"
       
-      - name: Create CI override file
-        run: |
-          cat > docker-compose.ci.yml << 'EOF'
-          version: '3.8'
-          
-          services:
-            # Disable monitoring services only
-            prometheus:
-              profiles:
-                - monitoring
-            grafana:
-              profiles:
-                - monitoring
-            nginx-exporter:
-              profiles:
-                - monitoring
-          EOF
-      
       - name: Make wait-for-it.sh executable
-        run: chmod +x ./scripts/wait-for-it.sh || true
+        run: chmod +x ./scripts/wait-for-it.sh
       
       - name: Start services with docker-compose
         run: |
-          docker-compose -f docker-compose.yml -f docker-compose.ci.yml up -d
-          
-          # Give extra time for proper initialization
-          echo "Waiting for all services to stabilize..."
-          sleep 30
+          docker-compose up -d
           
       - name: Wait for services to be healthy
         run: |
           echo "Waiting for services to be healthy..."
+          # Wait for backend
+          ./scripts/wait-for-it.sh localhost:8080 -t 120
+          # Wait for frontend
+          ./scripts/wait-for-it.sh localhost:3000 -t 120
+          # Wait for auth service
+          ./scripts/wait-for-it.sh localhost:8082 -t 120
+          # Wait for nginx to be ready (HTTPS)
+          ./scripts/wait-for-it.sh localhost:443 -t 120
           
-          # Direct service checks first
-          for i in {1..60}; do
-            if curl -f http://localhost:3000 2>/dev/null; then
-              echo "Frontend is accessible!"
-              break
-            fi
-            sleep 2
-          done
-          
-          for i in {1..60}; do
-            if curl -f http://localhost:8080/api/health 2>/dev/null; then
-              echo "Backend is accessible!"
-              break
-            fi
-            sleep 2
-          done
-          
-          # Now check nginx proxy
-          for i in {1..30}; do
-            if curl -f http://localhost 2>/dev/null; then
-              echo "Nginx proxy is working!"
-              break
-            fi
-            sleep 2
-          done
+          # Additional wait for services to stabilize
+          echo "Waiting for services to stabilize..."
+          sleep 10
           
           # Check if all containers are running
           docker-compose ps
+          
+      - name: Check service health
+        run: |
+          # Check if services are responding directly
+          curl -f http://localhost:3000 || echo "Frontend direct access check"
+          curl -f http://localhost:8080/api/health || echo "Backend direct access check"
+          curl -f http://localhost:8082/api/auth/health || echo "Auth direct access check"
           
       - name: Run integration tests through nginx
         run: |
           # Test frontend serves through nginx
           curl -f https://localhost --insecure -v || { 
             echo "Frontend test failed. Checking nginx logs..."
-            docker-compose logs nginx --tail=30
+            docker-compose logs nginx
             exit 1
           }
           
           # Test API endpoints through nginx
           curl -f https://localhost/api/health --insecure -v || {
             echo "API test failed. Checking backend logs..."
-            docker-compose logs backend --tail=30
-            docker-compose logs nginx --tail=30
+            docker-compose logs backend
+            docker-compose logs nginx
             exit 1
           }
           
           # Test Auth endpoints through nginx
           curl -f https://localhost/auth/api/auth/health --insecure -v || {
             echo "Auth test failed. Checking auth-service logs..."
-            docker-compose logs auth-service --tail=30
-            docker-compose logs nginx --tail=30
+            docker-compose logs auth-service
+            docker-compose logs nginx
             exit 1
           }
+          
+          # Test WebSocket upgrade
+          curl -f https://localhost/ws/ --insecure -H "Upgrade: websocket" -H "Connection: Upgrade" -v || echo "WebSocket test (expected to fail without full handshake)"
           
       - name: Debug information on failure
         if: failure()
@@ -366,17 +275,20 @@ jobs:
           echo "=== Docker Compose Status ==="
           docker-compose ps
           echo "=== Nginx Logs ==="
-          docker-compose logs nginx --tail=30
+          docker-compose logs nginx
           echo "=== Backend Logs ==="
-          docker-compose logs backend --tail=30
+          docker-compose logs backend
           echo "=== Frontend Logs ==="
-          docker-compose logs frontend --tail=30
+          docker-compose logs frontend
           echo "=== Auth Service Logs ==="
-          docker-compose logs auth-service --tail=30
+          docker-compose logs auth-service
+          echo "=== Network Information ==="
+          docker network ls
+          docker network inspect $(docker-compose ps -q nginx) || true
           
       - name: Cleanup
         if: always()
-        run: docker-compose -f docker-compose.yml -f docker-compose.ci.yml down -v
+        run: docker-compose down -v
 
   deploy:
     runs-on: ubuntu-latest
