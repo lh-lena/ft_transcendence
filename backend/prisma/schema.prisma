@@ -14,12 +14,14 @@ datasource db {
 }
 
 model user {
-  id              Int    @id @default( autoincrement() )
-  email           String @unique
-  username        String @unique
+  id              Int      @id @default(autoincrement())
+  email           String   @unique
+  username        String   @unique
+  alias           String?  // optional
+  avatar          String?  // optional
   password_hash   String
-  is_2fa_enabled  Boolean @default(false)
+  is_2fa_enabled  Boolean  @default(false)
   twofa_secret    String?
-  created_at      DateTime @default( now() )
+  created_at      DateTime @default(now())
   updated_at      DateTime @updatedAt
-  }
+}

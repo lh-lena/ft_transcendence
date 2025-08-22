@@ -71,6 +71,8 @@ services:
     volumes:
       - ./auth-service:/app
       - /app/node_modules
+      - ../backend/prisma:/app/prisma
+
     networks:
       - pong-network
 
