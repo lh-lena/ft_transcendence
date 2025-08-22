@@ -233,7 +233,19 @@ jobs:
           
           # Check if all containers are running
           docker-compose ps
+      - name: Debug frontend status
+        run: |
+          echo "=== Check if frontend is actually listening ==="
+          docker exec ft_transcendence_frontend sh -c "netstat -tuln | grep 3000 || ss -tuln | grep 3000" || echo "Port 3000 not listening"
           
+          echo "=== Frontend container logs ==="
+          docker logs ft_transcendence_frontend --tail=50
+          
+          echo "=== Test frontend directly (bypass nginx) ==="
+          curl -f http://localhost:3000 || echo "Frontend not responding on 3000"
+          
+          echo "=== Check container health ==="
+          docker ps | grep frontend          
       - name: Check service health
         run: |
           # Check if services are responding directly
