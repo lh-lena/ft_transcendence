@@ -62,6 +62,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 10
+      start_period: 30s
 
   realtime:
     build: ./realtime
@@ -73,6 +74,7 @@ services:
       - /app/node_modules
     networks:
       - pong-network
+    start_period: 30s
 
   auth-service:
     build: ./auth-service
@@ -84,6 +86,7 @@ services:
       - /app/node_modules
     networks:
       - pong-network
+    start_period: 30s
 
   prometheus:
     image: prom/prometheus:latest
