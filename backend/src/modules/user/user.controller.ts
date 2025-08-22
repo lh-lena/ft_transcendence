@@ -33,4 +33,11 @@ export const userController = {
     await userService.deleteOne(id);
     return { success: true };
   },
+
+  //uniqe
+  async getCount(): Promise<{ count: number }> {
+    const ret = await userService.getCount();
+
+    return { count: ret };
+  },
 };
