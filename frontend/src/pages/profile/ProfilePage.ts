@@ -4,7 +4,6 @@ import { Loading } from "../../components/loading";
 import { MenuBar } from "../../components/menuBar";
 import { CANVAS_DEFAULTS } from "../../types";
 import { Window } from "../../components/window";
-import { Chart } from "chart.js";
 
 // TODO-BACKEND
 import { userStore } from "../../constants/backend";

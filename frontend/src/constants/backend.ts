@@ -36,34 +36,42 @@ export const sampleFriends = [
   {
     username: "alex",
     ...generateProfilePrint(2),
+    status: "online",
   },
   {
     username: "sam",
     ...generateProfilePrint(2),
+    status: "online",
   },
   {
     username: "jamie",
     ...generateProfilePrint(2),
+    status: "online",
   },
   {
     username: "taylor",
     ...generateProfilePrint(2),
+    status: "online",
   },
   {
     username: "jordan",
     ...generateProfilePrint(2),
+    status: "offline",
   },
   {
     username: "casey",
     ...generateProfilePrint(2),
+    status: "offline",
   },
   {
     username: "riley",
     ...generateProfilePrint(2),
+    status: "offline",
   },
   {
     username: "drew",
     ...generateProfilePrint(2),
+    status: "offline",
   },
 ];
 

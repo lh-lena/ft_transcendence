@@ -18,7 +18,7 @@ export class RegisterPage {
     this.pongButton.mount(this.main);
 
     const form = document.createElement("form");
-    form.className = "flex flex-col gap-3 w-64";
+    form.className = "flex flex-col gap-3 w-48";
     this.main.appendChild(form);
 
     // name input

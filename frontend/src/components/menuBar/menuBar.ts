@@ -29,7 +29,7 @@ export class MenuBar {
     },
     { label: "profile", href: "/profile" },
     { label: "settings", href: "/settings" },
-    { label: "chat", href: "/chat" },
+    { label: "friends", href: "/chat" },
     { label: "leaderboard", href: "/leaderboard" },
     { label: "logout", href: "/logout" },
   ];

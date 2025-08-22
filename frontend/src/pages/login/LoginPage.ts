@@ -18,7 +18,7 @@ export class LoginPage {
     this.pongButton.mount(this.main);
 
     const form = document.createElement("form");
-    form.className = "flex flex-col gap-3 w-64";
+    form.className = "flex flex-col gap-3 w-48";
     this.main.appendChild(form);
 
     // email input
@@ -37,12 +37,7 @@ export class LoginPage {
     inputPassword.style.paddingLeft = "0.5em";
     form.appendChild(inputPassword);
 
-    const loginMenu = [
-      // obv will be changing this to /loginAuth for logins
-      { name: "log in", link: "/profile" },
-      // slash slash back is a quick and sweet little previous page match in menu
-      // { name: 'back', link: '//back' }
-    ];
+    const loginMenu = [{ name: "log in", link: "/profile" }];
     this.menu = new Menu(this.router, loginMenu);
     this.menu.mount(this.main);
   }
