@@ -1,38 +1,39 @@
 import 'fastify';
 import type { WebSocketServer, WebSocket } from 'ws';
 import type { IncomingMessage } from 'http';
+import type { EventEmitter } from 'events';
+import type {
+  createWSService,
+  createRespondService,
+} from '../../modules/websocket/services/ws.service.js';
+import type { createConnectionService } from '../../modules/websocket/services/connection.service.js';
+import type { createGameService } from '../../modules/game/services/game.service.js';
+import type {
+  createGameSessionService,
+  createGameDataService,
+} from '../../modules/game/services/game-session.service.js';
+import type { createGameStateService } from '../../modules/game/services/game-state.service.js';
+import type { createChatService } from '../../modules/chat/services/chat.service.js';
+import type { authService } from '../../modules/auth/services/auth.service.js';
+import type { createAIService } from '../../modules/ai/ai.js';
+import type { EnvironmentConfig } from '../../config/config.js';
+import type { NETWORK_QUALITY } from '../websocket/types/network.types.js';
 
 declare module 'fastify' {
   interface FastifyInstance {
-    eventBus: import('event').EventEmitter;
-    wsService: ReturnType<
-      typeof import('../services/ws.service').createWSService
-    >;
-    respond: ReturnType<
-      typeof import('../services/ws.service').createRespondService
-    >;
-    connectionService: ReturnType<
-      typeof import('../services/connection.service').connectionService
-    >;
-    reconnectionService: ReturnType<
-      typeof import('../services/reconnection.service').reconnectionService
-    >;
-    gameService: ReturnType<
-      typeof import('../services/game.service').createGameService
-    >;
-    gameSessionService: ReturnType<
-      typeof import('../services/game-session.service').createGameSessionService
-    >;
-    gameDataService: ReturnType<
-      typeof import('../services/game-session.service').createGameDataService
-    >;
-    gameStateService: ReturnType<
-      typeof import('../services/game-state.service').createGameStateService
-    >;
-
-    auth: ReturnType<typeof import('../services/auth.service').authService>;
+    eventBus: EventEmitter;
+    wsService: ReturnType<typeof createWSService>;
+    connectionService: ReturnType<typeof createConnectionService>;
+    respond: ReturnType<typeof createRespondService>;
+    gameService: ReturnType<typeof createGameService>;
+    gameSessionService: ReturnType<typeof createGameSessionService>;
+    gameDataService: ReturnType<typeof createGameDataService>;
+    gameStateService: ReturnType<typeof createGameStateService>;
+    chatService: ReturnType<typeof createChatService>;
+    auth: ReturnType<typeof authService>;
+    aiService: ReturnType<typeof createAIService>;
     wss: WebSocketServer;
-    config: import('../config/server.config').EnvironmentConfig;
+    config: EnvironmentConfig;
   }
 
   type WSConnection = WebSocket & {
@@ -45,8 +46,7 @@ declare module 'fastify' {
     lastPing: number;
     lastPong: number;
     authenticated: boolean;
-    isReconnecting: boolean;
-    networkQuality: import('./network.types.js').NETWORK_QUALITY;
+    networkQuality: NETWORK_QUALITY;
     latency: number;
     missedPings: number;
     heartbeatTimer?: NodeJS.Timeout;

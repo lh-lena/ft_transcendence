@@ -1,7 +1,7 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
-import { metricsService } from '../services/metrics.service.js';
+import { metricsService } from './metrics.service.js';
 
-export async function healthController(server: FastifyInstance) {
+export async function healthController(server: FastifyInstance): Promise<void> {
   // health check endpoint
   server.get('/health', async (request: FastifyRequest, reply: FastifyReply) => {
     try {

@@ -1,8 +1,8 @@
 import fp from 'fastify-plugin';
-import { FastifyInstance, FastifyPluginAsync } from 'fastify';
+import type { FastifyInstance, FastifyPluginCallback } from 'fastify';
 import { serverConfig } from '../config/server.config.js';
 
-const plugin: FastifyPluginAsync = async (app: FastifyInstance) => {
+const plugin: FastifyPluginCallback = (app: FastifyInstance) => {
   app.decorate('config', serverConfig);
 };
 

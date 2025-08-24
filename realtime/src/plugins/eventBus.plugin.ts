@@ -1,8 +1,8 @@
 import fp from 'fastify-plugin';
-import { FastifyPluginAsync } from 'fastify';
+import type { FastifyPluginCallback, FastifyInstance } from 'fastify';
 import { EventEmitter } from 'events';
 
-const plugin: FastifyPluginAsync = async (app) => {
+const plugin: FastifyPluginCallback = (app: FastifyInstance) => {
   const eventBus = new EventEmitter();
   eventBus.setMaxListeners(100);
 
