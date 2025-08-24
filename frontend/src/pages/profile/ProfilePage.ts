@@ -1,4 +1,4 @@
-import { Router } from "../../router";
+import { ServiceContainer, Router } from "../../services";
 import { ProfileAvatar } from "../../components/profileAvatar";
 import { Loading } from "../../components/loading";
 import { MenuBar } from "../../components/menuBar";
@@ -10,10 +10,16 @@ import { userStore } from "../../constants/backend";
 
 export class ProfilePage {
   private container: HTMLElement;
+  private serviceContainer: ServiceContainer;
+  private router: Router;
   private loadingScreen: Loading;
   private menuBar: MenuBar;
 
-  constructor(private router: Router) {
+  constructor(serviceContainer: ServiceContainer) {
+    // router / services container
+    this.serviceContainer = serviceContainer;
+    this.router = this.serviceContainer.get<Router>("router");
+
     // Full page background
     this.container = document.createElement("div");
     this.container.className =
@@ -22,7 +28,7 @@ export class ProfilePage {
     // Window content
 
     // skips profile menuBar
-    this.menuBar = new MenuBar(router, "profile");
+    this.menuBar = new MenuBar(this.router, "profile");
     const menuBarElement = this.menuBar.render();
 
     const profilePic = new ProfileAvatar(

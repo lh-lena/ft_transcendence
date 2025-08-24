@@ -1,4 +1,4 @@
-import { Router } from "../../router";
+import { ServiceContainer, Router } from "../../services";
 import { CANVAS_DEFAULTS } from "../../types";
 import { Window } from "../../components/window";
 import { MenuBar } from "../../components/menuBar";
@@ -43,8 +43,14 @@ export class SettingsPage {
   private buttonRow: HTMLDivElement;
   private activeButton!: HTMLElement;
   private inputPasswordDiv!: HTMLDivElement;
+  private serviceContainer: ServiceContainer;
+  private router: Router;
 
-  constructor(private router: Router) {
+  constructor(serviceContainer: ServiceContainer) {
+    // router / services container
+    this.serviceContainer = serviceContainer;
+    this.router = this.serviceContainer.get<Router>("router");
+
     // Full page background
     this.main = document.createElement("div");
     this.main.className =
@@ -66,7 +72,7 @@ export class SettingsPage {
       this.buttonRow.appendChild(button);
     });
 
-    const menuBar = new MenuBar(router, "settings");
+    const menuBar = new MenuBar(this.router, "settings");
 
     // settings main
     this.settingsPanel = document.createElement("div");
@@ -155,8 +161,9 @@ export class SettingsPage {
       // new password stuff
       this.inputPasswordDiv = document.createElement("div");
       this.inputPasswordDiv.className = "flex h-full pt-4 flex-col gap-5 w-36";
-      const inputPasswordTitle = document.createElement("h1");
+      const inputPasswordTitle = document.createElement("p");
       inputPasswordTitle.textContent = "new password:";
+      inputPasswordTitle.className = "font-bold text-center";
       this.inputPasswordDiv.appendChild(inputPasswordTitle);
       const inputPasswordFirst = document.createElement("input");
       inputPasswordFirst.type = "password";

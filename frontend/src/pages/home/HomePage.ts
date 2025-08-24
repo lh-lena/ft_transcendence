@@ -1,15 +1,19 @@
 import { Menu } from "../../components/menu";
-import { Router } from "../../router";
+import { ServiceContainer, Router } from "../../services";
 import { PongButton } from "../../components/pongButton";
 
 export class HomePage {
   private main: HTMLElement;
   private menu: Menu;
   private pongButton: PongButton;
+  private serviceContainer: ServiceContainer;
   private router: Router;
 
-  constructor(router: Router) {
-    this.router = router;
+  constructor(serviceContainer: ServiceContainer) {
+    // router / services container
+    this.serviceContainer = serviceContainer;
+    this.router = this.serviceContainer.get<Router>("router");
+
     this.main = document.createElement("div");
     this.main.className =
       "flex flex-col gap-5 w-full min-h-full justify-center items-center bg-[#0400FF]";

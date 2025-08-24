@@ -9,7 +9,7 @@ class ApiService {
   constructor() {
     // Add request interceptor for auth tokens
     this.api.interceptors.request.use((config) => {
-      const token = localStorage.getItem('authToken');
+      const token = localStorage.getItem("authToken");
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
       }
@@ -19,7 +19,7 @@ class ApiService {
 
   // User-related API calls
   async getCurrentUser() {
-    const response = await this.api.get('/users/me');
+    const response = await this.api.get("/users/me");
     return response.data;
   }
 
@@ -30,7 +30,7 @@ class ApiService {
 
   // Game-related API calls
   async createGame(gameConfig: any) {
-    const response = await this.api.post('/games', gameConfig);
+    const response = await this.api.post("/games", gameConfig);
     return response.data;
   }
 

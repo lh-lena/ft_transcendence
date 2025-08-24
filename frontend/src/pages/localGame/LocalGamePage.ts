@@ -1,4 +1,4 @@
-import { Router } from "../../router";
+import { ServiceContainer, Router } from "../../services";
 import { PongGame } from "../../game";
 import { Countdown } from "../../components/countdown";
 import { GameState, GameStatus } from "../../types";
@@ -11,17 +11,20 @@ import { userStore, userStore2 } from "../../constants/backend";
 
 export class LocalGamePage {
   private element: HTMLElement;
+  private serviceContainer: ServiceContainer;
   private router: Router;
   private game: PongGame | null = null;
   private gameState: GameState;
   private countdown: Countdown;
-  // private spectatorBar!: SpectatorBar;
   private scoreBar!: ScoreBar;
   private menu: Menu | null = null;
   private gameContainer: HTMLElement | null = null;
 
-  constructor(router: Router) {
-    this.router = router;
+  constructor(serviceContainer: ServiceContainer) {
+    // router / services container
+    this.serviceContainer = serviceContainer;
+    this.router = this.serviceContainer.get<Router>("router");
+
     // for player A
 
     this.gameState = {

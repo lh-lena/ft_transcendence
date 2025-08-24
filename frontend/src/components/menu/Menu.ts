@@ -1,7 +1,7 @@
-import { Router } from "../../router";
+import { Router } from "../../services";
 
 export interface MenuItem {
-  name: string; // Button text
+  name: string; // button text
   link?: string; // optional URL link
   onClick?: () => void; // optional custom callback
   style?: string;

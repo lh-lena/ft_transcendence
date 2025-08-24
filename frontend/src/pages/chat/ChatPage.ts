@@ -1,4 +1,4 @@
-import { Router } from "../../router";
+import { ServiceContainer, Router } from "../../services";
 import { Window } from "../../components/window";
 import { CANVAS_DEFAULTS } from "../../types";
 import { MenuBar } from "../../components/menuBar";
@@ -11,6 +11,8 @@ import { ProfilePopUp } from "../../components/profilePopUp";
 import { sampleFriends } from "../../constants/backend";
 
 export class ChatPage {
+  private serviceContainer: ServiceContainer;
+  private router: Router;
   private container;
   private clickedContact!: HTMLDivElement;
   private bottomBar: HTMLDivElement;
@@ -24,13 +26,17 @@ export class ChatPage {
   private chatRow: HTMLDivElement;
   private profilePopUp: ProfilePopUp;
 
-  constructor(private router: Router) {
+  constructor(serviceContainer: ServiceContainer) {
+    // router / services container
+    this.serviceContainer = serviceContainer;
+    this.router = this.serviceContainer.get<Router>("router");
+
     this.container = document.createElement("div");
     this.container.className =
       "w-full min-h-screen flex flex-col items-center justify-center bg-brandBlue";
 
     // menu bar
-    const menuBar = new MenuBar(router, "friends").render();
+    const menuBar = new MenuBar(this.router, "friends").render();
 
     // main chat row
     this.chatRow = document.createElement("div");

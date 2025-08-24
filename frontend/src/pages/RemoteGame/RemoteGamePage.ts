@@ -1,27 +1,14 @@
-import { Router } from "../../router";
+import { ServiceContainer, Router, Websocket } from "../../services";
 import { PongGame } from "../../game";
 import { GameState, GameStatus } from "../../types";
 import { ScoreBar } from "../../components/scoreBar";
 import { Loading } from "../../components/loading";
 import { Menu } from "../../components/menu";
+import { WsServerBroadcast, Direction } from "../../types/websocket";
 
 // TODO-BACKEND switch out for backend data cached on merge
 import { userStore, userStore2 } from "../../constants/backend";
-
-//web socket
-import {
-  WsServerBroadcast,
-  ClientMessageInterface,
-  ServerMessageInterface,
-  WsClientMessage,
-  Direction,
-} from "../../types/websocket";
-
-import { websocketUrl } from "../../constants/websocket";
 import { ProfileAvatar } from "../../components/profileAvatar";
-
-// test consts for websocket dev
-const DEV_GAMEID = "test-game-1";
 
 export class VsPlayerGamePage {
   private main: HTMLElement;
@@ -30,16 +17,20 @@ export class VsPlayerGamePage {
   private scoreBar!: ScoreBar;
   private menuPauseDiv: HTMLDivElement | null = null;
   private gameContainer: HTMLElement | null = null;
-  private websocket: WebSocket | null = null;
   private loadingOverlay: Loading;
+  private serviceContainer: ServiceContainer;
   private router: Router;
   private pauseCountdown!: HTMLElement;
   private menuEndDiv!: HTMLDivElement;
   private endResultText!: HTMLElement;
-  // private spectatorBar!: SpectatorBar;
+  private ws: Websocket;
 
-  constructor(router: Router) {
-    this.router = router;
+  constructor(serviceContainer: ServiceContainer) {
+    // services
+    this.serviceContainer = serviceContainer;
+    this.router = this.serviceContainer.get<Router>("router");
+    this.ws = this.serviceContainer.get<Websocket>("websocket");
+
     this.gameState = {
       status: GameStatus.PLAYING,
       previousStatus: GameStatus.PLAYING,
@@ -64,13 +55,97 @@ export class VsPlayerGamePage {
     this.main.className =
       "sys-window flex flex-col gap-1 w-full min-h-full items-center justify-center bg-[#0400FF]";
 
+    // register web socket handlers
+    this.registerWebsocketHandlers();
+
     // grab data from backend
     // get web socket before countdown
     this.loadingOverlay = new Loading("connecting to server");
-    this.initializeWebSocket();
 
     this.loadingOverlay.changeText("waiting for opponent");
     this.main.appendChild(this.loadingOverlay.getElement());
+  }
+
+  private registerWebsocketHandlers(): void {
+    this.ws.onMessage("countdown_update", this.wsCountdownHandler);
+    this.ws.onMessage("notification", this.wsNotificationHandler);
+    this.ws.onMessage("game_update", this.wsGameUpdateHandler);
+    this.ws.onMessage("game_pause", this.wsGamePauseHandler);
+    this.ws.onMessage("game_ended", this.wsGameEndedHandler);
+  }
+
+  private wsCountdownHandler(
+    payload: WsServerBroadcast["countdown_update"],
+  ): void {
+    const message = payload.message;
+    if (
+      this.gameState.status == GameStatus.PAUSED ||
+      (this.gameState.status == GameStatus.PLAYING &&
+        this.gameState.pauseInitiatedByMe == true)
+    ) {
+      this.pauseCountdown.innerText = "game resumes in: " + message;
+      if (message == "GO!") this.pauseCountdown.innerText = message;
+    } else this.loadingOverlay.changeText(message);
+  }
+
+  private wsNotificationHandler(
+    payload: WsServerBroadcast["notification"],
+  ): void {
+    const message = payload.message;
+    if (message == "Game started!") {
+      this.loadingOverlay.hide();
+      // added from game resume for now
+      this.gameState.status = GameStatus.PLAYING;
+      this.gameState.pauseInitiatedByMe = false;
+      this.gameState.blockedPlayButton = false;
+      this.game?.showGamePieces();
+      this.hidePauseOverlay();
+      this.gameStateCallback();
+    }
+  }
+
+  private wsGameUpdateHandler(payload: WsServerBroadcast["game_update"]): void {
+    this.game?.updateGameStateFromServer(payload);
+    if (!this.gameState.activePaddle) {
+      this.gameState.activePaddle = payload.activePaddle;
+      // change paddle pos to paddleB if we aren't A
+      if (this.gameState.activePaddle != "paddleA") {
+        [this.gameState.playerA, this.gameState.playerB] = [
+          this.gameState.playerB,
+          this.gameState.playerA,
+        ];
+      }
+      this.initializeGame();
+    }
+    // score stuff
+    this.gameState.playerA.score = payload.paddleA.score;
+    this.gameState.playerB.score = payload.paddleB.score;
+    // this.gameStateCallback();
+    // need to refresh / change this when actual user ids exist
+    this.scoreBar.updateScores(
+      this.gameState.playerA.score,
+      this.gameState.playerB.score,
+    );
+  }
+
+  private wsGamePauseHandler(): void {
+    this.gameState.status = GameStatus.PAUSED;
+    this.gameStateCallback();
+  }
+
+  private wsGameEndedHandler(payload: WsServerBroadcast["game_ended"]): void {
+    this.gameState.status = GameStatus.GAME_OVER;
+    this.showEndGameOverlay();
+    // update score for end of game diff than during. TODO refresh on backend integration -> must use diff logic
+    this.gameState.playerA.score = payload.scorePlayer1;
+    this.gameState.playerB.score = payload.scorePlayer2;
+    // need to refresh / change this when actual user ids exist
+    this.scoreBar.updateScores(
+      this.gameState.playerA.score,
+      this.gameState.playerB.score,
+    );
+    // implement actual winning logic here based on winning user id. not score. this is only temporary for now (while backend isnt synced)
+    this.endResultText.innerText = `Winner: ${this.gameState.playerA.username}`;
   }
 
   private initializeGame(): void {
@@ -91,9 +166,6 @@ export class VsPlayerGamePage {
 
     this.main.appendChild(this.gameContainer);
     this.game.mount(this.gameContainer);
-    // spectator bar
-    // this.spectatorBar = new SpectatorBar();
-    // this.spectatorBar.mount(this.main);
   }
 
   private showPauseOverlay(): void {
@@ -141,32 +213,20 @@ export class VsPlayerGamePage {
     if (currentKey != this.gameState.previousKey) {
       // key event handling
       if (currentKey == "KEY_UP") {
-        const game_update: ClientMessageInterface<"game_update"> = {
-          event: "game_update",
-          payload: {
-            direction: Direction.UP,
-            sequence: this.gameState.wsPaddleSequence,
-          },
-        };
-        this.sendMessage(game_update);
+        this.ws.messageGameUpdateDirection(
+          Direction.UP,
+          this.gameState.wsPaddleSequence,
+        );
       } else if (currentKey == "KEY_DOWN") {
-        const game_update: ClientMessageInterface<"game_update"> = {
-          event: "game_update",
-          payload: {
-            direction: Direction.DOWN,
-            sequence: this.gameState.wsPaddleSequence,
-          },
-        };
-        this.sendMessage(game_update);
+        this.ws.messageGameUpdateDirection(
+          Direction.DOWN,
+          this.gameState.wsPaddleSequence,
+        );
       } else if (currentKey == "") {
-        const game_update: ClientMessageInterface<"game_update"> = {
-          event: "game_update",
-          payload: {
-            direction: Direction.STOP,
-            sequence: this.gameState.wsPaddleSequence,
-          },
-        };
-        this.sendMessage(game_update);
+        this.ws.messageGameUpdateDirection(
+          Direction.STOP,
+          this.gameState.wsPaddleSequence,
+        );
       }
       this.gameState.previousKey = currentKey;
     }
@@ -177,15 +237,10 @@ export class VsPlayerGamePage {
       this.gameState.status == GameStatus.PLAYING &&
       this.gameState.previousStatus == GameStatus.PAUSED
     ) {
-      // this.gameState.blockedPlayButton = false;
       this.scoreBar.pausePlay.toggleIsPlaying(true);
       this.gameState.previousStatus = GameStatus.PLAYING;
       if (this.gameState.pauseInitiatedByMe == true) {
-        const game_resume: ClientMessageInterface<"game_resume"> = {
-          event: "game_resume",
-          payload: { gameId: DEV_GAMEID },
-        };
-        this.sendMessage(game_resume);
+        this.ws.messageGameResume();
       }
       // paused
     } else if (
@@ -199,11 +254,7 @@ export class VsPlayerGamePage {
       // send game pause to ws -> only from client who actually paused the button (otherwise we get duplicate send)
       this.gameState.previousStatus = GameStatus.PAUSED;
       if (this.gameState.pauseInitiatedByMe == true) {
-        const game_pause: ClientMessageInterface<"game_pause"> = {
-          event: "game_pause",
-          payload: { gameId: DEV_GAMEID },
-        };
-        this.sendMessage(game_pause);
+        this.ws.messageGamePause();
       } else {
         this.gameState.blockedPlayButton = true;
       }
@@ -216,63 +267,6 @@ export class VsPlayerGamePage {
 
   public unmount(): void {
     this.main.remove();
-  }
-
-  // web socket
-  private initializeWebSocket(): void {
-    const wsUrl = websocketUrl;
-
-    this.websocket = new WebSocket(wsUrl);
-
-    const gameStartMessage: ClientMessageInterface<"game_start"> = {
-      event: "game_start",
-      payload: { gameId: DEV_GAMEID },
-    };
-
-    this.websocket.onopen = () => {
-      // Send initial connection message
-      this.sendMessage(gameStartMessage);
-    };
-
-    this.websocket.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        this.handleWebSocketMessage(data);
-      } catch (error) {
-        console.error("Error parsing WebSocket message:", error);
-      }
-    };
-
-    this.websocket.onclose = (event) => {
-      console.log("WebSocket connection closed:", event.code, event.reason);
-      // Optionally implement reconnection logic here
-    };
-
-    this.websocket.onerror = (error) => {
-      console.error("WebSocket error:", error);
-    };
-  }
-
-  private sendMessage<T extends keyof WsClientMessage>(
-    message: ClientMessageInterface<T>,
-  ): void {
-    if (this.websocket && this.websocket.readyState === WebSocket.OPEN) {
-      this.websocket.send(JSON.stringify(message));
-      console.log("SENT: ", message.payload);
-    } else {
-      console.warn("WebSocket is not open. Message not sent:", { message });
-    }
-  }
-
-  private countdownHook(message: string): void {
-    if (
-      this.gameState.status == GameStatus.PAUSED ||
-      (this.gameState.status == GameStatus.PLAYING &&
-        this.gameState.pauseInitiatedByMe == true)
-    ) {
-      this.pauseCountdown.innerText = "game resumes in: " + message;
-      if (message == "GO!") this.pauseCountdown.innerText = message;
-    } else this.loadingOverlay.changeText(message);
   }
 
   private showEndGameOverlay(): void {
@@ -301,84 +295,6 @@ export class VsPlayerGamePage {
       this.menuEndDiv.style.left = "50%";
       this.menuEndDiv.style.transform = "translate(-50%, -50%)";
       this.menuEndDiv.style.zIndex = "1000";
-    }
-  }
-
-  // Handle incoming WebSocket messages
-  private handleWebSocketMessage<T extends keyof WsServerBroadcast>(
-    data: ServerMessageInterface<T>,
-  ): void {
-    console.log("Received WebSocket message:", data);
-    // Example: update game state, scores, etc. based on data
-    // if (data.error) this.toggleErrorScreen(data.error.message)
-    switch (data.event) {
-      case "countdown_update": {
-        const countdownData =
-          data as ServerMessageInterface<"countdown_update">;
-        this.countdownHook(countdownData.payload.message);
-        break;
-      }
-      case "notification": {
-        const notificationData = data as ServerMessageInterface<"notification">;
-        if (notificationData.payload.message == "Game started!") {
-          this.loadingOverlay.hide();
-          // added from game resume for now
-          this.gameState.status = GameStatus.PLAYING;
-          this.gameState.pauseInitiatedByMe = false;
-          this.gameState.blockedPlayButton = false;
-          this.game?.showGamePieces();
-          this.hidePauseOverlay();
-          this.gameStateCallback();
-        }
-        // in the case game is starting again after pause
-        break;
-      }
-      case "game_update": {
-        const gameUpdateData = data as ServerMessageInterface<"game_update">;
-        this.game?.updateGameStateFromServer(gameUpdateData);
-        if (!this.gameState.activePaddle) {
-          this.gameState.activePaddle = gameUpdateData.payload.activePaddle;
-          // change paddle pos to paddleB if we aren't A
-          if (this.gameState.activePaddle != "paddleA") {
-            [this.gameState.playerA, this.gameState.playerB] = [
-              this.gameState.playerB,
-              this.gameState.playerA,
-            ];
-          }
-          this.initializeGame();
-        }
-        // score stuff
-        this.gameState.playerA.score = gameUpdateData.payload.paddleA.score;
-        this.gameState.playerB.score = gameUpdateData.payload.paddleB.score;
-        // this.gameStateCallback();
-        // need to refresh / change this when actual user ids exist
-        this.scoreBar.updateScores(
-          this.gameState.playerA.score,
-          this.gameState.playerB.score,
-        );
-        break;
-      }
-      case "game_pause": {
-        this.gameState.status = GameStatus.PAUSED;
-        this.gameStateCallback();
-        break;
-      }
-      case "game_ended": {
-        this.gameState.status = GameStatus.GAME_OVER;
-        this.showEndGameOverlay();
-        // update score for end of game diff than during. TODO refresh on backend integration -> must use diff logic
-        const gameEndData = data as ServerMessageInterface<"game_ended">;
-        this.gameState.playerA.score = gameEndData.payload.scorePlayer1;
-        this.gameState.playerB.score = gameEndData.payload.scorePlayer2;
-        // this.gameStateCallback();
-        // need to refresh / change this when actual user ids exist
-        this.scoreBar.updateScores(
-          this.gameState.playerA.score,
-          this.gameState.playerB.score,
-        );
-        // implement actual winning logic here based on winning user id. not score. this is only temporary for now (while backend isnt synced)
-        this.endResultText.innerText = `Winner: ${this.gameState.playerA.username}`;
-      }
     }
   }
 }

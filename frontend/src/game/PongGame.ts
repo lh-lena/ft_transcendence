@@ -8,7 +8,7 @@ import {
   CANVAS_DEFAULTS,
 } from "../types";
 
-import { ServerMessageInterface } from "../types/websocket";
+import { WsServerBroadcast } from "../types/websocket";
 
 export class PongGame {
   private canvas: HTMLCanvasElement;
@@ -313,15 +313,13 @@ export class PongGame {
   }
 
   public updateGameStateFromServer(
-    data: ServerMessageInterface<"game_update">,
+    payload: WsServerBroadcast["game_update"],
   ): void {
     // handle ball from server
-    this.ball.x = data.payload.ball.x;
-    this.ball.y = data.payload.ball.y;
-
-    console.log("NEW DATA: ", data);
-    this.paddleB.y = data.payload.paddleB.y;
-    this.paddleA.y = data.payload.paddleA.y;
+    this.ball.x = payload.ball.x;
+    this.ball.y = payload.ball.y;
+    this.paddleB.y = payload.paddleB.y;
+    this.paddleA.y = payload.paddleA.y;
   }
 
   // game loop logic

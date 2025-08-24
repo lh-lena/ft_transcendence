@@ -1,4 +1,7 @@
-import { Router } from "./router/Router";
+// services
+import { ServiceContainer, Router, Websocket } from "./services";
+
+// pages
 import { HomePage } from "./pages/home";
 import { ProfilePage } from "./pages/profile";
 import { LocalGamePage } from "./pages/localGame";
@@ -7,75 +10,70 @@ import { RegisterPage } from "./pages/register";
 import { SettingsPage } from "./pages/settings";
 import { LeaderboardPage } from "./pages/leaderboard";
 import { ChatPage } from "./pages/chat";
-import { VsPlayerGamePage } from "./pages/RemoteGame";
+import { VsPlayerGamePage } from "./pages/remoteGame";
 import { TournamentAliasPage } from "./pages/tournament";
 
-// keeps state for router and passes between pages
-// to add a page
-// import page at the top
-// add to current page type
-// add in define routes
+// single source of truth for pages and routes
+const PAGE_ROUTES = {
+  "/": HomePage,
+  "/local": LocalGamePage,
+  "/profile": ProfilePage,
+  "/login": LoginPage,
+  "/register": RegisterPage,
+  "/settings": SettingsPage,
+  "/leaderboard": LeaderboardPage,
+  "/chat": ChatPage,
+  "/vs-player": VsPlayerGamePage,
+  "/tournament-start": TournamentAliasPage,
+} as const;
+
+// type magic
+type PageConstructor = (typeof PAGE_ROUTES)[keyof typeof PAGE_ROUTES];
+type PageInstance = InstanceType<PageConstructor> | null;
 
 export class App {
+  private serviceContainer: ServiceContainer;
   private router: Router;
+  private ws: Websocket;
   private container: HTMLElement;
-  private currentPage:
-    | HomePage
-    | ProfilePage
-    | LocalGamePage
-    | LoginPage
-    | RegisterPage
-    | SettingsPage
-    | LeaderboardPage
-    | ChatPage
-    | VsPlayerGamePage
-    | TournamentAliasPage
-    | null = null;
+  private currentPage: PageInstance;
 
   constructor() {
+    // full screen div for app
     this.container = document.createElement("div");
     this.container.className = "w-full h-screen";
-    this.router = new Router();
 
-    // Define routes
-    this.router.add("/", () => this.showPage(HomePage));
-    this.router.add("/local", () => this.showPage(LocalGamePage));
-    this.router.add("/profile", () => this.showPage(ProfilePage));
-    this.router.add("/login", () => this.showPage(LoginPage));
-    this.router.add("/register", () => this.showPage(RegisterPage));
-    this.router.add("/settings", () => this.showPage(SettingsPage));
-    this.router.add("/leaderboard", () => this.showPage(LeaderboardPage));
-    this.router.add("/chat", () => this.showPage(ChatPage));
-    this.router.add("/vs-player", () => this.showPage(VsPlayerGamePage));
-    this.router.add("/tournament-start", () =>
-      this.showPage(TournamentAliasPage));
-    // Initialize router
-    this.router.init();
+    // init state needs to be null
+    this.currentPage = null;
+
+    // set up service container
+    this.serviceContainer = ServiceContainer.getInstance();
+    this.serviceContainer.register("router", new Router());
+    this.serviceContainer.register("websocket", new Websocket());
+
+    // grab route from service container
+    this.router = this.serviceContainer.get<Router>("router");
+
+    // grab ws
+    this.ws = this.serviceContainer.get<Websocket>("websocket");
+    // no need to init for now -> test later
+    this.ws.initializeWebSocket();
+
+    // Define routes from single source
+    Object.entries(PAGE_ROUTES).forEach(([route, PageClass]) => {
+      this.router.add(route, () => this.showPage(PageClass));
+    });
   }
 
   public mount(parent: HTMLElement): void {
     parent.appendChild(this.container);
   }
 
-  private showPage(
-    PageClass:
-      | typeof HomePage
-      | typeof ProfilePage
-      | typeof LocalGamePage
-      | typeof LoginPage
-      | typeof RegisterPage
-      | typeof SettingsPage
-      | typeof LeaderboardPage
-      | typeof ChatPage
-      | typeof VsPlayerGamePage
-      | typeof TournamentAliasPage,
-  ) {
+  private showPage(PageClass: PageConstructor) {
     if (this.currentPage) {
       this.currentPage.unmount();
     }
-    this.currentPage = new PageClass(this.router);
-    if (this.currentPage) {
-      this.currentPage.mount(this.container);
-    }
+    this.currentPage = new PageClass(this.serviceContainer);
+    this.currentPage.mount(this.container);
   }
 }

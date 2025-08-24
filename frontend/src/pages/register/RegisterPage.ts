@@ -1,4 +1,4 @@
-import { Router } from "../../router";
+import { ServiceContainer, Router } from "../../services";
 import { Menu } from "../../components/menu";
 import { PongButton } from "../../components/pongButton";
 
@@ -6,10 +6,14 @@ export class RegisterPage {
   private main: HTMLElement;
   private menu: Menu;
   private pongButton: PongButton;
+  private serviceContainer: ServiceContainer;
   private router: Router;
 
-  constructor(router: Router) {
-    this.router = router;
+  constructor(serviceContainer: ServiceContainer) {
+    // router / services container
+    this.serviceContainer = serviceContainer;
+    this.router = this.serviceContainer.get<Router>("router");
+
     this.main = document.createElement("div");
     this.main.className =
       "flex flex-col w-full min-h-full gap-5 justify-center text-xl items-center bg-[#0400FF]";

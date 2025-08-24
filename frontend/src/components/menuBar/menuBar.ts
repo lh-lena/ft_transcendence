@@ -1,4 +1,4 @@
-import { Router } from "../../router";
+import { Router } from "../../services";
 
 export interface MenuBarItem {
   label: string;

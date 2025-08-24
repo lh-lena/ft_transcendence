@@ -1,22 +1,15 @@
-import { 
+import {
   Chart,
   CategoryScale,
   LinearScale,
   BarElement,
   Title,
   Tooltip,
-  Legend
+  Legend,
 } from "chart.js";
 
 // Register the components
-Chart.register(
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend
-);
+Chart.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
 export function createProfileChart(container: HTMLElement): Chart {
   const canvas = document.createElement("canvas");

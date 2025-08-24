@@ -28,7 +28,7 @@ export class Router {
     if (callback) {
       callback();
     } else {
-      // Handle 404 or redirect to home
+      // handle 404 or redirect to home
       this.navigate("/");
     }
   }

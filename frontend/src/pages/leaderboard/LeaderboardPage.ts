@@ -1,4 +1,4 @@
-import { Router } from "../../router";
+import { ServiceContainer, Router } from "../../services";
 import { CANVAS_DEFAULTS } from "../../types";
 import { Window } from "../../components/window";
 import { MenuBar } from "../../components/menuBar";
@@ -10,15 +10,21 @@ import { sampleScores } from "../../constants/backend";
 
 export class LeaderboardPage {
   private container: HTMLElement;
+  private serviceContainer: ServiceContainer;
+  private router: Router;
 
-  constructor(private router: Router) {
+  constructor(serviceContainer: ServiceContainer) {
+    // router / services container
+    this.serviceContainer = serviceContainer;
+    this.router = this.serviceContainer.get<Router>("router");
+
     // Full page background
     this.container = document.createElement("div");
     this.container.className =
       "w-full min-h-screen flex items-center justify-center bg-brandBlue";
 
     // Window content
-    const menuBar = new MenuBar(router, "leaderboard");
+    const menuBar = new MenuBar(this.router, "leaderboard");
 
     const mainCollumn = document.createElement("div");
     mainCollumn.className = "flex flex-col gap-3";

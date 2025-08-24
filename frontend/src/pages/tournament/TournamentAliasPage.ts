@@ -1,13 +1,17 @@
-import { Router } from "../../router";
+import { ServiceContainer, Router } from "../../services";
 import { Menu } from "../../components/menu";
 import { PongButton } from "../../components/pongButton";
 
 export class TournamentAliasPage {
   private main: HTMLElement;
+  private serviceContainer: ServiceContainer;
   private router: Router;
 
-  constructor(router: Router) {
-    this.router = router;
+  constructor(serviceContainer: ServiceContainer) {
+    // router / services container
+    this.serviceContainer = serviceContainer;
+    this.router = this.serviceContainer.get<Router>("router");
+
     this.main = document.createElement("div");
     this.main.className =
       "flex flex-col gap-5 text-xl w-full min-h-full justify-center items-center bg-[#0400FF]";
@@ -28,7 +32,7 @@ export class TournamentAliasPage {
     form.appendChild(inputAlias);
 
     const aliasMenu = [{ name: "play", link: "/tournament-game" }];
-    const menu = new Menu(router, aliasMenu);
+    const menu = new Menu(this.router, aliasMenu);
     this.main.appendChild(menu.menuElement);
   }
 
