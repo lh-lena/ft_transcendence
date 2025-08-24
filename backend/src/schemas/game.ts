@@ -13,7 +13,7 @@ const gameVisibilityBase = z.enum(['public', 'private']);
 
 //game object
 export const gameBase = z.object({
-  gameId: z.string(),
+  gameId: z.uuid(),
   players: z.array(userBase),
   mode: gameModeBase,
   status: status,
