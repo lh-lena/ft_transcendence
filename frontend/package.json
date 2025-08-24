@@ -2,7 +2,8 @@
   "name": "ft_transcendence_frontend",
   "version": "1.0.0",
   "scripts": {
-    "dev": "npm run lint && vite",
+    "dev": "vite",
+    "dev:lint": "npm run lint && vite",
     "build": "tsc",
     "lint": "eslint . --ext .ts,.tsx",
     "format:check": "prettier --check .",
