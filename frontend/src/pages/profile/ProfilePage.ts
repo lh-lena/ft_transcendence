@@ -1,6 +1,5 @@
-import { ServiceContainer, Router } from "../../services";
+import { ServiceContainer, Router, Websocket } from "../../services";
 import { ProfileAvatar } from "../../components/profileAvatar";
-import { Loading } from "../../components/loading";
 import { MenuBar } from "../../components/menuBar";
 import { CANVAS_DEFAULTS } from "../../types";
 import { Window } from "../../components/window";
@@ -12,13 +11,14 @@ export class ProfilePage {
   private container: HTMLElement;
   private serviceContainer: ServiceContainer;
   private router: Router;
-  private loadingScreen: Loading;
   private menuBar: MenuBar;
+  private ws: Websocket;
 
   constructor(serviceContainer: ServiceContainer) {
     // router / services container
     this.serviceContainer = serviceContainer;
     this.router = this.serviceContainer.get<Router>("router");
+    this.ws = this.serviceContainer.get<Websocket>("websocket");
 
     // Full page background
     this.container = document.createElement("div");
@@ -59,12 +59,8 @@ export class ProfilePage {
     });
     this.container.appendChild(windowComponent.getElement());
 
-    // waiting for opponent loading screen
-    this.loadingScreen = new Loading(
-      "waiting for opponent",
-      "button",
-      this.cancelWaitForOpponent.bind(this),
-    );
+    // init web socket on profile (logged in - online)
+    this.ws.initializeWebSocket();
   }
 
   public mount(parent: HTMLElement): void {
@@ -73,13 +69,5 @@ export class ProfilePage {
 
   public unmount(): void {
     this.container.remove();
-  }
-
-  private waitForOpponent(): void {
-    this.loadingScreen.mount(document.body);
-  }
-
-  private cancelWaitForOpponent(): void {
-    this.loadingScreen.hide();
   }
 }

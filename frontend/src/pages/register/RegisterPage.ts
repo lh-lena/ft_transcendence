@@ -57,12 +57,7 @@ export class RegisterPage {
     inputPasswordConfirm.style.paddingLeft = "0.5em"; // Add left padding
     form.appendChild(inputPasswordConfirm);
 
-    const loginMenu = [
-      // obv will be changing this to /loginAuth for logins
-      { name: "register", link: "/profile" },
-      // slash slash back is a quick and sweet little previous page match in menu
-      // { name: 'back', link: '//back' }
-    ];
+    const loginMenu = [{ name: "register", link: "/profile" }];
     this.menu = new Menu(this.router, loginMenu);
     this.menu.mount(this.main);
   }

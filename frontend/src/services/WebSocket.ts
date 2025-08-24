@@ -18,11 +18,7 @@ export class Websocket {
   private ws!: WebSocket | null;
   private messageHandlers: Map<string, MessageHandler<any>[]> = new Map();
 
-  constructor() {
-    this.initializeWebSocket();
-  }
-
-  // web socket
+  // web socket (init on profile load?)
   public initializeWebSocket(): void {
     const wsUrl = websocketUrl;
 
@@ -39,7 +35,7 @@ export class Websocket {
 
     // web socket stuff
     this.ws.onopen = () => {
-      console.log("connected to ws");
+      //
     };
 
     this.ws.onmessage = (event) => {
@@ -53,6 +49,7 @@ export class Websocket {
   }
 
   private handleWebSocketMessage(data: any): void {
+    console.log(data);
     const { event, payload } = data;
     const handlers = this.messageHandlers.get(event);
     if (handlers && handlers.length > 0) {
@@ -125,7 +122,7 @@ export class Websocket {
     const game_update: ClientMessageInterface<"game_update"> = {
       event: "game_update",
       payload: {
-        direction: Direction.STOP,
+        direction: direction,
         sequence: sequence,
       },
     };

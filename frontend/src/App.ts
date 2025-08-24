@@ -1,5 +1,5 @@
 // services
-import { ServiceContainer, Router, Websocket } from "./services";
+import { ServiceContainer, Router, Websocket, Backend } from "./services";
 
 // pages
 import { HomePage } from "./pages/home";
@@ -50,14 +50,13 @@ export class App {
     this.serviceContainer = ServiceContainer.getInstance();
     this.serviceContainer.register("router", new Router());
     this.serviceContainer.register("websocket", new Websocket());
+    this.serviceContainer.register("backend", new Backend());
 
     // grab route from service container
     this.router = this.serviceContainer.get<Router>("router");
 
     // grab ws
     this.ws = this.serviceContainer.get<Websocket>("websocket");
-    // no need to init for now -> test later
-    this.ws.initializeWebSocket();
 
     // Define routes from single source
     Object.entries(PAGE_ROUTES).forEach(([route, PageClass]) => {
@@ -71,7 +70,6 @@ export class App {
   }
 
   private showPage(PageClass: PageConstructor) {
-    console.log("showing");
     if (this.currentPage) {
       this.currentPage.unmount();
     }

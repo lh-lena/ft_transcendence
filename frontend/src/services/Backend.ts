@@ -1,6 +1,6 @@
 import axios from "axios";
 
-class ApiService {
+export class Backend {
   private api = axios.create({
     baseURL: import.meta.env.VITE_BACKEND_URL,
     timeout: 10000,
@@ -17,7 +17,7 @@ class ApiService {
     });
   }
 
-  // User-related API calls
+  // example API calls
   async getCurrentUser() {
     const response = await this.api.get("/users/me");
     return response.data;
@@ -45,5 +45,3 @@ class ApiService {
     return response.data;
   }
 }
-
-export const apiService = new ApiService();
