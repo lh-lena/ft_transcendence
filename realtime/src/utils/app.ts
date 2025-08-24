@@ -9,14 +9,5 @@ export const buildServer = () => {
 
   server.register(registerPlugins);
 
-  server.get('/health', async (request, reply) => {
-    return {
-      status: 'ok',
-      service: 'realtime',
-      websocket: 'ready',
-      timestamp: new Date().toISOString(),
-    };
-  });
-
   return server;
 };
