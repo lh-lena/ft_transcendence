@@ -63,6 +63,7 @@ export class App {
     Object.entries(PAGE_ROUTES).forEach(([route, PageClass]) => {
       this.router.add(route, () => this.showPage(PageClass));
     });
+    this.router.init();
   }
 
   public mount(parent: HTMLElement): void {
@@ -70,6 +71,7 @@ export class App {
   }
 
   private showPage(PageClass: PageConstructor) {
+    console.log("showing");
     if (this.currentPage) {
       this.currentPage.unmount();
     }

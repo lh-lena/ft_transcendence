@@ -1,4 +1,5 @@
 // frontend/src/main.ts
+import "./style.css";
 import { Loading } from "./components/loading";
 import { App } from "./App";
 
