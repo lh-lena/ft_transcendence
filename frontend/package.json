@@ -24,6 +24,7 @@
   },
   "dependencies": {
     "@sakun/system.css": "^0.1.11",
+    "@tabler/icons-solidjs": "^3.34.1",
     "autoprefixer": "^10.4.16",
     "axios": "^1.11.0",
     "chart.js": "^4.5.0",

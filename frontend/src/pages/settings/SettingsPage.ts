@@ -3,25 +3,46 @@ import { CANVAS_DEFAULTS } from "../../types";
 import { Window } from "../../components/window";
 import { MenuBar } from "../../components/menuBar";
 
-const securitySettings = [
-  { label: "2FA", value: "on" },
-  { label: "password", value: "change" },
+// shape of settings
+interface settingItem {
+  label: string;
+  value: string;
+  type: string;
+  onClick?: () => void;
+}
+
+// type of settings array (collection of settings)
+type settingList = settingItem[];
+
+// decided to put this here for now to make it easier to migrate later
+// y not
+const securitySettings: settingList = [
+  { label: "2FA", value: "on", type: "button" },
+  {
+    label: "password",
+    value: "change",
+    type: "button",
+    // define on click in constructor
+  },
 ];
 
 const otherSettings = [
-  { label: "other", value: "off" },
-  { label: "this", value: "change" },
+  // { label: "other", value: "off" },
+  { label: "avatar", value: "upload", type: "file" },
 ];
 
 const settingCategories = [
   { label: "security", settingsList: securitySettings },
-  { label: "other", settingsList: otherSettings },
+  { label: "profile", settingsList: otherSettings },
 ];
 
 export class SettingsPage {
   private main: HTMLElement;
+  private window: Window;
   private settingsPanel: HTMLDivElement;
+  private buttonRow: HTMLDivElement;
   private activeButton!: HTMLElement;
+  private inputPasswordDiv!: HTMLDivElement;
 
   constructor(private router: Router) {
     // Full page background
@@ -30,9 +51,8 @@ export class SettingsPage {
       "w-full min-h-screen flex items-center justify-center bg-brandBlue";
 
     // Window content
-
-    const buttonRow = document.createElement("div");
-    buttonRow.className = "flex flex-row gap-3";
+    this.buttonRow = document.createElement("div");
+    this.buttonRow.className = "flex flex-row gap-3";
 
     settingCategories.forEach((item, idx) => {
       const button = document.createElement("button");
@@ -43,7 +63,7 @@ export class SettingsPage {
       }
       button.textContent = item.label;
       button.onclick = () => this.toggleButton(button, item.settingsList);
-      buttonRow.appendChild(button);
+      this.buttonRow.appendChild(button);
     });
 
     const menuBar = new MenuBar(router, "settings");
@@ -52,25 +72,27 @@ export class SettingsPage {
     this.settingsPanel = document.createElement("div");
     this.settingsPanel.className = "flex flex-col w-64 gap-2";
 
+    // on clicks link functions to settings
+    // needed this object to link functions
+    // using optional chaining (!) because we are sure it exists other wise we would write more defensively
+    securitySettings.find((setting) => setting.label === "password")!.onClick =
+      () => this.changePassword();
+
     // use security settings as default for page
     this.populateSettingsPanel(securitySettings);
 
-    const windowComponent = new Window({
+    this.window = new Window({
       title: "Settings",
       width: CANVAS_DEFAULTS.width,
       height: CANVAS_DEFAULTS.height,
       className: "",
-      children: [menuBar.render(), buttonRow, this.settingsPanel],
+      children: [menuBar.render(), this.buttonRow, this.settingsPanel],
     });
 
-    this.main.appendChild(windowComponent.getElement());
+    this.main.appendChild(this.window.getElement());
   }
 
-  // need to implement a function that can change button design based on state. is refreshed on load from backend
-  private toggleButton(
-    button: HTMLElement,
-    settingsList: Array<{ label: string; value: string }>,
-  ): void {
+  private toggleButton(button: HTMLElement, settingsList: settingList): void {
     this.changeActiveCategoryButton(button);
     const newSettingsPanel = document.createElement("div");
     newSettingsPanel.className = this.settingsPanel.className;
@@ -82,22 +104,39 @@ export class SettingsPage {
     this.populateSettingsPanel(settingsList);
   }
 
-  private populateSettingsPanel(
-    settingsList: Array<{ label: string; value: string }>,
-  ): void {
+  private populateSettingsPanel(settingsList: settingList): void {
     settingsList.forEach((setting) => {
       const box = document.createElement("div");
       box.className = "flex flex-row gap-2 standard-dialog items-center";
       const boxTitle = document.createElement("h1");
       boxTitle.textContent = setting.label;
       box.appendChild(boxTitle);
-      const boxButton = document.createElement("button");
-      boxButton.innerText = setting.value;
-      boxButton.className = "btn ml-auto";
-      if (setting.value == "on")
-        boxButton.className = "btn active ml-auto bg-black text-white rounded";
-      box.appendChild(boxButton);
       this.settingsPanel.appendChild(box);
+      if (setting.type == "file") {
+        // create hidden file input
+        const boxInputFile = document.createElement("input");
+        boxInputFile.type = "file";
+        boxInputFile.id = `file-${setting.label}`;
+        boxInputFile.className = "hidden";
+        // create styled label that looks like your buttons
+        const fileLabel = document.createElement("label");
+        fileLabel.htmlFor = boxInputFile.id;
+        fileLabel.textContent = setting.value;
+        fileLabel.className = "btn ml-auto cursor-pointer";
+        box.appendChild(boxInputFile);
+        box.appendChild(fileLabel);
+      } else if (setting.type == "button") {
+        const boxButton = document.createElement("button");
+        boxButton.innerText = setting.value;
+        boxButton.className = "btn ml-auto";
+        if (setting.value == "on")
+          boxButton.className =
+            "btn active ml-auto bg-black text-white rounded";
+        if (setting.onClick) {
+          boxButton.onclick = setting.onClick;
+        }
+        box.appendChild(boxButton);
+      }
     });
   }
 
@@ -105,6 +144,41 @@ export class SettingsPage {
     this.activeButton.classList.remove("btn-default");
     button.classList.add("btn-default");
     this.activeButton = button;
+  }
+
+  private changePassword(): void {
+    // hide
+    if (this.window.getElement().contains(this.settingsPanel)) {
+      this.settingsPanel.remove();
+      this.buttonRow.remove();
+
+      // new password stuff
+      this.inputPasswordDiv = document.createElement("div");
+      this.inputPasswordDiv.className = "flex h-full pt-4 flex-col gap-5 w-36";
+      const inputPasswordTitle = document.createElement("h1");
+      inputPasswordTitle.textContent = "new password:";
+      this.inputPasswordDiv.appendChild(inputPasswordTitle);
+      const inputPasswordFirst = document.createElement("input");
+      inputPasswordFirst.type = "password";
+      inputPasswordFirst.id = "text_password";
+      inputPasswordFirst.placeholder = "password";
+      inputPasswordFirst.style.paddingLeft = "0.5em";
+      const inputPasswordSecond = inputPasswordFirst.cloneNode(true);
+      this.inputPasswordDiv.appendChild(inputPasswordFirst);
+      this.inputPasswordDiv.appendChild(inputPasswordSecond);
+      this.window.getElement().appendChild(this.inputPasswordDiv);
+      this.window.getPane().appendChild(this.inputPasswordDiv);
+      const inputPasswordButton = document.createElement("button");
+      inputPasswordButton.className = "btn";
+      inputPasswordButton.onclick = () => this.changePassword();
+      inputPasswordButton.innerText = "change";
+      this.inputPasswordDiv.appendChild(inputPasswordButton);
+    } // show
+    else {
+      this.inputPasswordDiv.remove();
+      this.window.getPane().appendChild(this.buttonRow);
+      this.window.getPane().appendChild(this.settingsPanel);
+    }
   }
 
   public mount(parent: HTMLElement): void {

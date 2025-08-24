@@ -1,25 +1,35 @@
+import { CloseIcon } from "../../components/closeIcon/CloseIcon";
 import { userStore2 } from "../../constants/backend";
 import { ProfileAvatar } from "../profileAvatar";
 
 export class ProfilePopUp {
   private main: HTMLElement;
 
-  constructor() {
+  constructor(closeCallBack: () => void) {
     this.main = document.createElement("div");
-    this.main.className = "standard-dialog w-48 flex flex-col gap-4 p-8";
+    this.main.className =
+      "standard-dialog w-48 flex justify-center flex-col gap-5 pb-4";
 
+    const titleBar = document.createElement("div");
+    titleBar.className = "flex flex-row";
+    this.main.appendChild(titleBar);
+    const closeIcon = new CloseIcon(closeCallBack);
+    closeIcon.className("ml-auto");
+    closeIcon.mount(titleBar);
+
+    const userDiv = document.createElement("div");
+    userDiv.className = "mx-auto flex flex-col gap-8 my-auto";
+    this.main.appendChild(userDiv);
     const userPic = new ProfileAvatar(
       userStore2.color,
       userStore2.colorMap,
     ).getElement();
     userPic.className = "mx-auto animate-bounce-slow";
-
-    this.main.appendChild(userPic);
+    userDiv.appendChild(userPic);
 
     const username = document.createElement("h1");
     username.innerText = userStore2.username;
-    this.main.appendChild(username);
-    username.className = "mx-auto";
+    userDiv.appendChild(username);
 
     const addFriendButton = document.createElement("button");
     addFriendButton.innerText = "add";

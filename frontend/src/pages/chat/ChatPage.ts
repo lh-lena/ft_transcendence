@@ -56,7 +56,7 @@ export class ChatPage {
     addFriendButton.appendChild(addFriendButtonText);
     clickableAddFriendButton.appendChild(addFriendButton);
     clickableAddFriendButton.onclick = () =>
-      this.addFriendToggle(addFriendButton);
+      this.toggleAddFriend(addFriendButton);
     contacts.appendChild(clickableAddFriendButton);
 
     const onlineHeader = document.createElement("h1");
@@ -149,7 +149,8 @@ export class ChatPage {
     friendsInputBox.appendChild(friendsInputBoxSearch);
     const searchButton = document.createElement("button");
     searchButton.textContent = "search";
-    searchButton.className = "btn items-center justify-center h-10 w-1/5";
+    searchButton.className =
+      "btn flex items-center justify-center text-center h-10 w-1/5";
     searchButton.onclick = () => this.sendButtonHook();
     friendsInputBox.appendChild(searchButton);
 
@@ -163,7 +164,7 @@ export class ChatPage {
       contact.className =
         "flex flex-row gap-2 box standard-dialog w-full items-center";
       const clickableContact = document.createElement("a");
-      clickableContact.onclick = () => this.clickChatContact(contact);
+      clickableContact.onclick = () => this.toggleProfilePopUp();
       clickableContact.style.cursor = "pointer";
       const contactName = document.createElement("h1");
       contactName.textContent = friend.username;
@@ -205,7 +206,7 @@ export class ChatPage {
     this.chatPanel.appendChild(this.bottomBar);
     // set input box as initial buttom bar
 
-    this.profilePopUp = new ProfilePopUp();
+    this.profilePopUp = new ProfilePopUp(() => this.toggleProfilePopUp());
 
     // window
     const windowComponent = new Window({
@@ -248,7 +249,9 @@ export class ChatPage {
     // check if we need to toggle off add friends panel
     if (this.chatRow.contains(this.addFriendsPanel)) {
       this.chatRow.removeChild(this.addFriendsPanel);
-      this.chatRow.appendChild(this.chatPanel);
+      if (this.chatRow.contains(this.profilePopUp.getNode()))
+        this.chatRow.insertBefore(this.chatPanel, this.profilePopUp.getNode());
+      else this.chatRow.appendChild(this.chatPanel);
     }
     // remove styling from old contact selected
     if (this.clickedContact) {
@@ -267,10 +270,16 @@ export class ChatPage {
     if (this.inputBox.contains(this.sendInvite)) this.toggleInvitePrompt();
   }
 
-  private addFriendToggle(contact: HTMLDivElement): void {
+  private toggleAddFriend(contact: HTMLDivElement): void {
     this.clickChatContact(contact);
     this.chatRow.removeChild(this.chatPanel);
-    this.chatRow.appendChild(this.addFriendsPanel);
+    if (this.chatRow.contains(this.profilePopUp.getNode())) {
+      // insert before profile pop
+      this.chatRow.insertBefore(
+        this.addFriendsPanel,
+        this.profilePopUp.getNode(),
+      );
+    } else this.chatRow.appendChild(this.addFriendsPanel);
   }
 
   private toggleProfilePopUp(): void {
