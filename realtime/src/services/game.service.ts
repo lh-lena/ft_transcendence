@@ -219,6 +219,7 @@ export default function createGameService(app: FastifyInstance) {
       if (action.sequence <= game.lastSequence) {
         return;
       }
+      log.info(`action ${action.direction}`);
       applyPlayerInputToPaddle(game, userId, action);
       game.lastSequence = action.sequence;
     } catch (error) {
