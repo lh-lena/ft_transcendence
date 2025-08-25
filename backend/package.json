@@ -1,14 +1,16 @@
 {
   "name": "ft_transcendence_backend",
   "version": "1.0.0",
+  "prisma": {
+    "seed": "node prisma/seed.ts"
+  },
   "scripts": {
     "dev": "npm run lint && npm run typecheck && npm run run",
     "run": "tsx watch --trace-warnings src/server.ts",
     "lint": "eslint --fix 'src/**/*.{ts,tsx,d.ts}'",
     "format:check": "prettier --check .",
     "format": "prettier --write .",
-    "typecheck": "tsc --noEmit",
-    "seed": "node prisma/prisma/seed.ts"
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@fastify/autoload": "^6.3.1",
@@ -33,6 +35,7 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",
     "@eslint/js": "^9.32.0",
+    "@faker-js/faker": "^10.0.0",
     "@types/node": "^20.0.0",
     "@types/qs": "^6.14.0",
     "@typescript-eslint/eslint-plugin": "^8.38.0",

@@ -25,26 +25,44 @@ async function main() {
     );
   }
 
-  // Seed friends relationships (no duplicates, no self-friend)
-  const friendPairs = new Set();
-  let friendEntries = 0;
-  while (friendEntries < 100) {
+  // Seed friendships (no duplicates, no self-friend)
+  const friendshipPairs = new Set();
+  let friendshipEntries = 0;
+  while (friendshipEntries < 100) {
     const userIdx = faker.number.int({ min: 0, max: users.length - 1 });
     const friendIdx = faker.number.int({ min: 0, max: users.length - 1 });
     if (userIdx === friendIdx) continue;
-
     const pairKey = `${users[userIdx].id}-${users[friendIdx].id}`;
-    const reverseKey = `${users[friendIdx].id}-${users[userIdx].id}`;
-    if (friendPairs.has(pairKey) || friendPairs.has(reverseKey)) continue;
+    if (friendshipPairs.has(pairKey)) continue;
 
-    await prisma.friend.create({
+    await prisma.friendship.create({
       data: {
         userId: users[userIdx].id,
         friendId: users[friendIdx].id,
       },
     });
-    friendPairs.add(pairKey);
-    friendEntries++;
+    friendshipPairs.add(pairKey);
+    friendshipEntries++;
+  }
+
+  // Seed blocked relationships (no duplicates, no self-block)
+  const blockedPairs = new Set();
+  let blockedEntries = 0;
+  while (blockedEntries < 40) {
+    const userIdx = faker.number.int({ min: 0, max: users.length - 1 });
+    const blockedIdx = faker.number.int({ min: 0, max: users.length - 1 });
+    if (userIdx === blockedIdx) continue;
+    const pairKey = `${users[userIdx].id}-${users[blockedIdx].id}`;
+    if (blockedPairs.has(pairKey)) continue;
+
+    await prisma.blocked.create({
+      data: {
+        userId: users[userIdx].id,
+        blockedId: users[blockedIdx].id,
+      },
+    });
+    blockedPairs.add(pairKey);
+    blockedEntries++;
   }
 
   // Seed results
@@ -74,6 +92,22 @@ async function main() {
         resultId: faker.helpers.arrayElement(results).id,
         score: faker.number.int({ min: 0, max: 100 }),
         isWinner: faker.datatype.boolean(),
+      },
+    });
+  }
+
+  // Seed chat messages (random sender/receiver, no self-message)
+  for (let i = 0; i < 100; i++) {
+    let senderIdx = faker.number.int({ min: 0, max: users.length - 1 });
+    let receiverIdx = faker.number.int({ min: 0, max: users.length - 1 });
+    while (senderIdx === receiverIdx) {
+      receiverIdx = faker.number.int({ min: 0, max: users.length - 1 });
+    }
+    await prisma.chatMessage.create({
+      data: {
+        senderId: users[senderIdx].id,
+        reciverId: users[receiverIdx].id,
+        message: faker.lorem.sentence(),
       },
     });
   }

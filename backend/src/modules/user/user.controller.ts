@@ -6,19 +6,19 @@ import { transformUser } from './user.helper';
 
 export const userController = {
   //controller to create an user
-  async create(data: Prisma.userCreateInput): Promise<userType> {
+  async create(data: Prisma.UserCreateInput): Promise<userType> {
     const ret = await userService.create(data);
     return await transformUser(ret);
   },
 
   //update user
-  async update(id: number, data: Prisma.userUpdateInput): Promise<userType> {
+  async update(id: number, data: Prisma.UserUpdateInput): Promise<userType> {
     const ret = await userService.update(id, data);
     return await transformUser(ret);
   },
 
   //controller for user get All or by Id
-  async getQuery(query?: Prisma.userWhereInput): Promise<userType[]> {
+  async getQuery(query?: Prisma.UserWhereInput): Promise<userType[]> {
     const ret = await userService.getQuery(query);
     return Promise.all(ret.map((user) => transformUser(user)));
   },

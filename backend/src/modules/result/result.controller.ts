@@ -12,7 +12,7 @@ export const resultController = {
   },
 
   //controller for result get All or by Id
-  async getQuery(query?: Prisma.resultWhereInput): Promise<resultType[]> {
+  async getQuery(query?: Prisma.ResultWhereInput): Promise<resultType[]> {
     const ret = await resultService.getQuery(query);
     return Promise.all(ret.map((r) => transformResult(r)));
   },

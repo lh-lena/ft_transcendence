@@ -1,8 +1,8 @@
-import { Prisma, result } from '@prisma/client';
+import { Prisma, Result } from '@prisma/client';
 import type { resultType, resultCreateType } from '../../schemas/result';
 
-export async function transformInput(data: resultCreateType): Promise<Prisma.resultCreateInput> {
-  const gamePlayed: Prisma.gamePlayedCreateWithoutResultInput[] = [];
+export async function transformInput(data: resultCreateType): Promise<Prisma.ResultCreateInput> {
+  const gamePlayed: Prisma.GamePlayedCreateWithoutResultInput[] = [];
 
   const addPlayer = (userId: number, score: number, isWinner: boolean) => {
     gamePlayed.push({
@@ -27,7 +27,7 @@ export async function transformInput(data: resultCreateType): Promise<Prisma.res
   };
 }
 
-export async function transformResult(result: result): Promise<resultType> {
+export async function transformResult(result: Result): Promise<resultType> {
   return {
     ...result,
     startedAt: result.startedAt.toISOString(),
