@@ -237,10 +237,10 @@ export default function createConnectionService(app: FastifyInstance): Connectio
       });
       if (!res.ok) {
         log.error(
-          `[connection-service] Failed to notify user ${userId} of online: ${res.statusText}`,
+          `[connection-service] Failed to update user ${userId} online status: ${res.statusText}`,
         );
       } else {
-        log.debug(`[connection-service] User ${userId} marked as online`);
+        log.debug(`[connection-service] User ID ${userId}: online status updated`);
       }
     } catch (error: unknown) {
       processErrorLog(

@@ -3,6 +3,7 @@ import { GameError } from './game.error.js';
 import type { FastifyInstance } from 'fastify';
 import type { RespondService } from '../websocket/types/ws.types.js';
 import type { User } from '../schemas/user.schema.js';
+import { z } from 'zod';
 
 function formatLogDetails(details?: string): string {
   return details !== undefined && details !== null && details.trim() !== '' ? `: ${details}` : '';
@@ -37,7 +38,10 @@ export function processDebugLog(
   logMessage(app, 'debug', service, message, safeErrorToString(error));
 }
 
-function safeErrorToString(error: unknown): string {
+export function safeErrorToString(error: unknown): string {
+  if (error instanceof z.ZodError) {
+    return error.errors.map((err) => err.message).join(', ');
+  }
   if (error instanceof Error || error instanceof GameError) {
     return error.message;
   }
