@@ -12,8 +12,11 @@ export async function transformInput(data: resultCreateType): Promise<Prisma.res
     });
   };
 
-  addPlayer(data.winnerId, data.scorePlayer1, true);
-  addPlayer(data.loserId, data.scorePlayer2, false);
+  const winnerScore = Math.max(data.scorePlayer1, data.scorePlayer2);
+  const loserScore = Math.min(data.scorePlayer1, data.scorePlayer2);
+
+  addPlayer(data.winnerId, winnerScore, true);
+  addPlayer(data.loserId, loserScore, false);
 
   return {
     gameId: data.gameId,

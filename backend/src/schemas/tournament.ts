@@ -1,21 +1,26 @@
 import { z } from 'zod/v4';
 import { status } from './basics';
 import { userInfo } from './user';
+import { gameBase } from './game';
 
 const tournamentBase = z.object({
   tournamentId: z.uuid(),
-  playerAmount: z.number().min(4).max(32),
+  round: z.number().default(1),
+  playerAmount: z.number().min(4).max(32).default(4),
   players: z.array(userInfo),
   status: status,
-  games: z.array(z.uuid()),
+  games: z.array(gameBase),
 });
 const tournament = tournamentBase.meta({ $id: 'tournament' });
 
 //define Post schema
-const tournamentCreateBase = z.object({
-  userId: z.number(),
-  playerAmount: z.number().min(4).max(32).default(4),
-});
+const tournamentCreateBase = tournamentBase
+  .pick({
+    playerAmount: true,
+  })
+  .extend({
+    playerId: z.number(),
+  });
 const tournamentCreate = tournamentCreateBase.meta({ $id: 'tournamentCreate' });
 
 const tournamentIdBase = tournamentBase.pick({
@@ -29,5 +34,4 @@ export const tournamentSchemas = [tournament, tournamentCreate, tournamentId, to
 
 export type tournamentType = z.infer<typeof tournamentBase>;
 export type tournamentCreateType = z.infer<typeof tournamentCreate>;
-export type tournamentIdType = z.infer<typeof tournamentId>;
 export type tournamentResponseType = z.infer<typeof tournamentResponse>;

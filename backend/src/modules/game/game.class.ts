@@ -1,107 +1,72 @@
-import { v4 as uuidv4 } from 'uuid';
+import { v4 as uuid } from 'uuid';
 
-import { userController } from '../user/user.controller';
-import type { userType } from '../../schemas/user';
+import type { gameType, gameCreateType } from '../../schemas/game';
+import { userService } from '../user/user.service';
 
-import { NotFoundError } from '../../utils/error';
+import { notifyPlayer } from '../../utils/notify';
 
-import type {
-  game,
-  gameIdType,
-  gameCreateType,
-  gameQueryType,
-  gameResponseType,
-  gameResponseArrayType,
-} from '../../schemas/game';
+export class gameClass {
+  private activeGames: gameType[] = [];
 
-export class gameMakingClass {
-  private activeMatches: game[] = [];
-
-  //check if two players are ready and game them ( can add gameing logic later )
-  private async tryMultiMatch(req: gameCreateType, user: userType): Promise<gameResponseType> {
-    let game = this.activeMatches.find((m) => m.status === 'waiting' && m.visibility === 'public');
-
-    if (game) {
-      game.players.push(user);
-      game.status = 'playing';
-    } else {
-      const gameId = uuidv4();
-      console.log(req);
-
-      game = {
-        gameId: gameId,
-        players: [user],
-        visibility: req.visibility,
-        mode: 'pvp_remote',
-        status: 'waiting',
-        createdAt: new Date().toISOString(),
-      };
-
-      this.activeMatches.push(game);
-    }
-
+  async getById(gameId: string): Promise<gameType | undefined> {
+    const game = this.activeGames.find((g) => g.gameId === gameId);
     return game;
   }
 
-  async findAll() {
-    return this.activeMatches as gameResponseArrayType;
+  async getByUser(userId: number): Promise<gameType | undefined> {
+    const game = this.activeGames.find((g) => g.players.some((p) => p.id === userId));
+    return game;
   }
 
-  async findFiltered(query: gameQueryType): Promise<gameResponseArrayType> {
-    return this.activeMatches.filter((item) =>
-      Object.entries(query).every(([key, value]) => item[key as keyof game] === value),
+  async create(game: gameCreateType): Promise<gameType> {
+    const newGame: gameType = {
+      gameId: uuid(),
+      players: [],
+      mode: game.mode,
+      status: 'waiting',
+      visibility: game.visibility,
+      aiDifficulty: game.aiDifficulty || 'easy',
+    };
+
+    this.activeGames.push(newGame);
+    return newGame;
+  }
+
+  async remove(gameId: string): Promise<void> {
+    this.activeGames = this.activeGames.filter((g) => g.gameId !== gameId);
+  }
+
+  async join(game: gameType, playerId: number): Promise<gameType> {
+    game.players.push(await userService.getInfoById(playerId));
+    this.startGame(game);
+    return game;
+  }
+
+  async findAvailableGame(playerId: number): Promise<gameType> {
+    let freeGame = this.activeGames.find(
+      (g) => g.players.length < 2 && g.visibility === 'public' && g.status === 'waiting',
     );
-  }
 
-  async findById(gameId: gameIdType): Promise<gameResponseType> {
-    const game = this.activeMatches.find((m) => m.gameId === gameId.id);
-    if (!game) throw new NotFoundError(`game with ${gameId} not found`);
-    return game;
-  }
-
-  async insert(req: gameCreateType): Promise<gameResponseType> {
-    const user = await userController.getById(req.userId);
-    if (!user) throw new Error('User not found');
-
-    const game = this.activeMatches.find((m) => m.players.some((p) => p.id === user.id));
-
-    if (game) return game;
-
-    if (req.mode === 'pvp_remote') {
-      const game = this.tryMultiMatch(req, user);
-
-      return game;
-    } else {
-      //Local or AI: create single playergame
-      const gameId = uuidv4();
-
-      const game: game = {
-        gameId: gameId,
-        players: [user],
-        mode: req.mode,
-        status: 'playing',
-        visibility: 'private',
-        createdAt: new Date().toISOString(),
-      };
-
-      console.log(game);
-      this.activeMatches.push(game);
-      return game;
+    if (!freeGame) {
+      freeGame = await this.create({ mode: 'pvp_remote', visibility: 'public' });
     }
+
+    this.join(freeGame, playerId);
+    this.startGame(freeGame);
+
+    return freeGame;
   }
 
-  async join(gameId: gameIdType, req: gameCreateType): Promise<gameResponseType> {
-    const game = await this.findById(gameId);
-    if (!game) throw new NotFoundError(`game ${gameId.id} not found`);
-
-    const user = await userController.getById(req.userId);
-    if (!user) throw new NotFoundError('User ${req.userId} not found');
-
-    if (game.players.length !== 1) throw new Error(`game ${gameId.id} is already full`);
-
-    game.players.push(user);
-    game.status = 'playing';
-
-    return game;
+  private async startGame(game: gameType): Promise<void> {
+    if (
+      (game.players.length === 2 && game.mode === 'pvp_remote') ||
+      (game.players.length === 1 && game.mode === 'pvb_ai')
+    ) {
+      game.status = 'ready';
+      game.createdAt = new Date().toISOString();
+      for (const player of game.players) {
+        notifyPlayer(player.id, -1, 'INFO: Your next Game starts soon');
+      }
+    }
   }
 }

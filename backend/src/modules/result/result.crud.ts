@@ -26,6 +26,7 @@ export const resultModel = {
       SELECT u.id, u.username, COUNT(gp.id) AS wins 
       FROM user u 
       JOIN gamePlayed gp ON u.id = gp.userId 
+      WHERE guest = false
       WHERE gp.isWinner = true 
       GROUP BY u.id, u.username 
       ORDER BY wins DESC 

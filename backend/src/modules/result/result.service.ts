@@ -6,10 +6,14 @@ import { resultCreateType, leaderboardType } from '../../schemas/result';
 
 import { transformInput } from './result.helper';
 import { transformQuery } from '../..//utils/crudQueryBuilder';
+import { gameService } from '../game/game.service';
+import { tournamentService } from '../tournament/tournament.service';
 
 export const resultService = {
   async create(data: resultCreateType): Promise<result> {
     const prismaData = await transformInput(data);
+    gameService.update(data.gameId);
+    tournamentService.update(data.gameId, data.loserId);
 
     try {
       const ret = await resultModel.insert(prismaData);

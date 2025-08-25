@@ -3,6 +3,7 @@ import { NotFoundError, ConflictError } from '../../utils/error';
 import { Prisma, user } from '@prisma/client';
 
 import { transformQuery } from '../../utils/crudQueryBuilder';
+import { userInfoType } from '../../schemas/user';
 
 export const userService = {
   async create(data: Prisma.userCreateInput): Promise<user> {
@@ -46,6 +47,11 @@ export const userService = {
     if (!ret) throw new NotFoundError(`user with ${id} not found`);
 
     return ret;
+  },
+
+  async getInfoById(id: number): Promise<userInfoType> {
+    const user = await this.getById(id);
+    return user as userInfoType;
   },
 
   async deleteOne(id: number): Promise<void> {

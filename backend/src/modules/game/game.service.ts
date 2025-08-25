@@ -1,50 +1,44 @@
-import { gameMakingClass } from './game.class';
+import { gameClass } from './game.class';
 import { NotFoundError } from '../../utils/error';
 
-import { transformQuery } from '../../utils/crudQueryBuilder';
+import type { gameType, gameJoinType, gameCreateType } from '../../schemas/game';
 
-import type {
-  gameCreateType,
-  gameQueryType,
-  gameIdType,
-  gameResponseType,
-  gameResponseArrayType,
-} from '../../schemas/game';
+const gamemaker = new gameClass();
 
-const gamemaker = new gameMakingClass();
+export const gameService = {
+  async getById(id: string): Promise<gameType> {
+    const game = await gamemaker.getById(id);
+    if (!game) throw new NotFoundError(`game ${id} not found`);
 
-export async function getQuery(filters?: gameQueryType): Promise<gameResponseArrayType> {
-  let game = [];
+    return game;
+  },
 
-  if (!filters) {
-    game = await gamemaker.findAll();
-  } else {
-    const query = transformQuery(filters);
-    game = await gamemaker.findFiltered(query);
-  }
-  if (!game || game.length === 0) {
-    throw new NotFoundError('No games found');
-  }
-  return game;
-}
+  async create(data: gameJoinType): Promise<gameType> {
+    const existingGame = await gamemaker.getByUser(data.playerId);
+    if (existingGame) return existingGame;
 
-export async function getgameById(id: gameIdType): Promise<gameResponseType> {
-  const game = await gamemaker.findById(id);
-  if (!game) throw new NotFoundError(`game with ${id} not found`);
+    let game;
+    if (data.gameId) {
+      game = await gamemaker.getById(data.gameId);
+      if (!game) throw new NotFoundError(`game ${data.gameId} not found`);
+      await gamemaker.join(game, data.playerId);
+    } else if (data.mode === 'pvp_remote' && data.visibility === 'public') {
+      game = gamemaker.findAvailableGame(data.playerId);
+    } else {
+      game = await gamemaker.create(data as gameCreateType);
+      await gamemaker.join(game, data.playerId);
+    }
+    return game;
+  },
 
-  return game;
-}
+  async createTournamentGame(player1: number, player2: number): Promise<gameType> {
+    const game = await gamemaker.create({ mode: 'pvp_remote', visibility: 'public' });
+    await gamemaker.join(game, player1);
+    await gamemaker.join(game, player2);
+    return game;
+  },
 
-export async function creategame(data: gameCreateType): Promise<gameResponseType> {
-  const ret = await gamemaker.insert(data);
-
-  return ret;
-}
-
-export async function joingame(id: gameIdType, input: gameCreateType): Promise<gameResponseType> {
-  await getgameById(id);
-
-  const game = await gamemaker.join(id, input);
-  if (!game) throw new NotFoundError(`game with ${id} not found`);
-  return game;
-}
+  async update(id: string): Promise<void> {
+    if (await gamemaker.getById(id)) gamemaker.remove(id);
+  },
+};
