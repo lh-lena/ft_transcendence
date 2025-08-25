@@ -46,16 +46,6 @@ services:
       retries: 10
       start_period: 30s
 
-  prisma:
-    build: ./prisma
-    container_name: ft_transcendence_prisma
-    environment:
-      - DATABASE_URL=file:/app/data/db.sqlite
-    volumes:
-      - ./data:/app/data
-    networks:
-      - pong-network
-
   backend:
     build: ./backend
     container_name: ft_transcendence_backend
@@ -67,8 +57,6 @@ services:
       - ./data:/app/data
       - ./backend:/app
       - /app/node_modules
-    depends_on:
-      - prisma
     networks:
       - pong-network
     healthcheck:
