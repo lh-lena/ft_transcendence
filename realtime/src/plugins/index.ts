@@ -1,30 +1,36 @@
-import { FastifyInstance } from 'fastify';
+import type { FastifyInstance } from 'fastify';
+import { configPlugin } from './config.plugin.js';
+import { eventBusPlugin } from './eventBus.plugin.js';
 import { authPlugin } from './auth.plugin.js';
 import { websocketPlugin } from './ws.plugin.js';
-import { configPlugin } from './config.plugin.js';
 import { gamePlugin } from './game.plugin.js';
-import { eventBusPlugin } from './eventBus.plugin.js';
+import { chatPlugin } from './chat.plugin.js';
+import { apiPlugin } from './api.plugin.js';
 import monitoringPlugin from './monitoring.plugin.js';
+import { processErrorLog } from '../utils/error.handler.js';
 
-export const registerPlugins = async (app: FastifyInstance) => {
+export const registerPlugins = async (app: FastifyInstance): Promise<void> => {
   try {
+    app.log.info('Registering plugins...');
+
     app.register(configPlugin);
 
-    await app.register(eventBusPlugin);
+    app.register(eventBusPlugin);
 
-    await app.register(authPlugin);
+    app.register(authPlugin);
 
-    await app.register(websocketPlugin);
+    app.register(websocketPlugin);
+
+    app.register(chatPlugin);
 
     await app.register(monitoringPlugin);
 
     app.register(gamePlugin);
 
-    app.log.debug('All plugins registered successfully');
-  } catch (err) {
-    app.log.error(
-      `Error registering plugins: ${err instanceof Error ? err.message : err}`,
-    );
-    throw err;
+    app.register(apiPlugin);
+
+    app.log.info('All plugins registered');
+  } catch (error: unknown) {
+    processErrorLog(app, 'plugin', 'Error registering plugins: ', error);
   }
 };
