@@ -122,7 +122,7 @@ export default function createGameStateService(app: FastifyInstance): GameStateS
       try {
         const currentTime = Date.now();
         let deltaTime = (currentTime - lastFrameTime) / 1000;
-        deltaTime = Math.min(deltaTime, 0.033);
+        deltaTime = Math.min(deltaTime, PONG_CONFIG.FRAME_TIME_CAP_SECONDS);
         lastFrameTime = currentTime;
         const { gameState } = game;
         if (game.status !== GameSessionStatus.ACTIVE) {
