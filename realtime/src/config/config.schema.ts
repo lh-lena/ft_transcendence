@@ -2,8 +2,8 @@ import { z } from 'zod';
 
 export const configSchema = z.object({
   NODE_ENV: z.enum(['development', 'production']).default('production'),
-  PORT: z.coerce.number().int().min(1).max(65535).default(8081),
-  HOST: z.string().default('0.0.0.0'),
+  WS_PORT: z.coerce.number().int().min(1).max(65535).default(8081),
+  WS_HOST: z.string().default('0.0.0.0'),
   LOG_LEVEL: z.enum(['debug', 'info', 'warn', 'error']).default('info'),
 
   WS_CONNECTION_TIMEOUT: z.coerce.number().int().positive().default(60_000),

@@ -1,11 +1,16 @@
 import { buildServer } from './app.js';
-import { serverConfig } from './config/server.config.js';
+import type { EnvironmentConfig } from './config/config.js';
+import { safeErrorToString } from './utils/error.handler.js';
 
 const start = async (): Promise<void> => {
-  const server = await buildServer();
-
-  const port = serverConfig.port;
-  const host = serverConfig.host;
+  const result = await buildServer();
+  if (result.isErr()) {
+    console.error(safeErrorToString(result.error));
+    process.exit(1);
+  }
+  const server = result.value;
+  const config = server.config as EnvironmentConfig;
+  const { port, host } = config;
   server.listen({ port, host }, function (err: unknown, address: string) {
     if (err) {
       server.log.error(err, 'Failed to start server:');

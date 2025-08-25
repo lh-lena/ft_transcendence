@@ -1,13 +1,20 @@
 import Fastify, { type FastifyInstance } from 'fastify';
-import { serverConfig } from './config/server.config.js';
+import { err, ok, type Result } from 'neverthrow';
+import { parseConfig } from './config/server.config.js';
 import { registerPlugins } from './plugins/index.js';
 
-export const buildServer = async (): Promise<FastifyInstance> => {
-  const server = Fastify({
-    logger: serverConfig.logger,
-  });
+export const buildServer = async (): Promise<Result<FastifyInstance, unknown>> => {
+  try {
+    const config = parseConfig();
 
-  await server.register(registerPlugins);
+    const server = Fastify({
+      logger: config.logger,
+    });
 
-  return server;
+    await registerPlugins(server);
+    await server.ready();
+    return ok(server);
+  } catch (error: unknown) {
+    return err(error);
+  }
 };
