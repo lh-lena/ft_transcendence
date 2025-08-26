@@ -25,7 +25,7 @@ export class TournamentAliasPage {
 
     // email input
     const inputAlias = document.createElement("input");
-    inputAlias.type = "alias";
+    inputAlias.type = "text";
     inputAlias.id = "text_alias";
     inputAlias.placeholder = "alias";
     inputAlias.style.paddingLeft = "0.5em";
