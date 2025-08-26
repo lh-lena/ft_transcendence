@@ -33,9 +33,7 @@ const crudRoutes =
           request: FastifyRequest<crudDefines.GetAll<TQuery>>,
           reply: FastifyReply,
         ) => {
-          console.log('Query in route before: ', request.query);
           const query = request.query as TQuery;
-          console.log('Query in Route: ', query);
           const ret = await controller.getQuery!(query);
 
           return reply.code(200).send(ret);

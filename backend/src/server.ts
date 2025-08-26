@@ -19,10 +19,10 @@ async function build() {
   });
 
   //  server.addHook('onRoute', (routeOptions) => {
-  //   console.log('📦 Route registered:', routeOptions.method, routeOptions.url);
-  //   if (routeOptions.schema) {
-  //     console.log('🧪 Route schema:', JSON.stringify(routeOptions.schema, null, 2));
-  //   }
+  //    console.log('📦 Route registered:', routeOptions.method, routeOptions.url);
+  //    if (routeOptions.schema) {
+  //      console.log('🧪 Route schema:', JSON.stringify(routeOptions.schema, null, 2));
+  //    }
   //  });
 
   server.register(AutoLoad, {

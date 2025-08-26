@@ -22,10 +22,6 @@ export const blockedService = {
 
   async getQuery(query?: Prisma.BlockedWhereInput): Promise<Blocked[]> {
     const ret = query ? await blockedModel.findBy(query) : await blockedModel.findAll();
-
-    if (ret.length === 0) {
-      throw new NotFoundError('no blockeds found');
-    }
     return ret;
   },
 
@@ -34,5 +30,11 @@ export const blockedService = {
     if (!ret) {
       throw new NotFoundError('blocked not found');
     }
+  },
+
+  async isBlocked(userId: number, blockedId: number): Promise<boolean> {
+    const ret = await blockedModel.findBy({ userId: userId, blockedId: blockedId });
+    if (ret.length > 0) return true;
+    return false;
   },
 };

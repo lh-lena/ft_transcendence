@@ -23,9 +23,6 @@ export const friendService = {
   async getQuery(query?: Prisma.FriendshipWhereInput): Promise<Friendship[]> {
     const ret = query ? await friendModel.findBy(query) : await friendModel.findAll();
 
-    if (ret.length === 0) {
-      throw new NotFoundError('no friends found');
-    }
     return ret;
   },
 

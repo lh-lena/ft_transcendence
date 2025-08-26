@@ -32,7 +32,7 @@ export const gameService = {
   },
 
   async createTournamentGame(player1: number, player2: number): Promise<gameType> {
-    const game = await gamemaker.create({ mode: 'pvp_remote', visibility: 'public' });
+    const game = await gamemaker.create({ mode: 'pvp_remote', visibility: 'private' });
     await gamemaker.join(game, player1);
     await gamemaker.join(game, player2);
     return game;

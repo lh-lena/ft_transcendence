@@ -9,6 +9,7 @@ import { resultRefSchemas } from '../modules/result/result.schema';
 import { friendRefSchemas } from '../modules/friend/friend.schema';
 import { blockedRefSchemas } from '../modules/blocked/blocked.schema';
 import { tournamentRefSchemas } from '../modules/tournament/tournament.schema';
+import { chatRefSchemas } from '../modules/chat/chat.schema';
 
 const schemaPlugin = async (server: FastifyInstance) => {
   const schemaList = [
@@ -20,6 +21,7 @@ const schemaPlugin = async (server: FastifyInstance) => {
     ...Object.values(friendRefSchemas),
     ...Object.values(blockedRefSchemas),
     ...Object.values(tournamentRefSchemas),
+    ...Object.values(chatRefSchemas),
   ];
 
   for (const schema of schemaList) {

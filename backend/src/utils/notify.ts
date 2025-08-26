@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const wsApiClient = axios.create({
-  baseURL: 'wss://localhost:8081/api',
+  baseURL: 'https://localhost:8081/api',
   timeout: 5000,
 });
 

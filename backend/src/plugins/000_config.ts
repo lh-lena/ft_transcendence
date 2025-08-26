@@ -30,7 +30,7 @@ const configPlugin = async (server: FastifyInstance) => {
 
   const config = envSchema<Config>({ schema });
 
-  console.log(config);
+  // console.log(config);
 
   server.decorate('config', config);
 };

@@ -1,5 +1,20 @@
 #!/bin/bash
 
+curl -X POST http://[::1]:8080/api/chat \
+  -H "Content-Type: application/json" \
+  -d '{
+    "senderId": "12",
+    "reciverId": "31",
+    "message": "true"
+  }'
+
+curl -X POST http://[::1]:8080/api/blocked \
+  -H "Content-Type: application/json" \
+  -d '{
+    "userId": "11",
+    "blockedId": "10",
+  }'
+
 curl -X POST http://[::1]:8080/api/user \
   -H "Content-Type: application/json" \
   -d '{
