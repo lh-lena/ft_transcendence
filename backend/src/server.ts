@@ -1,4 +1,5 @@
 import fastify from 'fastify';
+import fastifyStatic from '@fastify/static';
 import AutoLoad from '@fastify/autoload';
 import Path from 'path';
 
@@ -24,6 +25,10 @@ async function build() {
   //      console.log('🧪 Route schema:', JSON.stringify(routeOptions.schema, null, 2));
   //    }
   //  });
+  server.register(fastifyStatic, {
+    root: Path.join(__dirname, '../public'),
+    prefix: '/',
+  });
 
   server.register(AutoLoad, {
     dir: Path.join(__dirname, 'plugins'),

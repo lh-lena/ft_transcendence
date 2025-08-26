@@ -1,8 +1,12 @@
 import { userModel } from './user.crud';
+import path from 'path';
+import fs from 'fs/promises';
 import { NotFoundError, ConflictError } from '../../utils/error';
 import { Prisma, User } from '@prisma/client';
 
 import { userInfoType } from '../../schemas/user';
+
+const allowedExts = ['.jpg', '.jpeg', '.png', '.webp'];
 
 export const userService = {
   async create(data: Prisma.UserCreateInput): Promise<User> {
@@ -61,5 +65,27 @@ export const userService = {
   async getCount(): Promise<number> {
     const ret = await userModel.findAll();
     return ret.length;
+  },
+
+  async saveAvatar(userId: number, file: unknown): Promise<string> {
+    const ext = path.extname(file.filename).toLowerCase();
+    if (!allowedExts.includes(ext)) throw new Error('Invalid file type.');
+
+    const uploadDir = path.join(process.cwd(), 'public', 'avatars');
+    await fs.mkdir(uploadDir, { recursive: true });
+
+    const filename = `avatar_${userId}_${Date.now()}${ext}`;
+    const filePath = path.join(uploadDir, filename);
+
+    const writeStream = await fs.open(filePath, 'w');
+    for await (const chunk of file.file) {
+      await writeStream.write(chunk);
+    }
+    await writeStream.close();
+
+    const avatarUrl = `/avatars/${filename}`;
+    await this.update(userId, { avatarUrl: avatarUrl });
+
+    return avatarUrl;
   },
 };
