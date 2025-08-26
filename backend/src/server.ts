@@ -44,8 +44,9 @@ const start = async () => {
   const server = await build();
 
   try {
-    const PORT = parseInt(server.config.PORT);
-    await server.listen({ port: PORT, host: server.config.HOST });
+    const PORT = parseInt(process.env.PORT || '8080');
+    const IP = process.env.IP || '0.0.0.0';
+    await server.listen({ port: PORT, host: IP });
   } catch (err) {
     console.error(err);
     process.exit(1);

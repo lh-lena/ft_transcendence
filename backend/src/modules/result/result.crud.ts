@@ -21,18 +21,17 @@ export const resultModel = {
     return await prisma.result.create({ data, ...options });
   },
 
+  //WHERE guest = false -> add guest handling
   getLeaderboard: async (): Promise<leaderboardType> => {
     const ret: leaderboardType = await prisma.$queryRaw`
       SELECT u.id, u.username, COUNT(gp.id) AS wins 
       FROM user u 
       JOIN gamePlayed gp ON u.id = gp.userId 
-      WHERE guest = false
       WHERE gp.isWinner = true 
       GROUP BY u.id, u.username 
       ORDER BY wins DESC 
       LIMIT 5 OFFSET 0 
       `;
-    console.log(ret);
     return ret;
   },
 };

@@ -2,7 +2,6 @@ import { userModel } from './user.crud';
 import { NotFoundError, ConflictError } from '../../utils/error';
 import { Prisma, User } from '@prisma/client';
 
-import { transformQuery } from '../../utils/crudQueryBuilder';
 import { userInfoType } from '../../schemas/user';
 
 export const userService = {
@@ -33,7 +32,7 @@ export const userService = {
   },
 
   async getQuery(query?: Prisma.UserWhereInput): Promise<User[]> {
-    const ret = query ? await userModel.findBy(transformQuery(query)) : await userModel.findAll();
+    const ret = query ? await userModel.findBy(query) : await userModel.findAll();
 
     if (ret.length === 0) {
       throw new NotFoundError('No user found');

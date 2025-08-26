@@ -5,7 +5,6 @@ import { Prisma, Result } from '@prisma/client';
 import { resultCreateType, leaderboardType } from '../../schemas/result';
 
 import { transformInput } from './result.helper';
-import { transformQuery } from '../..//utils/crudQueryBuilder';
 import { gameService } from '../game/game.service';
 import { tournamentService } from '../tournament/tournament.service';
 
@@ -27,9 +26,10 @@ export const resultService = {
   },
 
   async getQuery(query?: Prisma.ResultWhereInput): Promise<Result[]> {
-    const ret = query
-      ? await resultModel.findBy(transformQuery(query))
-      : await resultModel.findAll();
+    //const ret = query
+    //  ? await resultModel.findBy(transformQuery(query))
+    //  : await resultModel.findAll();
+    const ret = query ? await resultModel.findBy(query) : await resultModel.findAll();
 
     if (ret.length === 0) {
       throw new NotFoundError('No result found');
