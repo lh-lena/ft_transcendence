@@ -67,14 +67,14 @@ STOP = 0
 }
 
 export interface GameState {
-gameId: string;
-ball: { x: number; y: number; dx: number; dy: number; v: number; };
-paddleA: { width: number; height: number; x: number; y: number; score: number; speed: number; direction: Direction; };
-paddleB: { width: number; height: number; x: number; y: number; score: number; speed: number; direction: Direction; };
-activePaddle?: string;
-status: GameSessionStatus;
-countdown: number;
-sequence: number; // default 0
+  gameId: string;
+  ball: { x: number; y: number; dx: number; dy: number; v: number; };
+  paddleA: { width: number; height: number; x: number; y: number; score: number; speed: number; direction: Direction; };
+  paddleB: { width: number; height: number; x: number; y: number; score: number; speed: number; direction: Direction; };
+  activePaddle?: string;
+  status: GameSessionStatus;
+  countdown: number;
+  sequence: number; // default 0
 }
 
 export enum GameSessionStatus {

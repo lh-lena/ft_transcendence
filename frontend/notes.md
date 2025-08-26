@@ -1,11 +1,13 @@
 # Frontend Development Notes
 
 ## Project Manager Feedback
-*Notes from PM feedback sessions*
+
+_Notes from PM feedback sessions_
 
 ## Git Workflow
 
 ### Daily Workflow
+
 ```bash
 # Start of day
 git checkout develop
@@ -15,6 +17,7 @@ git merge develop  # Handle conflicts if any
 ```
 
 ### Before Creating PR
+
 ```bash
 git checkout develop
 git pull origin develop
@@ -26,11 +29,13 @@ git push origin feature/your-branch
 ### Common Issues & Solutions
 
 #### "Your branch is behind"
+
 ```bash
 git pull origin feature/your-branch --rebase
 ```
 
 #### "Failed to push - remote contains work"
+
 ```bash
 git pull origin feature/your-branch
 # Resolve conflicts, then push again
@@ -39,6 +44,7 @@ git pull origin feature/your-branch
 ## Development TODOs
 
 ### Features to Implement
+
 - [ ] Account settings
 - [x] Add friends panel to profile
 - [ ] Chat system
@@ -47,4 +53,5 @@ git pull origin feature/your-branch
 - [x] Match history
 
 ## Additional Notes
-*Add any additional development notes here*
+
+_Add any additional development notes here_

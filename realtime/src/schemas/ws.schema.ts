@@ -1,6 +1,7 @@
 import { z } from 'zod';
-import { Direction, NotificationType } from '../types/game.types.js';
-import { GameStateSchema, GameResultSchema } from './game.schema.js';
+import { Direction, NotificationType } from '../constants/game.constants.js';
+import type { GameStateSchema, GameResultSchema } from './game.schema.js';
+import { ChatMessagePayloadSchema } from './chat.schema.js';
 
 export const GameIdSchema = z.object({
   gameId: z.string(),
@@ -23,7 +24,7 @@ export const GamePausePayloadSchema = z.object({
 export const NotificationPayloadSchema = z.object({
   type: z.nativeEnum(NotificationType),
   message: z.string(),
-  timestamp: z.number(),
+  timestamp: z.number().int(),
 });
 
 export const ConnectedPayloadSchema = z.object({
@@ -70,6 +71,10 @@ export const WsClientMessageSchema = z.discriminatedUnion('event', [
     event: z.literal('notification'),
     payload: NotificationPayloadSchema,
   }),
+  z.object({
+    event: z.literal('chat_message'),
+    payload: ChatMessagePayloadSchema,
+  }),
 ]);
 
 export interface WsServerBroadcast {
@@ -80,6 +85,7 @@ export interface WsServerBroadcast {
   countdown_update: z.infer<typeof CountdownUpdateSchema>;
   notification: z.infer<typeof NotificationPayloadSchema>;
   error: z.infer<typeof ErrorPayloadSchema>;
+  chat_message: z.infer<typeof ChatMessagePayloadSchema>;
 }
 
 export type ClientEventPayload<T extends WsClientMessage['event']> = Extract<

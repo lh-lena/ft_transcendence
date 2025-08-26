@@ -1,23 +1,36 @@
 export class ProfileAvatar {
   private element: HTMLElement;
+  private color: string;
+  private colorMap: string[];
+  private width: number;
+  private height: number;
+  private gridSize: number;
+  private style?: string | undefined;
 
   constructor(
-    private color: string,
-    private colorMap: string[],
-    private width: number = 40,
-    private height: number = 40,
-    private gridSize: number = 2,
-    private style?: string,
+    color: string,
+    colorMap: string[],
+    width: number = 40,
+    height: number = 40,
+    gridSize: number = 2,
+    style?: string,
   ) {
-    this.element = document.createElement('div');
+    this.color = color;
+    this.colorMap = colorMap;
+    this.width = width;
+    this.height = height;
+    this.gridSize = gridSize;
+    this.style = style;
+
+    this.element = document.createElement("div");
     this.element.style.width = `${width}px`;
     this.element.style.height = `${height}px`;
-    this.element.className = 'flex items-center justify-center';
+    this.element.className = "flex items-center justify-center";
 
-    const canvas = document.createElement('canvas');
+    const canvas = document.createElement("canvas");
     canvas.width = width + 5;
     canvas.height = height + 5;
-    const ctx = canvas.getContext('2d')!;
+    const ctx = canvas.getContext("2d")!;
 
     const squareWidth = width / gridSize;
     const squareHeight = height / gridSize;
@@ -26,8 +39,13 @@ export class ProfileAvatar {
     let i = 0;
     for (let y = 0; y < gridSize; y++) {
       for (let x = 0; x < gridSize; x++) {
-        ctx.fillStyle = this.colorMap[i] || 'white';
-        ctx.fillRect(x * squareWidth, y * squareHeight, squareWidth, squareHeight);
+        ctx.fillStyle = this.colorMap[i] || "white";
+        ctx.fillRect(
+          x * squareWidth,
+          y * squareHeight,
+          squareWidth,
+          squareHeight,
+        );
         i++;
       }
     }

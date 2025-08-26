@@ -1,16 +1,14 @@
 import { z } from 'zod';
-import {
-  GameMode,
-  AIDifficulty,
-  GameSessionStatus,
-  Direction,
-} from '../types/game.types.js';
+import { GameMode, GameSessionStatus, Direction } from '../constants/game.constants.js';
+import { AIDifficulty } from '../constants/ai.constants.js';
 import { UserSchema } from './user.schema.js';
+
+export const PlayerSchema = UserSchema.extend({});
 
 export const StartGameSchema = z.object({
   gameId: z.string(),
   gameMode: z.nativeEnum(GameMode),
-  players: z.array(UserSchema),
+  players: z.array(PlayerSchema),
   aiDifficulty: z.nativeEnum(AIDifficulty).optional(),
 });
 
@@ -42,15 +40,17 @@ const PaddleSchema = z.object({
   direction: z.nativeEnum(Direction),
 });
 
+const BallSchema = z.object({
+  x: z.number(),
+  y: z.number(),
+  dx: z.number(),
+  dy: z.number(),
+  v: z.number(),
+});
+
 export const GameStateSchema = z.object({
   gameId: z.string(),
-  ball: z.object({
-    x: z.number(),
-    y: z.number(),
-    dx: z.number(),
-    dy: z.number(),
-    v: z.number(),
-  }),
+  ball: BallSchema,
   paddleA: PaddleSchema,
   paddleB: PaddleSchema,
   countdown: z.number().int().min(0).default(0),
@@ -62,11 +62,11 @@ export const GameStateSchema = z.object({
 export const GameSessionSchema = z.object({
   gameId: z.string(),
   gameMode: z.nativeEnum(GameMode),
-  players: z.array(UserSchema),
+  players: z.array(PlayerSchema),
   isConnected: z.map(z.number(), z.boolean()),
   status: z.nativeEnum(GameSessionStatus),
-  startedAt: z.string().nullable(),
-  finishedAt: z.string().nullable(),
+  startedAt: z.string().optional(),
+  finishedAt: z.string().optional(),
   gameLoopInterval: z.any().optional(),
   lastSequence: z.number().default(0),
   countdownInterval: z.any().optional(),

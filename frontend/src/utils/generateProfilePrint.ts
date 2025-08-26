@@ -1,8 +1,11 @@
-export function generateProfilePrint(gridSize: number = 2): { color: string; colorMap: string[] } {
+export function generateProfilePrint(gridSize: number = 2): {
+  color: string;
+  colorMap: string[];
+} {
   // define the palette and colors
-  const pallete = ['#D72E1D', '#ed623c', '#ffc02e', '#06833e'];
+  const pallete = ["#D72E1D", "#ed623c", "#ffc02e", "#06833e"];
   const color = pallete[Math.floor(Math.random() * pallete.length)];
-  const colors = ['white', color];
+  const colors = ["white", color];
 
   // Track if accent color is placed and build color map
   let accentPlaced = false;
