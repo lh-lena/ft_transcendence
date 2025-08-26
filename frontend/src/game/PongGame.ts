@@ -196,13 +196,17 @@ export class PongGame {
     // only handle w and s if its a local game
     // --- Paddle Movement LOCAL---
     if (this.gameMode == "local") {
+      // if if statement for local to enable both presses at same time
       if (this.keys["w"]) {
         this.paddleA.y -= this.paddleA.speed * dt;
-      } else if (this.keys["s"]) {
+      }
+      if (this.keys["s"]) {
         this.paddleA.y += this.paddleA.speed * dt;
-      } else if (this.keys["ArrowUp"]) {
+      }
+      if (this.keys["ArrowUp"]) {
         this.paddleB.y -= this.paddleB.speed * dt;
-      } else if (this.keys["ArrowDown"]) {
+      }
+      if (this.keys["ArrowDown"]) {
         this.paddleB.y += this.paddleB.speed * dt;
       }
     }

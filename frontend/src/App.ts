@@ -10,7 +10,7 @@ import { RegisterPage } from "./pages/register";
 import { SettingsPage } from "./pages/settings";
 import { LeaderboardPage } from "./pages/leaderboard";
 import { ChatPage } from "./pages/chat";
-import { VsPlayerGamePage } from "./pages/remoteGame";
+import { VsPlayerGamePage } from "./pages/RemoteGame";
 import { TournamentAliasPage } from "./pages/tournament";
 
 // single source of truth for pages and routes
