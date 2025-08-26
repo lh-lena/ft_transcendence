@@ -4,7 +4,7 @@ import type { GameStateSchema, GameResultSchema } from './game.schema.js';
 import { ChatMessagePayloadSchema } from './chat.schema.js';
 
 export const GameIdSchema = z.object({
-  gameId: z.string(),
+  gameId: z.string().min(1),
 });
 
 export const GameLeavePayloadSchema = z.object({
@@ -12,6 +12,7 @@ export const GameLeavePayloadSchema = z.object({
 });
 
 export const PlayerInputSchema = z.object({
+  ...GameIdSchema.shape,
   direction: z.nativeEnum(Direction),
   sequence: z.number().default(0),
 });

@@ -189,7 +189,7 @@ export default function createGameService(app: FastifyInstance): GameService {
     if (user === undefined || user === null) return;
     const { userId } = user;
     try {
-      const gameId = extractGameIdForUser(user);
+      const { gameId } = action;
       const game = validator.getValidGameCheckPlayer(gameId, userId);
       const player = game.players.find((p) => p.userId === userId);
       validator.validateGameStatus(game.status, [GameSessionStatus.ACTIVE]);
