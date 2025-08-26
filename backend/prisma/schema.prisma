@@ -22,6 +22,9 @@ model User {
   is_2fa_enabled Boolean      @default(false)
   twofa_secret   String?
   guest          Boolean      @default(false)
+  color:         String
+  colormap:      String[]
+  avatarUrl:     String
 
   gamePlayed     GamePlayed[]
 

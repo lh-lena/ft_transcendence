@@ -3,17 +3,10 @@ import { dtString } from './basics';
 
 import { sharedGamePlayedBase, sharedGamePlayedQueryBase } from './shared';
 
-const avatar = z.object({
-  color: z.string(),
-  colormap: z.array(z.string()),
-  avatarUrl: z.url().optional(),
-});
-
 export const userBase = z.object({
   id: z.number(),
   createdAt: dtString,
   updatedAt: dtString,
-  avatar: avatar.optional(),
   gamePlayed: z.array(sharedGamePlayedBase).optional(),
   email: z.email(),
   username: z.string(),
@@ -21,6 +14,9 @@ export const userBase = z.object({
   is_2fa_enabled: z.boolean().optional(),
   twofa_secret: z.string().nullable().optional(),
   guest: z.boolean().default(false),
+  color: z.string(),
+  colormap: z.array(z.string()),
+  avatarUrl: z.url().optional(),
 });
 
 export const userInfo = userBase.pick({
