@@ -20,6 +20,7 @@ export const userBase = z.object({
   password_hash: z.string(),
   is_2fa_enabled: z.boolean().optional(),
   twofa_secret: z.string().nullable().optional(),
+  guest: z.boolean().default(false),
 });
 
 export const userInfo = userBase.pick({

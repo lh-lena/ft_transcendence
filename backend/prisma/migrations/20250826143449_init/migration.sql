@@ -6,6 +6,7 @@ CREATE TABLE "User" (
     "password_hash" TEXT NOT NULL,
     "is_2fa_enabled" BOOLEAN NOT NULL DEFAULT false,
     "twofa_secret" TEXT,
+    "guest" BOOLEAN NOT NULL DEFAULT false,
     "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" DATETIME NOT NULL
 );

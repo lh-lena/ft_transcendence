@@ -13,6 +13,7 @@ function hasValidationError(error: unknown): error is { validation: unknown } {
 }
 
 export function errorHandler(error: FastifyError, _request: FastifyRequest, reply: FastifyReply) {
+  console.log('Error occurred:', error);
   if (error instanceof AppError) {
     return reply.code(error.statusCode ? error.statusCode : 500).send({
       error: error.code,

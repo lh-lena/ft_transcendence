@@ -4,12 +4,13 @@ const { faker } = require('@faker-js/faker');
 const prisma = new PrismaClient();
 
 async function main() {
+  // Exit if users already exist
   const userCount = await prisma.user.count();
   if (userCount > 0) {
     return;
   }
 
-  // Seed users
+  // Seed Users
   const users = [];
   for (let i = 0; i < 100; i++) {
     users.push(
@@ -25,7 +26,7 @@ async function main() {
     );
   }
 
-  // Seed friendships (no duplicates, no self-friend)
+  // Seed Friendships (no duplicates, no self-friend)
   const friendshipPairs = new Set();
   let friendshipEntries = 0;
   while (friendshipEntries < 100) {
@@ -45,7 +46,7 @@ async function main() {
     friendshipEntries++;
   }
 
-  // Seed blocked relationships (no duplicates, no self-block)
+  // Seed Blocked relationships (no duplicates, no self-block)
   const blockedPairs = new Set();
   let blockedEntries = 0;
   while (blockedEntries < 40) {
@@ -65,7 +66,7 @@ async function main() {
     blockedEntries++;
   }
 
-  // Seed results
+  // Seed Results
   const results = [];
   for (let i = 0; i < 100; i++) {
     results.push(
@@ -84,7 +85,7 @@ async function main() {
     );
   }
 
-  // Seed gamePlayed
+  // Seed GamePlayed
   for (let i = 0; i < 100; i++) {
     await prisma.gamePlayed.create({
       data: {
@@ -96,7 +97,7 @@ async function main() {
     });
   }
 
-  // Seed chat messages (random sender/receiver, no self-message)
+  // Seed Chat Messages (random sender/receiver, no self-message)
   for (let i = 0; i < 100; i++) {
     let senderIdx = faker.number.int({ min: 0, max: users.length - 1 });
     let receiverIdx = faker.number.int({ min: 0, max: users.length - 1 });

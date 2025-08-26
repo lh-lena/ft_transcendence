@@ -21,6 +21,7 @@ model User {
   password_hash  String
   is_2fa_enabled Boolean      @default(false)
   twofa_secret   String?
+  guest          Boolean      @default(false)
 
   gamePlayed     GamePlayed[]
 
