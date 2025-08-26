@@ -1,11 +1,11 @@
-@import '@sakun/system.css';
+@import "@sakun/system.css";
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  --star-color: #0400FF;
+  --star-color: #0400ff;
 }
 
 .star_8 {
@@ -28,8 +28,7 @@
 
 @layer utilities {
   .bg-noise {
-    background-image: url('../assets/images/noise.svg');
+    background-image: url("../assets/images/noise.svg");
     background-repeat: repeat;
   }
 }
-

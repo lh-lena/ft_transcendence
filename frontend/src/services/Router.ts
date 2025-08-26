@@ -5,7 +5,7 @@ export class Router {
     this.routes = new Map();
 
     // Handle browser back/forward buttons
-    window.addEventListener('popstate', () => {
+    window.addEventListener("popstate", () => {
       this.handleRoute(window.location.pathname);
     });
   }
@@ -15,7 +15,7 @@ export class Router {
   }
 
   public navigate(path: string): void {
-    window.history.pushState({}, '', path);
+    window.history.pushState({}, "", path);
     this.handleRoute(path);
   }
 
@@ -28,8 +28,8 @@ export class Router {
     if (callback) {
       callback();
     } else {
-      // Handle 404 or redirect to home
-      this.navigate('/');
+      // handle 404 or redirect to home
+      this.navigate("/");
     }
   }
 

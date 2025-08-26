@@ -1,16 +1,22 @@
-import { Menu } from '../../components/menu';
-import { Router } from '../../router';
-import { PongButton } from '../../components/pongButton';
+import { Menu } from "../../components/menu";
+import { ServiceContainer, Router } from "../../services";
+import { PongButton } from "../../components/pongButton";
 
 export class HomePage {
   private main: HTMLElement;
   private menu: Menu;
   private pongButton: PongButton;
+  private serviceContainer: ServiceContainer;
+  private router: Router;
 
-  constructor(private router: Router) {
-    this.main = document.createElement('div');
+  constructor(serviceContainer: ServiceContainer) {
+    // router / services container
+    this.serviceContainer = serviceContainer;
+    this.router = this.serviceContainer.get<Router>("router");
+
+    this.main = document.createElement("div");
     this.main.className =
-      'flex flex-col gap-5 w-full min-h-full justify-center items-center bg-[#0400FF]';
+      "flex flex-col gap-5 w-full min-h-full justify-center items-center bg-[#0400FF]";
 
     this.pongButton = new PongButton();
     this.pongButton.mount(this.main);
@@ -18,8 +24,9 @@ export class HomePage {
     // menu for when user is not logged in
     const notLoggedInMenu = [
       // obv will be changing this to /loginAuth for logins
-      { name: 'log in', link: '/login' },
-      { name: 'register', link: '/register' },
+      { name: "log in", link: "/login" },
+      { name: "register", link: "/register" },
+      { name: "guest", link: "/tournament-start" },
     ];
     this.menu = new Menu(this.router, notLoggedInMenu);
   }

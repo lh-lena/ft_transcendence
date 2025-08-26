@@ -1,9 +1,9 @@
 // frontend/src/main.ts
-import './style.css';
-import { Loading } from './components/loading';
-import { App } from './App';
+import "./style.css";
+import { Loading } from "./components/loading";
+import { App } from "./App";
 
-const loading = new Loading('pong');
+const loading = new Loading("pong");
 loading.mount(document.body);
 
 setTimeout(() => {
@@ -15,7 +15,7 @@ setTimeout(() => {
 // Simple connectivity test for CI/CD (runs in background, does not impact app)
 (async function connectivityTest() {
   try {
-    await fetch('http://localhost:8080/api/health');
+    await fetch("http://localhost:8080/api/health");
   } catch (e) {
     console.log(e);
   }
