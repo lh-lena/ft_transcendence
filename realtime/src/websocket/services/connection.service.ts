@@ -246,7 +246,7 @@ export default function createConnectionService(app: FastifyInstance): Connectio
       processErrorLog(
         app,
         'connection-service',
-        `Error notifying status for user ${userId}:`,
+        `Failed to update online status for user ${userId}:`,
         error,
       );
     }
