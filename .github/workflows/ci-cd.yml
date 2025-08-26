@@ -65,22 +65,62 @@ jobs:
       - name: Verify single command startup
         run: |
           docker-compose up -d
-          sleep 10
+          echo "Waiting for containers to initialize..."
+          sleep 20  # Give more time
+          
+          echo "=== Container Status ==="
           docker-compose ps
-          for i in {1..30}; do
-            curl -f http://localhost:3000 && break || sleep 2
+          
+          echo "=== Frontend Container Logs ==="
+          docker logs ft_transcendence_frontend || true
+          
+          # Try different approaches to check frontend
+          echo "=== Checking frontend connectivity ==="
+          
+          # First check if container is running
+          if docker ps | grep -q ft_transcendence_frontend; then
+            echo "Frontend container is running"
+            
+            # Check what's listening inside the container
+            docker exec ft_transcendence_frontend sh -c "netstat -tuln 2>/dev/null || ss -tuln 2>/dev/null || echo 'No netstat/ss available'" || true
+            
+            # Try to curl from inside the container
+            docker exec ft_transcendence_frontend sh -c "curl -f http://localhost:3000 || wget -O- http://localhost:3000" || true
+          else
+            echo "Frontend container is not running!"
+            exit 1
+          fi
+          
+          # Extended wait with more attempts
+          echo "Waiting for frontend to be ready..."
+          for i in {1..60}; do
+            if curl -f http://localhost:3000 2>/dev/null; then
+              echo "Frontend is ready!"
+              break
+            fi
+            echo "Attempt $i/60: Frontend not ready yet..."
+            if [ $i -eq 30 ]; then
+              echo "=== Frontend logs at 30 seconds ==="
+              docker logs ft_transcendence_frontend || true
+            fi
+            sleep 2
           done
           
-          # Wait for backend
+          # Final check
+          curl -f http://localhost:3000 || {
+            echo "=== FINAL Frontend logs ==="
+            docker logs --tail=50 ft_transcendence_frontend
+            exit 1
+          }
+          
+          # Continue with other checks...
           for i in {1..30}; do
             curl -f http://localhost:8080/api/health && break || sleep 2
           done
           
-          # Wait for auth
           for i in {1..30}; do
             curl -f http://localhost:8082/api/auth/health && break || sleep 2
           done
-          
       - name: Health checks
         run: |
           # Frontend
@@ -178,22 +218,27 @@ jobs:
       - name: Wait for services to be healthy
         run: |
           echo "Waiting for services to be healthy..."
-          # Wait for backend
           ./scripts/wait-for-it.sh localhost:8080 -t 120
-          # Wait for frontend
           ./scripts/wait-for-it.sh localhost:3000 -t 120
-          # Wait for auth service
           ./scripts/wait-for-it.sh localhost:8082 -t 120
-          # Wait for nginx to be ready (HTTPS)
           ./scripts/wait-for-it.sh localhost:443 -t 120
           
-          # Additional wait for services to stabilize
-          echo "Waiting for services to stabilize..."
-          sleep 10
+          # Add extra wait for Vite to fully initialize
+          echo "Extra wait for frontend to stabilize..."
+          sleep 30  # Give Vite time to fully start
+      - name: Debug frontend status
+        run: |
+          echo "=== Check if frontend is actually listening ==="
+          docker exec ft_transcendence_frontend sh -c "netstat -tuln | grep 3000 || ss -tuln | grep 3000" || echo "Port 3000 not listening"
           
-          # Check if all containers are running
-          docker-compose ps
+          echo "=== Frontend container logs ==="
+          docker logs ft_transcendence_frontend --tail=50
           
+          echo "=== Test frontend directly (bypass nginx) ==="
+          curl -f http://localhost:3000 || echo "Frontend not responding on 3000"
+          
+          echo "=== Check container health ==="
+          docker ps | grep frontend          
       - name: Check service health
         run: |
           # Check if services are responding directly
@@ -249,16 +294,3 @@ jobs:
       - name: Cleanup
         if: always()
         run: docker-compose down -v
-
-  #6: Deployment (Manual Trigger)
-  deploy:
-    runs-on: ubuntu-latest
-    needs: [lint-format, build-verify, security-scan, typescript-check]
-    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
-    steps:
-      - uses: actions/checkout@v3
-      
-      - name: Deploy to production
-        run: |
-          echo "Deployment steps would go here"
-          # docker-compose -f docker-compose.prod.yml up -d

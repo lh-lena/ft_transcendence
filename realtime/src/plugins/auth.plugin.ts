@@ -1,9 +1,9 @@
 import fp from 'fastify-plugin';
-import { FastifyInstance, FastifyPluginAsync } from 'fastify';
-import authService from '../services/auth.service.js';
+import type { FastifyInstance, FastifyPluginCallback } from 'fastify';
+import createAuthService from '../auth/auth.service.js';
 
-const plugin: FastifyPluginAsync = async (app: FastifyInstance) => {
-  const auth = authService(app);
+const plugin: FastifyPluginCallback = (app: FastifyInstance) => {
+  const auth = createAuthService(app);
 
   app.decorate('auth', auth);
 };

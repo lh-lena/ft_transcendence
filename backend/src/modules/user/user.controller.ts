@@ -8,45 +8,33 @@ import type {
   userIdInput,
   userResponseType,
   userResponseArrayType,
-  } from '../../schemas/user';
+} from '../../schemas/user';
 
 import * as userService from './user.service';
 
-export const userController = { 
-
+export const userController = {
   //controller to create an user
-  async create(
-    input: userCreateInput,
-  ) : Promise< userResponseType > {
-  	const newUser = await userService.createuser( input );
+  async create(input: userCreateInput): Promise<userResponseType> {
+    const newUser = await userService.createuser(input);
     return newUser;
   },
-  
+
   //update user
-  async update(
-    id: userIdInput,
-    input: userUpdateInput,
-  ) : Promise< userResponseType > {
-  	return await userService.updateuser( id, input );
+  async update(id: userIdInput, input: userUpdateInput): Promise<userResponseType> {
+    return await userService.updateuser(id, input);
   },
 
   //controller for user get All or by Id
-  async getAllorFiltered(
-    query: userQueryInput,
-  ) : Promise< userResponseArrayType > {
-    return await userService.getAllorFiltereduser( query );
+  async getAllorFiltered(query: userQueryInput): Promise<userResponseArrayType> {
+    return await userService.getAllorFiltereduser(query);
   },
-  
-  async getById(
-    id: userIdInput,
-  ) : Promise< userResponseType | null > {
-  	return await userService.getuserById( id );
+
+  async getById(id: userIdInput): Promise<userResponseType | null> {
+    return await userService.getuserById(id);
   },
-  
+
   //delete user
- async remove(
-    id: userIdInput,
-  ) : Promise< { message: string } > {
-  	return await userService.removeuser( id );
+  async remove(id: userIdInput): Promise<{ message: string }> {
+    return await userService.removeuser(id);
   },
-}
+};
