@@ -3,12 +3,14 @@ import { GameMode, GameSessionStatus, Direction } from '../constants/game.consta
 import { AIDifficulty } from '../constants/ai.constants.js';
 import { UserSchema } from './user.schema.js';
 
-export const PlayerSchema = UserSchema.extend({});
+export const PlayerSchema = UserSchema.extend({
+  sequence: z.number().default(0).optional(),
+});
 
 export const StartGameSchema = z.object({
   gameId: z.string(),
   gameMode: z.nativeEnum(GameMode),
-  players: z.array(PlayerSchema),
+  players: z.array(UserSchema),
   aiDifficulty: z.nativeEnum(AIDifficulty).optional(),
 });
 
@@ -68,7 +70,6 @@ export const GameSessionSchema = z.object({
   startedAt: z.string().optional(),
   finishedAt: z.string().optional(),
   gameLoopInterval: z.any().optional(),
-  lastSequence: z.number().default(0),
   countdownInterval: z.any().optional(),
   gameState: GameStateSchema,
 });
