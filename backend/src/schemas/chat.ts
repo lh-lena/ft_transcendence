@@ -13,7 +13,11 @@ const chatCreateBase = chatBase.pick({
   reciverId: true,
   message: true,
 });
-const chatCreate = chatCreateBase.meta({ $id: 'chatCreate' });
+const chatCreate = chatCreateBase
+  .meta({ $id: 'chatCreate' })
+  .describe(
+    'Create a new chat message. SenderId who sent, reciverId for who gets, message the content.',
+  );
 
 const chatQueryBase = chatBase
   .pick({
@@ -21,10 +25,14 @@ const chatQueryBase = chatBase
     reciverId: true,
   })
   .extend({
-    senderId: z.coerce.number(),
+    senderId: z.coerce.number().optional(),
     reciverId: z.coerce.number().optional(),
   });
-const chatQuery = chatQueryBase.meta({ $id: 'chatQuery' });
+const chatQuery = chatQueryBase
+  .meta({ $id: 'chatQuery' })
+  .describe(
+    'Query for chat messages. SenderId for all messages sent by user, add reciverId for all messages between two users, or empty for all messages.',
+  );
 
 const chatResponse = chatBase.meta({ $id: 'chatResponse' });
 const chatResponseArray = z.array(chatBase).meta({ $id: 'chatResponseArray' });

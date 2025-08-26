@@ -7,7 +7,8 @@ export const dtString = z
     (arg) => (typeof arg === 'string' || arg instanceof Date ? new Date(arg) : undefined),
     z.date(),
   )
-  .transform((date) => date.toISOString());
+  .transform((date) => date.toISOString())
+  .describe('Stores Dates as strings');
 
 //define game status
 export const status = z.enum(['waiting', 'ready', 'playing', 'finished']);

@@ -11,7 +11,7 @@ const tournamentBase = z.object({
   status: status,
   games: z.array(gameBase),
 });
-const tournament = tournamentBase.meta({ $id: 'tournament' });
+const tournament = tournamentBase.meta({ $id: 'tournament' }).describe('Tournament object');
 
 //define Post schema
 const tournamentCreateBase = tournamentBase
@@ -21,7 +21,11 @@ const tournamentCreateBase = tournamentBase
   .extend({
     playerId: z.number(),
   });
-const tournamentCreate = tournamentCreateBase.meta({ $id: 'tournamentCreate' });
+const tournamentCreate = tournamentCreateBase
+  .meta({ $id: 'tournamentCreate' })
+  .describe(
+    'Tournament creation, with playerId of the creator, and optional playerAmount (4-32, default 4).',
+  );
 
 const tournamentIdBase = tournamentBase.pick({
   tournamentId: true,

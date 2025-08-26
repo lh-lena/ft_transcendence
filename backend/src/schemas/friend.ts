@@ -5,9 +5,16 @@ const friendBase = z.object({
   userId: z.number(),
   friendId: z.number(),
 });
-const friend = friendBase.meta({ $id: 'friend' });
+const friend = friendBase
+  .meta({ $id: 'friend' })
+  .describe('A friend relationship. Containes userId(user) and friendId(who is friend)');
 
-const friendCreate = friendBase.omit({ id: true }).meta({ $id: 'friendCreate' });
+const friendCreate = friendBase
+  .omit({ id: true })
+  .meta({ $id: 'friendCreate' })
+  .describe(
+    'Create a new friend relationship. Containes userId(user) and friendId(who becomes friend)',
+  );
 
 const friendId = friendBase.pick({ id: true }).meta({ $id: 'friendId' });
 
@@ -18,7 +25,10 @@ const friendQuery = friendBase
     friendId: z.coerce.number().optional(),
   })
   .partial()
-  .meta({ $id: 'friendQuery' });
+  .meta({ $id: 'friendQuery' })
+  .describe(
+    'Query for friend relationships. All fields are optional. Query for userId for all its friends, userId and friendId for relation between two users. Or empty for all friend relationships.',
+  );
 
 const friendResponse = friendBase.meta({ $id: 'friendResponse' });
 const friendResponseArray = z.array(friendBase).meta({ $id: 'friendResponseArray' });

@@ -35,10 +35,13 @@ const userPostBase = userBase.omit({
   updatedAt: true,
   gamePlayed: true,
 });
-export const userCreate = userPostBase.meta({ $id: 'userCreate' });
+export const userCreate = userPostBase.meta({ $id: 'userCreate' }).describe('User creation schema');
 
 //define schema for PATCH
-const userUpdate = userPostBase.partial().meta({ $id: 'userUpdate' });
+const userUpdate = userPostBase
+  .partial()
+  .meta({ $id: 'userUpdate' })
+  .describe('User update schema');
 
 //define schemas for GET
 const userId = z.object({ id: z.number() }).meta({ $id: 'userId' });
@@ -53,13 +56,16 @@ export const userQueryBase = userBase
       .optional(),
   })
   .partial();
-const userQuery = userQueryBase.meta({ $id: 'userQuery' });
+const userQuery = userQueryBase
+  .meta({ $id: 'userQuery' })
+  .describe('Query for users with optional filters');
 
 const userCount = z
   .object({
     count: z.number(),
   })
-  .meta({ $id: 'userCount' });
+  .meta({ $id: 'userCount' })
+  .describe('Count of users');
 
 //define schemas for responses
 export const userResponse = userBase.meta({ $id: 'userResponse' });

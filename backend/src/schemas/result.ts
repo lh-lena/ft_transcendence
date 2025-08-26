@@ -19,7 +19,9 @@ const resultTypeBase = z.object({
   startedAt: dtString,
   finishedAt: dtString,
 });
-const resultCreate = resultTypeBase.meta({ $id: 'resultCreate' });
+const resultCreate = resultTypeBase
+  .meta({ $id: 'resultCreate' })
+  .describe('Create a new game result');
 
 //result base
 export const resultBase = z.object({
@@ -34,13 +36,15 @@ export const resultBase = z.object({
 //define schema for GET
 const resultId = resultBase.pick({ id: true }).meta({ $id: 'resultId' });
 
-const resultQueryBase = z.object({
-  id: z.coerce.number().optional(),
-  gameId: z.uuid().optional(),
-  startedAt: dtString.optional(),
-  finishedAt: dtString.optional(),
-  gamePlayed: z.object({ some: sharedGamePlayedQueryBase }).optional(),
-});
+const resultQueryBase = z
+  .object({
+    id: z.coerce.number().optional(),
+    gameId: z.uuid().optional(),
+    startedAt: dtString.optional(),
+    finishedAt: dtString.optional(),
+    gamePlayed: z.object({ some: sharedGamePlayedQueryBase }).optional(),
+  })
+  .describe('Query for results with optional filters');
 const resultQuery = resultQueryBase.meta({ $id: 'resultQuery' });
 
 //leaderboard
@@ -49,7 +53,10 @@ const leaderboardBase = z.object({
   username: z.string(),
   wins: z.number(),
 });
-const leaderboard = z.array(leaderboardBase).meta({ $id: 'leaderboard' });
+const leaderboard = z
+  .array(leaderboardBase)
+  .meta({ $id: 'leaderboard' })
+  .describe('Leaderboard with user id, username and number of wins');
 
 //schemas for response
 const resultResponse = resultBase.meta({ $id: 'resultResponse' });

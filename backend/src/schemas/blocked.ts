@@ -5,9 +5,16 @@ const blockedBase = z.object({
   userId: z.number(),
   blockedId: z.number(),
 });
-const blocked = blockedBase.meta({ $id: 'blocked' });
+const blocked = blockedBase
+  .meta({ $id: 'blocked' })
+  .describe('A blocked user relationship. Containes userId(user) and blockedId(who is blocked)');
 
-const blockedCreate = blockedBase.omit({ id: true }).meta({ $id: 'blockedCreate' });
+const blockedCreate = blockedBase
+  .omit({ id: true })
+  .meta({ $id: 'blockedCreate' })
+  .describe(
+    'Create a new blocked user relationship. Containes userId(user) and blockedId(who is blocked)',
+  );
 
 const blockedId = blockedBase.pick({ id: true }).meta({ $id: 'blockedId' });
 
@@ -18,7 +25,10 @@ const blockedQuery = blockedBase
     blockedId: z.coerce.number().optional(),
   })
   .partial()
-  .meta({ $id: 'blockedQuery' });
+  .meta({ $id: 'blockedQuery' })
+  .describe(
+    'Query for blocked user relationships. All fields are optional. Query for userId for all its blocked Users, userId and blockedId for realtion between two users. Or empty for all blocked relationships.',
+  );
 
 const blockedResponse = blockedBase.meta({ $id: 'blockedResponse' });
 const blockedResponseArray = z.array(blockedBase).meta({ $id: 'blockedResponseArray' });
