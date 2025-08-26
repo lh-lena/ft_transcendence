@@ -23,7 +23,6 @@ export default function createGameSessionService(app: FastifyInstance): GameSess
       gameLoopInterval: undefined,
       startedAt: undefined,
       finishedAt: undefined,
-      lastSequence: 0,
       countdownInterval: undefined,
     };
     return newGame;

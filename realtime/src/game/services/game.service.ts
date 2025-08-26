@@ -175,16 +175,13 @@ export default function createGameService(app: FastifyInstance): GameService {
         `game resumed successfully by user ${user.userAlias}`,
       );
     } catch (error: unknown) {
-      if (error instanceof GameError) {
-        log.debug(
-          `[game-service] User ID ${user.userId}. Game ID ${gameId}. Error: ${error.message}`,
-        );
-        respond.notification(user.userId, NotificationType.WARN, error.message);
-      } else {
-        const errorMsg = `Failed to resume game for user ${user.userId}. Error: ${error instanceof Error ? error.message : 'Unknown error'}`;
-        log.error(`[game-service] ${errorMsg}`);
-        respond.error(user.userId, errorMsg);
-      }
+      processGameError(
+        app,
+        user,
+        'game-service',
+        `Failed to resume game for user ${user.userId}:`,
+        error,
+      );
     }
   }
 
@@ -194,12 +191,16 @@ export default function createGameService(app: FastifyInstance): GameService {
     try {
       const gameId = extractGameIdForUser(user);
       const game = validator.getValidGameCheckPlayer(gameId, userId);
+      const player = game.players.find((p) => p.userId === userId);
       validator.validateGameStatus(game.status, [GameSessionStatus.ACTIVE]);
-      if (action.sequence <= game.lastSequence) {
+      if (player!.sequence !== undefined && action.sequence <= player!.sequence) {
+        log.debug(
+          `[game-service] Ignoring old sequence from player ${userId}: ${action.sequence} <= ${player!.sequence}`,
+        );
         return;
       }
       applyPlayerInputToPaddle(game, userId, action);
-      game.lastSequence = action.sequence;
+      player!.sequence = action.sequence;
     } catch (error: unknown) {
       processGameError(
         app,
