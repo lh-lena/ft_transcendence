@@ -50,6 +50,6 @@ export class ProfilePopUp {
   }
 
   unmount(): void {
-    this.main.remove;
+    this.main.remove();
   }
 }
