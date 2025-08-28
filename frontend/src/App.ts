@@ -1,5 +1,5 @@
 // services
-import { ServiceContainer, Router, Websocket, Backend } from "./services";
+import { ServiceContainer, Router, Websocket, Backend, Auth } from "./services";
 
 // pages
 import { HomePage } from "./pages/home";
@@ -34,7 +34,6 @@ type PageInstance = InstanceType<PageConstructor> | null;
 export class App {
   private serviceContainer: ServiceContainer;
   private router: Router;
-  private ws: Websocket;
   private container: HTMLElement;
   private currentPage: PageInstance;
 
@@ -51,12 +50,10 @@ export class App {
     this.serviceContainer.register("router", new Router());
     this.serviceContainer.register("websocket", new Websocket());
     this.serviceContainer.register("backend", new Backend());
+    this.serviceContainer.register("auth", new Auth());
 
     // grab route from service container
     this.router = this.serviceContainer.get<Router>("router");
-
-    // grab ws
-    this.ws = this.serviceContainer.get<Websocket>("websocket");
 
     // Define routes from single source
     Object.entries(PAGE_ROUTES).forEach(([route, PageClass]) => {

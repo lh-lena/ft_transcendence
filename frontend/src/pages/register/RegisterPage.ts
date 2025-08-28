@@ -1,4 +1,4 @@
-import { ServiceContainer, Router } from "../../services";
+import { ServiceContainer, Router, Auth } from "../../services";
 import { Menu } from "../../components/menu";
 import { PongButton } from "../../components/pongButton";
 
@@ -8,11 +8,13 @@ export class RegisterPage {
   private pongButton: PongButton;
   private serviceContainer: ServiceContainer;
   private router: Router;
+  private auth: Auth;
 
   constructor(serviceContainer: ServiceContainer) {
     // router / services container
     this.serviceContainer = serviceContainer;
     this.router = this.serviceContainer.get<Router>("router");
+    this.auth = this.serviceContainer.get<Auth>("auth");
 
     this.main = document.createElement("div");
     this.main.className =
@@ -57,9 +59,24 @@ export class RegisterPage {
     inputPasswordConfirm.style.paddingLeft = "0.5em"; // Add left padding
     form.appendChild(inputPasswordConfirm);
 
-    const loginMenu = [{ name: "register", link: "/profile" }];
+    const loginMenu = [
+      {
+        name: "register",
+        onClick: () => this.registerHook(),
+      },
+    ];
     this.menu = new Menu(this.router, loginMenu);
     this.menu.mount(this.main);
+  }
+
+  private async registerHook() {
+    const body = {
+      email: "test@test.com",
+      username: "test",
+      password: "test123",
+    };
+    const data = await this.auth.registerUser(body);
+    console.log(data);
   }
 
   public mount(parent: HTMLElement): void {

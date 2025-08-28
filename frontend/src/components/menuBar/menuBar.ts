@@ -24,7 +24,7 @@ export class MenuBar {
         { label: "Local Game", href: "/local" },
         { label: "Vs AI", href: "/vs-ai" },
         { label: "Vs Player", href: "/vs-player" },
-        { label: "Tournament", href: "/tournament" },
+        { label: "Tournament", href: "/tournament-start" },
       ],
     },
     { label: "profile", href: "/profile" },
