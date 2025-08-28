@@ -1,4 +1,5 @@
 import { Router } from "../../services";
+import { HomeIcon } from "../homeIcon/HomeIcon";
 
 export interface MenuBarItem {
   label: string;
@@ -27,10 +28,10 @@ export class MenuBar {
         { label: "Tournament", href: "/tournament-start" },
       ],
     },
-    { label: "profile", href: "/profile" },
+    // { label: "profile", href: "/profile" },
+    // { label: "friends", href: "/chat" },
     { label: "settings", href: "/settings" },
-    { label: "friends", href: "/chat" },
-    { label: "leaderboard", href: "/leaderboard" },
+    // { label: "leaderboard", href: "/leaderboard" },
     { label: "logout", href: "/logout" },
   ];
 
@@ -43,6 +44,17 @@ export class MenuBar {
   render(): HTMLElement {
     const ul = document.createElement("ul");
     ul.setAttribute("role", "menu-bar");
+
+    // add HomeIcon as the first menu item
+    const homeLi = document.createElement("li");
+    homeLi.setAttribute("role", "menu-item");
+    homeLi.setAttribute("tabindex", "0");
+    // use HomeIcon and make it clickable to navigate to home
+    const homeIcon = new HomeIcon(() => {
+      this.router.navigate("/chat");
+    });
+    homeLi.appendChild(homeIcon["main"] || homeIcon["main"]);
+    ul.appendChild(homeLi);
 
     this.menuBarItems.forEach((menu: MenuBarItem) => {
       if (this.skipThis && menu.label == this.skipThis) return;

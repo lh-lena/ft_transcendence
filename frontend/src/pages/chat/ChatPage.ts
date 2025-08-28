@@ -50,6 +50,33 @@ export class ChatPage {
       "flex flex-col gap-2 w-full overflow-y-auto flex-1 pr-2";
     contactsPanel.appendChild(contacts);
 
+    const clickableYoubutton = document.createElement("a");
+    const addYouButton = document.createElement("div");
+    clickableYoubutton.style.cursor = "pointer";
+    clickableYoubutton.className = "w-full";
+    addYouButton.className =
+      "standard-dialog w-full text-center items-center mb-2";
+    const addYouButtonText = document.createElement("h1");
+    addYouButtonText.textContent = "you";
+    addYouButton.appendChild(addYouButtonText);
+    clickableYoubutton.appendChild(addYouButton);
+    clickableYoubutton.onclick = () => this.toggleAddFriend(addYouButton);
+    contacts.appendChild(clickableYoubutton);
+
+    const clickableLeaderboardbutton = document.createElement("a");
+    const addLeaderboardButton = document.createElement("div");
+    clickableLeaderboardbutton.style.cursor = "pointer";
+    clickableLeaderboardbutton.className = "w-full";
+    addLeaderboardButton.className =
+      "standard-dialog w-full text-center items-center mb-2";
+    const addLeaderboardButtonText = document.createElement("h1");
+    addLeaderboardButtonText.textContent = "leaderboard";
+    addLeaderboardButton.appendChild(addLeaderboardButtonText);
+    clickableLeaderboardbutton.appendChild(addLeaderboardButton);
+    clickableLeaderboardbutton.onclick = () =>
+      this.toggleAddFriend(addLeaderboardButton);
+    contacts.appendChild(clickableLeaderboardbutton);
+
     // adding add friends button in contacts panel to style it the same
     const clickableAddFriendButton = document.createElement("a");
     const addFriendButton = document.createElement("div");

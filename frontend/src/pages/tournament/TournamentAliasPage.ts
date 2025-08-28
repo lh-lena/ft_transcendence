@@ -4,6 +4,7 @@ import { PongButton } from "../../components/pongButton";
 import { userStore } from "../../constants/backend";
 import { ProfileAvatar } from "../../components/profileAvatar";
 
+// replace with stuff from backend
 const demoMatchup1 = ["alex", "naledi"];
 const demoMatchup2 = ["lucas", "mo"];
 const matchUps = [demoMatchup1, demoMatchup2];

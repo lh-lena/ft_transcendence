@@ -1,4 +1,4 @@
-import { CloseIcon } from "../../components/closeIcon/CloseIcon";
+import { CloseIcon } from "../closeIcon/CloseIcon";
 import { userStore2 } from "../../constants/backend";
 import { ProfileAvatar } from "../profileAvatar";
 
