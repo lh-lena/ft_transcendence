@@ -22,7 +22,7 @@ export class MenuBar {
       label: "start Game",
       items: [
         { label: "Local Game", href: "/local" },
-        { label: "Vs AI", href: "/vs-ai" },
+        { label: "Vs AI", href: "/vs-player" },
         { label: "Vs Player", href: "/vs-player" },
         { label: "Tournament", href: "/tournament-start" },
       ],

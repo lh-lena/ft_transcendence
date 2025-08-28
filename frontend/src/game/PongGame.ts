@@ -44,7 +44,6 @@ export class PongGame {
     this.windowElement = document.createElement("div");
     this.windowElement.className = "window border-2";
 
-    // this.bgColor = "#182245";
     this.bgColor = "#0f162d";
 
     // Create title bar

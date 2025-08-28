@@ -5,7 +5,8 @@ import { userStore } from "../../constants/backend";
 import { ProfileAvatar } from "../../components/profileAvatar";
 
 const demoMatchup1 = ["alex", "naledi"];
-const demoMatchup2 = ["lucas", "xenia"];
+const demoMatchup2 = ["lucas", "mo"];
+const matchUps = [demoMatchup1, demoMatchup2];
 
 export class TournamentAliasPage {
   private main: HTMLElement;
@@ -61,40 +62,34 @@ export class TournamentAliasPage {
     const bracketsRow = document.createElement("div");
     bracketsRow.className = "flex flex-row gap-20";
     bracketCol.appendChild(bracketsRow);
-    const bracketA = document.createElement("div");
-    bracketA.className = "flex flex-col gap-2";
-    bracketsRow.appendChild(bracketA);
-    const bracketB = bracketA.cloneNode(true) as HTMLDivElement;
-    demoMatchup1.forEach((player) => {
-      if (demoMatchup1.indexOf(player) == 1) {
-        const vsText = document.createElement("p");
-        vsText.textContent = "|";
-        vsText.className = "text-white text-center";
-        bracketA.appendChild(vsText);
-      }
-      const playerDiv = this.createPlayer(player);
-      bracketA.appendChild(playerDiv);
-    });
-    bracketsRow.appendChild(bracketB);
-    demoMatchup2.forEach((player) => {
-      if (demoMatchup2.indexOf(player) == 1) {
-        const vsText = document.createElement("p");
-        vsText.textContent = "|";
-        vsText.className = "text-white text-center";
-        bracketB.appendChild(vsText);
-      }
-      const playerDiv = this.createPlayer(player);
-      bracketB.appendChild(playerDiv);
+    // loop over match ups
+    matchUps.forEach((matchup) => {
+      const bracket = document.createElement("div");
+      bracket.className = "flex flex-col gap-2 w-48";
+      bracketsRow.appendChild(bracket);
+      // for each matchup
+      matchup.forEach((player) => {
+        if (matchup.indexOf(player) == 1) {
+          const vsText = document.createElement("p");
+          vsText.textContent = "|";
+          vsText.className = "text-white text-center";
+          bracket.appendChild(vsText);
+        }
+        const playerDiv = this.createPlayer(player);
+        bracket.appendChild(playerDiv);
+        if (matchUps.indexOf(matchup) == 0)
+          bracket.classList.add("animate-pulse");
+      });
+      // replace with check to see if player is you (reference check)
     });
 
-    // select active bracket
-    bracketB.classList.add("animate-pulse");
+    setTimeout(() => this.router.navigate("/vs-player"), 5000);
   }
 
   private createPlayer(username: string): HTMLDivElement {
     const contact = document.createElement("div");
     contact.className =
-      "flex flex-row gap-2 box standard-dialog w-full items-center";
+      "flex flex-row gap-4 box standard-dialog w-full items-center";
     const contactName = document.createElement("h1");
     contactName.textContent = username;
     const contactAvatar = new ProfileAvatar(
