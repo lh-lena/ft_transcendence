@@ -24,6 +24,9 @@ curl -X POST http://[::1]:8080/api/user \
     "is_2fa_enabled": "true"
   }'
 
+curl -X POST http://localhost:8080/api/upload/avatar \
+  -F "avatar=@Screenshot_20250603_093448.png"
+
 curl -X POST http://[::1]:8080/api/user \
   -H "Content-Type: application/json" \
   -d '{

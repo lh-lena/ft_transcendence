@@ -15,14 +15,13 @@ export const userBase = z.object({
   twofa_secret: z.string().nullable().optional(),
   guest: z.boolean().default(false),
   color: z.string(),
-  colormap: z.array(z.string()),
-  avatarUrl: z.url().optional(),
+  colormap: z.string(),
+  avatar: z.url().optional().nullable(),
 });
 
 export const userInfo = userBase.pick({
   id: true,
   username: true,
-  avatar: true,
 });
 
 //define schema for POST
@@ -39,6 +38,13 @@ const userUpdate = userPostBase
   .partial()
   .meta({ $id: 'userUpdate' })
   .describe('User update schema');
+
+const userAvatarUpload = z
+  .object({
+    id: z.number(),
+    avatar: z.string(),
+  })
+  .meta({ $id: 'userAvatarUpload' });
 
 //define schemas for GET
 const userId = z.object({ id: z.number() }).meta({ $id: 'userId' });
@@ -70,6 +76,7 @@ export const userResponseArray = z.array(userBase).meta({ $id: 'userResponseArra
 
 export const userSchemas = [
   userCreate,
+  userAvatarUpload,
   userUpdate,
   userId,
   userCount,
@@ -81,6 +88,7 @@ export const userSchemas = [
 ////export types
 export type userType = z.infer<typeof userBase>;
 export type userCreateType = z.infer<typeof userCreate>;
+export type userAvatarUploadType = z.infer<typeof userAvatarUpload>;
 export type userUpdateType = z.infer<typeof userUpdate>;
 export type userQueryType = z.infer<typeof userQuery>;
 export type userInfoType = z.infer<typeof userInfo>;

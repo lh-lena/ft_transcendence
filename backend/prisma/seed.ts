@@ -21,6 +21,10 @@ async function main() {
           password_hash: faker.internet.password(),
           is_2fa_enabled: faker.datatype.boolean(),
           twofa_secret: faker.datatype.boolean() ? faker.string.alphanumeric(32) : null,
+          guest: faker.datatype.boolean(),
+          color: faker.color.rgb(), // faker.color.rgb() returns a random color string
+          colormap: faker.helpers.arrayElement(['warm', 'cool', 'neutral']),
+          avatar: faker.image.avatar(),
         },
       }),
     );

@@ -23,8 +23,8 @@ model User {
   twofa_secret   String?
   guest          Boolean      @default(false)
   color          String
-  colormap       String[]
-  avatarUrl      String
+  colormap       String
+  avatar      String?
 
   gamePlayed     GamePlayed[]
 

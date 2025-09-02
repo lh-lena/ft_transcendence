@@ -1,5 +1,4 @@
 import { Prisma } from '@prisma/client';
-import { FastifyReply, FastifyRequest } from 'fastify';
 import type { userType } from '../../schemas/user';
 
 import { userService } from './user.service';
@@ -40,24 +39,5 @@ export const userController = {
     const ret = await userService.getCount();
 
     return { count: ret };
-  },
-
-  async uploadAvatar(request: FastifyRequest, reply: FastifyReply) {
-    const parts = request.parts();
-    let file;
-    for await (const part of parts) {
-      if (part.file && part.fieldname === 'avatar') {
-        file = part;
-        break;
-      }
-    }
-    if (!file) return reply.status(400).send({ error: 'No file uploaded.' });
-
-    try {
-      const avatarUrl = await userService.saveAvatar(userId, file);
-      return reply.send({ avatarUrl });
-    } catch (err) {
-      return reply.status(400).send({ error: (err as Error).message });
-    }
   },
 };

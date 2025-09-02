@@ -16,7 +16,7 @@ const openAiPlugin = async (server: FastifyInstance) => {
   });
 
   await server.register(FastifySwaggerUi, {
-    routePrefix: 'api/docs',
+    routePrefix: '/api/docs',
     uiConfig: {
       docExpansion: 'list',
       deepLinking: false,
