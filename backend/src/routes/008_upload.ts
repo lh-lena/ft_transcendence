@@ -13,10 +13,10 @@ const uploadRoutes = async (server: FastifyInstance) => {
     '/api/upload',
     {
       schema: {
-        summary: 'Upload an avatar image',
+        summary: 'Upload an png image',
         description:
-          'Endpoint to upload a user avatar image. Validates the file and stores it on the server.',
-        tags: ['Avatar'],
+          'Endpoint to upload a png image. Validates the file and stores it on the server. Returns the upload path to eg. add to user',
+        tags: ['upload'],
         consumes: ['multipart/form-data'],
         body: {
           type: 'object',

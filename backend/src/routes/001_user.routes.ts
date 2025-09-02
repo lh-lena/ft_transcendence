@@ -14,10 +14,12 @@ const userRoutes = async (server: FastifyInstance) => {
 
   server.get('/api/user/count', {
     schema: {
+      summary: 'Amount of Users',
+      description: 'Endpoint to get the amount of registered Users',
+      tags: ['user'],
       response: {
         200: { $ref: 'userCount' },
       },
-      summary: 'Get amounts of users',
     },
     handler: async (_, reply: FastifyReply) => {
       const ret = await userController.getCount();

@@ -25,11 +25,13 @@ const healthRoute = async (server: FastifyInstance) => {
   // Existing health check endpoint
   server.get('/api/health', {
     schema: {
+      summary: 'Healthcheck',
+      description: 'Endpoint to get health metrics',
+      tags: ['default'],
       response: {
         200: { $ref: 'healthCheck' },
         500: { $ref: 'InternalError' },
       },
-      summary: 'Health Check',
     },
     handler: async (_request: FastifyRequest, reply: FastifyReply) => {
       const startTime = Date.now();

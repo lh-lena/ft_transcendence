@@ -16,10 +16,12 @@ const resultRoutes = async (server: FastifyInstance) => {
 
   server.get('/api/result/leaderboard', {
     schema: {
+      summary: 'Get leaderboard',
+      description: 'Endpoint to get the five best registered Players',
+      tags: ['result'],
       response: {
         200: { $ref: 'leaderboard' },
       },
-      summary: 'Get leaderboard',
     },
     handler: async (_, reply: FastifyReply) => {
       const ret = await resultController.getLeaderboard();
