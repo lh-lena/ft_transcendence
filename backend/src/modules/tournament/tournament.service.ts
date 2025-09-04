@@ -19,7 +19,7 @@ export const tournamentService = {
     return ret;
   },
 
-  async update(id: string, loserId: number): Promise<void> {
+  async update(id: string, loserId: string): Promise<void> {
     if (await this.getById(id)) await tournamentmaker.update(id, loserId);
   },
 };

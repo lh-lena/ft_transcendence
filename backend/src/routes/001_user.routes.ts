@@ -5,7 +5,7 @@ import { userController } from '../modules/user/user.controller';
 import type { userType, userQueryType, userCreateType, userUpdateType } from '../schemas/user';
 
 const userRoutes = async (server: FastifyInstance) => {
-  server.register(crudRoutes<userType, userQueryType, userCreateType, userUpdateType, number>(), {
+  server.register(crudRoutes<userType, userQueryType, userCreateType, userUpdateType, string>(), {
     basePath: '/api/user',
     entityName: 'user',
     controller: userController,

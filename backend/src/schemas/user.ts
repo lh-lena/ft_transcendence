@@ -1,13 +1,10 @@
 import { z } from 'zod/v4';
 import { dtString } from './basics';
 
-import { sharedGamePlayedBase, sharedGamePlayedQueryBase } from './shared';
-
 export const userBase = z.object({
-  id: z.number(),
+  id: z.uuid(),
   createdAt: dtString,
   updatedAt: dtString,
-  gamePlayed: z.array(sharedGamePlayedBase).optional(),
   email: z.email(),
   username: z.string(),
   password_hash: z.string(),
@@ -29,7 +26,6 @@ const userPostBase = userBase.omit({
   id: true,
   createdAt: true,
   updatedAt: true,
-  gamePlayed: true,
 });
 export const userCreate = userPostBase.meta({ $id: 'userCreate' }).describe('User creation schema');
 
@@ -49,16 +45,7 @@ const userAvatarUpload = z
 //define schemas for GET
 const userId = z.object({ id: z.number() }).meta({ $id: 'userId' });
 
-export const userQueryBase = userBase
-  .extend({
-    id: z.coerce.number().optional(),
-    gamePlayed: z
-      .object({
-        some: sharedGamePlayedQueryBase.optional(),
-      })
-      .optional(),
-  })
-  .partial();
+export const userQueryBase = userBase.partial();
 const userQuery = userQueryBase
   .meta({ $id: 'userQuery' })
   .describe('Query for users with optional filters');

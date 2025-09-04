@@ -17,7 +17,7 @@ export const userService = {
     }
   },
 
-  async update(id: number, data: Prisma.UserUpdateInput): Promise<User> {
+  async update(id: string, data: Prisma.UserUpdateInput): Promise<User> {
     try {
       return await userModel.patch(id, data);
     } catch (err: unknown) {
@@ -40,7 +40,7 @@ export const userService = {
     return ret;
   },
 
-  async getById(id: number): Promise<User> {
+  async getById(id: string): Promise<User> {
     const ret = await userModel.findById(id);
 
     if (!ret) throw new NotFoundError(`user with ${id} not found`);
@@ -48,12 +48,12 @@ export const userService = {
     return ret;
   },
 
-  async getInfoById(id: number): Promise<userInfoType> {
+  async getInfoById(id: string): Promise<userInfoType> {
     const user = await this.getById(id);
     return user as userInfoType;
   },
 
-  async deleteOne(id: number): Promise<void> {
+  async deleteOne(id: string): Promise<void> {
     const ret = await userModel.deleteOne(id);
     if (!ret) throw new NotFoundError(`user with ${id} not found`);
   },
