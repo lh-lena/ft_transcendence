@@ -1,6 +1,6 @@
 -- CreateTable
 CREATE TABLE "User" (
-    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "id" TEXT NOT NULL PRIMARY KEY,
     "email" TEXT NOT NULL,
     "username" TEXT NOT NULL,
     "password_hash" TEXT NOT NULL,
@@ -17,8 +17,8 @@ CREATE TABLE "User" (
 -- CreateTable
 CREATE TABLE "Friendship" (
     "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-    "userId" INTEGER NOT NULL,
-    "friendId" INTEGER NOT NULL,
+    "userId" TEXT NOT NULL,
+    "friendId" TEXT NOT NULL,
     "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT "Friendship_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT "Friendship_friendId_fkey" FOREIGN KEY ("friendId") REFERENCES "User" ("id") ON DELETE CASCADE ON UPDATE CASCADE
@@ -27,8 +27,8 @@ CREATE TABLE "Friendship" (
 -- CreateTable
 CREATE TABLE "Blocked" (
     "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-    "userId" INTEGER NOT NULL,
-    "blockedId" INTEGER NOT NULL,
+    "userId" TEXT NOT NULL,
+    "blockedId" TEXT NOT NULL,
     "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT "Blocked_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT "Blocked_blockedId_fkey" FOREIGN KEY ("blockedId") REFERENCES "User" ("id") ON DELETE CASCADE ON UPDATE CASCADE
@@ -46,8 +46,8 @@ CREATE TABLE "Result" (
 -- CreateTable
 CREATE TABLE "ChatMessage" (
     "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-    "senderId" INTEGER NOT NULL,
-    "reciverId" INTEGER NOT NULL,
+    "senderId" TEXT NOT NULL,
+    "reciverId" TEXT NOT NULL,
     "message" TEXT NOT NULL,
     "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT "ChatMessage_senderId_fkey" FOREIGN KEY ("senderId") REFERENCES "User" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
@@ -57,7 +57,7 @@ CREATE TABLE "ChatMessage" (
 -- CreateTable
 CREATE TABLE "GamePlayed" (
     "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-    "userId" INTEGER,
+    "userId" TEXT,
     "resultId" INTEGER,
     "score" INTEGER,
     "isWinner" BOOLEAN,

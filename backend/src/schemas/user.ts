@@ -12,7 +12,7 @@ export const userBase = z.object({
   twofa_secret: z.string().nullable().optional(),
   guest: z.boolean().default(false),
   color: z.string(),
-  colormap: z.string(),
+  colormap: z.array(z.string()).transform((arr) => arr.join(',')),
   avatar: z.url().optional().nullable(),
 });
 
@@ -43,7 +43,7 @@ const userAvatarUpload = z
   .meta({ $id: 'userAvatarUpload' });
 
 //define schemas for GET
-const userId = z.object({ id: z.number() }).meta({ $id: 'userId' });
+const userId = userBase.pick({ id: true }).meta({ $id: 'userId' });
 
 export const userQueryBase = userBase.partial();
 const userQuery = userQueryBase
@@ -58,7 +58,11 @@ const userCount = z
   .describe('Count of users');
 
 //define schemas for responses
-export const userResponse = userBase.meta({ $id: 'userResponse' });
+export const userResponse = userBase
+  .extend({
+    colormap: z.string().transform((str) => str.split(',').filter(Boolean)),
+  })
+  .meta({ $id: 'userResponse' });
 export const userResponseArray = z.array(userBase).meta({ $id: 'userResponseArray' });
 
 export const userSchemas = [

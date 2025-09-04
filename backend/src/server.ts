@@ -1,5 +1,6 @@
 import fastify from 'fastify';
 import fastifyStatic from '@fastify/static';
+import cors from '@fastify/cors';
 import AutoLoad from '@fastify/autoload';
 import Path from 'path';
 
@@ -28,6 +29,10 @@ async function build() {
   server.register(fastifyStatic, {
     root: Path.join(__dirname, '../public'),
     prefix: '/',
+  });
+
+  server.register(cors, {
+    origin: true,
   });
 
   server.register(AutoLoad, {
