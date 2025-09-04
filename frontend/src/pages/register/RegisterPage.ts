@@ -1,6 +1,7 @@
-import { ServiceContainer, Router, Auth } from "../../services";
+import { ServiceContainer, Router, Backend } from "../../services";
 import { Menu } from "../../components/menu";
 import { PongButton } from "../../components/pongButton";
+import { UserRegistration } from "../../types";
 
 export class RegisterPage {
   private main: HTMLElement;
@@ -8,13 +9,14 @@ export class RegisterPage {
   private pongButton: PongButton;
   private serviceContainer: ServiceContainer;
   private router: Router;
-  private auth: Auth;
+  private backend: Backend;
 
   constructor(serviceContainer: ServiceContainer) {
     // router / services container
     this.serviceContainer = serviceContainer;
     this.router = this.serviceContainer.get<Router>("router");
-    this.auth = this.serviceContainer.get<Auth>("auth");
+    // this.auth = this.serviceContainer.get<Auth>("auth");
+    this.backend = this.serviceContainer.get<Backend>("backend");
 
     this.main = document.createElement("div");
     this.main.className =
@@ -70,13 +72,44 @@ export class RegisterPage {
   }
 
   private async registerHook() {
-    const body = {
-      email: "test@test.com",
-      username: "test",
-      password: "test123",
+    // get all input data from forms
+    const username = (
+      document.getElementById("text_username") as HTMLInputElement
+    ).value;
+    const email = (document.getElementById("text_email") as HTMLInputElement)
+      .value;
+    const password = (
+      document.getElementById("text_password") as HTMLInputElement
+    ).value;
+    const passwordConfirm = (
+      document.getElementById("text_password_confirm") as HTMLInputElement
+    ).value;
+
+    // basic validation
+    if (password != passwordConfirm) {
+      alert("Passwords don't match!");
+      return;
+    }
+
+    const userRegistrationData: UserRegistration = {
+      email: email,
+      username: username,
+      password_hash: password, // You might want to hash this on the backend
+      is_2fa_enabled: false, // Default values for now
+      twofa_secret: "",
+      guest: false,
+      color: "blue", // Default or get from form
+      colormap: "default", // Default or get from form
+      avatar: "", // Default or get from form
     };
-    const data = await this.auth.registerUser(body);
-    console.log(data);
+
+    try {
+      const response = this.backend.registerUser(userRegistrationData);
+      console.log(response);
+    } catch (error) {
+      console.error(error);
+      alert(`Registration failed: ${error}`);
+    }
   }
 
   public mount(parent: HTMLElement): void {

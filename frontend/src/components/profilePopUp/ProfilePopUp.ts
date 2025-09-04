@@ -5,7 +5,7 @@ import { userStore2 } from "../../constants/backend";
 export class ProfilePopUp {
   private main: HTMLElement;
 
-  constructor(closeCallBack: () => void, mode: string) {
+  constructor(closeCallBack: () => void) {
     this.main = document.createElement("div");
     this.main.className =
       "standard-dialog w-48 flex justify-center flex-col gap-5 pb-4";

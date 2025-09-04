@@ -1,4 +1,4 @@
-import { ServiceContainer, Router } from "../../services";
+import { ServiceContainer, Router, Backend } from "../../services";
 import { Window } from "../../components/window";
 import { CANVAS_DEFAULTS } from "../../types";
 import { MenuBar } from "../../components/menuBar";
@@ -6,6 +6,9 @@ import { ProfileAvatar } from "../../components/profileAvatar";
 import { sampleChatHistory, userStore } from "../../constants/backend";
 import { InformationIcon } from "../../components/informationIcon";
 import { ProfilePopUp } from "../../components/profilePopUp";
+
+// new backend types
+import { User } from "../../types";
 
 // pretend backend -> change
 import { sampleFriends } from "../../constants/backend";
@@ -26,11 +29,15 @@ export class ChatPage {
   private addFriendsPanel: HTMLDivElement;
   private chatRow: HTMLDivElement;
   private profilePopUp: ProfilePopUp;
+  private backend: Backend;
 
   constructor(serviceContainer: ServiceContainer) {
     // router / services container
     this.serviceContainer = serviceContainer;
     this.router = this.serviceContainer.get<Router>("router");
+    this.backend = this.serviceContainer.get<Backend>("backend");
+
+    // grab user data from backend
 
     this.container = document.createElement("div");
     this.container.className =
@@ -260,10 +267,7 @@ export class ChatPage {
     this.chatPanel.appendChild(this.bottomBar);
     // set input box as initial buttom bar
 
-    this.profilePopUp = new ProfilePopUp(
-      () => this.toggleProfilePopUp(),
-      "you",
-    );
+    this.profilePopUp = new ProfilePopUp(() => this.toggleProfilePopUp());
 
     // window
     const windowComponent = new Window({

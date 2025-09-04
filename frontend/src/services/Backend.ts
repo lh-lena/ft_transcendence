@@ -1,6 +1,8 @@
 import axios from "axios";
+import { User, UserRegistration } from "../types";
 
 export class Backend {
+  private user: User | undefined;
   private api = axios.create({
     baseURL: import.meta.env.VITE_BACKEND_URL,
     timeout: 10000,
@@ -17,10 +19,27 @@ export class Backend {
     });
   }
 
-  // example API calls
-  async getCurrentUser() {
-    const response = await this.api.get("/users/me");
+  async registerUser(data: UserRegistration) {
+    const response = await this.api.post("/user", data);
     return response.data;
+  }
+
+  // example API calls
+  async getUser() {
+    return this.user;
+  }
+
+  async fetchAllUsers() {
+    const response = await this.api.get("user");
+    return response;
+  }
+
+  async refreshUser() {
+    if (!this.user?.id) {
+      throw new Error("User ID is undefined");
+    }
+    const response = await this.getUserById(this.user.id);
+    this.user = response;
   }
 
   async getUserById(userId: string) {
