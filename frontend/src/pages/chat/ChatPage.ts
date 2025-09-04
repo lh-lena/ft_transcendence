@@ -3,12 +3,13 @@ import { Window } from "../../components/window";
 import { CANVAS_DEFAULTS } from "../../types";
 import { MenuBar } from "../../components/menuBar";
 import { ProfileAvatar } from "../../components/profileAvatar";
-import { sampleChatHistory } from "../../constants/backend";
+import { sampleChatHistory, userStore } from "../../constants/backend";
 import { InformationIcon } from "../../components/informationIcon";
 import { ProfilePopUp } from "../../components/profilePopUp";
 
 // pretend backend -> change
 import { sampleFriends } from "../../constants/backend";
+import { FriendsIcon } from "../../components/profileIcon";
 
 export class ChatPage {
   private serviceContainer: ServiceContainer;
@@ -50,19 +51,29 @@ export class ChatPage {
       "flex flex-col gap-2 w-full overflow-y-auto flex-1 pr-2";
     contactsPanel.appendChild(contacts);
 
+    // YOU BUTTON
     const clickableYoubutton = document.createElement("a");
     const addYouButton = document.createElement("div");
     clickableYoubutton.style.cursor = "pointer";
     clickableYoubutton.className = "w-full";
     addYouButton.className =
-      "standard-dialog w-full text-center items-center mb-2";
+      "standard-dialog flex flex-row w-full gap-3 mb-2 justify-center items-center";
+    const youButtonAvatar = new ProfileAvatar(
+      userStore.color,
+      userStore.colorMap,
+      30,
+      30,
+      2,
+    );
+    addYouButton.appendChild(youButtonAvatar.getElement());
     const addYouButtonText = document.createElement("h1");
-    addYouButtonText.textContent = "you";
+    addYouButtonText.textContent = userStore.username;
     addYouButton.appendChild(addYouButtonText);
     clickableYoubutton.appendChild(addYouButton);
-    clickableYoubutton.onclick = () => this.toggleAddFriend(addYouButton);
+    clickableYoubutton.onclick = () => this.toggleProfilePopUp();
     contacts.appendChild(clickableYoubutton);
 
+    // LEADERBOARD BUTTON
     const clickableLeaderboardbutton = document.createElement("a");
     const addLeaderboardButton = document.createElement("div");
     clickableLeaderboardbutton.style.cursor = "pointer";
@@ -76,6 +87,16 @@ export class ChatPage {
     clickableLeaderboardbutton.onclick = () =>
       this.toggleAddFriend(addLeaderboardButton);
     contacts.appendChild(clickableLeaderboardbutton);
+
+    const friendsHeaderRow = document.createElement("div");
+    friendsHeaderRow.className =
+      "flex flex-row gap-2 mb-2 justify-center items-center";
+    const friendsIcon = new FriendsIcon();
+    friendsHeaderRow.appendChild(friendsIcon.getNode());
+    const friendsHeader = document.createElement("h1");
+    friendsHeader.textContent = "friends";
+    friendsHeaderRow.appendChild(friendsHeader);
+    contacts.appendChild(friendsHeaderRow);
 
     // adding add friends button in contacts panel to style it the same
     const clickableAddFriendButton = document.createElement("a");
@@ -239,7 +260,10 @@ export class ChatPage {
     this.chatPanel.appendChild(this.bottomBar);
     // set input box as initial buttom bar
 
-    this.profilePopUp = new ProfilePopUp(() => this.toggleProfilePopUp());
+    this.profilePopUp = new ProfilePopUp(
+      () => this.toggleProfilePopUp(),
+      "you",
+    );
 
     // window
     const windowComponent = new Window({

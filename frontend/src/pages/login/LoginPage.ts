@@ -41,7 +41,7 @@ export class LoginPage {
     inputPassword.style.paddingLeft = "0.5em";
     form.appendChild(inputPassword);
 
-    const loginMenu = [{ name: "log in", link: "/profile" }];
+    const loginMenu = [{ name: "log in", link: "/chat" }];
     this.menu = new Menu(this.router, loginMenu);
     this.menu.mount(this.main);
   }
