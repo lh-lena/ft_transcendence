@@ -84,7 +84,12 @@ services:
       - ./auth-service:/app
       - /app/node_modules
       - ../backend/prisma:/app/prisma
-
+    environment:
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - JWT_SECRET=${JWT_SECRET}
+    env_file:
+      - ./auth-service/.env
     networks:
       - pong-network
 

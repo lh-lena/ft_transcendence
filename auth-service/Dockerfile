@@ -1,22 +1,3 @@
-# FROM node:20
-
-# # Install build dependencies for argon2 and sqlite3
-# RUN apt-get update && \
-#     apt-get install -y python3 make g++ sqlite3 && \
-#     rm -rf /var/lib/apt/lists/*
-
-# WORKDIR /app
-
-
-# COPY . .
-
-# ENV DATABASE_URL="file:/app/data/database.sqlite"
-
-# RUN npx prisma db push --schema=../backend/prisma/schema.prisma
-
-
-# CMD ["npm", "run", "dev"]
-
 # Use Node.js 20 as base
 FROM node:20
 
@@ -27,7 +8,7 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install dependencies
-RUN npm install
+RUN npm install --fetch-timeout=60000 --cache /tmp/npm-cache
 
 # Copy the source code
 COPY . .

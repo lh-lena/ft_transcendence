@@ -1,38 +1,42 @@
 import { FastifyInstance } from 'fastify';
-import { authMiddleware } from '../authMiddleware';
+import { authMiddleware } from '../auth/authMiddleware';
 
-export default function friendsRoutes(server: FastifyInstance, db: any) {
-  // Send friend request
-  server.post('/api/friends/request', { preHandler: authMiddleware }, async (request, reply) => {
-    const { friend_id } = request.body as { friend_id: number };
-    const userId = (request.user as any).id;
-    if (userId === friend_id) return reply.status(400).send({ error: 'Cannot add yourself.' });
-    db.prepare('INSERT INTO friends (user_id, friend_id, status) VALUES (?, ?, ?)').run(
-      userId,
-      friend_id,
-      'pending',
-    );
-    return { message: 'Friend request sent.' };
-  });
+export default function friendsRoutes(server: FastifyInstance, apiClientBackend: any) {
+	// Send friend request
+	server.post('/api/friends/request', { preHandler: authMiddleware }, async (request, reply) => {
+		const { friend_id } = request.body as { friend_id: number };
+		const userId = (request.user as any).id;
+		if (userId === friend_id) return reply.status(400).send({ error: 'Cannot add yourself.' });
 
-  // Accept friend request
-  server.post('/api/friends/accept', { preHandler: authMiddleware }, async (request, reply) => {
-    const { friend_id } = request.body as { friend_id: number };
-    const userId = (request.user as any).id;
-    db.prepare('UPDATE friends SET status = ? WHERE user_id = ? AND friend_id = ?').run(
-      'accepted',
-      friend_id,
-      userId,
-    );
-    return { message: 'Friend request accepted.' };
-  });
+		try {
+			await apiClientBackend.post(`/friends/request`, { user_id: userId, friend_id });
+			return { message: 'Friend request sent.' };
+		} catch (err) {
+			return reply.status(500).send({ error: 'Failed to send friend request.' });
+		}
+	});
 
-  // List friends
-  server.get('/api/friends', { preHandler: authMiddleware }, async (request, reply) => {
-    const userId = (request.user as any).id;
-    const friends = db
-      .prepare('SELECT friend_id FROM friends WHERE user_id = ? AND status = ?')
-      .all(userId, 'accepted');
-    return { friends };
-  });
+	// Accept friend request
+	server.post('/api/friends/accept', { preHandler: authMiddleware }, async (request, reply) => {
+		const { friend_id } = request.body as { friend_id: number };
+		const userId = (request.user as any).id;
+
+		try {
+			await apiClientBackend.post(`/friends/accept`, { user_id: userId, friend_id });
+			return { message: 'Friend request accepted.' };
+		} catch (err) {
+			return reply.status(500).send({ error: 'Failed to accept friend request.' });
+		}
+	});
+
+	// List friends
+	server.get('/api/friends', { preHandler: authMiddleware }, async (request, reply) => {
+		const userId = (request.user as any).id;
+		try {
+			const response = await apiClientBackend.get(`/friends/${userId}`);
+			return { friends: response.data };
+		} catch (err) {
+			return reply.status(500).send({ error: 'Failed to fetch friends.' });
+		}
+	});
 }

@@ -1,0 +1,21 @@
+2FA Flows
+
+Prompt user for TOTP or email code if requires2fa is true
+Call /api/auth/2fa/verify with code
+
+Support backup codes
+Privacy
+
+Export user data /api/privacy/export
+
+Delete account /api/privacy/delete
+
+Update privacy settings /api/privacy/settings
+
+JWT Handling
+Store access token in memory
+Store refresh token as httpOnly cookie
+Call /api/auth/refresh automatically to rotate tokens
+
+CSRF
+Include CSRF token on mutating requests if using cookies
