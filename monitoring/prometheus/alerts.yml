@@ -5,7 +5,7 @@ groups:
       # Service Down Alerts
       - alert: ServiceDown
         expr: up == 0
-        for: 2m
+        for: 1m
         labels:
           severity: critical
         annotations:
@@ -14,23 +14,23 @@ groups:
 
       # High CPU Usage
       - alert: HighCpuUsage
-        expr: rate(process_cpu_seconds_total[5m]) * 100 > 80
-        for: 5m
+        expr: rate(process_cpu_seconds_total[5m]) * 100 > 60
+        for: 2m
         labels:
           severity: warning
         annotations:
           summary: "High CPU usage on {{ $labels.job }}"
-          description: "{{ $labels.job }} CPU usage is above 80% (current value: {{ $value }}%)"
+          description: "{{ $labels.job }} CPU usage is above 60% (current value: {{ $value }}%)"
 
       # High Memory Usage
       - alert: HighMemoryUsage
-        expr: process_resident_memory_bytes > 500000000
-        for: 5m
+        expr: process_resident_memory_bytes > 200000000
+        for: 2m
         labels:
           severity: warning
         annotations:
           summary: "High memory usage on {{ $labels.job }}"
-          description: "{{ $labels.job }} is using more than 500MB of memory (current value: {{ $value }} bytes)"
+          description: "{{ $labels.job }} is using more than 200MB of memory (current value: {{ $value }} bytes)"
 
       # Database Connection Failed
       - alert: DatabaseConnectionFailed
@@ -44,23 +44,23 @@ groups:
 
       # High WebSocket Connections
       - alert: HighWebSocketConnections
-        expr: websocket_connections_active > 100
+        expr: websocket_connections_active > 50
         for: 5m
         labels:
           severity: warning
         annotations:
           summary: "High number of WebSocket connections"
-          description: "More than 100 active WebSocket connections (current: {{ $value }})"
+          description: "More than 50 active WebSocket connections (current: {{ $value }})"
 
       # Nginx High Request Rate
       - alert: NginxHighRequestRate
-        expr: sum(rate(nginx_http_requests_total[5m])) * 60 > 1000
-        for: 5m
+        expr: sum(rate(nginx_http_requests_total[2m])) * 60 > 100
+        for: 2m
         labels:
           severity: warning
         annotations:
           summary: "High HTTP request rate"
-          description: "Nginx is handling more than 1000 requests per minute"
+          description: "Nginx is handling more than 100 requests per minute"
 
       # Service Health Check Failed
       - alert: HealthCheckFailed
