@@ -1,40 +1,43 @@
-import { FastifyRequest, FastifyReply } from 'fastify';
-import Database from 'better-sqlite3';
+import { Prisma } from '@prisma/client';
+import type { userType } from '../../schemas/user';
 
-import type {
-  userCreateInput,
-  userUpdateInput,
-  userQueryInput,
-  userIdInput,
-  userResponseType,
-  userResponseArrayType,
-} from '../../schemas/user';
-
-import * as userService from './user.service';
+import { userService } from './user.service';
+import { transformUser } from './user.helper';
 
 export const userController = {
   //controller to create an user
-  async create(input: userCreateInput): Promise<userResponseType> {
-    const newUser = await userService.createuser(input);
-    return newUser;
+  async create(data: Prisma.UserCreateInput): Promise<userType> {
+    const ret = await userService.create(data);
+    return await transformUser(ret);
   },
 
   //update user
-  async update(id: userIdInput, input: userUpdateInput): Promise<userResponseType> {
-    return await userService.updateuser(id, input);
+  async update(id: number, data: Prisma.UserUpdateInput): Promise<userType> {
+    const ret = await userService.update(id, data);
+    return await transformUser(ret);
   },
 
   //controller for user get All or by Id
-  async getAllorFiltered(query: userQueryInput): Promise<userResponseArrayType> {
-    return await userService.getAllorFiltereduser(query);
+  async getQuery(query?: Prisma.UserWhereInput): Promise<userType[]> {
+    const ret = await userService.getQuery(query);
+    return Promise.all(ret.map((user) => transformUser(user)));
   },
 
-  async getById(id: userIdInput): Promise<userResponseType | null> {
-    return await userService.getuserById(id);
+  async getById(id: number): Promise<userType> {
+    const ret = await userService.getById(id);
+    return await transformUser(ret);
   },
 
   //delete user
-  async remove(id: userIdInput): Promise<{ message: string }> {
-    return await userService.removeuser(id);
+  async deleteOne(id: number): Promise<{ success: boolean }> {
+    await userService.deleteOne(id);
+    return { success: true };
+  },
+
+  //uniqe
+  async getCount(): Promise<{ count: number }> {
+    const ret = await userService.getCount();
+
+    return { count: ret };
   },
 };

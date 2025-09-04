@@ -1,20 +1,23 @@
-import { FastifyError, FastifyReply, FastifyRequest } from 'fastify';
-import { AppError, NotFoundError, ValidationError, ConflictError, DatabaseError } from './error';
-
+import { FastifyError, FastifyRequest, FastifyReply } from 'fastify';
 import { ZodError } from 'zod';
+import {
+  AppError,
+  //NotFoundError,
+  //ValidationError,
+  //ConflictError,
+  //DatabaseError,
+} from './error';
 
-export function errorHandler(
-  error: FastifyError | Error,
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
-  console.log(`Error occurred: ${error.message}, ${error.statusCode}`);
+function hasValidationError(error: unknown): error is { validation: unknown } {
+  return typeof error === 'object' && error !== null && 'validation' in error;
+}
 
+export function errorHandler(error: FastifyError, _request: FastifyRequest, reply: FastifyReply) {
+  console.log('Error occurred:', error);
   if (error instanceof AppError) {
-    return reply.code(error.statusCode).send({
+    return reply.code(error.statusCode ? error.statusCode : 500).send({
       error: error.code,
       message: error.message,
-      //details: (error as any).details ?? undefined,
     });
   }
 
@@ -22,26 +25,22 @@ export function errorHandler(
     return reply.code(400).send({
       error: 'VALIDATION_ERROR',
       message: 'Invalid input',
-      //details: error.errors,
     });
   }
 
-  if ((error as any).validation) {
+  if (hasValidationError(error)) {
     return reply.code(400).send({
       error: 'VALIDATION_ERROR',
       message: 'Validation failed',
-      //details: (error as any).validation,
     });
   }
 
-  if ((error as any).statusCode === 404 && !(error as any).validation) {
+  if ('statusCode' in error && error.statusCode === 404 && !('validation' in error)) {
     return reply.code(404).send({
       error: 'NOT_FOUND',
       message: error.message || 'Route not found',
     });
   }
-
-  console.log(error);
 
   return reply.code(500).send({
     error: 'INTERNAL_ERROR',

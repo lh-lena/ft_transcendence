@@ -1,0 +1,99 @@
+import { v4 as uuidv4 } from 'uuid';
+import type { tournamentType, tournamentCreateType } from '../../schemas/tournament';
+
+import { userService } from '../user/user.service';
+import { gameService } from '../game/game.service';
+import { notifyPlayer } from '../../utils/notify';
+
+export class tournamentClass {
+  private activeTournaments: tournamentType[] = [];
+
+  async getById(id: string): Promise<tournamentType | undefined> {
+    const tournament = this.activeTournaments.find((t) => t.tournamentId === id);
+    return tournament;
+  }
+
+  async getByUser(userId: number): Promise<tournamentType | undefined> {
+    const tournament = this.activeTournaments.find((t) => t.players.some((p) => p.id === userId));
+
+    return tournament;
+  }
+
+  async create(playerAmount: number): Promise<tournamentType> {
+    const newTournament: tournamentType = {
+      tournamentId: uuidv4(),
+      round: 1,
+      playerAmount: playerAmount,
+      players: [],
+      status: 'waiting',
+      games: [],
+    };
+
+    this.activeTournaments.push(newTournament);
+    return newTournament;
+  }
+
+  async remove(tournamentId: string): Promise<void> {
+    this.activeTournaments = this.activeTournaments.filter((t) => t.tournamentId !== tournamentId);
+  }
+
+  async join(tournament: tournamentType, playerId: number): Promise<tournamentType> {
+    tournament.players.push(await userService.getInfoById(playerId));
+    this.startTournament(tournament);
+    return tournament;
+  }
+
+  async findAvailableTournament(join: tournamentCreateType): Promise<tournamentType> {
+    let freeTournament = this.activeTournaments.find(
+      (t) =>
+        t.playerAmount === join.playerAmount &&
+        t.players.length < t.playerAmount &&
+        t.status === 'waiting',
+    );
+
+    if (!freeTournament) {
+      freeTournament = await this.create(join.playerAmount);
+    }
+
+    this.join(freeTournament, join.playerId);
+    this.startTournament(freeTournament);
+    return freeTournament;
+  }
+
+  private async createGames(tournament: tournamentType): Promise<void> {
+    for (let i = 0; i < tournament.playerAmount; i += 2) {
+      const game = await gameService.createTournamentGame(
+        tournament.players[i].id,
+        tournament.players[i + 1].id,
+      );
+      tournament.games.push(game);
+    }
+  }
+
+  private async startTournament(tournament: tournamentType): Promise<void> {
+    if (tournament.players.length === tournament.playerAmount && tournament.status === 'waiting') {
+      tournament.status = 'ready';
+      for (const player of tournament.players) {
+        notifyPlayer(player.id, -1, 'INFO: Tournament starts soon');
+      }
+      await this.createGames(tournament);
+    }
+  }
+
+  async update(gameId: string, loserId: number): Promise<void> {
+    const tournament = this.activeTournaments.find((t) => t.games.some((g) => g.gameId === gameId));
+
+    if (!tournament) return undefined;
+
+    tournament.games = tournament.games.filter((g) => g.gameId !== gameId);
+    tournament.players = tournament.players.filter((p) => p.id !== loserId);
+
+    if (tournament.players.length === 1) {
+      notifyPlayer(tournament.players[0].id, -1, 'INFO: You won the tournament!');
+      this.remove(tournament.tournamentId);
+    } else if (tournament.games.length === 0) {
+      tournament.round += 1;
+      await this.createGames(tournament);
+    }
+  }
+}

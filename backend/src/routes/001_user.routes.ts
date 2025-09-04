@@ -1,18 +1,31 @@
-import { FastifyInstance } from 'fastify';
+import { FastifyInstance, FastifyReply } from 'fastify';
 import fp from 'fastify-plugin';
-
 import crudRoutes from '../utils/crudRoutes';
-
-import { userRefSchemas } from '../modules/user/user.schema';
 import { userController } from '../modules/user/user.controller';
-
-import { responseRefSchemas } from '../modules/response/response.schema';
+import type { userType, userQueryType, userCreateType, userUpdateType } from '../schemas/user';
 
 const userRoutes = async (server: FastifyInstance) => {
-  server.register(crudRoutes, {
+  server.register(crudRoutes<userType, userQueryType, userCreateType, userUpdateType, number>(), {
     basePath: '/api/user',
     entityName: 'user',
     controller: userController,
+    routes: ['getQuery', 'getById', 'create', 'update', 'delete'],
+  });
+
+  server.get('/api/user/count', {
+    schema: {
+      summary: 'Amount of Users',
+      description: 'Endpoint to get the amount of registered Users',
+      tags: ['user'],
+      response: {
+        200: { $ref: 'userCount' },
+      },
+    },
+    handler: async (_, reply: FastifyReply) => {
+      const ret = await userController.getCount();
+
+      return reply.code(200).send(ret);
+    },
   });
 };
 
