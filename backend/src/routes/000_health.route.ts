@@ -1,4 +1,4 @@
-import { FastifyInstance } from 'fastify';
+import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import fp from 'fastify-plugin';
 import * as client from 'prom-client';
 
@@ -25,13 +25,15 @@ const healthRoute = async (server: FastifyInstance) => {
   // Existing health check endpoint
   server.get('/api/health', {
     schema: {
+      summary: 'Healthcheck',
+      description: 'Endpoint to get health metrics',
+      tags: ['default'],
       response: {
         200: { $ref: 'healthCheck' },
         500: { $ref: 'InternalError' },
       },
-      summary: 'Health Check',
     },
-    handler: async (request, reply) => {
+    handler: async (_request: FastifyRequest, reply: FastifyReply) => {
       const startTime = Date.now();
       let dbStatus = 'down';
       let dbStatusCode = 0;
@@ -65,7 +67,7 @@ const healthRoute = async (server: FastifyInstance) => {
 
   // New Prometheus metrics endpoint
   server.get('/metrics', {
-    handler: async (request, reply) => {
+    handler: async (_, reply: FastifyReply) => {
       try {
         const metrics = await register.metrics();
         reply.header('Content-Type', register.contentType).code(200).send(metrics);

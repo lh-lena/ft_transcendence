@@ -4,16 +4,12 @@ RUN apk add --no-cache curl
 
 WORKDIR /app
 
-EXPOSE 8080
+COPY package.json ./
 
-ENV NODE_ENV=development
-
-COPY package*.json ./
+RUN npm install
 
 COPY . .
 
-ENV DATABASE_URL="file:/app/data/database.sqlite"
+RUN npm exec prisma generate
 
-RUN npm install && npx prisma db push
-
-CMD [ "npm", "run", "dev" ]
+CMD [ "/bin/sh", "-c", "npx prisma migrate deploy && npx prisma db seed && npm run run" ]

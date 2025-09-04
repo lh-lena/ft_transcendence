@@ -1,15 +1,13 @@
-import Fastify from 'fastify';
+import fastify from 'fastify';
+import fastifyStatic from '@fastify/static';
 import AutoLoad from '@fastify/autoload';
-
 import Path from 'path';
+
 import { errorHandler } from './utils/errorHandler';
 
-//test
-
-//build server
-export async function buildServer() {
+async function build() {
   //build fastify instance
-  const server = Fastify({
+  const server = fastify({
     logger: {
       transport: {
         target: 'pino-pretty',
@@ -20,14 +18,17 @@ export async function buildServer() {
       },
     },
   });
-  //}).withTypeProvider<ZodTypeProvider>();
 
   //  server.addHook('onRoute', (routeOptions) => {
-  //   console.log('📦 Route registered:', routeOptions.method, routeOptions.url);
-  //   if (routeOptions.schema) {
-  //     console.log('🧪 Route schema:', JSON.stringify(routeOptions.schema, null, 2));
-  //   }
+  //    console.log('📦 Route registered:', routeOptions.method, routeOptions.url);
+  //    if (routeOptions.schema) {
+  //      console.log('🧪 Route schema:', JSON.stringify(routeOptions.schema, null, 2));
+  //    }
   //  });
+  server.register(fastifyStatic, {
+    root: Path.join(__dirname, '../public'),
+    prefix: '/',
+  });
 
   server.register(AutoLoad, {
     dir: Path.join(__dirname, 'plugins'),
@@ -44,18 +45,17 @@ export async function buildServer() {
   return server;
 }
 
-//start server
-async function start() {
-  try {
-    const server = await buildServer();
-    const PORT = parseInt(server.config.PORT);
+const start = async () => {
+  const server = await build();
 
-    //start listening with the instance
-    await server.listen({ port: PORT, host: server.config.HOST });
+  try {
+    const PORT = parseInt(process.env.PORT || '8080');
+    const IP = process.env.IP || '0.0.0.0';
+    await server.listen({ port: PORT, host: IP });
   } catch (err) {
     console.error(err);
     process.exit(1);
   }
-}
+};
 
 start();
