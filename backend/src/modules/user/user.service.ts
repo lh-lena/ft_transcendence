@@ -1,69 +1,65 @@
-import { createCrud } from '../../utils/prismaCrudGenerator';
-import { AppError, NotFoundError, ConflictError } from '../../utils/error';
-import { Prisma } from '@prisma/client';
+import { userModel } from './user.crud';
+import { NotFoundError, ConflictError } from '../../utils/error';
+import { Prisma, User } from '@prisma/client';
 
-import { createuserInput, patchuserInput } from '../../schemas/user';
+import { userInfoType } from '../../schemas/user';
 
-export const userModel = createCrud('user');
-
-export async function getAllorFiltereduser(filters: Record<string, any>) {
-  let user;
-
-  if (Object.keys(filters).length === 0) {
-    user = await userModel.findAll();
-  } else {
-    user = await userModel.findBy(filters);
-  }
-  if (!user || user.length === 0) {
-    throw new NotFoundError('No users found');
-  }
-  return user;
-}
-
-export async function getuserById(id: number) {
-  const user = await userModel.findById(id);
-  if (!user || user.length === 0) throw new NotFoundError(`user with ${id} not found`);
-
-  return user;
-}
-
-export async function createuser(data: createuserInput) {
-  try {
-    const user = await userModel.insert(data);
-    return user;
-  } catch (err: any) {
-    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
-      throw new ConflictError(`user already exists`);
+export const userService = {
+  async create(data: Prisma.UserCreateInput): Promise<User> {
+    try {
+      const ret = await userModel.insert(data);
+      return ret;
+    } catch (err: unknown) {
+      if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
+        throw new ConflictError(`user already exists`);
+      }
+      throw err;
     }
-    throw err;
-  }
-}
+  },
 
-export async function updateuser(id: number, data: patchuserInput) {
-  try {
-    const user = await userModel.patch(id, data);
-    if (!user) throw new NotFoundError(`user with ${id} not found`);
-    return user;
-  } catch (err: any) {
-    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
-      throw new ConflictError(`user already exists`);
+  async update(id: number, data: Prisma.UserUpdateInput): Promise<User> {
+    try {
+      return await userModel.patch(id, data);
+    } catch (err: unknown) {
+      if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
+        throw new ConflictError(`user already exists`);
+      }
+      if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2025') {
+        throw new NotFoundError(`user with ${id} not found`);
+      }
+      throw err;
     }
-    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2025') {
-      throw new NotFoundError(`user with ${id} not found`);
-    }
-    throw err;
-  }
-}
+  },
 
-export async function removeuser(id: number) {
-  try {
-    const user = await userModel.remove(id);
-    if (!user) throw new NotFoundError(`user with ${id} not found`);
-    return { message: `user ${id} deleted successfully` };
-  } catch (err: any) {
-    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2025') {
-      throw new NotFoundError(`user with ${id} not found`);
+  async getQuery(query?: Prisma.UserWhereInput): Promise<User[]> {
+    const ret = query ? await userModel.findBy(query) : await userModel.findAll();
+
+    if (ret.length === 0) {
+      throw new NotFoundError('No user found');
     }
-    throw err;
-  }
-}
+    return ret;
+  },
+
+  async getById(id: number): Promise<User> {
+    const ret = await userModel.findById(id);
+
+    if (!ret) throw new NotFoundError(`user with ${id} not found`);
+
+    return ret;
+  },
+
+  async getInfoById(id: number): Promise<userInfoType> {
+    const user = await this.getById(id);
+    return user as userInfoType;
+  },
+
+  async deleteOne(id: number): Promise<void> {
+    const ret = await userModel.deleteOne(id);
+    if (!ret) throw new NotFoundError(`user with ${id} not found`);
+  },
+
+  async getCount(): Promise<number> {
+    const ret = await userModel.findAll();
+    return ret.length;
+  },
+};
