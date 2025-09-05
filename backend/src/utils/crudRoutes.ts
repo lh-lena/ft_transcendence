@@ -38,6 +38,7 @@ const crudRoutes =
           const query = request.query as TQuery;
           const ret = await controller.getQuery!(query);
 
+          //TODO:: parse return
           return reply.code(200).send(ret);
         },
       });
@@ -81,6 +82,7 @@ const crudRoutes =
           reply: FastifyReply,
         ) => {
           const body = request.body as TCreate;
+          console.log(body);
           const ret = await controller.create!(body);
 
           return reply.code(201).send(ret);

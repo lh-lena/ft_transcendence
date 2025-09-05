@@ -23,7 +23,7 @@ curl -X POST http://127.0.0.1:8080/api/user \
     "username": "Johnson",
     "is_2fa_enabled": "true",
     "color":"warm",
-    "colormap": [ "ready", "warm", "cold" ]
+    "colormap":"ready"
   }'
 
 curl -X POST http://localhost:8080/api/upload/avatar \
