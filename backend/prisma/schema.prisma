@@ -16,13 +16,22 @@ datasource db {
 // add string string map and avatar
 model User {
   id             String       @id @default(uuid())
+
   email          String       @unique
   username       String       @unique
   alias          String?
-  password_hash  String
-  is_2fa_enabled Boolean      @default(false)
-  twofa_secret   String?
   guest          Boolean      @default(false)
+
+  password_hash  String
+
+  is_2fa_enabled Boolean      @default(false)
+  twofa_method   String?
+  twofa_secret   String?
+  twofa_temp_code String?
+  twofa_code_expires_at DateTime?
+
+  backup_codes   String?
+
   color          String
   colormap       String
   avatar      String?
@@ -37,6 +46,7 @@ model User {
 
   chatSent       ChatMessage[] @relation("sender")
   chatRecived    ChatMessage[] @relation("reciver")
+
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
 }

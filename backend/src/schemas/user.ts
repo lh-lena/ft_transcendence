@@ -3,15 +3,24 @@ import { dtString } from './basics';
 
 export const userBase = z.object({
   id: z.uuid(),
+
   createdAt: dtString,
   updatedAt: dtString,
+
   email: z.email(),
   username: z.string(),
   alias: z.string().optional(),
+
   password_hash: z.string(),
+
   is_2fa_enabled: z.boolean().optional(),
   twofa_secret: z.string().nullable().optional(),
+  twofa_method: z.string().optional(),
+  twofa_temp_code: z.string().optional(),
+  twofa_code_expires: dtString.optional(),
+
   guest: z.boolean().default(false),
+
   color: z.string(),
   colormap: z.string(),
   avatar: z.url().optional().nullable(),
