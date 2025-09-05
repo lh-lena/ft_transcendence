@@ -1,8 +1,9 @@
 import axios from "axios";
-import { User, UserRegistration } from "../types";
+import { UserLocal, UserRegistration, UserResponse } from "../types";
+import { profilePrintToArray } from "../utils/profilePrintFunctions";
 
 export class Backend {
-  private user: User | undefined;
+  private user!: UserLocal;
   private api = axios.create({
     baseURL: import.meta.env.VITE_BACKEND_URL,
     timeout: 10000,
@@ -17,17 +18,40 @@ export class Backend {
       }
       return config;
     });
+
+    this.loadUserFromStorage();
   }
 
   async registerUser(data: UserRegistration) {
     console.log(data);
     const response = await this.api.post("/user", data);
-    return response.data;
+    return response;
   }
 
   // example API calls
-  async getUser() {
+  getUser() {
     return this.user;
+  }
+
+  setUser(response: UserResponse) {
+    this.user = {} as UserLocal;
+    this.user.id = response.id;
+    this.user.createdAt = response.createdAt;
+    this.user.updatedAt = response.updatedAt;
+    this.user.email = response.email;
+    this.user.username = response.username;
+    this.user.password_hash = response.password_hash;
+    this.user.is_2fa_enabled = response.is_2fa_enabled;
+    this.user.twofa_secret = response.twofa_secret;
+    this.user.guest = response.guest;
+    this.user.color = response.color;
+    // take string color map to array
+    this.user.colormap = profilePrintToArray(response.colormap);
+    console.log(this.user.colormap);
+    this.user.avatar = response.avatar;
+
+    // save to local
+    this.saveUserToStorage();
   }
 
   async fetchAllUsers() {
@@ -63,5 +87,24 @@ export class Backend {
   async getMatchHistory(userId: string) {
     const response = await this.api.get(`/users/${userId}/matches`);
     return response.data;
+  }
+
+  // local storage magic
+  private saveUserToStorage() {
+    if (this.user) {
+      localStorage.setItem("user", JSON.stringify(this.user));
+    }
+  }
+
+  private loadUserFromStorage() {
+    const savedUser = localStorage.getItem("user");
+    if (savedUser) {
+      try {
+        this.user = JSON.parse(savedUser);
+      } catch (error) {
+        console.error("Failed to parse saved user data:", error);
+        localStorage.removeItem("user");
+      }
+    }
   }
 }

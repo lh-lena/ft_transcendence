@@ -2,6 +2,7 @@ import { ServiceContainer, Router, Backend } from "../../services";
 import { Menu } from "../../components/menu";
 import { PongButton } from "../../components/pongButton";
 import { UserRegistration } from "../../types";
+import { generateProfilePrint, profilePrintToString } from "../../utils/profilePrintFunctions";
 
 export class RegisterPage {
   private main: HTMLElement;
@@ -91,21 +92,26 @@ export class RegisterPage {
       return;
     }
 
+    // generate color and color map
+    const { color, colorMap } = generateProfilePrint();
+
     const userRegistrationData: UserRegistration = {
       email: email,
       username: username,
       password_hash: password, // You might want to hash this on the backend
-      is_2fa_enabled: false, // Default values for now
+      is_2fa_enabled: "false", // Default values for now
       twofa_secret: "",
-      guest: false,
-      color: "blue", // Default or get from form
-      colormap: "default", // Default or get from form
-      avatar: "", // Default or get from form
+      color: color, // Default or get from form
+      colormap: profilePrintToString(colorMap), // Default or get from form
     };
 
     try {
-      const response = this.backend.registerUser(userRegistrationData);
-      console.log(response);
+      const response = await this.backend.registerUser(userRegistrationData);
+      // if user object was sent backend
+      if (response.status === 201) {
+        this.backend.setUser(response.data);
+        this.router.navigate("/chat");
+      }
     } catch (error) {
       console.error(error);
       alert(`Registration failed: ${error}`);

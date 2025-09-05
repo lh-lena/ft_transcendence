@@ -1,6 +1,6 @@
 import { ServiceContainer, Router, Backend } from "../../services";
 import { Window } from "../../components/window";
-import { CANVAS_DEFAULTS } from "../../types";
+import { CANVAS_DEFAULTS, User } from "../../types";
 import { MenuBar } from "../../components/menuBar";
 import { ProfileAvatar } from "../../components/profileAvatar";
 import { sampleChatHistory, userStore } from "../../constants/backend";
@@ -37,6 +37,7 @@ export class ChatPage {
     this.backend = this.serviceContainer.get<Backend>("backend");
 
     // grab user data from backend
+    const user: User = this.backend.getUser();
 
     this.container = document.createElement("div");
     this.container.className =
@@ -65,15 +66,15 @@ export class ChatPage {
     addYouButton.className =
       "standard-dialog flex flex-row w-full gap-3 mb-2 justify-center items-center";
     const youButtonAvatar = new ProfileAvatar(
-      userStore.color,
-      userStore.colorMap,
+      user.color,
+      user.colormap,
       30,
       30,
       2,
     );
     addYouButton.appendChild(youButtonAvatar.getElement());
     const addYouButtonText = document.createElement("h1");
-    addYouButtonText.textContent = userStore.username;
+    addYouButtonText.textContent = user.username;
     addYouButton.appendChild(addYouButtonText);
     clickableYoubutton.appendChild(addYouButton);
     clickableYoubutton.onclick = () => this.toggleProfilePopUp();

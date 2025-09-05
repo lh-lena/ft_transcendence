@@ -1,4 +1,4 @@
-import { generateProfilePrint } from "../../utils/generateProfilePrint";
+import { generateProfilePrint } from "../../utils/profilePrintFunctions";
 import { ProfileAvatar } from "../profileAvatar";
 
 export class SpectatorBar {

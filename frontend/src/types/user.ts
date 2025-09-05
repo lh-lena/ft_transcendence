@@ -8,34 +8,42 @@ export type UserRegistration = {
   email: string;
   username: string;
   password_hash: string;
-  is_2fa_enabled?: boolean;
-  twofa_secret?: string | null;
-  guest?: boolean;
+  is_2fa_enabled?: string;
+  twofa_secret?: string;
+  guest?: string;
   color: string;
   colormap: string;
-  avatar?: string | null;
+  avatar?: string;
 };
 
-export type User = {
-  id?: string;
-  createdAt?: string;
-  updatedAt?: string;
-  gamePlayed?: {
-    some?: {
-      id?: string;
-      userId?: number;
-      isWinner?: boolean;
-      score?: number;
-      gameId?: number;
-    };
-  };
-  email?: string;
-  username?: string;
-  password_hash?: string;
-  is_2fa_enabled?: boolean;
-  twofa_secret?: string | null;
-  guest?: boolean;
-  color?: string;
-  colormap?: string;
-  avatar?: string | null;
+// user obj we store locally -> notice we use a colormap array instead of string
+export type UserLocal = {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  email: string;
+  username: string;
+  password_hash: string;
+  is_2fa_enabled: boolean;
+  twofa_secret: string;
+  guest: boolean;
+  color: string;
+  colormap: string[];
+  avatar: string | null;
+};
+
+// user obj we get back from backend
+export type UserResponse = {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  email: string;
+  username: string;
+  password_hash: string;
+  is_2fa_enabled: boolean;
+  twofa_secret: string;
+  guest: boolean;
+  color: string;
+  colormap: string;
+  avatar: string | null;
 };

@@ -1,6 +1,8 @@
 // services
 import { ServiceContainer, Router, Websocket, Backend, Auth } from "./services";
 
+import { Loading } from "./components/loading";
+
 // pages
 import { HomePage } from "./pages/home";
 import { ProfilePage } from "./pages/profile";
@@ -70,7 +72,14 @@ export class App {
     if (this.currentPage) {
       this.currentPage.unmount();
     }
-    this.currentPage = new PageClass(this.serviceContainer);
-    this.currentPage.mount(this.container);
+    // show loading for a second
+    const loading = new Loading("pong");
+    loading.mount(this.container);
+    // show loading screen
+    setTimeout(() => {
+      loading.hide();
+      this.currentPage = new PageClass(this.serviceContainer);
+      this.currentPage.mount(this.container);
+    }, 789);
   }
 }
