@@ -20,6 +20,7 @@ export class Backend {
   }
 
   async registerUser(data: UserRegistration) {
+    console.log(data);
     const response = await this.api.post("/user", data);
     return response.data;
   }

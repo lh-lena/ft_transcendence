@@ -8,12 +8,12 @@ export type UserRegistration = {
   email: string;
   username: string;
   password_hash: string;
-  is_2fa_enabled: boolean;
-  twofa_secret: string;
-  guest: boolean;
+  is_2fa_enabled?: boolean;
+  twofa_secret?: string | null;
+  guest?: boolean;
   color: string;
   colormap: string;
-  avatar: string;
+  avatar?: string | null;
 };
 
 export type User = {

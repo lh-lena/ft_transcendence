@@ -8,7 +8,6 @@ import { InformationIcon } from "../../components/informationIcon";
 import { ProfilePopUp } from "../../components/profilePopUp";
 
 // new backend types
-import { User } from "../../types";
 
 // pretend backend -> change
 import { sampleFriends } from "../../constants/backend";
