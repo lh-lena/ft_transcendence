@@ -30,7 +30,7 @@ const gameCreateBase = gameBase.pick({
 });
 export const gameCreate = gameCreateBase.meta({ $id: 'gameCreate' });
 
-const gameJoinBase = gameCreateBase.extend({
+const gameJoinBase = z.object({
   gameId: z.uuid().optional(),
   playerId: z.uuid(),
 });
@@ -39,9 +39,7 @@ const gameJoin = gameJoinBase
   .describe('Join a game, optionally with gameId to join specific game.');
 
 //schemas for GET
-export const gameIdBase = z.object({
-  id: z.uuid(),
-});
+export const gameIdBase = gameBase.pick({ gameId: true });
 export const gameId = gameIdBase.meta({ $id: 'gameId' });
 
 //schemas for response

@@ -19,18 +19,14 @@ const friendCreate = friendBase
 const friendId = friendBase.pick({ id: true }).meta({ $id: 'friendId' });
 
 const friendQuery = friendBase
-  .extend({
-    id: z.coerce.number().optional(),
-    userId: z.uuid().optional(),
-    friendId: z.uuid().optional(),
-  })
+  .extend({ id: z.coerce.number().optional() })
   .partial()
   .meta({ $id: 'friendQuery' })
   .describe(
     'Query for friend relationships. All fields are optional. Query for userId for all its friends, userId and friendId for relation between two users. Or empty for all friend relationships.',
   );
 
-const friendResponse = friendBase.meta({ $id: 'friendResponse' });
+const friendResponse = friendBase.omit({ id: true }).meta({ $id: 'friendResponse' });
 const friendResponseArray = z.array(friendBase).meta({ $id: 'friendResponseArray' });
 
 export const friendSchemas = [

@@ -19,18 +19,14 @@ const blockedCreate = blockedBase
 const blockedId = blockedBase.pick({ id: true }).meta({ $id: 'blockedId' });
 
 const blockedQuery = blockedBase
-  .extend({
-    id: z.coerce.number().optional(),
-    userId: z.uuid().optional(),
-    blockedId: z.uuid().optional(),
-  })
+  .extend({ id: z.coerce.number().optional() })
   .partial()
   .meta({ $id: 'blockedQuery' })
   .describe(
     'Query for blocked user relationships. All fields are optional. Query for userId for all its blocked Users, userId and blockedId for realtion between two users. Or empty for all blocked relationships.',
   );
 
-const blockedResponse = blockedBase.meta({ $id: 'blockedResponse' });
+const blockedResponse = blockedBase.omit({ id: true }).meta({ $id: 'blockedResponse' });
 const blockedResponseArray = z.array(blockedBase).meta({ $id: 'blockedResponseArray' });
 
 export const blockedSchemas = [

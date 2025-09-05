@@ -58,8 +58,9 @@ const leaderboard = z
   .describe('Leaderboard with user id, username and number of wins');
 
 //schemas for response
-const resultResponse = resultBase.meta({ $id: 'resultResponse' });
+const resultResponse = resultBase.omit({ id: true }).meta({ $id: 'resultResponse' });
 const resultResponseArray = z.array(resultBase).meta({ $id: 'resultResponseArray' });
+
 //export schemas
 export const resultSchemas = [
   //  resultStatusSchema,
