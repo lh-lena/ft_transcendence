@@ -15,13 +15,15 @@ curl -X POST http://[::1]:8080/api/blocked \
     "blockedId": "10",
   }'
 
-curl -X POST http://[::1]:8080/api/user \
+curl -X POST http://127.0.0.1:8080/api/user \
   -H "Content-Type: application/json" \
   -d '{
     "email": "john4@example.com",
     "password_hash": "hashed_password",
     "username": "Johnson",
-    "is_2fa_enabled": "true"
+    "is_2fa_enabled": "true",
+    "color":"warm",
+    "colormap": [ "ready", "warm", "cold" ]
   }'
 
 curl -X POST http://localhost:8080/api/upload/avatar \
