@@ -2,8 +2,8 @@ import { z } from 'zod/v4';
 
 const friendBase = z.object({
   id: z.number(),
-  userId: z.number(),
-  friendId: z.number(),
+  userId: z.uuid(),
+  friendId: z.uuid(),
 });
 const friend = friendBase
   .meta({ $id: 'friend' })
@@ -21,8 +21,8 @@ const friendId = friendBase.pick({ id: true }).meta({ $id: 'friendId' });
 const friendQuery = friendBase
   .extend({
     id: z.coerce.number().optional(),
-    userId: z.coerce.number().optional(),
-    friendId: z.coerce.number().optional(),
+    userId: z.uuid().optional(),
+    friendId: z.uuid().optional(),
   })
   .partial()
   .meta({ $id: 'friendQuery' })

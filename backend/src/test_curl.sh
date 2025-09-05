@@ -35,6 +35,10 @@ curl -X POST http://[::1]:8080/api/user \
     "username": "Janesen2"
   }'
 
+curl -X PATCH http://localhost:8080/api/user/3f0761d5-738c-4360-8996-d369ecc4f47d \
+  -H "Content-Type: application/json" \
+  -d '{"colormap": [ "ready", "warm", "cold" ] }'
+
 curl -X PATCH http://localhost:8080/api/game/user/29369 \
   -H "Content-Type: application/json" \
   -d '{"status": "ready" }'

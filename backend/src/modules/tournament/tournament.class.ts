@@ -13,7 +13,7 @@ export class tournamentClass {
     return tournament;
   }
 
-  async getByUser(userId: number): Promise<tournamentType | undefined> {
+  async getByUser(userId: string): Promise<tournamentType | undefined> {
     const tournament = this.activeTournaments.find((t) => t.players.some((p) => p.id === userId));
 
     return tournament;
@@ -37,7 +37,7 @@ export class tournamentClass {
     this.activeTournaments = this.activeTournaments.filter((t) => t.tournamentId !== tournamentId);
   }
 
-  async join(tournament: tournamentType, playerId: number): Promise<tournamentType> {
+  async join(tournament: tournamentType, playerId: string): Promise<tournamentType> {
     tournament.players.push(await userService.getInfoById(playerId));
     this.startTournament(tournament);
     return tournament;
@@ -74,13 +74,13 @@ export class tournamentClass {
     if (tournament.players.length === tournament.playerAmount && tournament.status === 'waiting') {
       tournament.status = 'ready';
       for (const player of tournament.players) {
-        notifyPlayer(player.id, -1, 'INFO: Tournament starts soon');
+        notifyPlayer(player.id, '0000-0000-0000-0000', 'INFO: Tournament starts soon');
       }
       await this.createGames(tournament);
     }
   }
 
-  async update(gameId: string, loserId: number): Promise<void> {
+  async update(gameId: string, loserId: string): Promise<void> {
     const tournament = this.activeTournaments.find((t) => t.games.some((g) => g.gameId === gameId));
 
     if (!tournament) return undefined;
@@ -89,7 +89,11 @@ export class tournamentClass {
     tournament.players = tournament.players.filter((p) => p.id !== loserId);
 
     if (tournament.players.length === 1) {
-      notifyPlayer(tournament.players[0].id, -1, 'INFO: You won the tournament!');
+      notifyPlayer(
+        tournament.players[0].id,
+        '0000-0000-0000-0000',
+        'INFO: You won the tournament!',
+      );
       this.remove(tournament.tournamentId);
     } else if (tournament.games.length === 0) {
       tournament.round += 1;

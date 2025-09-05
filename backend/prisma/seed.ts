@@ -13,18 +13,27 @@ async function main() {
   // Seed Users
   const users = [];
   for (let i = 0; i < 100; i++) {
+    // Generate a username of max 5 chars
+    let username = faker.internet
+      .username()
+      .replace(/[^a-zA-Z0-9]/g, '')
+      .slice(0, 5);
+    // Ensure not empty, fallback if needed
+    if (!username || username.length === 0) {
+      username = faker.string.alpha({ length: 5 });
+    }
     users.push(
       await prisma.user.create({
         data: {
           email: faker.internet.email(),
-          username: faker.internet.username() + faker.number.int().toString(),
+          username,
           password_hash: faker.internet.password(),
           is_2fa_enabled: faker.datatype.boolean(),
           twofa_secret: faker.datatype.boolean() ? faker.string.alphanumeric(32) : null,
           guest: faker.datatype.boolean(),
-          color: faker.color.rgb(), // faker.color.rgb() returns a random color string
+          color: faker.color.rgb(),
           colormap: faker.helpers.arrayElement(['warm', 'cool', 'neutral']),
-          avatar: faker.image.avatar(),
+          // avatar: not initialized
         },
       }),
     );

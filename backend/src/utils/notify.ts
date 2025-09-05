@@ -6,8 +6,8 @@ const wsApiClient = axios.create({
 });
 
 export async function notifyPlayer(
-  reciver: number,
-  sender: number,
+  reciver: string,
+  sender: string,
   message: string,
 ): Promise<void> {
   wsApiClient.post('/notify', {

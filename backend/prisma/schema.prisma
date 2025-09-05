@@ -15,7 +15,7 @@ datasource db {
 
 // add string string map and avatar
 model User {
-  id             Int          @id @default(autoincrement())
+  id             String       @id @default(uuid())
   email          String       @unique
   username       String       @unique
   password_hash  String
@@ -43,9 +43,9 @@ model User {
 model Friendship {
   id       Int  @id @default(autoincrement())
   user     User @relation("user", fields: [userId], references: [id], onDelete: Cascade)
-  userId   Int
+  userId   String
   friend   User @relation("friend", fields: [friendId], references: [id], onDelete: Cascade)
-  friendId Int
+  friendId String
 
   createdAt DateTime @default(now())
 
@@ -53,11 +53,11 @@ model Friendship {
 }
 
 model Blocked {
-  id      Int      @id @default(autoincrement())
+  id         Int      @id @default(autoincrement())
   user       User     @relation("blocker", fields: [userId], references: [id], onDelete: Cascade)
-  userId     Int
+  userId     String
   blocked    User     @relation("blocked", fields: [blockedId], references: [id], onDelete: Cascade)
-  blockedId  Int
+  blockedId  String
   createdAt  DateTime @default(now())
 
   @@unique([userId, blockedId])
@@ -75,9 +75,9 @@ model Result {
 model ChatMessage {
   id         Int     @id @default(autoincrement())
   sender     User     @relation("sender", fields: [senderId], references: [id], onDelete: Cascade)
-  senderId   Int
+  senderId   String
   reciver    User     @relation("reciver", fields: [reciverId], references: [id], onDelete: Cascade)
-  reciverId  Int
+  reciverId  String
   message    String
   createdAt  DateTime @default(now())
   }
@@ -85,7 +85,7 @@ model ChatMessage {
 model GamePlayed {
   id       Int      @id @default(autoincrement())
   user     User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId   Int?
+  userId   String?
   result   Result?  @relation(fields: [resultId], references: [id], onDelete: Cascade)
   resultId Int?
   score    Int?

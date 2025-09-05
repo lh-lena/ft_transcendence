@@ -13,7 +13,7 @@ export class gameClass {
     return game;
   }
 
-  async getByUser(userId: number): Promise<gameType | undefined> {
+  async getByUser(userId: string): Promise<gameType | undefined> {
     const game = this.activeGames.find((g) => g.players.some((p) => p.id === userId));
     return game;
   }
@@ -36,13 +36,13 @@ export class gameClass {
     this.activeGames = this.activeGames.filter((g) => g.gameId !== gameId);
   }
 
-  async join(game: gameType, playerId: number): Promise<gameType> {
+  async join(game: gameType, playerId: string): Promise<gameType> {
     game.players.push(await userService.getInfoById(playerId));
     this.startGame(game);
     return game;
   }
 
-  async findAvailableGame(playerId: number): Promise<gameType> {
+  async findAvailableGame(playerId: string): Promise<gameType> {
     let freeGame = this.activeGames.find(
       (g) => g.players.length < 2 && g.visibility === 'public' && g.status === 'waiting',
     );
@@ -65,7 +65,7 @@ export class gameClass {
       game.status = 'ready';
       game.createdAt = new Date().toISOString();
       for (const player of game.players) {
-        notifyPlayer(player.id, -1, 'INFO: Your next Game starts soon');
+        notifyPlayer(player.id, '0000-0000-0000-0000', 'INFO: Your next Game starts soon');
       }
     }
   }
