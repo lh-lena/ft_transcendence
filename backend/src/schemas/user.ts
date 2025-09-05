@@ -12,7 +12,7 @@ export const userBase = z.object({
   twofa_secret: z.string().nullable().optional(),
   guest: z.boolean().default(false),
   color: z.string(),
-  colormap: z.array(z.string()).transform((arr) => arr.join(',')),
+  colormap: z.string(),
   avatar: z.url().optional().nullable(),
 });
 
@@ -60,7 +60,7 @@ const userCount = z
 //define schemas for responses
 export const userResponse = userBase
   .extend({
-    colormap: z.string().transform((str) => str.split(',').filter(Boolean)),
+    colormap: z.string(),
   })
   .meta({ $id: 'userResponse' });
 export const userResponseArray = z.array(userBase).meta({ $id: 'userResponseArray' });
