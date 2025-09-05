@@ -7,6 +7,7 @@ export const userBase = z.object({
   updatedAt: dtString,
   email: z.email(),
   username: z.string(),
+  alias: z.string().optional(),
   password_hash: z.string(),
   is_2fa_enabled: z.boolean().optional(),
   twofa_secret: z.string().nullable().optional(),
@@ -19,6 +20,7 @@ export const userBase = z.object({
 export const userInfo = userBase.pick({
   id: true,
   username: true,
+  alias: true,
 });
 
 //define schema for POST

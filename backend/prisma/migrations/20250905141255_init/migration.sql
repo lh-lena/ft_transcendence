@@ -3,6 +3,7 @@ CREATE TABLE "User" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "email" TEXT NOT NULL,
     "username" TEXT NOT NULL,
+    "alias" TEXT,
     "password_hash" TEXT NOT NULL,
     "is_2fa_enabled" BOOLEAN NOT NULL DEFAULT false,
     "twofa_secret" TEXT,
