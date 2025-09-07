@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { UserRecord } from '../types';
+import { UserRecord } from '../schemas';
 
 const apiClientBackend = axios.create({
   baseURL: 'http://backend:8080/api',

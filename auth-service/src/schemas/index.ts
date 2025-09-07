@@ -21,7 +21,7 @@ export interface TokenPayload {
   username: string;
   email: string;
   alias?: string;
-  is_2fa_enabled: boolean;
+  tfaEnabled: boolean;
   iat?: number;
   exp?: number;
 }

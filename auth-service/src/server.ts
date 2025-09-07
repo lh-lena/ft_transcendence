@@ -1,27 +1,17 @@
 import Fastify from 'fastify';
-import fastifyMultipart from '@fastify/multipart';
 import fastifyCookie from '@fastify/cookie';
 import fastifyCsrf from '@fastify/csrf-protection';
 import fastifyOauth2 from '@fastify/oauth2';
 import { config } from './config/index';
-
-// Routes
+import cronPlugin from './plugins/000_cron';
 import authRoutes from './routes/auth';
-import privacyRoutes from './routes/privacy';
-import profileRoutes from './routes/profile';
-import avatarRoutes from './routes/avatarupload';
-import friendsRoutes from './routes/friends';
-import statsRoutes from './routes/stats';
-import twofaRoutes from './routes/2fa';
 
 const server = Fastify({ logger: true });
 
 // ------------ Plugins ------------
-server.register(fastifyMultipart);
 server.register(fastifyCookie);
 server.register(fastifyCsrf);
-
-twofaRoutes(server);
+server.register(cronPlugin);
 
 // ------------ Google OAuth2 ------------
 server.register(fastifyOauth2, {
@@ -43,11 +33,6 @@ server.get('/api/auth/health', async () => ({
 }));
 
 server.register(authRoutes);
-server.register(privacyRoutes);
-server.register(profileRoutes);
-server.register(avatarRoutes);
-server.register(friendsRoutes);
-server.register(statsRoutes);
 
 // ------------ Start Server ------------
 const start = async () => {

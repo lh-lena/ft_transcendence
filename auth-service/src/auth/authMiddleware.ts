@@ -27,4 +27,3 @@ export async function authMiddleware(req: FastifyRequest, reply: FastifyReply) {
     return reply.status(401).send({ error: 'Invalid token' });
   }
 }
-

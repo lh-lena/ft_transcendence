@@ -10,5 +10,7 @@ export const dtString = z
   .transform((date) => date.toISOString())
   .describe('Stores Dates as strings');
 
+export const tfaType = z.enum(['totp', 'email', 'backup']);
+
 //define game status
 export const status = z.enum(['waiting', 'ready', 'playing', 'finished']);

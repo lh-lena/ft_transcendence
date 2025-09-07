@@ -1,11 +1,11 @@
 import { z } from 'zod/v4';
-import { dtString } from './basics';
+import { dtString, tfaType } from './basics';
 
 export const userSchema = z.object({
   userId: z.uuid(),
 
-  createdAt: dtString,
-  updatedAt: dtString,
+  createdAt: dtString.optional(),
+  updatedAt: dtString.optional(),
 
   email: z.email(),
   username: z.string().min(3).max(15),
@@ -13,17 +13,18 @@ export const userSchema = z.object({
 
   password_hash: z.string(),
 
-  is_2fa_enabled: z.boolean().optional(),
-  twofa_secret: z.string().nullable().optional(),
-  twofa_method: z.string().optional(),
-  twofa_temp_code: z.string().optional(),
-  twofa_code_expires: dtString.optional(),
+  tfaEnabled: z.boolean().default(false),
+  tfaSecret: z.string().nullable().default(null),
+  tfaMethod: tfaType.nullable().default(null),
+  tfaTempCode: z.string().nullable().default(null),
+  tfaCodeExpires: dtString.nullable().default(null),
+  backupCodes: z.array(z.string()).nullable().default(null),
 
   guest: z.boolean().default(false),
 
   color: z.string(),
   colormap: z.string(),
-  avatar: z.url().optional().nullable(),
+  avatar: z.url().nullable().optional(),
 });
 
 export const userRegisterSchema = userSchema
@@ -51,3 +52,6 @@ export const userResponseSchema = userSchema.omit({
   twofa_temp_code: true,
   twofa_code_expires: true,
 });
+
+//typed
+export type UserType = z.infer<typeof userSchema>;
