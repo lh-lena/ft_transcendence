@@ -25,14 +25,14 @@ export default function createAuthService(app: FastifyInstance): AuthService {
           Authorization: `Bearer ${token}`,
         },
       });
-      if (!res.ok) {
+      if (res.status !== 200) {
         log.debug(`[auth-service] Token validation failed: ${res.status} ${res.statusText}`);
         return null;
       }
       const rawUserData = await res.json();
       const validationResult = UserSchema.safeParse(rawUserData);
       if (!validationResult.success) {
-        const errorMessages = validationResult.error.errors.map((err) => err.message).join(', ');
+        const errorMessages = validationResult.error.issues.map((err) => err.message).join(', ');
         log.debug(
           `[auth-service] Invalid user data received from auth service. Data: ${JSON.stringify(rawUserData)}. Errors: ${errorMessages}`,
         );

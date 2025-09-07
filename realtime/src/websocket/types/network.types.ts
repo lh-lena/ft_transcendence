@@ -1,22 +1,22 @@
-import type { User } from '../../schemas/index.js';
+import type { Player, UserIdType, GameIdType } from '../../schemas/index.js';
 
 export interface DisconnectInfo {
-  userId: number;
+  userId: UserIdType;
   username: string;
-  gameId: string | null;
+  gameId: GameIdType | null;
   disconnectTime: number;
 }
 
 export interface GameDisconnectState {
-  disconnectedPlayerIds: Set<number>;
+  disconnectedPlayerIds: Set<UserIdType>;
   gameEndTimer?: NodeJS.Timeout;
   pausedByDisconnection: boolean;
 }
 
 export interface PausedGameState {
-  gameId: string;
-  pausedByPlayerId: number;
+  gameId: GameIdType;
+  pausedByPlayerId: UserIdType;
   pausedAt: number;
-  players: Array<User>;
-  playersWhoPaused: Set<number>;
+  players: Array<Player>;
+  playersWhoPaused: Set<UserIdType>;
 }

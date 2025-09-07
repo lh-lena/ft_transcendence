@@ -1,10 +1,10 @@
 import type { FastifyInstance } from 'fastify';
 import { GameMode, GameSessionStatus } from '../../constants/game.constants.js';
 import type { PausedGameState } from '../../websocket/types/network.types.js';
-import type { GameSession } from '../../schemas/game.schema.js';
+import type { GameIdType, GameSession, Player } from '../../schemas/game.schema.js';
 import { GameError } from '../../utils/game.error.js';
 import type { GameSessionService, GameValidator } from '../types/game.js';
-import type { User } from '../../schemas/user.schema.js';
+import type { UserIdType } from '../../schemas/user.schema.js';
 
 export default function createGameValidator(app: FastifyInstance): GameValidator {
   const { log } = app;
@@ -12,15 +12,15 @@ export default function createGameValidator(app: FastifyInstance): GameValidator
   function validateResumingGame(
     pausedState: PausedGameState,
     game: GameSession,
-    resumeByPlayerId?: number,
+    resumeByPlayerId?: UserIdType,
   ): void {
     const { gameId, status } = game;
     if (pausedState === undefined || pausedState.gameId !== gameId) {
       throw new GameError(`game ${gameId} is not paused or does not exist`);
     }
     validateGameStatus(status, [GameSessionStatus.PAUSED]);
-    const allPlayersConnected = isPlayersConnected(game);
-    if (!allPlayersConnected) {
+    const areAllPlayersConnected = allPlayersConnected(game);
+    if (!areAllPlayersConnected) {
       throw new GameError(`not all players are connected to the game ${gameId}`);
     }
     if (resumeByPlayerId != undefined && pausedState.pausedByPlayerId !== resumeByPlayerId) {
@@ -28,12 +28,14 @@ export default function createGameValidator(app: FastifyInstance): GameValidator
     }
   }
 
-  function isExpectedPlayer(players: User[], userId: number): boolean {
-    const expectedPlayer = players.find((p) => p.userId === userId);
-    if (expectedPlayer) {
-      return true;
+  function isGameFull(game: GameSession): void {
+    if (game.gameMode === GameMode.PVP_REMOTE && game.players.length >= 2) {
+      throw new GameError(`game ${game.gameId} is already full`);
     }
-    return false;
+  }
+
+  function isExpectedPlayer(players: Player[], userId: UserIdType): boolean {
+    return players.some((p) => p.userId === userId);
   }
 
   function validateGameStatus(
@@ -45,7 +47,7 @@ export default function createGameValidator(app: FastifyInstance): GameValidator
     }
   }
 
-  function getValidGameCheckPlayer(gameId: string, userId: number): GameSession {
+  function getValidGameCheckPlayer(gameId: GameIdType, userId: UserIdType): GameSession {
     const gameSessionService = app.gameSessionService as GameSessionService;
     const game = gameSessionService.getGameSession(gameId) as GameSession;
     if (game === undefined || game === null) {
@@ -57,7 +59,7 @@ export default function createGameValidator(app: FastifyInstance): GameValidator
     return game;
   }
 
-  function isPlayersConnected(game: GameSession): boolean {
+  function allPlayersConnected(game: GameSession): boolean {
     const { gameId } = game;
     app.log.debug(`[game-service] Checking players' connection status in game ${gameId}`);
     if (game.gameMode === GameMode.PVB_AI) {
@@ -88,7 +90,7 @@ export default function createGameValidator(app: FastifyInstance): GameValidator
       );
       return false;
     }
-    if (!isPlayersConnected(game)) {
+    if (!allPlayersConnected(game)) {
       log.debug(`[game-service] Cannot start game ${game.gameId} - players are not connected`);
       return false;
     }
@@ -106,7 +108,8 @@ export default function createGameValidator(app: FastifyInstance): GameValidator
     validateGameStatus,
     getValidGameCheckPlayer,
     isExpectedPlayer,
-    isPlayersConnected,
+    allPlayersConnected,
     gameReadyToStart,
+    isGameFull,
   };
 }

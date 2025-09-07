@@ -11,6 +11,8 @@ import { WSStatusCode } from '../../constants/status.constants.js';
 import { processErrorLog, processDebugLog } from '../../utils/error.handler.js';
 import type { GameSessionService, GameStateService } from '../../game/types/game.js';
 import createGameValidator from '../../game/utils/game.validation.js';
+import type { UserIdType } from '../../schemas/user.schema.js';
+import type { GameIdType } from '../../schemas/game.schema.js';
 
 export default function createConnectionService(app: FastifyInstance): ConnectionService {
   const { log } = app;
@@ -27,13 +29,13 @@ export default function createConnectionService(app: FastifyInstance): Connectio
   const HEARTBEAT_INTERVAL = config.websocket.heartbeatInterval;
   const MAX_CONNECTIONS = config.websocket.maxConnections;
 
-  function handleHeartbeatTimeout(userId: number): void {
+  function handleHeartbeatTimeout(userId: UserIdType): void {
     log.info(`[connection-service] Handling heartbeat timeout for client ${userId}`);
     handleConnectionLoss(userId);
   }
 
   function updateConnectionQuality(
-    userId: number,
+    userId: UserIdType,
     latency: number,
     quality: NETWORK_QUALITY,
   ): void {
@@ -44,7 +46,7 @@ export default function createConnectionService(app: FastifyInstance): Connectio
     }
   }
 
-  function handlePong(userId: number): void {
+  function handlePong(userId: UserIdType): void {
     heartbeatService.handlePong(userId);
   }
 
@@ -94,7 +96,7 @@ export default function createConnectionService(app: FastifyInstance): Connectio
 
     heartbeatService.stopHeartbeat(oldConn);
 
-    const gameId: string | null | undefined = oldConn.gameId;
+    const gameId: GameIdType | null | undefined = oldConn.gameId;
     if (gameId !== undefined && gameId !== null) {
       newConn.gameId = gameId;
       reconnectionService.handlePlayerDisconnect(oldConn.user, gameId);
@@ -123,7 +125,7 @@ export default function createConnectionService(app: FastifyInstance): Connectio
     );
   }
 
-  function handleConnectionLoss(userId: number): void {
+  function handleConnectionLoss(userId: UserIdType): void {
     log.info(`[connection-service] Handling connection loss for client ${userId}`);
 
     const conn = userConnections.get(userId);
@@ -145,7 +147,7 @@ export default function createConnectionService(app: FastifyInstance): Connectio
     }
   }
 
-  function reconnectPlayer(userId: number): void {
+  function reconnectPlayer(userId: UserIdType): void {
     const gameSessionService = app.gameSessionService as GameSessionService;
     const disconnectInfo = reconnectionService.handlePlayerReconnection(userId);
     if (disconnectInfo === undefined) {
@@ -153,7 +155,7 @@ export default function createConnectionService(app: FastifyInstance): Connectio
       return;
     }
 
-    const { gameId } = disconnectInfo as { gameId: string };
+    const { gameId } = disconnectInfo as { gameId: GameIdType };
     updateUserGame(userId, gameId);
     gameSessionService.setPlayerConnectionStatus(userId, gameId, true);
 
@@ -184,12 +186,12 @@ export default function createConnectionService(app: FastifyInstance): Connectio
     }
   }
 
-  function getConnection(userId: number): WSConnection | undefined {
+  function getConnection(userId: UserIdType): WSConnection | undefined {
     const conn = userConnections.get(userId);
     return conn;
   }
 
-  function updateUserGame(userId: number, gameId: string | null): void {
+  function updateUserGame(userId: UserIdType, gameId: GameIdType | null): void {
     const conn = userConnections.get(userId);
     if (conn === undefined) {
       log.warn(`[connection-service] Cannot update game for user ${userId} - connection not found`);
@@ -226,9 +228,9 @@ export default function createConnectionService(app: FastifyInstance): Connectio
     await Promise.allSettled(notifications);
   }
 
-  async function processUserOnline(userId: number, online: boolean): Promise<void> {
+  async function processUserOnline(userId: UserIdType, online: boolean): Promise<void> {
     try {
-      const res = await fetch(`${config.websocket.backendUrl}/api/game/user/${userId}`, {
+      const res = await fetch(`${config.websocket.backendUrl}/api/user/${userId}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -246,7 +248,7 @@ export default function createConnectionService(app: FastifyInstance): Connectio
       processErrorLog(
         app,
         'connection-service',
-        `Failed to update online status for user ${userId}:`,
+        `Failed to update online status for user ${userId}`,
         error,
       );
     }
@@ -267,7 +269,7 @@ export default function createConnectionService(app: FastifyInstance): Connectio
         processErrorLog(
           app,
           'connection-service',
-          `Error closing connection for user ${conn.user.userId}:`,
+          `Error closing connection for user ${conn.user.userId}`,
           error,
         );
       }

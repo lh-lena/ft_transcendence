@@ -3,30 +3,30 @@ import type { ReconnectionService } from '../types/ws.types.js';
 import type { EnvironmentConfig } from '../../config/config.js';
 import type { RespondService, ConnectionService } from '../types/ws.types.js';
 import type { GameSessionService, GameStateService } from '../../game/types/game.js';
-import type { User } from '../../schemas/user.schema.js';
+import type { User, UserIdType } from '../../schemas/user.schema.js';
 import type { GameError } from '../../utils/game.error.js';
-import type { GameSession } from '../../schemas/game.schema.js';
+import type { GameSession, GameIdType } from '../../schemas/game.schema.js';
 import type { DisconnectInfo } from '../types/network.types.js';
 import { processErrorLog } from '../../utils/error.handler.js';
 import createGameValidator from '../../game/utils/game.validation.js';
 import { NotificationType, GameSessionStatus } from '../../constants/game.constants.js';
 
 export default function createReconnectionService(app: FastifyInstance): ReconnectionService {
-  const disconnectedPlayers: Map<number, DisconnectInfo> = new Map();
-  const reconnectionTimers: Map<number, NodeJS.Timeout> = new Map();
+  const disconnectedPlayers: Map<UserIdType, DisconnectInfo> = new Map();
+  const reconnectionTimers: Map<UserIdType, NodeJS.Timeout> = new Map();
 
   const config = app.config as EnvironmentConfig;
   const validator = createGameValidator(app);
   const { log } = app;
   const RECONNECTION_TIMEOUT = config.websocket.connectionTimeout;
 
-  function hasDisconnectData(userId: number): boolean {
+  function hasDisconnectData(userId: UserIdType): boolean {
     const hasData = disconnectedPlayers.has(userId);
     log.debug(`[reconnection-service] Found disconnect data for user ${userId}: ${hasData}`);
     return hasData;
   }
 
-  function handlePlayerDisconnect(user: User, gameId: string): void {
+  function handlePlayerDisconnect(user: User, gameId: GameIdType): void {
     if (user === undefined || user.userId === undefined) return;
     const { userId, userAlias } = user;
     const respond = app.respond as RespondService;
@@ -49,7 +49,7 @@ export default function createReconnectionService(app: FastifyInstance): Reconne
     gameStateService.pauseGame(game, userId);
   }
 
-  function attemptReconnection(userId: number): string | null {
+  function attemptReconnection(userId: UserIdType): GameIdType | null {
     const { log } = app;
     const gameSessionService = app.gameSessionService as GameSessionService;
     const gameStateService = app.gameStateService as GameStateService;
@@ -90,7 +90,7 @@ export default function createReconnectionService(app: FastifyInstance): Reconne
     return gameId;
   }
 
-  function handlePlayerReconnection(userId: number): DisconnectInfo | undefined {
+  function handlePlayerReconnection(userId: UserIdType): DisconnectInfo | undefined {
     const info = disconnectedPlayers.get(userId);
     if (info === undefined) {
       return undefined;
@@ -99,7 +99,7 @@ export default function createReconnectionService(app: FastifyInstance): Reconne
     return info;
   }
 
-  async function handleReconnectionTimeout(userId: number): Promise<void> {
+  async function handleReconnectionTimeout(userId: UserIdType): Promise<void> {
     const info = disconnectedPlayers.get(userId);
     if (info === undefined || info.gameId === undefined || info.gameId === null) return;
     log.info(
@@ -135,7 +135,7 @@ export default function createReconnectionService(app: FastifyInstance): Reconne
     }
   }
 
-  function setReconnectionTimer(userId: number, gameId: string | null): void {
+  function setReconnectionTimer(userId: UserIdType, gameId: GameIdType | null): void {
     const timeout: ReturnType<typeof setTimeout> = setTimeout((): void => {
       void (async (): Promise<void> => {
         log.debug(
@@ -148,7 +148,11 @@ export default function createReconnectionService(app: FastifyInstance): Reconne
     reconnectionTimers.set(userId, timeout);
   }
 
-  function setPlayerDisconnectInfo(userId: number, username: string, gameId: string | null): void {
+  function setPlayerDisconnectInfo(
+    userId: UserIdType,
+    username: string,
+    gameId: GameIdType | null,
+  ): void {
     const info: DisconnectInfo = {
       userId,
       username,
@@ -159,7 +163,7 @@ export default function createReconnectionService(app: FastifyInstance): Reconne
     log.debug(`[reconnection-service] Stored disconnect info for user ${userId}`);
   }
 
-  function cleanup(userId?: number): void {
+  function cleanup(userId?: UserIdType): void {
     if (userId === undefined) {
       log.debug(`[reconnection-service] Cleaning up all reconnection data`);
       disconnectedPlayers.clear();
