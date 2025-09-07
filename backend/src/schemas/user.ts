@@ -13,11 +13,11 @@ export const userBase = z.object({
 
   password_hash: z.string(),
 
-  is_2fa_enabled: z.boolean().optional(),
-  twofa_secret: z.string().nullable().optional(),
-  twofa_method: z.string().optional(),
-  twofa_temp_code: z.string().optional(),
-  twofa_code_expires: dtString.optional(),
+  is_2fa_enabled: z.boolean().default(false),
+  twofa_secret: z.string().nullable().optional().default(null),
+  twofa_method: z.string().nullable().optional().default(null),
+  twofa_temp_code: z.string().nullable().optional().default(null),
+  twofa_code_expires: dtString.nullable().optional().default(null),
 
   guest: z.boolean().default(false),
 
