@@ -34,6 +34,41 @@ server.get('/api/auth/health', async () => ({
 
 server.register(authRoutes);
 
+server.addHook('onRequest', async (req: FastifyRequest, reply: Fastifyreply) => {
+  const publicRoutes = [
+    '/api/auth/health',
+    '/api/auth/google',
+    '/api/auth/google/callback',
+    '/api/register',
+    '/api/login',
+  ];
+
+  if (publicRoutes.includes(req.routerPath)) {
+    return;
+  }
+
+  const authHeaders = req.headers.authorization;
+  if (!authHeaders) {
+    return reply.code(401).send({ error: 'Missing Authorisation Headers' });
+  }
+
+  const token = authHeaders.split(' ')[1];
+  if (!token) {
+    return reply.code(401).send({ error: 'Missing Authentication Token' });
+  }
+
+  if (await isBlacklisted(token)) {
+    return reply.code(401).send({ error: 'Token revoked' });
+  }
+
+  try {
+    const decoded = server.jwt.verify(token);
+    req.user = decoded;
+  } catch (err) {
+    return reply.code(401).send({ error: 'Unauthorised' });
+  }
+});
+
 // ------------ Start Server ------------
 const start = async () => {
   try {
