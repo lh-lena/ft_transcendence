@@ -27,7 +27,18 @@ export const PADDLE_DEFAULTS = {
   width: 15,
   speed: 500,
   score: 0,
-  offset: 5,
+  x: 5,
+};
+
+export const PADDLE_A_DEFAULTS = {
+  ...PADDLE_DEFAULTS,
+  y: BOARD_DEFAULTS.height / 2 - PADDLE_DEFAULTS.height / 2,
+};
+
+export const PADDLE_B_DEFAULTS = {
+  ...PADDLE_DEFAULTS,
+  x: BOARD_DEFAULTS.width - (PADDLE_A_DEFAULTS.x + PADDLE_DEFAULTS.width),
+  y: BOARD_DEFAULTS.height / 2 - PADDLE_DEFAULTS.height / 2,
 };
 
 export enum GameMode {

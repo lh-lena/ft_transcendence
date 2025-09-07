@@ -4,38 +4,26 @@ import {
   Direction,
   PaddleName,
   BOARD_DEFAULTS,
-  PADDLE_DEFAULTS,
   BALL_DEFAULTS,
+  PADDLE_DEFAULTS,
+  PADDLE_A_DEFAULTS,
+  PADDLE_B_DEFAULTS,
 } from '../../../constants/game.constants.js';
-import type { GameState } from '../../../schemas/game.schema.js';
+import type { GameState, BallType } from '../../../schemas/game.schema.js';
 
 export function initializeGameState(gameId: string): GameState {
   const gameState: GameState = {
     gameId,
     ball: {
-      x: BOARD_DEFAULTS.width / 2 - BALL_DEFAULTS.size / 2,
-      y: BOARD_DEFAULTS.height / 2 - BALL_DEFAULTS.size / 2,
-      dx: BALL_DEFAULTS.dx,
-      dy: BALL_DEFAULTS.dy,
-      v: BALL_DEFAULTS.v,
+      ...BALL_DEFAULTS,
     },
     paddleA: {
-      width: PADDLE_DEFAULTS.width,
-      height: PADDLE_DEFAULTS.height,
-      x: PADDLE_DEFAULTS.offset,
-      y: BOARD_DEFAULTS.height / 2 - PADDLE_DEFAULTS.height / 2,
-      score: PADDLE_DEFAULTS.score,
-      speed: PADDLE_DEFAULTS.speed,
+      ...PADDLE_A_DEFAULTS,
       direction: Direction.STOP,
       isAI: false,
     },
     paddleB: {
-      width: PADDLE_DEFAULTS.width,
-      height: PADDLE_DEFAULTS.height,
-      x: BOARD_DEFAULTS.width - (PADDLE_DEFAULTS.offset + PADDLE_DEFAULTS.width),
-      y: BOARD_DEFAULTS.height / 2 - PADDLE_DEFAULTS.height / 2,
-      score: PADDLE_DEFAULTS.score,
-      speed: PADDLE_DEFAULTS.speed,
+      ...PADDLE_B_DEFAULTS,
       direction: Direction.STOP,
       isAI: false,
     },
@@ -64,11 +52,11 @@ export function updateGame(state: GameState, deltaTime: number): void {
 
   paddleA.y = Math.max(
     0,
-    Math.min(paddleA.y, BOARD_DEFAULTS.height - paddleA.height - PADDLE_DEFAULTS.offset),
+    Math.min(paddleA.y, BOARD_DEFAULTS.height - PADDLE_DEFAULTS.height - PADDLE_DEFAULTS.x),
   );
   paddleB.y = Math.max(
     0,
-    Math.min(paddleB.y, BOARD_DEFAULTS.height - paddleB.height - PADDLE_DEFAULTS.offset),
+    Math.min(paddleB.y, BOARD_DEFAULTS.height - PADDLE_DEFAULTS.height - PADDLE_DEFAULTS.x),
   );
 
   ball.x += ball.v * ball.dx * deltaTime;
@@ -97,8 +85,7 @@ export function updateGame(state: GameState, deltaTime: number): void {
     ball.x = paddleA.x + paddleA.width;
     ball.dx = Math.abs(ball.dx);
     ball.v += PONG_CONFIG.INCREMENT_BALL_VELOCITY;
-    ball.dy += (Math.random() - 0.5) * 0.5;
-    ball.dy *= Math.random() < 0.5 ? -1 : 1;
+    randomizeBallDirection(ball);
   }
   if (
     ball.x >= paddleB.x - BALL_DEFAULTS.size &&
@@ -108,8 +95,7 @@ export function updateGame(state: GameState, deltaTime: number): void {
     ball.x = paddleB.x - BALL_DEFAULTS.size;
     ball.dx = -Math.abs(ball.dx);
     ball.v += PONG_CONFIG.INCREMENT_BALL_VELOCITY;
-    ball.dy += (Math.random() - 0.5) * 0.5;
-    ball.dy *= Math.random() < 0.5 ? -1 : 1;
+    randomizeBallDirection(ball);
   }
 
   if (ball.dy > PONG_CONFIG.MAX_BALL_DY) ball.dy = PONG_CONFIG.MAX_BALL_DY;
@@ -117,17 +103,19 @@ export function updateGame(state: GameState, deltaTime: number): void {
 }
 
 function resetBall(state: GameState): void {
-  const { ball } = state;
-  ball.x = BOARD_DEFAULTS.width / 2;
-  ball.y = BOARD_DEFAULTS.height / 2;
-  ball.dx = Math.random() < 0.5 ? 6 : -6;
-  ball.dy = Math.random() < 0.5 ? 1 : -1;
-  ball.v = BALL_DEFAULTS.v;
+  state.ball = {
+    ...BALL_DEFAULTS,
+  };
+}
+
+function randomizeBallDirection(ball: BallType): void {
+  ball.dy += (Math.random() - 0.5) * 0.5;
+  ball.dy *= Math.random() < 0.5 ? -1 : 1;
 }
 
 function resetPadlesPosition(state: GameState): void {
-  state.paddleA.y = BOARD_DEFAULTS.height / 2 - PADDLE_DEFAULTS.height / 2;
-  state.paddleB.y = BOARD_DEFAULTS.height / 2 - PADDLE_DEFAULTS.height / 2;
+  state.paddleA.y = PADDLE_A_DEFAULTS.y;
+  state.paddleB.y = PADDLE_B_DEFAULTS.y;
 }
 
 export function checkWinCondition(gameState: GameState): boolean {
