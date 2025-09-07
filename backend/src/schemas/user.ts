@@ -2,7 +2,7 @@ import { z } from 'zod/v4';
 import { dtString } from './basics';
 
 export const userBase = z.object({
-  id: z.uuid(),
+  userId: z.uuid(),
 
   createdAt: dtString,
   updatedAt: dtString,
@@ -27,14 +27,14 @@ export const userBase = z.object({
 });
 
 export const userInfo = userBase.pick({
-  id: true,
+  userId: true,
   username: true,
   alias: true,
 });
 
 //define schema for POST
 const userPostBase = userBase.omit({
-  id: true,
+  userId: true,
   createdAt: true,
   updatedAt: true,
 });
@@ -48,13 +48,13 @@ const userUpdate = userPostBase
 
 const userAvatarUpload = z
   .object({
-    id: z.number(),
+    userId: z.uuid(),
     avatar: z.string(),
   })
   .meta({ $id: 'userAvatarUpload' });
 
 //define schemas for GET
-const userId = userBase.pick({ id: true }).meta({ $id: 'userId' });
+const userId = userBase.pick({ userId: true }).meta({ $id: 'userId' });
 
 export const userQueryBase = userBase.partial();
 const userQuery = userQueryBase
@@ -69,11 +69,7 @@ const userCount = z
   .describe('Count of users');
 
 //define schemas for responses
-export const userResponse = userBase
-  .extend({
-    colormap: z.string(),
-  })
-  .meta({ $id: 'userResponse' });
+export const userResponse = userBase.meta({ $id: 'userResponse' });
 export const userResponseArray = z.array(userBase).meta({ $id: 'userResponseArray' });
 
 export const userSchemas = [
