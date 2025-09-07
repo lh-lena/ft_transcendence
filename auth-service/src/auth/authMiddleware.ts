@@ -1,13 +1,11 @@
 import { FastifyReply, FastifyRequest } from 'fastify';
 import { verifyJWT } from './jwt';
-import { config } from '../config';
-import { AuthenticatedRequest } from '../types';
 import { isBlacklisted } from '../services/userService';
 
 import axios from 'axios';
 
 // Use the same backend API client as in server.ts
-const apiClientBackend = axios.create({
+export const apiClientBackend = axios.create({
   baseURL: 'http://backend:8080/api',
   timeout: 5000,
 });
@@ -22,7 +20,7 @@ export async function authMiddleware(req: FastifyRequest, reply: FastifyReply) {
 
   try {
     const payload = verifyJWT(token, process.env.ACCESS_TOKEN_SECRET!);
-    (req as AuthenticatedRequest).user = payload;
+    return payload;
   } catch {
     return reply.status(401).send({ error: 'Invalid token' });
   }

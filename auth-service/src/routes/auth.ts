@@ -1,6 +1,6 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { hashPassword, verifyPassword } from '../auth/passwords';
-import { generateJWT, generateRefreshToken, verifyJWT } from '../auth/jwt';
+import { verifyJWT } from '../auth/jwt';
 import { isBlacklisted, apiClientBackend } from '../services/userService';
 import { tfaHandler } from './tfa';
 import {
@@ -75,8 +75,8 @@ export default async function authRoutes(server: FastifyInstance) {
 
     try {
       const payload = verifyJWT(refreshToken, process.env.REFRESH_TOKEN_SECRET!);
-      const newAccessToken = server.jwt.sign(payload);
-      const newRefreshToken = server.refreshJwt.sign(payload);
+      const newAccessToken = server.generateAccessToken(payload);
+      const newRefreshToken = server.generateRefreshToken(payload);
       reply.setCookie('refreshToken', newRefreshToken, {
         httpOnly: true,
         path: '/api/refresh',
@@ -157,6 +157,10 @@ export default async function authRoutes(server: FastifyInstance) {
 
     return reply.send({ message: 'Logged out successfully' });
   });
+}
+
+export async function cleanupExpiredSession() {
+  tfa.cleanupExpiredSessions();
 }
 
 // TODO: whats this for

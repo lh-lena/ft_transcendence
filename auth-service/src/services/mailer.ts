@@ -9,5 +9,10 @@ export const transporter = nodemailer.createTransport({
 });
 
 export async function sendMail(to: string, subject: string, text: string) {
-  return transporter.sendMail({ from: '"ft_transcendance" <no-reply@transcendance.com>', to, subject, text });
+  return transporter.sendMail({
+    from: '"ft_transcendance" <no-reply@transcendance.com>',
+    to,
+    subject,
+    text,
+  });
 }

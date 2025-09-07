@@ -56,7 +56,7 @@ export class tfaHandler {
     return false;
   }
 
-  async cleanupExpiredSession() {
+  async cleanupExpiredSessions() {
     const now = new Date();
     this.tfaSessions = this.tfaSessions.filter((session) => {
       const sessionTime = new Date(session.create);
