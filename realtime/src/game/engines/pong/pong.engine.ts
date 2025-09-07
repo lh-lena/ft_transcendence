@@ -1,4 +1,12 @@
-import { PONG_CONFIG, GameSessionStatus, Direction, PaddleName, BOARD_DEFAULTS, PADDLE_DEFAULTS, BALL_DEFAULTS } from '../../../constants/game.constants.js';
+import {
+  PONG_CONFIG,
+  GameSessionStatus,
+  Direction,
+  PaddleName,
+  BOARD_DEFAULTS,
+  PADDLE_DEFAULTS,
+  BALL_DEFAULTS,
+} from '../../../constants/game.constants.js';
 import type { GameState } from '../../../schemas/game.schema.js';
 
 export function initializeGameState(gameId: string): GameState {
