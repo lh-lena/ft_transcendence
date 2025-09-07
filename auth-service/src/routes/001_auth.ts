@@ -1,67 +1,65 @@
+import fp from 'fastify-plugin';
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
-import { hashPassword, verifyPassword } from '../auth/passwords';
-import { verifyJWT } from '../auth/jwt';
+import { verifyPassword } from '../auth/passwords';
 import { isBlacklisted, apiClientBackend } from '../services/userService';
-import { tfaHandler } from './tfa';
-import {
-  userSchema,
-  userRegisterSchema,
-  userLoginSchema,
-  userResponseSchema,
-} from '../schemas/user';
-import type { UserType } from '../schemas/user';
+import { auth } from '../modules/auth';
+
+import { userSchema, userRegisterSchema, userLoginSchema } from '../schemas/user';
+import type { UserResponseType, UserType } from '../schemas/user';
 
 import { tfaVerifySchema, tfaSetupSchema } from '../schemas/tfa';
 
-export const tfa = new tfaHandler();
+const authRoutes = async (server: FastifyInstance) => {
+  server.post(
+    '/api/register',
+    async (req: FastifyRequest, reply: FastifyReply): Promise<UserResponseType> => {
+      const parsedResult = userRegisterSchema.safeParse(req.body);
+      if (!parsedResult.success) {
+        return reply.status(400).send({ error: parsedResult.error.issues });
+      }
 
-export default async function authRoutes(server: FastifyInstance) {
-  server.post('/api/register', async (req: FastifyRequest, reply: FastifyReply) => {
-    const parseResult = userRegisterSchema.safeParse(req.body);
+      const ret = await auth.register(parsedResult.data);
 
-    if (!parseResult.success) {
-      return reply.status(400).send({ error: parseResult.error.issues });
-    }
+      const parsedRet = userSchema.safeParse(ret);
+      if (!parsedRet.success) {
+        return reply.status(400).send({ error: parsedRet.error.issues });
+      }
 
-    const password_hash = await hashPassword(parseResult.data.password);
-    const newUser: UserType = userSchema.parse({ ...parseResult.data, password_hash });
+      return reply.status(201).send({
+        message: 'User registered successfully',
+        data: parsedRet.data,
+      });
+    },
+  );
 
-    const ret: UserType = await apiClientBackend.post('/user', newUser);
+  server.post(
+    '/api/login',
+    async (req: FastifyRequest, reply: FastifyReply): Promise<UserResponseType> => {
+      const parseResult = userLoginSchema.safeParse(req.body);
+      if (!parseResult.success) {
+        return reply.status(400).send({ error: parseResult.error.issues });
+      }
 
-    const parsedRet = userResponseSchema.safeParse(ret);
+      const user: UserType = await apiClientBackend.get(`/user`, {
+        params: { email: parseResult.data.email },
+      });
 
-    return reply.status(201).send({
-      message: 'User registered successfully',
-      data: parsedRet,
-    });
-  });
+      if (!user) {
+        return reply.status(401).send({ error: 'Invalid credentials' });
+      }
 
-  server.post('/api/login', async (req: FastifyRequest, reply: FastifyReply) => {
-    const parseResult = userLoginSchema.safeParse(req.body);
+      const valid = await verifyPassword(user.password_hash, parseResult.data.password);
+      if (!valid) {
+        return reply.status(401).send({ error: 'Invalid credentials' });
+      }
 
-    if (!parseResult.success) {
-      return reply.status(400).send({ error: parseResult.error.issues });
-    }
+      if (user.tfaEnabled) {
+        return await tfa.handletfa(user, reply);
+      }
 
-    const user: UserType = await apiClientBackend.get(`/user`, {
-      params: { email: parseResult.data.email },
-    });
-
-    if (!user) {
-      return reply.status(401).send({ error: 'Invalid credentials' });
-    }
-
-    const valid = await verifyPassword(user.password_hash, parseResult.data.password);
-    if (!valid) {
-      return reply.status(401).send({ error: 'Invalid credentials' });
-    }
-
-    if (user.tfaEnabled) {
-      return await tfa.handletfa(user, reply);
-    }
-
-    return await tfa.sendJwt(user, reply);
-  });
+      return await tfa.sendJwt(user, reply);
+    },
+  );
 
   server.post('/api/refresh', async (req: FastifyRequest, reply: FastifyReply) => {
     const refreshToken = req.cookies.refreshToken;
@@ -74,7 +72,7 @@ export default async function authRoutes(server: FastifyInstance) {
     }
 
     try {
-      const payload = verifyJWT(refreshToken, process.env.REFRESH_TOKEN_SECRET!);
+      const payload = server.refresh.verify(refreshToken);
       const newAccessToken = server.generateAccessToken(payload);
       const newRefreshToken = server.generateRefreshToken(payload);
       reply.setCookie('refreshToken', newRefreshToken, {
@@ -157,11 +155,13 @@ export default async function authRoutes(server: FastifyInstance) {
 
     return reply.send({ message: 'Logged out successfully' });
   });
-}
+};
 
 export async function cleanupExpiredSession() {
   tfa.cleanupExpiredSessions();
 }
+
+export default fp(authRoutes);
 
 // TODO: whats this for
 // server.get('/api/auth/me', { preHandler: authMiddleware }, async (req, reply) => {
