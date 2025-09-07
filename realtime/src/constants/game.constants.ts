@@ -26,6 +26,11 @@ export enum GameMode {
   PVB_AI = 'pvb_ai',
 }
 
+export enum PaddleName {
+  PADDLE_A = 'paddleA',
+  PADDLE_B = 'paddleB',
+}
+
 export enum GameSessionStatus {
   PENDING = 'pending', // Created but not yet started on ws-server
   ACTIVE = 'active', // running on ws-server

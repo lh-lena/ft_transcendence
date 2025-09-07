@@ -15,6 +15,8 @@ import type { authService } from '../auth/services/auth.service.js';
 import type { createAIService } from '../ai/ai.js';
 import type { EnvironmentConfig } from '../config/config.js';
 import type { NETWORK_QUALITY } from '../websocket/types/network.types.js';
+import type { UserIdType } from '../schemas/user.schema.js';
+import type { GameIdType } from '../schemas/game.schema.js';
 
 declare module 'fastify' {
   interface FastifyInstance {
@@ -35,11 +37,11 @@ declare module 'fastify' {
 
   type WSConnection = WebSocket & {
     user: {
-      userId: number;
+      userId: UserIdType;
       username: string;
       userAlias: string;
     };
-    gameId?: string | null;
+    gameId?: GameIdType | null;
     lastPing: number;
     lastPong: number;
     authenticated: boolean;

@@ -2,7 +2,7 @@ import { NotificationType } from '../constants/game.constants.js';
 import { GameError } from './game.error.js';
 import type { FastifyInstance } from 'fastify';
 import type { RespondService } from '../websocket/types/ws.types.js';
-import type { User } from '../schemas/user.schema.js';
+import type { User, UserIdType } from '../schemas/user.schema.js';
 import { z } from 'zod';
 
 function formatLogDetails(details?: string): string {
@@ -60,7 +60,7 @@ export function safeErrorToString(error: unknown): string {
 
 function sendErrorResponse(
   respond: RespondService,
-  userId: number,
+  userId: UserIdType,
   type: 'error' | 'notification',
   message: string,
   notificationType?: NotificationType,
@@ -74,7 +74,7 @@ function sendErrorResponse(
 
 export function handleWebSocketError(
   error: unknown,
-  userId: number,
+  userId: UserIdType,
   message: string,
   app: FastifyInstance,
 ): void {
