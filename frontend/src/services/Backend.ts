@@ -1,9 +1,17 @@
 import axios from "axios";
-import { UserLocal, UserRegistration, UserResponse } from "../types";
+import {
+  FriendsList,
+  UserLocal,
+  UserRegistration,
+  UserResponse,
+} from "../types";
+
+// utils
 import { profilePrintToArray } from "../utils/profilePrintFunctions";
 
 export class Backend {
   private user!: UserLocal;
+  private friends!: FriendsList;
   private api = axios.create({
     baseURL: import.meta.env.VITE_BACKEND_URL,
     timeout: 10000,
@@ -35,7 +43,7 @@ export class Backend {
 
   setUser(response: UserResponse) {
     this.user = {} as UserLocal;
-    this.user.id = response.id;
+    this.user.userId = response.id;
     this.user.createdAt = response.createdAt;
     this.user.updatedAt = response.updatedAt;
     this.user.email = response.email;
@@ -54,16 +62,25 @@ export class Backend {
     this.saveUserToStorage();
   }
 
+  async fetchFriends(user: UserLocal) {
+    const response = await this.api.get("/friend", {
+      params: {
+        userId: user.userId,
+      },
+    });
+    return response.data;
+  }
+
   async fetchAllUsers() {
     const response = await this.api.get("user");
     return response;
   }
 
   async refreshUser() {
-    if (!this.user?.id) {
+    if (!this.user?.userId) {
       throw new Error("User ID is undefined");
     }
-    const response = await this.getUserById(this.user.id);
+    const response = await this.getUserById(this.user.userId);
     this.user = response;
   }
 
@@ -90,6 +107,7 @@ export class Backend {
   }
 
   // local storage magic
+
   private saveUserToStorage() {
     if (this.user) {
       localStorage.setItem("user", JSON.stringify(this.user));

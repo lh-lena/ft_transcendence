@@ -4,7 +4,8 @@ import { PongButton } from "../../components/pongButton";
 
 export class LoginPage {
   private main: HTMLElement;
-  private menu: Menu;
+  private firstMenu: Menu;
+  private loginMenu!: Menu;
   private pongButton: PongButton;
   private serviceContainer: ServiceContainer;
   private router: Router;
@@ -21,6 +22,24 @@ export class LoginPage {
     this.pongButton = new PongButton();
     this.pongButton.mount(this.main);
 
+    const firstMenu = [
+      {
+        name: "email",
+        onClick: () => this.toggleLoginMenu(),
+      },
+      {
+        name: "google auth",
+        // onClick: () => this.//;
+      },
+    ];
+    this.firstMenu = new Menu(this.router, firstMenu);
+    this.firstMenu.mount(this.main);
+  }
+
+  private toggleLoginMenu(): void {
+    this.main.removeChild(this.firstMenu.getMenuElement());
+
+    // form
     const form = document.createElement("form");
     form.className = "flex flex-col gap-3 w-48";
     this.main.appendChild(form);
@@ -42,8 +61,8 @@ export class LoginPage {
     form.appendChild(inputPassword);
 
     const loginMenu = [{ name: "log in", link: "/chat" }];
-    this.menu = new Menu(this.router, loginMenu);
-    this.menu.mount(this.main);
+    this.loginMenu = new Menu(this.router, loginMenu);
+    this.main.appendChild(this.loginMenu.getMenuElement());
   }
 
   public mount(parent: HTMLElement): void {

@@ -1,11 +1,11 @@
 import { CloseIcon } from "../closeIcon/CloseIcon";
 import { ProfileAvatar } from "../profileAvatar";
-import { userStore2 } from "../../constants/backend";
+import { UserLocal } from "../../types";
 
 export class ProfilePopUp {
   private main: HTMLElement;
 
-  constructor(closeCallBack: () => void) {
+  constructor(closeCallBack: () => void, user: UserLocal, style?: string) {
     this.main = document.createElement("div");
     this.main.className =
       "standard-dialog w-48 flex justify-center flex-col gap-5 pb-4";
@@ -20,25 +20,25 @@ export class ProfilePopUp {
     const userDiv = document.createElement("div");
     userDiv.className = "mx-auto flex flex-col gap-8 my-auto";
     this.main.appendChild(userDiv);
-    const userPic = new ProfileAvatar(
-      userStore2.color,
-      userStore2.colorMap,
-    ).getElement();
+    const userPic = new ProfileAvatar(user.color, user.colormap).getElement();
     userPic.className = "mx-auto animate-bounce-slow";
     userDiv.appendChild(userPic);
 
     const username = document.createElement("h1");
-    username.innerText = userStore2.username;
+    username.innerText = user.username;
     userDiv.appendChild(username);
 
-    const addFriendButton = document.createElement("button");
-    addFriendButton.innerText = "add";
-    addFriendButton.className = "btn mt-auto";
-    const blockFriendButton = document.createElement("button");
-    blockFriendButton.innerText = "block";
-    blockFriendButton.className = "btn";
-    this.main.appendChild(addFriendButton);
-    this.main.appendChild(blockFriendButton);
+    // if statement checks if the user is the local user
+    if (style == "friend") {
+      const addFriendButton = document.createElement("button");
+      addFriendButton.innerText = "add";
+      addFriendButton.className = "btn mt-auto";
+      const blockFriendButton = document.createElement("button");
+      blockFriendButton.innerText = "block";
+      blockFriendButton.className = "btn";
+      this.main.appendChild(addFriendButton);
+      this.main.appendChild(blockFriendButton);
+    }
   }
 
   public getNode(): HTMLElement {

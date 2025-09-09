@@ -76,10 +76,13 @@ export class App {
     const loading = new Loading("pong");
     loading.mount(this.container);
     // show loading screen
+    const randomLoadingTime = Math.random() * 400 + 400;
+    // random range between 400 and 800
+    console.log(randomLoadingTime);
     setTimeout(() => {
       loading.hide();
       this.currentPage = new PageClass(this.serviceContainer);
       this.currentPage.mount(this.container);
-    }, 789);
+    }, randomLoadingTime);
   }
 }

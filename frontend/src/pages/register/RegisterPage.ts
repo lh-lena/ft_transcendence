@@ -2,11 +2,15 @@ import { ServiceContainer, Router, Backend } from "../../services";
 import { Menu } from "../../components/menu";
 import { PongButton } from "../../components/pongButton";
 import { UserRegistration } from "../../types";
-import { generateProfilePrint, profilePrintToString } from "../../utils/profilePrintFunctions";
+import {
+  generateProfilePrint,
+  profilePrintToString,
+} from "../../utils/profilePrintFunctions";
 
 export class RegisterPage {
   private main: HTMLElement;
-  private menu: Menu;
+  private firstMenu: Menu;
+  private registerMenu!: Menu;
   private pongButton: PongButton;
   private serviceContainer: ServiceContainer;
   private router: Router;
@@ -25,6 +29,69 @@ export class RegisterPage {
 
     this.pongButton = new PongButton();
     this.pongButton.mount(this.main);
+
+    const firstMenu = [
+      {
+        name: "email",
+        onClick: () => this.toggleRegisterMenu(),
+      },
+      {
+        name: "google auth",
+        // onClick: () => //,
+      },
+    ];
+    this.firstMenu = new Menu(this.router, firstMenu);
+    this.main.appendChild(this.firstMenu.getMenuElement());
+  }
+
+  private async registerHook() {
+    // get all input data from forms
+    const username = (
+      document.getElementById("text_username") as HTMLInputElement
+    ).value;
+    const email = (document.getElementById("text_email") as HTMLInputElement)
+      .value;
+    const password = (
+      document.getElementById("text_password") as HTMLInputElement
+    ).value;
+    const passwordConfirm = (
+      document.getElementById("text_password_confirm") as HTMLInputElement
+    ).value;
+
+    // basic validation -> add more
+    if (password != passwordConfirm) {
+      alert("Passwords don't match!");
+      return;
+    }
+
+    // generate color and color map
+    const { color, colorMap } = generateProfilePrint();
+
+    const userRegistrationData: UserRegistration = {
+      email: email,
+      username: username,
+      password_hash: password, // You might want to hash this on the backend
+      is_2fa_enabled: "false", // Default values for now
+      twofa_secret: "",
+      color: color, // Default or get from form
+      colormap: profilePrintToString(colorMap), // Default or get from form
+    };
+
+    try {
+      const response = await this.backend.registerUser(userRegistrationData);
+      // if user object was received
+      if (response.status === 201) {
+        this.backend.setUser(response.data);
+        this.router.navigate("/chat");
+      }
+    } catch (error) {
+      console.error(error);
+      alert(`Registration failed: ${error}`);
+    }
+  }
+
+  private toggleRegisterMenu(): void {
+    this.main.removeChild(this.firstMenu.getMenuElement());
 
     const form = document.createElement("form");
     form.className = "flex flex-col gap-3 w-48";
@@ -68,54 +135,8 @@ export class RegisterPage {
         onClick: () => this.registerHook(),
       },
     ];
-    this.menu = new Menu(this.router, loginMenu);
-    this.menu.mount(this.main);
-  }
-
-  private async registerHook() {
-    // get all input data from forms
-    const username = (
-      document.getElementById("text_username") as HTMLInputElement
-    ).value;
-    const email = (document.getElementById("text_email") as HTMLInputElement)
-      .value;
-    const password = (
-      document.getElementById("text_password") as HTMLInputElement
-    ).value;
-    const passwordConfirm = (
-      document.getElementById("text_password_confirm") as HTMLInputElement
-    ).value;
-
-    // basic validation
-    if (password != passwordConfirm) {
-      alert("Passwords don't match!");
-      return;
-    }
-
-    // generate color and color map
-    const { color, colorMap } = generateProfilePrint();
-
-    const userRegistrationData: UserRegistration = {
-      email: email,
-      username: username,
-      password_hash: password, // You might want to hash this on the backend
-      is_2fa_enabled: "false", // Default values for now
-      twofa_secret: "",
-      color: color, // Default or get from form
-      colormap: profilePrintToString(colorMap), // Default or get from form
-    };
-
-    try {
-      const response = await this.backend.registerUser(userRegistrationData);
-      // if user object was sent backend
-      if (response.status === 201) {
-        this.backend.setUser(response.data);
-        this.router.navigate("/chat");
-      }
-    } catch (error) {
-      console.error(error);
-      alert(`Registration failed: ${error}`);
-    }
+    this.registerMenu = new Menu(this.router, loginMenu);
+    this.registerMenu.mount(this.main);
   }
 
   public mount(parent: HTMLElement): void {

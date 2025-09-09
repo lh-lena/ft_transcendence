@@ -21,7 +21,7 @@ export class Menu {
     this.createMenuContent();
   }
 
-  get menuElement(): HTMLElement {
+  getMenuElement(): HTMLElement {
     return this.element;
   }
 

@@ -1,17 +1,18 @@
 import { ServiceContainer, Router, Backend } from "../../services";
 import { Window } from "../../components/window";
-import { CANVAS_DEFAULTS, User } from "../../types";
+import { CANVAS_DEFAULTS } from "../../types";
 import { MenuBar } from "../../components/menuBar";
 import { ProfileAvatar } from "../../components/profileAvatar";
-import { sampleChatHistory, userStore } from "../../constants/backend";
+import { sampleChatHistory } from "../../constants/backend";
 import { InformationIcon } from "../../components/informationIcon";
 import { ProfilePopUp } from "../../components/profilePopUp";
 
 // new backend types
+import { UserLocal } from "../../types";
 
 // pretend backend -> change
 import { sampleFriends } from "../../constants/backend";
-import { FriendsIcon } from "../../components/profileIcon";
+import { FriendsIcon } from "../../components/friendsIcon";
 
 export class ChatPage {
   private serviceContainer: ServiceContainer;
@@ -37,7 +38,8 @@ export class ChatPage {
     this.backend = this.serviceContainer.get<Backend>("backend");
 
     // grab user data from backend
-    const user: User = this.backend.getUser();
+    const user: UserLocal = this.backend.getUser();
+    console.log(user);
 
     this.container = document.createElement("div");
     this.container.className =
@@ -77,7 +79,7 @@ export class ChatPage {
     addYouButtonText.textContent = user.username;
     addYouButton.appendChild(addYouButtonText);
     clickableYoubutton.appendChild(addYouButton);
-    clickableYoubutton.onclick = () => this.toggleProfilePopUp();
+    clickableYoubutton.onclick = () => this.toggleProfilePopUp(user);
     contacts.appendChild(clickableYoubutton);
 
     // LEADERBOARD BUTTON
@@ -168,7 +170,7 @@ export class ChatPage {
     informationText.textContent = "Chat with XXX";
     informationBar.appendChild(informationText);
     const informationIcon = new InformationIcon(() =>
-      this.toggleProfilePopUp(),
+      this.toggleProfilePopUp(user),
     );
     informationIcon.mount(informationBar);
     informationIcon.className("ml-auto");
@@ -225,7 +227,7 @@ export class ChatPage {
       contact.className =
         "flex flex-row gap-2 box standard-dialog w-full items-center";
       const clickableContact = document.createElement("a");
-      clickableContact.onclick = () => this.toggleProfilePopUp();
+      clickableContact.onclick = () => this.toggleProfilePopUp(user);
       clickableContact.style.cursor = "pointer";
       const contactName = document.createElement("h1");
       contactName.textContent = friend.username;
@@ -267,7 +269,12 @@ export class ChatPage {
     this.chatPanel.appendChild(this.bottomBar);
     // set input box as initial buttom bar
 
-    this.profilePopUp = new ProfilePopUp(() => this.toggleProfilePopUp());
+    // default profile pop up that shows our own profile at start
+    this.profilePopUp = new ProfilePopUp(
+      () => this.toggleProfilePopUp(user),
+      user,
+    );
+    this.toggleProfilePopUp(user);
 
     // window
     const windowComponent = new Window({
@@ -343,10 +350,31 @@ export class ChatPage {
     } else this.chatRow.appendChild(this.addFriendsPanel);
   }
 
-  private toggleProfilePopUp(): void {
-    if (this.chatRow.contains(this.profilePopUp.getNode())) {
+  private toggleProfilePopUp(user: UserLocal): void {
+    // remove profile pop up if it is already shown on screen
+    if (
+      this.profilePopUp &&
+      this.chatRow.contains(this.profilePopUp.getNode())
+    ) {
       this.chatRow.removeChild(this.profilePopUp.getNode());
-    } else this.chatRow.appendChild(this.profilePopUp.getNode());
+      return;
+    }
+
+    // create new popup and show it
+    if (user === this.backend.getUser()) {
+      // case is pop up for local user
+      this.profilePopUp = new ProfilePopUp(
+        () => this.toggleProfilePopUp(user),
+        user,
+      );
+    } else {
+      this.profilePopUp = new ProfilePopUp(
+        () => this.toggleProfilePopUp(user),
+        user,
+        "friend",
+      );
+    }
+    this.chatRow.appendChild(this.profilePopUp.getNode());
   }
 
   public unmount(): void {

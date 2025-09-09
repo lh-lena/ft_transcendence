@@ -18,7 +18,7 @@ export type UserRegistration = {
 
 // user obj we store locally -> notice we use a colormap array instead of string
 export type UserLocal = {
-  id: string;
+  userId: string;
   createdAt: string;
   updatedAt: string;
   email: string;
@@ -47,3 +47,9 @@ export type UserResponse = {
   colormap: string;
   avatar: string | null;
 };
+
+export type FriendsList = {
+  id: number;
+  userId: string;
+  friendId: string;
+}[];
