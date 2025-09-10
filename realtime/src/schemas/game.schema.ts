@@ -48,6 +48,7 @@ const PaddleSchema = z.object({
   score: z.number().int().min(0),
   speed: z.number().int().positive(),
   direction: z.enum(Direction),
+  isAI: z.boolean().optional().default(false),
 });
 
 const BallSchema = z.object({
@@ -56,6 +57,7 @@ const BallSchema = z.object({
   dx: z.number(),
   dy: z.number(),
   v: z.number(),
+  size: z.number().int().positive(),
 });
 
 export const GameStateSchema = z.object({
@@ -90,3 +92,4 @@ export type GameSession = z.infer<typeof GameSessionSchema>;
 export type Player = z.infer<typeof PlayerSchema>;
 export type GameIdType = z.infer<typeof GameIdSchema>;
 export type Paddle = z.infer<typeof PaddleSchema>;
+export type BallType = z.infer<typeof BallSchema>;
