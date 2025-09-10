@@ -1,8 +1,20 @@
 import type { FastifyInstance } from 'fastify';
-import type { User, GameResult, GameState, GameSession } from '../../schemas/index.js';
+import type {
+  GameState,
+  GameSession,
+  GameIdType,
+  Player,
+  UserIdType,
+} from '../../schemas/index.js';
 import type { PausedGameState } from '../../websocket/types/network.types.js';
-import { PONG_CONFIG, NotificationType, GameSessionStatus } from '../../constants/index.js';
-import { processErrorLog } from '../../utils/error.handler.js';
+import {
+  PONG_CONFIG,
+  NotificationType,
+  GameSessionStatus,
+  GameMode,
+  AIDifficulty,
+} from '../../constants/index.js';
+import { processErrorLog, processDebugLog } from '../../utils/error.handler.js';
 import {
   updateGame,
   checkWinCondition,
@@ -12,11 +24,13 @@ import createGameValidator from '../utils/game.validation.js';
 import type { ConnectionService, RespondService } from '../../websocket/types/ws.types.js';
 import type { GameSessionService, GameDataService, GameStateService } from '../types/game.js';
 import type { EnvironmentConfig } from '../../config/config.js';
-import { processDebugLog } from '../../utils/error.handler.js';
+import type { AIService } from '../../ai/ai.types.js';
+import { createGameResult } from '../utils/game.result.js';
+import { assignPaddleToPlayers } from '../utils/player.utils.js';
 
 export default function createGameStateService(app: FastifyInstance): GameStateService {
-  const pausedGames: Map<string, PausedGameState> = new Map();
-  const pauseTimeouts: Map<string, NodeJS.Timeout> = new Map();
+  const pausedGames: Map<GameIdType, PausedGameState> = new Map();
+  const pauseTimeouts: Map<GameIdType, NodeJS.Timeout> = new Map();
   const config = app.config as EnvironmentConfig;
   const validator = createGameValidator(app);
   const { log } = app;
@@ -25,11 +39,12 @@ export default function createGameStateService(app: FastifyInstance): GameStateS
     log.info(`[game-state] Starting the game ${game.gameId}`);
     updateGameToActive(game);
     resetGameState(game.gameState);
+    assignPaddleToPlayers(game);
     broadcastGameUpdate(game.players, game.gameState);
     startCountdownSequence(game, 'Game started!', PONG_CONFIG.COUNTDOWN);
   }
 
-  function pauseGame(game: GameSession, pausedByPlayerId: number): boolean {
+  function pauseGame(game: GameSession, pausedByPlayerId: UserIdType): boolean {
     if (game === undefined || game === null) {
       log.warn(`[game-state] Cannot pause - game not found`);
       return false;
@@ -62,7 +77,7 @@ export default function createGameStateService(app: FastifyInstance): GameStateS
     return true;
   }
 
-  function resumeGame(game: GameSession, resumeByPlayerId?: number): void {
+  function resumeGame(game: GameSession, resumeByPlayerId?: UserIdType): void {
     if (game === undefined || game === null) {
       log.warn(`[game-state] Cannot resume - game not found`);
       return;
@@ -82,7 +97,7 @@ export default function createGameStateService(app: FastifyInstance): GameStateS
       | GameSessionStatus.CANCELLED
       | GameSessionStatus.FINISHED
       | GameSessionStatus.CANCELLED_SERVER_ERROR,
-    leftPlayerId?: number,
+    leftPlayerId?: UserIdType,
   ): Promise<void> {
     if (game === undefined || game === null) {
       log.warn(`[game-state] Cannot end - game not found`);
@@ -94,15 +109,19 @@ export default function createGameStateService(app: FastifyInstance): GameStateS
     log.debug(`[game-state] Ending game ${gameId} with status: ${status}`);
     stopCountdownSequence(game);
     stopGameLoop(game);
+    stopAIGame(game);
     updateGameToEnded(game, status);
-    removePausedGameInfo(gameId); //added here
+    removePausedGameInfo(gameId);
     const result = createGameResult(game, status, leftPlayerId);
-    respond.gameEnded(gameId, result);
-    await gameDataService.sendGameResult(result);
+    log.debug(`[game-state] Creating game result for game ${gameId}: ${JSON.stringify(result)}`);
+    if (result.isErr()) {
+      log.error(`[game-state] Error creating game result for game ${gameId}: ${result.error}`);
+      return;
+    }
+    respond.gameEnded(gameId, result.value);
+    await gameDataService.sendGameResult(result.value);
     cleanupGameResources(game);
-    log.debug(
-      `[game-state] Game ${gameId} ended. Status: ${status}. Result: ${JSON.stringify(result)}`,
-    );
+    log.debug(`[game-state] Game ${gameId} ended. Status: ${status}`);
   }
 
   function startGameLoop(game: GameSession): void {
@@ -110,17 +129,18 @@ export default function createGameStateService(app: FastifyInstance): GameStateS
       log.warn(`[game-state] Cannot start game loop - game not found`);
       return;
     }
-    log.debug(`[game-state] Starting the game loop. Game ID ${game.gameId}`);
+    const { gameId } = game;
+    log.debug(`[game-state] Starting the game loop. Game ID ${gameId}`);
     if (game.gameLoopInterval !== undefined) {
-      log.warn(`[game-state] Game loop already running for game ${game.gameId}`);
+      log.warn(`[game-state] Game loop already running for game ${gameId}`);
       return;
     }
-    game.gameState.sequence = 1;
+    game.gameState.sequence = 0;
     const targetFrameTime = 1000 / PONG_CONFIG.FPS;
-    let lastFrameTime = Date.now();
+    let lastFrameTime = performance.now();
     game.gameLoopInterval = setInterval(() => {
       try {
-        const currentTime = Date.now();
+        const currentTime = performance.now();
         let deltaTime = (currentTime - lastFrameTime) / 1000;
         deltaTime = Math.min(deltaTime, PONG_CONFIG.FRAME_TIME_CAP_SECONDS);
         lastFrameTime = currentTime;
@@ -130,25 +150,30 @@ export default function createGameStateService(app: FastifyInstance): GameStateS
           return;
         }
         if (gameState.countdown <= 0) {
+          if (game.gameMode === GameMode.PVB_AI) {
+            const aiService = app.aiService as AIService;
+            aiService.processAILogic(gameState, deltaTime);
+          }
           updateGame(gameState, deltaTime);
         }
         if (checkWinCondition(gameState)) {
+          broadcastGameUpdate(game.players, gameState);
           endGame(game, GameSessionStatus.FINISHED).catch((error) => {
-            processErrorLog(app, 'game-state', `Error ending game ${game.gameId}:`, error);
+            processErrorLog(app, 'game-state', `Error ending game ${gameId}:`, error);
           });
           return;
         }
-        game.gameState.sequence++;
-        if (game.gameState.sequence % 2 === 0) {
+        gameState.sequence++;
+        if (gameState.sequence % 2 === 0) {
           broadcastGameUpdate(game.players, gameState);
         }
       } catch (error: unknown) {
-        processErrorLog(app, 'game-state', `Error in game loop for ${game.gameId}`, error);
+        processErrorLog(app, 'game-state', `Error in game loop for ${gameId}`, error);
         endGame(game, GameSessionStatus.CANCELLED_SERVER_ERROR).catch((error) => {
           processErrorLog(
             app,
             'game-state',
-            `Error ending game ${game.gameId} due to server error:`,
+            `Error ending game ${gameId} due to server error:`,
             error,
           );
         });
@@ -185,8 +210,23 @@ export default function createGameStateService(app: FastifyInstance): GameStateS
         game.countdownInterval = undefined;
         respond.notificationToGame(game.gameId, NotificationType.INFO, infoMsg);
         startGameLoop(game);
+        startAIGame(game);
       }
     }, 1300);
+  }
+
+  function startAIGame(game: GameSession): void {
+    if (game.gameMode !== GameMode.PVB_AI) return;
+    const aiService = app.aiService as AIService;
+    aiService.startAI(game.gameId, game.aiDifficulty as AIDifficulty);
+    log.info(`[game-state] AI system started for game ${game.gameId}`);
+  }
+
+  function stopAIGame(game: GameSession): void {
+    if (game.gameMode !== GameMode.PVB_AI) return;
+    const aiService = app.aiService as AIService;
+    aiService.stopAI(game.gameId);
+    log.info(`[game-state] AI system stopped for game ${game.gameId}`);
   }
 
   function stopCountdownSequence(game: GameSession): void {
@@ -204,74 +244,6 @@ export default function createGameStateService(app: FastifyInstance): GameStateS
     if (game.gameLoopInterval !== undefined) {
       clearInterval(game.gameLoopInterval);
       game.gameLoopInterval = undefined;
-    }
-  }
-
-  function createGameResult(
-    game: GameSession,
-    status: GameSessionStatus,
-    leftPlayerId?: number,
-  ): GameResult {
-    let finishedAt = game.finishedAt;
-    if (finishedAt === undefined || finishedAt === null) {
-      finishedAt = Date.now().toString();
-    }
-    let player1Username = game.players[0]?.userAlias;
-    if (player1Username === undefined || player1Username === null) {
-      player1Username = 'Player 1';
-    }
-    let player2Username = game.players[1]?.userAlias;
-    if (player2Username === undefined || player2Username === null) {
-      player2Username = 'Player 2';
-    }
-    const baseResult: Partial<GameResult> = {
-      gameId: game.gameId,
-      scorePlayer1: game.gameState.paddleA.score,
-      scorePlayer2: game.gameState.paddleB.score,
-      player1Username: player1Username,
-      player2Username: player2Username,
-      mode: game.gameMode,
-      startedAt: game.startedAt,
-      finishedAt: finishedAt,
-    };
-    const winnerId =
-      game.gameState.paddleA.score > game.gameState.paddleB.score
-        ? game.players[0].userId
-        : game.players[1].userId;
-    const loserId =
-      winnerId === game.players[0].userId ? game.players[1].userId : game.players[0].userId;
-    const setLoserId: number | null = leftPlayerId !== undefined ? leftPlayerId : null;
-    let setWinnerId: number | null = null;
-    if (setLoserId !== null) {
-      const winnerUser = game.players.find((player) => player.userId !== setLoserId);
-      setWinnerId = winnerUser !== undefined ? winnerUser?.userId : null;
-    }
-    switch (status) {
-      case GameSessionStatus.FINISHED:
-        return {
-          ...baseResult,
-          status,
-          winnerId,
-          loserId,
-        } as GameResult;
-
-      case GameSessionStatus.CANCELLED:
-        return {
-          ...baseResult,
-          status,
-          winnerId: setWinnerId,
-          loserId: setLoserId,
-        } as GameResult;
-      case GameSessionStatus.CANCELLED_SERVER_ERROR:
-        return {
-          ...baseResult,
-          status,
-          winnerId: null,
-          loserId: null,
-        } as GameResult;
-
-      default:
-        throw new Error(`invalid game status: ${status}`);
     }
   }
 
@@ -313,7 +285,7 @@ export default function createGameStateService(app: FastifyInstance): GameStateS
     log.debug(`[game-state] Game ${game.gameId} updated to ENDED status: ${status}`);
   }
 
-  function storePausedGameInfo(game: GameSession, pausedByPlayerId: number): void {
+  function storePausedGameInfo(game: GameSession, pausedByPlayerId: UserIdType): void {
     const existingPausedGame = pausedGames.get(game.gameId);
     if (existingPausedGame) {
       existingPausedGame.pausedAt = Date.now();
@@ -330,12 +302,12 @@ export default function createGameStateService(app: FastifyInstance): GameStateS
     }
   }
 
-  function removePausedGameInfo(gameId: string): void {
+  function removePausedGameInfo(gameId: GameIdType): void {
     pausedGames.delete(gameId);
     stopAutoResume(gameId);
   }
 
-  function stopAutoResume(gameId: string): void {
+  function stopAutoResume(gameId: GameIdType): void {
     const existingTimeout = pauseTimeouts.get(gameId);
     if (existingTimeout !== undefined) {
       clearTimeout(existingTimeout);
@@ -360,19 +332,19 @@ export default function createGameStateService(app: FastifyInstance): GameStateS
     pauseTimeouts.set(gameId, pauseTimeout);
   }
 
-  function broadcastGameUpdate(players: User[], gameState: GameState): void {
+  function broadcastGameUpdate(players: Player[], gameState: GameState): void {
     const respond = app.respond as RespondService;
     const { gameUpdate } = respond;
-    if (players[0] !== undefined && players[0].userId !== -1) {
+    if (players[0] !== undefined && players[0].isAI === false) {
       gameUpdate(players[0].userId, {
         ...gameState,
-        activePaddle: 'paddleA',
+        activePaddle: players[0].paddle!,
       });
     }
-    if (players[1] !== undefined && players[1].userId !== -1) {
+    if (players[1] !== undefined && players[1].isAI === false) {
       gameUpdate(players[1].userId, {
         ...gameState,
-        activePaddle: 'paddleB',
+        activePaddle: players[1].paddle!,
       });
     }
   }
