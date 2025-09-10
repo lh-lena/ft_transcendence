@@ -1,5 +1,5 @@
 import type { FastifyInstance } from 'fastify';
-import type { StartGame, GameResult } from '../../schemas/game.schema.js';
+import type { StartGame, GameResult, GameIdType } from '../../schemas/game.schema.js';
 import { StartGameSchema } from '../../schemas/game.schema.js';
 import { GameError } from '../../utils/game.error.js';
 import { processErrorLog } from '../../utils/error.handler.js';
@@ -14,11 +14,11 @@ export default function createGameDataService(app: FastifyInstance): GameDataSer
     throw new Error('Backend URL is not configured');
   }
 
-  async function fetchGameData(gameId: string): Promise<StartGame> {
+  async function fetchGameData(gameId: GameIdType): Promise<StartGame> {
     log.debug(`[game-data] Fetching game data from backend. Game ID: ${gameId}`);
     const response = await fetch(`${BACKEND_URL}/api/game/${gameId}`);
 
-    if (!response.ok) {
+    if (response.status !== 200) {
       const errorDetails = await response.text();
       log.error(
         `Failed to fetch game data for ${gameId}. Status: ${response.status} - ${response.statusText}. Details: ${errorDetails}`,
@@ -54,13 +54,13 @@ export default function createGameDataService(app: FastifyInstance): GameDataSer
   async function sendGameResult(result: GameResult): Promise<boolean> {
     log.debug({ gameId: result.gameId }, `[game-data] Sending game result to backend`);
     try {
-      const response = await fetch(`${BACKEND_URL}/api/games/result`, {
+      const response = await fetch(`${BACKEND_URL}/api/result`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(result),
       });
 
-      if (!response.ok) {
+      if (response.status !== 201) {
         log.error(
           `Failed to send results of the game ${result.gameId}. Status: ${response.status} - ${response.statusText}`,
         );
@@ -70,7 +70,7 @@ export default function createGameDataService(app: FastifyInstance): GameDataSer
       log.debug({ gameId: result.gameId }, `[game-data] Game result sent successfully`);
       return true;
     } catch (error: unknown) {
-      processErrorLog(app, 'game-data', `Failed to send game result. ID ${result.gameId}: `, error);
+      processErrorLog(app, 'game-data', `Failed to send game result. ID ${result.gameId}`, error);
       return false;
     }
   }
