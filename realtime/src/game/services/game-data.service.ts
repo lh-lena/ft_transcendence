@@ -20,10 +20,9 @@ export default function createGameDataService(app: FastifyInstance): GameDataSer
 
     if (response.status !== 200) {
       const errorDetails = await response.text();
-      log.error(
-        `Failed to fetch game data for ${gameId}. Status: ${response.status} - ${response.statusText}. Details: ${errorDetails}`,
+      throw new GameError(
+        `failed to fetch game data for ${gameId}. Status: ${response.status} - ${response.statusText}. Details: ${errorDetails}`,
       );
-      throw new GameError(`failed to fetch game data for ${gameId}`);
     }
 
     const rawGameData: unknown = await response.json();
@@ -42,11 +41,8 @@ export default function createGameDataService(app: FastifyInstance): GameDataSer
 
       return gameData;
     } else {
-      log.error(
-        `[game-data] Invalid game data received for game ${gameId}. Validation errors: ${JSON.stringify(ValidationResult.error.issues)}`,
-      );
       throw new GameError(
-        `invalid game data received for game ${gameId}. try to create a new game`,
+        `invalid game data received for game ${gameId}. Validation errors: ${JSON.stringify(ValidationResult.error.issues)}. try to create a new game`,
       );
     }
   }
@@ -61,10 +57,9 @@ export default function createGameDataService(app: FastifyInstance): GameDataSer
       });
 
       if (response.status !== 201) {
-        log.error(
-          `Failed to send results of the game ${result.gameId}. Status: ${response.status} - ${response.statusText}`,
+        throw new GameError(
+          `failed to send game result for ${result.gameId}. Status: ${response.status} - ${response.statusText}`,
         );
-        throw new GameError(`failed to send game result for ${result.gameId}`);
       }
 
       log.debug({ gameId: result.gameId }, `[game-data] Game result sent successfully`);
