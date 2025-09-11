@@ -1,9 +1,10 @@
 import { z } from 'zod/v4';
-import { Direction, NotificationType } from '../constants/game.constants.js';
+import { Direction, NotificationType, GAME_EVENTS } from '../constants/game.constants.js';
 import type { GameStateSchema, GameResultSchema } from './game.schema.js';
 import { GameIdSchema } from './game.schema.js';
 import { ChatMessagePayloadSchema, ChatMessageBroadcastSchema } from './chat.schema.js';
 import { UserIdSchema } from './user.schema.js';
+import { CHAT_EVENTS } from '../constants/chat.constants.js';
 
 export const GameIdPayloadSchema = z.object({
   gameId: GameIdSchema,
@@ -51,31 +52,31 @@ export const ErrorPayloadSchema = z.object({
 
 export const WsClientMessageSchema = z.discriminatedUnion('event', [
   z.object({
-    event: z.literal('game_start'),
+    event: z.literal(GAME_EVENTS.START),
     payload: GameIdPayloadSchema,
   }),
   z.object({
-    event: z.literal('game_leave'),
+    event: z.literal(GAME_EVENTS.LEAVE),
     payload: GameIdPayloadSchema,
   }),
   z.object({
-    event: z.literal('game_update'),
+    event: z.literal(GAME_EVENTS.UPDATE),
     payload: PlayerInputSchema,
   }),
   z.object({
-    event: z.literal('game_pause'),
+    event: z.literal(GAME_EVENTS.PAUSE),
     payload: GameIdPayloadSchema,
   }),
   z.object({
-    event: z.literal('game_resume'),
+    event: z.literal(GAME_EVENTS.RESUME),
     payload: GameIdPayloadSchema,
   }),
   z.object({
-    event: z.literal('notification'),
+    event: z.literal(GAME_EVENTS.NOTIFICATION),
     payload: NotificationPayloadSchema,
   }),
   z.object({
-    event: z.literal('chat_message'),
+    event: z.literal(CHAT_EVENTS.MESSAGE),
     payload: ChatMessagePayloadSchema,
   }),
 ]);

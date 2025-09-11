@@ -6,6 +6,7 @@ export const PONG_CONFIG = {
   FRAME_TIME_CAP_SECONDS: 2 / 60,
   MAX_SCORE: 11,
   COUNTDOWN: 3,
+  COUNTDOWN_INTERVAL: 1300,
 };
 
 export const BOARD_DEFAULTS = {
@@ -77,3 +78,19 @@ export enum Direction {
   DOWN = 1,
   STOP = 0,
 }
+
+export const GAME_EVENTS = {
+  START: 'game_start',
+  UPDATE: 'game_update',
+  LEAVE: 'game_leave',
+  PAUSE: 'game_pause',
+  RESUME: 'game_resume',
+  FINISHED: 'game_ended',
+  COUNTDOWN_UPDATE: 'countdown_update',
+  WIN_CONDITION_MET: 'game_win_condition_met',
+  SERVER_ERROR: 'game_server_error',
+  NOTIFICATION: 'notification',
+  ERROR: 'error',
+} as const;
+
+export type GameEventType = (typeof GAME_EVENTS)[keyof typeof GAME_EVENTS];
