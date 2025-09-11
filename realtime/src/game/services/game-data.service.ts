@@ -3,7 +3,7 @@ import type { StartGame, GameResult, GameIdType } from '../../schemas/game.schem
 import { StartGameSchema } from '../../schemas/game.schema.js';
 import { GameError } from '../../utils/game.error.js';
 import { processErrorLog } from '../../utils/error.handler.js';
-import type { GameDataService } from '../types/game.js';
+import type { GameDataService } from '../types/game.types.js';
 import type { EnvironmentConfig } from '../../config/config.js';
 
 export default function createGameDataService(app: FastifyInstance): GameDataService {

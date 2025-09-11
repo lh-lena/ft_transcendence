@@ -52,8 +52,6 @@ export interface GameLoopService {
   stopGameLoop: (game: GameSession) => void;
   startCountdownSequence: (game: GameSession, infoMsg: string, count?: number) => void;
   stopCountdownSequence: (game: GameSession) => void;
-  startAIGame: (game: GameSession) => void;
-  stopAIGame: (game: GameSession) => void;
 }
 
 export interface GameValidator {

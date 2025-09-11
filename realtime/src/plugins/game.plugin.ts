@@ -76,7 +76,7 @@ const plugin: FastifyPluginCallback = (app: FastifyInstance): void => {
 
   app.eventBus.on(
     GAME_EVENTS.WIN_CONDITION_MET,
-    ({ game, gameId }: { game: any; gameId: string }) => {
+    ({ game, gameId }: { game: GameSession; gameId: string }) => {
       gameStateService.endGame(game, GameSessionStatus.FINISHED).catch((error: unknown) => {
         processErrorLog(
           app,

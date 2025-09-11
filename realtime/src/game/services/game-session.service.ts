@@ -3,13 +3,27 @@ import { GameSessionStatus, NotificationType } from '../../constants/game.consta
 import type { StartGame, GameSession, GameIdType } from '../../schemas/game.schema.js';
 import { initializeGameState } from '../../game/engines/pong/pong.engine.js';
 import type { RespondService } from '../../websocket/types/ws.types.js';
-import type { GameStateService, GameSessionService } from '../types/game.js';
+import type { GameStateService, GameSessionService } from '../types/game.types.js';
 import { processErrorLog } from '../../utils/error.handler.js';
 import type { UserIdType } from '../../schemas/user.schema.js';
 
 export default function createGameSessionService(app: FastifyInstance): GameSessionService {
   const gameSessions: Map<GameIdType, GameSession> = new Map();
   const { log } = app;
+
+  function getAllActiveGameSessions(): GameSession[] {
+    const activeSessions: GameSession[] = [];
+    gameSessions.forEach((session) => {
+      if (
+        session.status !== GameSessionStatus.FINISHED &&
+        session.status !== GameSessionStatus.CANCELLED &&
+        session.status !== GameSessionStatus.CANCELLED_SERVER_ERROR
+      ) {
+        activeSessions.push(session);
+      }
+    });
+    return activeSessions;
+  }
 
   function createGameSession(gameId: GameIdType, gameData: StartGame): GameSession | null {
     if (gameSessions.has(gameId)) {
@@ -34,20 +48,6 @@ export default function createGameSessionService(app: FastifyInstance): GameSess
     return session;
   }
 
-  function getAllActiveGameSessions(): GameSession[] {
-    const activeSessions: GameSession[] = [];
-    gameSessions.forEach((session) => {
-      if (
-        session.status !== GameSessionStatus.FINISHED &&
-        session.status !== GameSessionStatus.CANCELLED &&
-        session.status !== GameSessionStatus.CANCELLED_SERVER_ERROR
-      ) {
-        activeSessions.push(session);
-      }
-    });
-    return activeSessions;
-  }
-
   function storeGameSession(game: GameSession): void {
     gameSessions.set(game.gameId, game);
     log.debug(`[game-session] Stored game session ${game.gameId}`);
@@ -68,7 +68,7 @@ export default function createGameSessionService(app: FastifyInstance): GameSess
   ): void {
     const gameSession = gameSessions.get(gameId);
     if (gameSession === undefined || gameSession === null) {
-      throw new Error(`[game-session] Game session ${gameId} not found`);
+      throw new Error(`Game session ${gameId} not found`);
     }
     if (connected) {
       gameSession.isConnected.set(userId, connected);
