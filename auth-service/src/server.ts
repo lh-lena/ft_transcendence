@@ -1,10 +1,13 @@
 import Fastify from 'fastify';
-import { FastifyRequest, FastifyReply } from 'fastify';
 import fastifyCookie from '@fastify/cookie';
 import fastifyCsrf from '@fastify/csrf-protection';
 import fastifyOauth2 from '@fastify/oauth2';
-import { config } from './config/index';
+
 import cronPlugin from './plugins/000_cron';
+import AutoLoad from '@fastify/autoload';
+import path from 'path';
+
+import { config } from './config/index';
 
 const server = Fastify({ logger: true });
 
@@ -25,48 +28,13 @@ server.register(fastifyOauth2, {
   callbackUri: 'http://localhost:8082/api/auth/google/callback',
 });
 
-// ------------ Routes ------------
-server.get('/api/auth/health', async () => ({
-  status: 'ok',
-  service: 'auth-service',
-  message: 'Auth service running on port 8082',
-}));
+//----------Loader--------------------
+server.register(AutoLoad, {
+  dir: path.join(__dirname, '/routes'),
+});
 
-server.register(authRoutes);
-
-server.addHook('onRequest', async (req: FastifyRequest, reply: FastifyReply) => {
-  const publicRoutes = [
-    '/api/auth/health',
-    '/api/auth/google',
-    '/api/auth/google/callback',
-    '/api/register',
-    '/api/login',
-  ];
-
-  if (publicRoutes.includes(req.routerPath)) {
-    return;
-  }
-
-  const authHeaders = req.headers.authorization;
-  if (!authHeaders) {
-    return reply.code(401).send({ error: 'Missing Authorisation Headers' });
-  }
-
-  const token = authHeaders.split(' ')[1];
-  if (!token) {
-    return reply.code(401).send({ error: 'Missing Authentication Token' });
-  }
-
-  if (await isBlacklisted(token)) {
-    return reply.code(401).send({ error: 'Token revoked' });
-  }
-
-  try {
-    const decoded = server.jwt.verify(token);
-    req.user = decoded;
-  } catch (err) {
-    return reply.code(401).send({ error: 'Unauthorised' });
-  }
+server.register(AutoLoad, {
+  dir: path.join(__dirname, '/hooks'),
 });
 
 // ------------ Start Server ------------

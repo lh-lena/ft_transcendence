@@ -1,13 +1,13 @@
 // src/routes/2fa.ts
 import { FastifyReply } from 'fastify';
 import { v4 as uuidv4 } from 'uuid';
-import { apiClientBackend } from '../services/userService';
+import { apiClientBackend } from '../utils/apiClient';
 import { sendMail } from '../services/mailer';
 import { generate6DigitCode, nowPlusMinutes, sha256 } from '../services/twofa';
 import { authenticator } from 'otplib';
 import QRCode from 'qrcode';
 import crypto from 'crypto';
-import { generateJWT, generateRefreshToken } from '../auth/jwt';
+import { generateJWT, generateRefreshToken } from './jwt';
 import type { TfaSessionType, TfaVerifyType } from '../schemas/tfa';
 import type { TokenPayloadType } from '../schemas/jwt';
 import type { UserType } from '../schemas/user';
@@ -67,21 +67,22 @@ export class tfaHandler {
     });
   }
 
+  //TODO cleanup
   async sendJwt(user: UserType, reply: FastifyReply): Promise<FastifyReply> {
     const jwtToken: TokenPayloadType = {
-      sub: user.userId,
-      username: user.username,
-      email: user.email,
-      alias: user.alias ?? undefined,
-      tfaEnabled: user.tfaEnabled,
+      id: user.userId,
+      //   username: user.username,
+      //   email: user.email,
+      //   alias: user.alias ?? user.email,
+      //   tfaEnabled: user.tfaEnabled,
     };
     const accessToken = generateJWT(jwtToken);
 
     const refToken = {
-      sub: user.userId,
-      username: user.username,
-      email: user.email,
-      tfaEnabled: user.tfaEnabled,
+      id: user.userId,
+      //username: user.username,
+      //email: user.email,
+      //tfaEnabled: user.tfaEnabled,
     };
     const refreshToken = generateRefreshToken(refToken);
 

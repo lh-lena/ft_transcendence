@@ -27,6 +27,10 @@ export const userSchema = z.object({
   avatar: z.url().nullable().optional(),
 });
 
+export const userIdSchema = userSchema.pick({
+  userId: true,
+});
+
 export const userRegisterSchema = userSchema
   .pick({
     email: true,
@@ -51,6 +55,13 @@ export const userResponseSchema = userSchema.omit({
   twofa_method: true,
   twofa_temp_code: true,
   twofa_code_expires: true,
+});
+
+export const userInfoResponseSchema = userResponseSchema.omit({
+  createdAt: true,
+  updatedAt: true,
+  email: true,
+  guest: true,
 });
 
 //typed

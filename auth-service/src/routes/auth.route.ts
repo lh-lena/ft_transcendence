@@ -1,13 +1,15 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
-import { verifyPassword } from '../utils/password';
-import { isBlacklisted, apiClientBackend } from '../services/userService';
+import fp from 'fastify-plugin';
 
-import { userSchema, userRegisterSchema, userLoginSchema } from '../schemas/user';
-import type { UserResponseType, UserType } from '../schemas/user';
 import { hashPassword, verifyPassword } from '../auth/passwords';
-import { verifyJWT } from '../auth/jwt';
-import { isBlacklisted, apiClientBackend } from '../services/userService';
-import { tfaHandler } from './tfa';
+import { verifyJWT } from '../utils/jwt';
+
+import { isBlacklisted } from '../services/userService';
+import { apiClientBackend } from '../utils/apiClient';
+
+import { tfaHandler } from '../utils/tfa';
+import { tfaVerifySchema, tfaSetupSchema } from '../schemas/tfa';
+
 import {
   userSchema,
   userRegisterSchema,
@@ -16,11 +18,9 @@ import {
 } from '../schemas/user';
 import type { UserType } from '../schemas/user';
 
-import { tfaVerifySchema, tfaSetupSchema } from '../schemas/tfa';
-
 export const tfa = new tfaHandler();
 
-export default async function authRoutes(server: FastifyInstance) {
+const authRoutes = async (server: FastifyInstance) => {
   server.post('/api/register', async (req: FastifyRequest, reply: FastifyReply) => {
     const parseResult = userRegisterSchema.safeParse(req.body);
 
@@ -126,7 +126,6 @@ export default async function authRoutes(server: FastifyInstance) {
     return reply.send({ message: '2FA verified successfully' });
   });
 
-  //TODO:: add middleware hook
   server.post('/api/tfaSetup', async (req: FastifyRequest, reply: FastifyReply) => {
     const parseResult = tfaSetupSchema.safeParse(req.body);
 
@@ -162,7 +161,9 @@ export default async function authRoutes(server: FastifyInstance) {
 
     return reply.send({ message: 'Logged out successfully' });
   });
-}
+};
+
+export default fp(authRoutes);
 
 export async function cleanupExpiredSession() {
   tfa.cleanupExpiredSessions();
