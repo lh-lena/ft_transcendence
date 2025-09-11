@@ -1,13 +1,10 @@
 import { z } from 'zod/v4';
 import { dtString } from './basics';
 
-import { sharedGamePlayedBase, sharedGamePlayedQueryBase } from './shared';
-
 export const userBase = z.object({
-  id: z.number(),
+  id: z.uuid(),
   createdAt: dtString,
   updatedAt: dtString,
-  gamePlayed: z.array(sharedGamePlayedBase).optional(),
   email: z.email(),
   username: z.string(),
   password_hash: z.string(),
@@ -29,7 +26,6 @@ const userPostBase = userBase.omit({
   id: true,
   createdAt: true,
   updatedAt: true,
-  gamePlayed: true,
 });
 export const userCreate = userPostBase.meta({ $id: 'userCreate' }).describe('User creation schema');
 
@@ -47,18 +43,9 @@ const userAvatarUpload = z
   .meta({ $id: 'userAvatarUpload' });
 
 //define schemas for GET
-const userId = z.object({ id: z.number() }).meta({ $id: 'userId' });
+const userId = userBase.pick({ id: true }).meta({ $id: 'userId' });
 
-export const userQueryBase = userBase
-  .extend({
-    id: z.coerce.number().optional(),
-    gamePlayed: z
-      .object({
-        some: sharedGamePlayedQueryBase.optional(),
-      })
-      .optional(),
-  })
-  .partial();
+export const userQueryBase = userBase.partial();
 const userQuery = userQueryBase
   .meta({ $id: 'userQuery' })
   .describe('Query for users with optional filters');
@@ -71,7 +58,11 @@ const userCount = z
   .describe('Count of users');
 
 //define schemas for responses
-export const userResponse = userBase.meta({ $id: 'userResponse' });
+export const userResponse = userBase
+  .extend({
+    colormap: z.string(),
+  })
+  .meta({ $id: 'userResponse' });
 export const userResponseArray = z.array(userBase).meta({ $id: 'userResponseArray' });
 
 export const userSchemas = [

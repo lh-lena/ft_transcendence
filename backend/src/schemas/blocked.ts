@@ -2,8 +2,8 @@ import { z } from 'zod/v4';
 
 const blockedBase = z.object({
   id: z.number(),
-  userId: z.number(),
-  blockedId: z.number(),
+  userId: z.uuid(),
+  blockedId: z.uuid(),
 });
 const blocked = blockedBase
   .meta({ $id: 'blocked' })
@@ -21,8 +21,8 @@ const blockedId = blockedBase.pick({ id: true }).meta({ $id: 'blockedId' });
 const blockedQuery = blockedBase
   .extend({
     id: z.coerce.number().optional(),
-    userId: z.coerce.number().optional(),
-    blockedId: z.coerce.number().optional(),
+    userId: z.uuid().optional(),
+    blockedId: z.uuid().optional(),
   })
   .partial()
   .meta({ $id: 'blockedQuery' })

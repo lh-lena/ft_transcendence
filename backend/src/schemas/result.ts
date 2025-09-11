@@ -7,12 +7,11 @@ const resultStatusBase = z.enum(['finished', 'cancled', 'cancled_server_error'])
 
 //define basic object for input
 const resultTypeBase = z.object({
-  id: z.number().int().optional(),
   gameId: z.uuid(),
   scorePlayer1: z.number(),
   scorePlayer2: z.number(),
-  winnerId: z.number(),
-  loserId: z.number(),
+  winnerId: z.uuid(),
+  loserId: z.uuid(),
   player1Username: z.string(),
   player2Username: z.string(),
   status: resultStatusBase,

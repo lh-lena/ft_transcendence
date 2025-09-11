@@ -32,7 +32,7 @@ export const gameCreate = gameCreateBase.meta({ $id: 'gameCreate' });
 
 const gameJoinBase = gameCreateBase.extend({
   gameId: z.uuid().optional(),
-  playerId: z.number(),
+  playerId: z.uuid(),
 });
 const gameJoin = gameJoinBase
   .meta({ $id: 'gameJoin' })

@@ -12,7 +12,8 @@ export const userController = {
   },
 
   //update user
-  async update(id: number, data: Prisma.UserUpdateInput): Promise<userType> {
+  async update(id: string, data: Prisma.UserUpdateInput): Promise<userType> {
+    console.log(data);
     const ret = await userService.update(id, data);
     return await transformUser(ret);
   },
@@ -23,13 +24,13 @@ export const userController = {
     return Promise.all(ret.map((user) => transformUser(user)));
   },
 
-  async getById(id: number): Promise<userType> {
+  async getById(id: string): Promise<userType> {
     const ret = await userService.getById(id);
     return await transformUser(ret);
   },
 
   //delete user
-  async deleteOne(id: number): Promise<{ success: boolean }> {
+  async deleteOne(id: string): Promise<{ success: boolean }> {
     await userService.deleteOne(id);
     return { success: true };
   },

@@ -4,7 +4,7 @@ import type { resultType, resultCreateType } from '../../schemas/result';
 export async function transformInput(data: resultCreateType): Promise<Prisma.ResultCreateInput> {
   const gamePlayed: Prisma.GamePlayedCreateWithoutResultInput[] = [];
 
-  const addPlayer = (userId: number, score: number, isWinner: boolean) => {
+  const addPlayer = (userId: string, score: number, isWinner: boolean) => {
     gamePlayed.push({
       user: { connect: { id: userId } },
       score: score,

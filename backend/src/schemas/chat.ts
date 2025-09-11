@@ -2,8 +2,8 @@ import { z } from 'zod/v4';
 import { dtString } from './basics';
 
 export const chatBase = z.object({
-  senderId: z.number(),
-  reciverId: z.number(),
+  senderId: z.uuid(),
+  reciverId: z.uuid(),
   message: z.string(),
   createdAt: dtString,
 });
@@ -25,8 +25,8 @@ const chatQueryBase = chatBase
     reciverId: true,
   })
   .extend({
-    senderId: z.coerce.number().optional(),
-    reciverId: z.coerce.number().optional(),
+    senderId: z.uuid().optional(),
+    reciverId: z.uuid().optional(),
   });
 const chatQuery = chatQueryBase
   .meta({ $id: 'chatQuery' })
