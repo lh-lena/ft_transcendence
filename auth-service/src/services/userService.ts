@@ -1,4 +1,4 @@
-import axios from 'axios';
+import { apiClientBackend } from '../apiClient';
 import { UserRecord } from '../schemas';
 
 export async function loadUserByEmail(email: string): Promise<UserRecord | undefined> {

@@ -1,10 +1,10 @@
 import Fastify from 'fastify';
+import { FastifyRequest, FastifyReply } from 'fastify';
 import fastifyCookie from '@fastify/cookie';
 import fastifyCsrf from '@fastify/csrf-protection';
 import fastifyOauth2 from '@fastify/oauth2';
 import { config } from './config/index';
 import cronPlugin from './plugins/000_cron';
-import authRoutes from './routes/auth';
 
 export const server = Fastify({ logger: true });
 
@@ -29,7 +29,7 @@ server.register(fastifyOauth2, {
 
 server.register(authRoutes);
 
-server.addHook('onRequest', async (req: FastifyRequest, reply: Fastifyreply) => {
+server.addHook('onRequest', async (req: FastifyRequest, reply: FastifyReply) => {
   const publicRoutes = [
     '/api/auth/health',
     '/api/auth/google',

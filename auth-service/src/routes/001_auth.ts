@@ -1,8 +1,7 @@
 import fp from 'fastify-plugin';
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
-import { verifyPassword } from '../auth/passwords';
+import { verifyPassword } from '../utils/password';
 import { isBlacklisted, apiClientBackend } from '../services/userService';
-import { auth } from '../modules/auth';
 
 import { userSchema, userRegisterSchema, userLoginSchema } from '../schemas/user';
 import type { UserResponseType, UserType } from '../schemas/user';
