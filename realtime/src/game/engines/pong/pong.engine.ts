@@ -105,6 +105,8 @@ export function updateGame(state: GameState, deltaTime: number): void {
 function resetBall(state: GameState): void {
   state.ball = {
     ...BALL_DEFAULTS,
+    dx: Math.random() < 0.5 ? 6 : -6,
+    dy: Math.random() < 0.5 ? 1 : -1,
   };
 }
 
