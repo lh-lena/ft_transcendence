@@ -3,7 +3,7 @@ import { GameMode, GameSessionStatus } from '../../constants/game.constants.js';
 import type { PausedGameState } from '../../websocket/types/network.types.js';
 import type { GameIdType, GameSession, Player } from '../../schemas/game.schema.js';
 import { GameError } from '../../utils/game.error.js';
-import type { GameSessionService, GameValidator } from '../types/game.js';
+import type { GameSessionService, GameValidator } from '../types/game.types.js';
 import type { UserIdType } from '../../schemas/user.schema.js';
 
 export default function createGameValidator(app: FastifyInstance): GameValidator {

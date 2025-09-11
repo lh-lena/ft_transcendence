@@ -9,7 +9,7 @@ import type { NETWORK_QUALITY } from '../../constants/network.constants.js';
 import { NotificationType } from '../../constants/game.constants.js';
 import { WSStatusCode } from '../../constants/status.constants.js';
 import { processErrorLog, processDebugLog } from '../../utils/error.handler.js';
-import type { GameSessionService, GameStateService } from '../../game/types/game.js';
+import type { GameSessionService, GameStateService } from '../../game/types/game.types.js';
 import createGameValidator from '../../game/utils/game.validation.js';
 import type { UserIdType } from '../../schemas/user.schema.js';
 import type { GameIdType } from '../../schemas/game.schema.js';

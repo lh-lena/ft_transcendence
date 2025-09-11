@@ -1,4 +1,10 @@
-import type { GameSession, StartGame, GameResult, GameIdType } from '../../schemas/game.schema.js';
+import type {
+  GameSession,
+  StartGame,
+  GameResult,
+  GameIdType,
+  Player,
+} from '../../schemas/game.schema.js';
 import type { ClientEventPayload } from '../../schemas/ws.schema.js';
 import type { GameSessionStatus } from '../../constants/game.constants.js';
 import type { PausedGameState } from '../../websocket/types/network.types.js';
@@ -39,6 +45,15 @@ export interface GameSessionService {
 export interface GameDataService {
   fetchGameData: (gameId: GameIdType) => Promise<StartGame>;
   sendGameResult: (result: GameResult) => Promise<boolean>;
+}
+
+export interface GameLoopService {
+  startGameLoop: (game: GameSession) => void;
+  stopGameLoop: (game: GameSession) => void;
+  startCountdownSequence: (game: GameSession, infoMsg: string, count?: number) => void;
+  stopCountdownSequence: (game: GameSession) => void;
+  startAIGame: (game: GameSession) => void;
+  stopAIGame: (game: GameSession) => void;
 }
 
 export interface GameValidator {

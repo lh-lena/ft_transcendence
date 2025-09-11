@@ -4,9 +4,10 @@ import type { WsServerBroadcast } from '../../schemas/ws.schema.js';
 import type { GameResult, GameState, GameSession, GameIdType } from '../../schemas/game.schema.js';
 import type { UserIdType } from '../../schemas/user.schema.js';
 import type { NotificationType } from '../../constants/game.constants.js';
+import { GAME_EVENTS } from '../../constants/game.constants.js';
 import { processErrorLog } from '../../utils/error.handler.js';
 import type { RespondService, ConnectionService } from '../types/ws.types.js';
-import type { GameSessionService } from '../../game/types/game.js';
+import type { GameSessionService } from '../../game/types/game.types.js';
 import type { ChatMessageBroadcast } from '../../schemas/chat.schema.js';
 
 export default function createRespondService(app: FastifyInstance): RespondService {
@@ -76,15 +77,15 @@ export default function createRespondService(app: FastifyInstance): RespondServi
   }
 
   function gameUpdate(userId: UserIdType, gameState: GameState): boolean {
-    return send(userId, 'game_update', { ...gameState });
+    return send(userId, GAME_EVENTS.UPDATE, { ...gameState });
   }
 
   function gameEnded(gameId: GameIdType, result: GameResult): boolean {
-    return broadcast(gameId, 'game_ended', result);
+    return broadcast(gameId, GAME_EVENTS.FINISHED, result);
   }
 
   function gamePaused(gameId: GameIdType, reason: string): boolean {
-    return broadcast(gameId, 'game_pause', { gameId, reason });
+    return broadcast(gameId, GAME_EVENTS.PAUSE, { gameId, reason });
   }
 
   function chatMessage(userId: UserIdType, payload: ChatMessageBroadcast): boolean {
@@ -94,7 +95,7 @@ export default function createRespondService(app: FastifyInstance): RespondServi
   }
 
   function countdownUpdate(gameId: GameIdType, countdown: number, message: string): boolean {
-    return broadcast(gameId, 'countdown_update', { gameId, countdown, message });
+    return broadcast(gameId, GAME_EVENTS.COUNTDOWN_UPDATE, { gameId, countdown, message });
   }
 
   function error(userId: UserIdType, message: string): boolean {

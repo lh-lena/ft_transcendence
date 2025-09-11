@@ -2,7 +2,7 @@ import type { FastifyInstance } from 'fastify';
 import type { ReconnectionService } from '../types/ws.types.js';
 import type { EnvironmentConfig } from '../../config/config.js';
 import type { RespondService, ConnectionService } from '../types/ws.types.js';
-import type { GameSessionService, GameStateService } from '../../game/types/game.js';
+import type { GameSessionService, GameStateService } from '../../game/types/game.types.js';
 import type { User, UserIdType } from '../../schemas/user.schema.js';
 import type { GameError } from '../../utils/game.error.js';
 import type { GameSession, GameIdType } from '../../schemas/game.schema.js';
