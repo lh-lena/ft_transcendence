@@ -6,7 +6,7 @@ import fastifyOauth2 from '@fastify/oauth2';
 import { config } from './config/index';
 import cronPlugin from './plugins/000_cron';
 
-export const server = Fastify({ logger: true });
+const server = Fastify({ logger: true });
 
 // ------------ Plugins ------------
 server.register(fastifyCookie);
@@ -22,10 +22,15 @@ server.register(fastifyOauth2, {
     auth: fastifyOauth2.GOOGLE_CONFIGURATION,
   },
   startRedirectPath: '/api/auth/google',
-  callbackUri: 'https://localhost:8082/api/auth/google/callback',
+  callbackUri: 'http://localhost:8082/api/auth/google/callback',
 });
 
 // ------------ Routes ------------
+server.get('/api/auth/health', async () => ({
+  status: 'ok',
+  service: 'auth-service',
+  message: 'Auth service running on port 8082',
+}));
 
 server.register(authRoutes);
 

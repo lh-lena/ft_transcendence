@@ -1,6 +1,11 @@
 import { apiClientBackend } from '../apiClient';
 import { UserRecord } from '../schemas';
 
+const apiClientBackend = axios.create({
+  baseURL: 'http://backend:8080/api',
+  timeout: 5000,
+});
+
 export async function loadUserByEmail(email: string): Promise<UserRecord | undefined> {
   const res = await apiClientBackend.get<UserRecord[]>('/user', { params: { email } });
   const user = res.data?.[0];
