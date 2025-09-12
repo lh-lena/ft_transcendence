@@ -100,8 +100,7 @@ export class ChatPage {
     addLeaderboardButtonText.textContent = "leaderboard";
     addLeaderboardButton.appendChild(addLeaderboardButtonText);
     clickableLeaderboardbutton.appendChild(addLeaderboardButton);
-    clickableLeaderboardbutton.onclick = () =>
-      this.toggleAddFriendPanel(addLeaderboardButton);
+    clickableLeaderboardbutton.onclick = () => this.toggleAddFriendPanel();
     contacts.appendChild(clickableLeaderboardbutton);
 
     // FRIENDS ICON: adds seperation to collumn
@@ -126,8 +125,7 @@ export class ChatPage {
     addFriendButtonText.textContent = "add friend +";
     addFriendButton.appendChild(addFriendButtonText);
     clickableAddFriendButton.appendChild(addFriendButton);
-    clickableAddFriendButton.onclick = () =>
-      this.toggleAddFriendPanel(addFriendButton);
+    clickableAddFriendButton.onclick = () => this.toggleAddFriendPanel();
     contacts.appendChild(clickableAddFriendButton);
 
     const onlineHeader = document.createElement("h1");
@@ -367,14 +365,15 @@ export class ChatPage {
 
   // add friend panel: left panel type
   private toggleAddFriendPanel(): void {
+    console.log("toggleAddFriendPanel");
     this.replaceLeftPanel(this.addFriendsPanel);
   }
 
   // right side panel (only type that populates right side panel as of rn)
   private toggleProfilePopUp(user: UserLocal): void {
     // remove profile pop up if it is already shown on screen
-    if (this.profilePopUp && this.chatRow.contains(this.profilePopUp)) {
-      this.chatRow.removeChild(this.profilePopUp);
+    if (this.profilePopUp && this.chatRow.contains(this.rightPanel)) {
+      this.chatRow.removeChild(this.rightPanel);
       return;
     }
 
@@ -392,7 +391,7 @@ export class ChatPage {
         "friend",
       ).getNode();
     }
-    this.chatRow.appendChild(this.profilePopUp);
+    this.chatRow.appendChild(this.rightPanel);
   }
 
   // HOOKS:
