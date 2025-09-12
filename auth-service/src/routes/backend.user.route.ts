@@ -12,6 +12,7 @@ import {
   userInfoResponseArraySchema,
 } from '../schemas/user';
 
+//TODO check if req.user is always used not the provided user
 const backendUserRoutes = async (fastify: FastifyInstance) => {
   //-------User Routes-------//
 
