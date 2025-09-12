@@ -1,4 +1,4 @@
-import { ServiceContainer, Router } from "../../services";
+import { ServiceContainer, Router, Backend } from "../../services";
 import { CANVAS_DEFAULTS } from "../../types";
 import { Window } from "../../components/window";
 import { MenuBar } from "../../components/menuBar";
@@ -15,8 +15,7 @@ interface settingItem {
 type settingList = settingItem[];
 
 // decided to put this here for now to make it easier to migrate later
-// y not
-const securitySettings: settingList = [
+let securitySettings: settingList = [
   { label: "2FA", value: "on", type: "button" },
   {
     label: "password",
@@ -26,14 +25,14 @@ const securitySettings: settingList = [
   },
 ];
 
-const otherSettings = [
+const profileSettings = [
   // { label: "other", value: "off" },
   { label: "avatar", value: "upload", type: "file" },
 ];
 
 const settingCategories = [
   { label: "security", settingsList: securitySettings },
-  { label: "profile", settingsList: otherSettings },
+  { label: "profile", settingsList: profileSettings },
 ];
 
 export class SettingsPage {
@@ -45,11 +44,20 @@ export class SettingsPage {
   private inputPasswordDiv!: HTMLDivElement;
   private serviceContainer: ServiceContainer;
   private router: Router;
+  private backend: Backend;
 
   constructor(serviceContainer: ServiceContainer) {
     // router / services container
     this.serviceContainer = serviceContainer;
     this.router = this.serviceContainer.get<Router>("router");
+    this.backend = this.serviceContainer.get<Backend>("backend");
+
+    // fetch user from backend
+
+    // change 2FA settings from user data
+    const twoFASetting = securitySettings.find((s) => s.label === "2FA");
+    if (twoFASetting)
+      twoFASetting.value = this.backend.getUser().is_2fa_enabled ? "on" : "off";
 
     // Full page background
     this.main = document.createElement("div");

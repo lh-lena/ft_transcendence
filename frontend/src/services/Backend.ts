@@ -62,12 +62,14 @@ export class Backend {
     this.saveUserToStorage();
   }
 
-  async fetchFriends(user: UserLocal) {
+  async fetchFriends() {
     const response = await this.api.get("/friend", {
       params: {
-        userId: user.userId,
+        // fetch friends using user id we've stored locally
+        userId: this.user.userId,
       },
     });
+    console.log(response);
     return response.data;
   }
 
@@ -106,6 +108,12 @@ export class Backend {
     return response.data;
   }
 
+  // get leaderboard results
+  async getLeaderboard() {
+    const response = await this.api.get(`/result/leaderboard`);
+    return response.data;
+  }
+
   // local storage magic
 
   private saveUserToStorage() {
@@ -125,4 +133,6 @@ export class Backend {
       }
     }
   }
+
+  // delete user from local storage is handled in router directly on /logout call
 }

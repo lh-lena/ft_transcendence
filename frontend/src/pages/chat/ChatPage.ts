@@ -13,6 +13,34 @@ import { UserLocal } from "../../types";
 // pretend backend -> change
 import { sampleFriends } from "../../constants/backend";
 import { FriendsIcon } from "../../components/friendsIcon";
+// fake leaderboard data
+export const sampleLeaderboard = [
+  {
+    id: 1,
+    username: "alice",
+    wins: 12,
+  },
+  {
+    id: 2,
+    username: "bob",
+    wins: 8,
+  },
+  {
+    id: 3,
+    username: "charlie",
+    wins: 15,
+  },
+  {
+    id: 4,
+    username: "dana",
+    wins: 5,
+  },
+  {
+    id: 5,
+    username: "eve",
+    wins: 20,
+  },
+];
 
 export class ChatPage {
   private serviceContainer: ServiceContainer;
@@ -28,7 +56,7 @@ export class ChatPage {
   private chatPanel: HTMLDivElement;
   private addFriendsPanel: HTMLDivElement;
   private chatRow: HTMLDivElement;
-  // private leaderBoardPanel: HTMLDivElement;
+  private leaderboardPanel: HTMLDivElement;
   private profilePopUp: HTMLElement;
   private backend: Backend;
   // keeps track of what panel is on left
@@ -45,6 +73,13 @@ export class ChatPage {
     // grab user data from backend
     const user: UserLocal = this.backend.getUser();
     console.log(user);
+
+    // grab leaderboard data from backend
+    // const leaderboard = this.backend.getLeaderboard();
+    // console.log(leaderboard);
+
+    // get friend data from backend
+    this.backend.fetchFriends();
 
     // main container
     this.container = document.createElement("div");
@@ -100,7 +135,7 @@ export class ChatPage {
     addLeaderboardButtonText.textContent = "leaderboard";
     addLeaderboardButton.appendChild(addLeaderboardButtonText);
     clickableLeaderboardbutton.appendChild(addLeaderboardButton);
-    clickableLeaderboardbutton.onclick = () => this.toggleAddFriendPanel();
+    clickableLeaderboardbutton.onclick = () => this.toggleLeaderboardPanel();
     contacts.appendChild(clickableLeaderboardbutton);
 
     // FRIENDS ICON: adds seperation to collumn
@@ -165,13 +200,32 @@ export class ChatPage {
       }
     });
 
-    // // LEADERBOARD PANEL
-    // this.leaderBoardPanel = document.createElement("div");
-    // this.leaderBoardPanel.className =
-    //   "flex-1 w-4/5 h-96 standard-dialog flex flex-col";
-    // const h1 = document.createElement("h1");
-    // h1.textContent = "test";
-    // this.leaderBoardPanel.appendChild(h1);
+    // LEADERBOARDPANEL
+    this.leaderboardPanel = document.createElement("div");
+    this.leaderboardPanel.className =
+      "flex-1 w-4/5 h-96 standard-dialog flex flex-col gap-2";
+    const results = document.createElement("h1");
+    results.textContent = "leaderboard";
+    this.leaderboardPanel.appendChild(results);
+    this.leftPanel = this.leaderboardPanel;
+    this.chatRow.appendChild(this.leftPanel);
+    const leaderboardResults = document.createElement("div");
+    leaderboardResults.className =
+      "grid grid-cols-2 gap-2 p-2 w-full my-3 overflow-y-auto";
+    this.leaderboardPanel.appendChild(leaderboardResults);
+    sampleLeaderboard.forEach((user) => {
+      const resultBox = document.createElement("div");
+      resultBox.className =
+        "flex flex-row gap-2 box standard-dialog w-full items-center";
+      // add avatar to this
+      const username = document.createElement("h1");
+      username.textContent = user.username;
+      resultBox.appendChild(username);
+      const userScore = document.createElement("h1");
+      userScore.textContent = `wins: ${user.wins}`;
+      resultBox.appendChild(userScore);
+      leaderboardResults.appendChild(resultBox);
+    });
 
     // CHATPANEL
     this.chatPanel = document.createElement("div");
@@ -181,7 +235,7 @@ export class ChatPage {
     const informationBar = document.createElement("div");
     informationBar.className = "flex flex-row pb-2";
     const informationText = document.createElement("h1");
-    informationText.textContent = "Chat with XXX";
+    informationText.textContent = `chat with ${user.username}`;
     informationBar.appendChild(informationText);
     const informationIcon = new InformationIcon(() =>
       this.toggleProfilePopUp(user),
@@ -205,9 +259,6 @@ export class ChatPage {
       messageBox.appendChild(messageText);
       messages.appendChild(messageBox);
     });
-    // assign chat panel to left panel
-    this.leftPanel = this.chatPanel;
-    this.chatRow.appendChild(this.leftPanel);
 
     // add friends panel (toggles on add friend)
     this.addFriendsPanel = document.createElement("div");
@@ -332,6 +383,11 @@ export class ChatPage {
     // remove current left panel if it's in the DOM
     if (this.chatRow.contains(this.leftPanel)) {
       this.chatRow.removeChild(this.leftPanel);
+      // remove clicked contact styling in case user clicks any other button outside of clicked contact
+      if (this.leftPanel == this.chatPanel) {
+        this.clickedContact.classList.remove("bg-black");
+        this.clickedContact.classList.remove("text-white");
+      }
     }
     this.leftPanel = newPanel;
     // always insert before rightPanel if it exists, else append
@@ -342,10 +398,10 @@ export class ChatPage {
     }
   }
 
-  // // leaderboard panel: left panel type
-  // private toggleLeaderboardPanel(): void {
-  //   this.replaceLeftPanel(this.leaderboardPanel)
-  // }
+  // leaderboard panel: left panel type
+  private toggleLeaderboardPanel(): void {
+    this.replaceLeftPanel(this.leaderboardPanel);
+  }
 
   // chat panel: left panel type
   private toggleChatPanel(contact: HTMLDivElement): void {

@@ -5,12 +5,10 @@ import { Loading } from "./components/loading";
 
 // pages
 import { HomePage } from "./pages/home";
-import { ProfilePage } from "./pages/profile";
 import { LocalGamePage } from "./pages/localGame";
 import { LoginPage } from "./pages/login";
 import { RegisterPage } from "./pages/register";
 import { SettingsPage } from "./pages/settings";
-import { LeaderboardPage } from "./pages/leaderboard";
 import { ChatPage } from "./pages/chat";
 import { VsPlayerGamePage } from "./pages/remoteGame";
 import { TournamentAliasPage } from "./pages/tournament";
@@ -19,12 +17,12 @@ import { TournamentAliasPage } from "./pages/tournament";
 const PAGE_ROUTES = {
   "/": HomePage,
   "/local": LocalGamePage,
-  "/profile": ProfilePage,
+  // "/profile": ProfilePage,
   "/login": LoginPage,
   "/register": RegisterPage,
   "/settings": SettingsPage,
-  "/leaderboard": LeaderboardPage,
-  "/chat": ChatPage,
+  // "/leaderboard": LeaderboardPage,
+  "/chat": ChatPage, // -> main page now (home when logged in)
   "/vs-player": VsPlayerGamePage,
   "/tournament-start": TournamentAliasPage,
 } as const;
@@ -78,7 +76,6 @@ export class App {
     // show loading screen
     const randomLoadingTime = Math.random() * 400 + 400;
     // random range between 400 and 800
-    console.log(randomLoadingTime);
     setTimeout(() => {
       loading.hide();
       this.currentPage = new PageClass(this.serviceContainer);

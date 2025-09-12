@@ -84,7 +84,7 @@ export class LocalGamePage {
     this.game?.hideGamePieces();
     if (this.gameContainer && !this.menu) {
       // Create and mount menu to game container instead of main element
-      const menuItems = [{ name: "quit", link: "/profile" }];
+      const menuItems = [{ name: "quit", link: "/chat" }];
       this.menu = new Menu(this.router, menuItems);
       this.menu.mount(this.gameContainer);
       // Add overlay styling to menu element
