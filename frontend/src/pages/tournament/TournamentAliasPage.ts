@@ -43,7 +43,7 @@ export class TournamentAliasPage {
 
     const aliasMenu = [{ name: "play", onClick: () => this.showBracket() }];
     this.menu = new Menu(this.router, aliasMenu);
-    this.main.appendChild(this.menu.menuElement);
+    this.main.appendChild(this.menu.getMenuElement());
   }
 
   private showBracket(): void {

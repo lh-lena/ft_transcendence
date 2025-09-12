@@ -28,8 +28,13 @@ export class ChatPage {
   private chatPanel: HTMLDivElement;
   private addFriendsPanel: HTMLDivElement;
   private chatRow: HTMLDivElement;
-  private profilePopUp: ProfilePopUp;
+  // private leaderBoardPanel: HTMLDivElement;
+  private profilePopUp: HTMLElement;
   private backend: Backend;
+  // keeps track of what panel is on left
+  private leftPanel: HTMLDivElement;
+  // keeps track of what panel is on right
+  private rightPanel: HTMLElement;
 
   constructor(serviceContainer: ServiceContainer) {
     // router / services container
@@ -41,11 +46,12 @@ export class ChatPage {
     const user: UserLocal = this.backend.getUser();
     console.log(user);
 
+    // main container
     this.container = document.createElement("div");
     this.container.className =
       "w-full min-h-screen flex flex-col items-center justify-center bg-brandBlue";
 
-    // menu bar
+    // MENU BAR TOP
     const menuBar = new MenuBar(this.router, "friends").render();
 
     // main chat row
@@ -59,6 +65,7 @@ export class ChatPage {
     contacts.className =
       "flex flex-col gap-2 w-full overflow-y-auto flex-1 pr-2";
     contactsPanel.appendChild(contacts);
+    this.chatRow.appendChild(contactsPanel);
 
     // YOU BUTTON
     const clickableYoubutton = document.createElement("a");
@@ -94,9 +101,10 @@ export class ChatPage {
     addLeaderboardButton.appendChild(addLeaderboardButtonText);
     clickableLeaderboardbutton.appendChild(addLeaderboardButton);
     clickableLeaderboardbutton.onclick = () =>
-      this.toggleAddFriend(addLeaderboardButton);
+      this.toggleAddFriendPanel(addLeaderboardButton);
     contacts.appendChild(clickableLeaderboardbutton);
 
+    // FRIENDS ICON: adds seperation to collumn
     const friendsHeaderRow = document.createElement("div");
     friendsHeaderRow.className =
       "flex flex-row gap-2 mb-2 justify-center items-center";
@@ -107,7 +115,7 @@ export class ChatPage {
     friendsHeaderRow.appendChild(friendsHeader);
     contacts.appendChild(friendsHeaderRow);
 
-    // adding add friends button in contacts panel to style it the same
+    // ADD FRIENDS ICON
     const clickableAddFriendButton = document.createElement("a");
     const addFriendButton = document.createElement("div");
     clickableAddFriendButton.style.cursor = "pointer";
@@ -119,7 +127,7 @@ export class ChatPage {
     addFriendButton.appendChild(addFriendButtonText);
     clickableAddFriendButton.appendChild(addFriendButton);
     clickableAddFriendButton.onclick = () =>
-      this.toggleAddFriend(addFriendButton);
+      this.toggleAddFriendPanel(addFriendButton);
     contacts.appendChild(clickableAddFriendButton);
 
     const onlineHeader = document.createElement("h1");
@@ -131,13 +139,13 @@ export class ChatPage {
     contacts.appendChild(onlineHeader);
     contacts.appendChild(offlineHeader);
 
-    // contacts on left
+    // CONTACTS
     sampleFriends.forEach((friend) => {
       const contact = document.createElement("div");
       contact.className =
         "flex flex-row gap-2 box standard-dialog w-full items-center";
       const clickableContact = document.createElement("a");
-      clickableContact.onclick = () => this.clickChatContact(contact);
+      clickableContact.onclick = () => this.toggleChatPanel(contact);
       clickableContact.style.cursor = "pointer";
       const contactName = document.createElement("h1");
       contactName.textContent = friend.username;
@@ -159,7 +167,15 @@ export class ChatPage {
       }
     });
 
-    // chat panel
+    // // LEADERBOARD PANEL
+    // this.leaderBoardPanel = document.createElement("div");
+    // this.leaderBoardPanel.className =
+    //   "flex-1 w-4/5 h-96 standard-dialog flex flex-col";
+    // const h1 = document.createElement("h1");
+    // h1.textContent = "test";
+    // this.leaderBoardPanel.appendChild(h1);
+
+    // CHATPANEL
     this.chatPanel = document.createElement("div");
     this.chatPanel.className =
       "flex-1 w-4/5 h-96 standard-dialog flex flex-col";
@@ -191,9 +207,9 @@ export class ChatPage {
       messageBox.appendChild(messageText);
       messages.appendChild(messageBox);
     });
-
-    this.chatRow.appendChild(contactsPanel);
-    this.chatRow.appendChild(this.chatPanel);
+    // assign chat panel to left panel
+    this.leftPanel = this.chatPanel;
+    this.chatRow.appendChild(this.leftPanel);
 
     // add friends panel (toggles on add friend)
     this.addFriendsPanel = document.createElement("div");
@@ -273,8 +289,9 @@ export class ChatPage {
     this.profilePopUp = new ProfilePopUp(
       () => this.toggleProfilePopUp(user),
       user,
-    );
-    this.toggleProfilePopUp(user);
+    ).getNode();
+    this.rightPanel = this.profilePopUp;
+    this.chatRow.appendChild(this.rightPanel);
 
     // window
     const windowComponent = new Window({
@@ -287,10 +304,7 @@ export class ChatPage {
     this.container.appendChild(windowComponent.getElement());
   }
 
-  public mount(parent: HTMLElement): void {
-    parent.appendChild(this.container);
-  }
-
+  // toggles invite (in messages)
   private toggleInvitePrompt(): void {
     // toggle back to normal state (invite has been sent)
     if (this.inputBox.contains(this.sendInvite)) {
@@ -313,14 +327,32 @@ export class ChatPage {
     this.inputBox.insertBefore(this.sendInvite, this.sendButton);
   }
 
-  private clickChatContact(contact: HTMLDivElement): void {
-    // check if we need to toggle off add friends panel
-    if (this.chatRow.contains(this.addFriendsPanel)) {
-      this.chatRow.removeChild(this.addFriendsPanel);
-      if (this.chatRow.contains(this.profilePopUp.getNode()))
-        this.chatRow.insertBefore(this.chatPanel, this.profilePopUp.getNode());
-      else this.chatRow.appendChild(this.chatPanel);
+  // PANELS:
+
+  // function to correctly switch the left panel
+  private replaceLeftPanel(newPanel: HTMLDivElement) {
+    // remove current left panel if it's in the DOM
+    if (this.chatRow.contains(this.leftPanel)) {
+      this.chatRow.removeChild(this.leftPanel);
     }
+    this.leftPanel = newPanel;
+    // always insert before rightPanel if it exists, else append
+    if (this.chatRow.contains(this.rightPanel)) {
+      this.chatRow.insertBefore(this.leftPanel, this.rightPanel);
+    } else {
+      this.chatRow.appendChild(this.leftPanel);
+    }
+  }
+
+  // // leaderboard panel: left panel type
+  // private toggleLeaderboardPanel(): void {
+  //   this.replaceLeftPanel(this.leaderboardPanel)
+  // }
+
+  // chat panel: left panel type
+  private toggleChatPanel(contact: HTMLDivElement): void {
+    this.replaceLeftPanel(this.chatPanel);
+
     // remove styling from old contact selected
     if (this.clickedContact) {
       this.clickedContact.classList.remove("bg-black");
@@ -333,30 +365,16 @@ export class ChatPage {
     this.clickedContact = contact;
   }
 
-  private sendButtonHook(): void {
-    // release toggle
-    if (this.inputBox.contains(this.sendInvite)) this.toggleInvitePrompt();
+  // add friend panel: left panel type
+  private toggleAddFriendPanel(): void {
+    this.replaceLeftPanel(this.addFriendsPanel);
   }
 
-  private toggleAddFriend(contact: HTMLDivElement): void {
-    this.clickChatContact(contact);
-    this.chatRow.removeChild(this.chatPanel);
-    if (this.chatRow.contains(this.profilePopUp.getNode())) {
-      // insert before profile pop
-      this.chatRow.insertBefore(
-        this.addFriendsPanel,
-        this.profilePopUp.getNode(),
-      );
-    } else this.chatRow.appendChild(this.addFriendsPanel);
-  }
-
+  // right side panel (only type that populates right side panel as of rn)
   private toggleProfilePopUp(user: UserLocal): void {
     // remove profile pop up if it is already shown on screen
-    if (
-      this.profilePopUp &&
-      this.chatRow.contains(this.profilePopUp.getNode())
-    ) {
-      this.chatRow.removeChild(this.profilePopUp.getNode());
+    if (this.profilePopUp && this.chatRow.contains(this.profilePopUp)) {
+      this.chatRow.removeChild(this.profilePopUp);
       return;
     }
 
@@ -366,15 +384,28 @@ export class ChatPage {
       this.profilePopUp = new ProfilePopUp(
         () => this.toggleProfilePopUp(user),
         user,
-      );
+      ).getNode();
     } else {
       this.profilePopUp = new ProfilePopUp(
         () => this.toggleProfilePopUp(user),
         user,
         "friend",
-      );
+      ).getNode();
     }
-    this.chatRow.appendChild(this.profilePopUp.getNode());
+    this.chatRow.appendChild(this.profilePopUp);
+  }
+
+  // HOOKS:
+
+  private sendButtonHook(): void {
+    // release toggle
+    if (this.inputBox.contains(this.sendInvite)) this.toggleInvitePrompt();
+  }
+
+  // standard mount unmount:
+
+  public mount(parent: HTMLElement): void {
+    parent.appendChild(this.container);
   }
 
   public unmount(): void {

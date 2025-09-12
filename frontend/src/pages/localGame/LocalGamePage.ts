@@ -88,7 +88,7 @@ export class LocalGamePage {
       this.menu = new Menu(this.router, menuItems);
       this.menu.mount(this.gameContainer);
       // Add overlay styling to menu element
-      const menuElement = this.menu.menuElement;
+      const menuElement = this.menu.getMenuElement();
       menuElement.style.position = "absolute";
       menuElement.style.top = "50%";
       menuElement.style.left = "50%";
