@@ -31,6 +31,17 @@ export const userIdSchema = userSchema.pick({
   userId: true,
 });
 
+export const userQuerySchema = userSchema.pick({
+  userId: true,
+
+  createdAt: true,
+  updatedAt: true,
+
+  email: true,
+  username: true,
+  alias: true,
+});
+
 export const userRegisterSchema = userSchema
   .pick({
     email: true,
@@ -48,6 +59,12 @@ export const userLoginSchema = userSchema
   .pick({ email: true })
   .extend({ password: z.string().min(8) });
 
+export const userPatchSchema = userSchema.pick({
+  email: true,
+  username: true,
+  alias: true,
+});
+
 export const userResponseSchema = userSchema.omit({
   password_hash: true,
   is_2fa_enabled: true,
@@ -63,7 +80,10 @@ export const userInfoResponseSchema = userResponseSchema.omit({
   email: true,
   guest: true,
 });
+export const userInfoResponseArraySchema = z.array(userInfoResponseSchema);
 
 //typed
 export type UserType = z.infer<typeof userSchema>;
 export type UserIdType = z.infer<typeof userIdSchema>;
+export type UserQueryType = z.infer<typeof userQuerySchema>;
+export type UserPatchType = z.infer<typeof userPatchSchema>;

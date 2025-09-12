@@ -1,9 +1,9 @@
 import { z } from 'zod/v4';
 
-export const TokenPayloadSchema = z.object({
+export const JwTPayloadSchema = z.object({
   id: z.uuid(),
-  iat: z.number().optional(),
-  exp: z.number().optional(),
+  iat: z.number(),
+  exp: z.number(),
 });
 
-export type TokenPayloadType = z.infer<typeof TokenPayloadSchema>;
+export type JwTPayloadType = z.infer<typeof JwTPayloadSchema>;

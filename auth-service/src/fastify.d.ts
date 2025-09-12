@@ -8,4 +8,11 @@ declare module 'fastify' {
     verifyAccessToken(token: string): object;
     verifyRefreshToken(token: string): object;
   }
+  interface FastifyRequest {
+    user: {
+      id: string;
+      iat: number;
+      exp: number;
+    };
+  }
 }

@@ -1,6 +1,8 @@
 import fp from 'fastify-plugin';
 import fastifyJwt from '@fastify/jwt';
-import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
+import { FastifyInstance } from 'fastify';
+import { JwTPayloadSchema } from '../schemas/jwt';
+import type { JwTPayloadType } from '../schemas/jwt';
 
 export default fp(async (fastify: FastifyInstance) => {
   //set secrets in docker-compose.yml
@@ -17,24 +19,20 @@ export default fp(async (fastify: FastifyInstance) => {
       sign: { expiresIn: '15m' },
     });
 
-    instance.decorate(
-      'authenticateAccess',
-      async (request: FastifyRequest, reply: FastifyReply) => {
-        try {
-          await request.jwtVerify();
-        } catch (err) {
-          reply.code(401).send({ message: 'Unauthorized' });
-        }
-      },
-    );
-
-    instance.decorate('generateAccessToken', (payload: object) => {
+    instance.decorate('generateAccessToken', (payload: { id: string }) => {
       return instance.jwt.sign(payload);
     });
 
-    instance.decorate('verifyAccessToken', async (token: string) => {
+    instance.decorate('verifyAccessToken', async (token: string): Promise<JwTPayloadType> => {
       try {
-        return instance.jwt.verify(token);
+        const decoded = instance.jwt.verify(token);
+
+        const result = JwTPayloadSchema.safeParse(decoded);
+        if (!result.success) {
+          throw new Error('Invalid token payload');
+        }
+
+        return result.data;
       } catch (err) {
         throw new Error('Invalid token');
       }
@@ -48,13 +46,20 @@ export default fp(async (fastify: FastifyInstance) => {
         sign: { expiresIn: '7d' },
       });
 
-      refresh.decorate('generateRefreshToken', (payload: object) => {
+      refresh.decorate('generateRefreshToken', (payload: { id: string }) => {
         return refresh.jwt.sign(payload);
       });
 
-      refresh.decorate('verifyRefreshToken', async (token: string) => {
+      refresh.decorate('verifyRefreshToken', async (token: string): Promise<JwTPayloadType> => {
         try {
-          return refresh.jwt.verify(token);
+          const decoded = refresh.jwt.verify<JwTPayloadType>(token);
+
+          const result = JwTPayloadSchema.safeParse(decoded);
+          if (!result.success) {
+            throw new Error('Invalid token payload');
+          }
+
+          return result.data;
         } catch (err) {
           throw new Error('Invalid token');
         }

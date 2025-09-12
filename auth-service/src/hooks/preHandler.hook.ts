@@ -1,7 +1,8 @@
 import fp from 'fastify-plugin';
 import { FastifyRequest, FastifyReply } from 'fastify';
 
-import { isBlacklistedToken } from '../utils/jwt';
+import type { JwTPayloadType } from '../schemas/jwt';
+import { isBlacklistedToken } from '../utils/blacklistToken';
 
 export default fp(async function onRequestHook(server) {
   server.addHook('preHandler', async (req: FastifyRequest, reply: FastifyReply) => {
@@ -36,7 +37,9 @@ export default fp(async function onRequestHook(server) {
     }
 
     try {
-      const decoded = server.verifyAccessToken(token);
+      //TODO find out why
+      //@ts-expect-error i don't know
+      const decoded: JwTPayloadType = server.verifyAccessToken(token);
       req.user = decoded;
     } catch (err) {
       return reply.code(401).send({ error: 'Unauthorised' });

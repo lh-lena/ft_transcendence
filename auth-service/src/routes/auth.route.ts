@@ -78,6 +78,7 @@ const authRoutes = async (server: FastifyInstance) => {
       return reply.status(401).send({ error: 'Token revoked. Login again' });
     }
 
+    //TODO add proper typing to payload -> only use id
     try {
       const payload = server.verifyRefreshToken(refreshToken);
       const newAccessToken = server.generateAccessToken(payload);
