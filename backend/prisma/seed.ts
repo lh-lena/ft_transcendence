@@ -27,6 +27,7 @@ async function main() {
         data: {
           email: faker.internet.email(),
           username,
+          alias: username,
           password_hash: faker.internet.password(),
           is_2fa_enabled: faker.datatype.boolean(),
           twofa_secret: faker.datatype.boolean() ? faker.string.alphanumeric(32) : null,

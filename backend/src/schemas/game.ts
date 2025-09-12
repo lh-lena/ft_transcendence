@@ -23,11 +23,15 @@ export const gameBase = z.object({
 });
 
 //schemas for POST
-const gameCreateBase = gameBase.pick({
-  mode: true,
-  visibility: true,
-  aiDifficulty: true,
-});
+const gameCreateBase = gameBase
+  .pick({
+    mode: true,
+    visibility: true,
+    aiDifficulty: true,
+  })
+  .extend({
+    playerId: z.uuid(),
+  });
 export const gameCreate = gameCreateBase.meta({ $id: 'gameCreate' });
 
 const gameJoinBase = z.object({

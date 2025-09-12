@@ -15,11 +15,11 @@ datasource db {
 
 // add string string map and avatar
 model User {
-  id             String       @id @default(uuid())
+  userId         String       @id @default(uuid())
 
   email          String       @unique
   username       String       @unique
-  alias          String?
+  alias          String
   guest          Boolean      @default(false)
 
   password_hash  String
@@ -53,9 +53,9 @@ model User {
 
 model Friendship {
   id       Int  @id @default(autoincrement())
-  user     User @relation("user", fields: [userId], references: [id], onDelete: Cascade)
+  user     User @relation("user", fields: [userId], references:[userId], onDelete: Cascade)
   userId   String
-  friend   User @relation("friend", fields: [friendId], references: [id], onDelete: Cascade)
+  friend   User @relation("friend", fields: [friendId], references: [userId], onDelete: Cascade)
   friendId String
 
   createdAt DateTime @default(now())
@@ -65,9 +65,9 @@ model Friendship {
 
 model Blocked {
   id         Int      @id @default(autoincrement())
-  user       User     @relation("blocker", fields: [userId], references: [id], onDelete: Cascade)
+  user       User     @relation("blocker", fields: [userId], references: [userId], onDelete: Cascade)
   userId     String
-  blocked    User     @relation("blocked", fields: [blockedId], references: [id], onDelete: Cascade)
+  blocked    User     @relation("blocked", fields: [blockedId], references: [userId], onDelete: Cascade)
   blockedId  String
   createdAt  DateTime @default(now())
 
@@ -85,9 +85,9 @@ model Result {
 
 model ChatMessage {
   id         Int     @id @default(autoincrement())
-  sender     User     @relation("sender", fields: [senderId], references: [id], onDelete: Cascade)
+  sender     User     @relation("sender", fields: [senderId], references: [userId], onDelete: Cascade)
   senderId   String
-  reciver    User     @relation("reciver", fields: [reciverId], references: [id], onDelete: Cascade)
+  reciver    User     @relation("reciver", fields: [reciverId], references: [userId], onDelete: Cascade)
   reciverId  String
   message    String
   createdAt  DateTime @default(now())
@@ -95,7 +95,7 @@ model ChatMessage {
 
 model GamePlayed {
   id       Int      @id @default(autoincrement())
-  user     User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user     User?    @relation(fields: [userId], references: [userId], onDelete: Cascade)
   userId   String?
   result   Result?  @relation(fields: [resultId], references: [id], onDelete: Cascade)
   resultId Int?

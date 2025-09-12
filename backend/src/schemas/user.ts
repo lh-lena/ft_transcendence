@@ -9,7 +9,7 @@ export const userBase = z.object({
 
   email: z.email(),
   username: z.string(),
-  alias: z.string().optional(),
+  alias: z.string(),
 
   password_hash: z.string(),
 
@@ -25,6 +25,7 @@ export const userBase = z.object({
   colormap: z.string(),
   avatar: z.url().optional().nullable(),
 });
+export const userBaseArray = z.array(userBase);
 
 export const userInfo = userBase.pick({
   userId: true,
@@ -85,8 +86,8 @@ export const userSchemas = [
 //
 ////export types
 export type userType = z.infer<typeof userBase>;
+export type userInfoType = z.infer<typeof userInfo>;
 export type userCreateType = z.infer<typeof userCreate>;
 export type userAvatarUploadType = z.infer<typeof userAvatarUpload>;
 export type userUpdateType = z.infer<typeof userUpdate>;
 export type userQueryType = z.infer<typeof userQuery>;
-export type userInfoType = z.infer<typeof userInfo>;

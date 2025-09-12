@@ -14,7 +14,7 @@ export class gameClass {
   }
 
   async getByUser(userId: string): Promise<gameType | undefined> {
-    const game = this.activeGames.find((g) => g.players.some((p) => p.id === userId));
+    const game = this.activeGames.find((g) => g.players.some((p) => p.userId === userId));
     return game;
   }
 
@@ -48,10 +48,13 @@ export class gameClass {
     );
 
     if (!freeGame) {
-      freeGame = await this.create({ mode: 'pvp_remote', visibility: 'public' });
+      freeGame = await this.create({
+        mode: 'pvp_remote',
+        visibility: 'public',
+        playerId: playerId,
+      });
     }
 
-    this.join(freeGame, playerId);
     this.startGame(freeGame);
 
     return freeGame;
@@ -65,7 +68,7 @@ export class gameClass {
       game.status = 'ready';
       game.createdAt = new Date().toISOString();
       for (const player of game.players) {
-        notifyPlayer(player.id, '0000-0000-0000-0000', 'INFO: Your next Game starts soon');
+        notifyPlayer(player.userId, '0000-0000-0000-0000', 'INFO: Your next Game starts soon');
       }
     }
   }

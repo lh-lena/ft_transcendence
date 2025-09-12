@@ -2,31 +2,48 @@ import { Prisma } from '@prisma/client';
 import type { userType } from '../../schemas/user';
 
 import { userService } from './user.service';
-import { transformUser } from './user.helper';
+import { userBase, userBaseArray } from '../../schemas/user';
 
 export const userController = {
   //controller to create an user
   async create(data: Prisma.UserCreateInput): Promise<userType> {
     const ret = await userService.create(data);
-    return await transformUser(ret);
+    const user = userBase.safeParse(ret);
+
+    if (!user.success) throw new Error('User creation failed');
+
+    return user.data;
   },
 
   //update user
   async update(id: string, data: Prisma.UserUpdateInput): Promise<userType> {
     console.log(data);
     const ret = await userService.update(id, data);
-    return await transformUser(ret);
+    const user = userBase.safeParse(ret);
+
+    if (!user.success) throw new Error('User creation failed');
+
+    return user.data;
   },
 
   //controller for user get All or by Id
   async getQuery(query?: Prisma.UserWhereInput): Promise<userType[]> {
     const ret = await userService.getQuery(query);
-    return Promise.all(ret.map((user) => transformUser(user)));
+
+    const user = userBaseArray.safeParse(ret);
+
+    if (!user.success) throw new Error('User creation failed');
+
+    return user.data;
   },
 
   async getById(id: string): Promise<userType> {
     const ret = await userService.getById(id);
-    return await transformUser(ret);
+    const user = userBase.safeParse(ret);
+
+    if (!user.success) throw new Error('User creation failed');
+
+    return user.data;
   },
 
   //delete user

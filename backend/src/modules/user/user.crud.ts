@@ -8,8 +8,8 @@ export const userModel = {
     return await prisma.user.findMany(options);
   },
 
-  findById: async (id: string): Promise<User | null> => {
-    return await prisma.user.findUnique({ where: { id }, ...options });
+  findById: async (userId: string): Promise<User | null> => {
+    return await prisma.user.findUnique({ where: { userId }, ...options });
   },
 
   findBy: async (where: Prisma.UserWhereInput): Promise<User[]> => {
@@ -20,13 +20,13 @@ export const userModel = {
     return await prisma.user.create({ data, ...options });
   },
 
-  patch: async (id: string, data: Prisma.UserUpdateInput): Promise<User> => {
-    return await prisma.user.update({ where: { id }, data, ...options });
+  patch: async (userId: string, data: Prisma.UserUpdateInput): Promise<User> => {
+    return await prisma.user.update({ where: { userId }, data, ...options });
   },
 
-  deleteOne: async (id: string): Promise<boolean> => {
+  deleteOne: async (userId: string): Promise<boolean> => {
     try {
-      await prisma.user.delete({ where: { id }, ...options });
+      await prisma.user.delete({ where: { userId }, ...options });
       return true;
     } catch {
       return false;

@@ -13,27 +13,30 @@ export const gameService = {
     return game;
   },
 
-  async create(data: gameJoinType): Promise<gameType> {
-    const existingGame = await gamemaker.getByUser(data.playerId);
-    if (existingGame) return existingGame;
+  async create(data: gameCreateType): Promise<gameType> {
+    let game = await gamemaker.create(data as gameCreateType);
 
-    let game;
+    game = await gamemaker.join(game, data.playerId);
+
+    return game;
+  },
+
+  async join(data: gameJoinType): Promise<gameType> {
     if (data.gameId) {
-      game = await gamemaker.getById(data.gameId);
-      if (!game) throw new NotFoundError(`game ${data.gameId} not found`);
-      await gamemaker.join(game, data.playerId);
-    } else if (data.mode === 'pvp_remote' && data.visibility === 'public') {
-      game = gamemaker.findAvailableGame(data.playerId);
-    } else {
-      game = await gamemaker.create(data as gameCreateType);
-      await gamemaker.join(game, data.playerId);
+      let game = await this.getById(data.gameId);
+      game = await gamemaker.join(game, data.playerId);
+      return game;
     }
+    const game = await gamemaker.findAvailableGame(data.playerId);
     return game;
   },
 
   async createTournamentGame(player1: string, player2: string): Promise<gameType> {
-    const game = await gamemaker.create({ mode: 'pvp_remote', visibility: 'private' });
-    await gamemaker.join(game, player1);
+    const game = await gamemaker.create({
+      mode: 'pvp_remote',
+      visibility: 'private',
+      playerId: player1,
+    });
     await gamemaker.join(game, player2);
     return game;
   },
