@@ -9,7 +9,7 @@ import path from 'path';
 
 import { config } from './config/index';
 
-const server = Fastify({ logger: true });
+export const server = Fastify({ logger: true });
 
 // ------------ Plugins ------------
 server.register(fastifyCookie);

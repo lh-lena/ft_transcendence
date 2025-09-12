@@ -66,3 +66,4 @@ export const userInfoResponseSchema = userResponseSchema.omit({
 
 //typed
 export type UserType = z.infer<typeof userSchema>;
+export type UserIdType = z.infer<typeof userIdSchema>;

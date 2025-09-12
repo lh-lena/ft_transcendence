@@ -36,7 +36,7 @@ export default fp(async function onRequestHook(server) {
     }
 
     try {
-      const decoded = server.jwt.verify(token);
+      const decoded = server.verifyAccessToken(token);
       req.user = decoded;
     } catch (err) {
       return reply.code(401).send({ error: 'Unauthorised' });

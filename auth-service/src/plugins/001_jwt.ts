@@ -3,6 +3,7 @@ import fastifyJwt from '@fastify/jwt';
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 
 export default fp(async (fastify: FastifyInstance) => {
+  //set secrets in docker-compose.yml
   const accessSecret = process.env.ACCESS_TOKE_SECRET;
   const refreshSecret = process.env.REFRESH_TOKEN_SECRET;
 
@@ -30,6 +31,14 @@ export default fp(async (fastify: FastifyInstance) => {
     instance.decorate('generateAccessToken', (payload: object) => {
       return instance.jwt.sign(payload);
     });
+
+    instance.decorate('verifyAccessToken', async (token: string) => {
+      try {
+        return instance.jwt.verify(token);
+      } catch (err) {
+        throw new Error('Invalid token');
+      }
+    });
   });
 
   fastify.register(
@@ -41,6 +50,14 @@ export default fp(async (fastify: FastifyInstance) => {
 
       refresh.decorate('generateRefreshToken', (payload: object) => {
         return refresh.jwt.sign(payload);
+      });
+
+      refresh.decorate('verifyRefreshToken', async (token: string) => {
+        try {
+          return refresh.jwt.verify(token);
+        } catch (err) {
+          throw new Error('Invalid token');
+        }
       });
     },
     { prefix: '/refresh' },

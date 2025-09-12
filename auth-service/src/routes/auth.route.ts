@@ -2,7 +2,7 @@ import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import fp from 'fastify-plugin';
 
 import { hashPassword, verifyPassword } from '../auth/passwords';
-import { verifyJWT } from '../utils/jwt';
+//import { verifyJWT } from '../utils/jwt';
 
 import { isBlacklisted } from '../services/userService';
 import { apiClientBackend } from '../utils/apiClient';
@@ -18,9 +18,9 @@ import {
 } from '../schemas/user';
 import type { UserType } from '../schemas/user';
 
-export const tfa = new tfaHandler();
-
 const authRoutes = async (server: FastifyInstance) => {
+  const tfa = new tfaHandler(server);
+
   server.post('/api/register', async (req: FastifyRequest, reply: FastifyReply) => {
     const parseResult = userRegisterSchema.safeParse(req.body);
 
@@ -79,7 +79,7 @@ const authRoutes = async (server: FastifyInstance) => {
     }
 
     try {
-      const payload = verifyJWT(refreshToken, process.env.REFRESH_TOKEN_SECRET!);
+      const payload = server.verifyRefreshToken(refreshToken);
       const newAccessToken = server.generateAccessToken(payload);
       const newRefreshToken = server.generateRefreshToken(payload);
       reply.setCookie('refreshToken', newRefreshToken, {
@@ -164,10 +164,6 @@ const authRoutes = async (server: FastifyInstance) => {
 };
 
 export default fp(authRoutes);
-
-export async function cleanupExpiredSession() {
-  tfa.cleanupExpiredSessions();
-}
 
 // TODO: whats this for
 // server.get('/api/auth/me', { preHandler: authMiddleware }, async (req, reply) => {
