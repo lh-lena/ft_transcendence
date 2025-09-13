@@ -86,6 +86,7 @@ export const userSchemas = [
 //
 ////export types
 export type userType = z.infer<typeof userBase>;
+export type userIdType = z.infer<typeof userId>;
 export type userInfoType = z.infer<typeof userInfo>;
 export type userCreateType = z.infer<typeof userCreate>;
 export type userAvatarUploadType = z.infer<typeof userAvatarUpload>;
