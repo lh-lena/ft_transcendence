@@ -3,7 +3,7 @@ import { GameMode, GameSessionStatus, Direction, PaddleName } from '../constants
 import { AIDifficulty } from '../constants/ai.constants.js';
 import { UserIdSchema, UserSchema } from './user.schema.js';
 
-export const GameIdSchema = z.string().min(1);
+export const GameIdSchema = z.uuidv4();
 
 export const PaddleNameSchema = z.enum(PaddleName);
 
