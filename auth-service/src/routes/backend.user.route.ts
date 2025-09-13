@@ -31,6 +31,7 @@ const backendUserRoutes = async (fastify: FastifyInstance) => {
     const schema = isSelf ? userResponseSchema : userInfoResponseSchema;
 
     const ret = schema.safeParse(user);
+
     if (!ret.success) {
       return reply.code(500).send({ error: 'Failed to parse user data' });
     }
@@ -81,10 +82,7 @@ const backendUserRoutes = async (fastify: FastifyInstance) => {
       return reply.code(403).send({ error: 'Forbidden: You can only update your own profile' });
     }
 
-    const updatedUser: UserType = await apiClientBackend.patch(
-      `/user/${requestId.userId}`,
-      updateData,
-    );
+    const updatedUser: UserType = await apiClientBackend.patch(`/user/${req.user.id}`, updateData);
 
     const ret = userResponseSchema.safeParse(updatedUser);
 
@@ -94,6 +92,24 @@ const backendUserRoutes = async (fastify: FastifyInstance) => {
 
     const userRet = ret.data;
     return reply.code(201).send(userRet);
+  });
+
+  fastify.delete('/user/:id', async (req: FastifyRequest, reply: FastifyReply) => {
+    const parsedReq = userIdSchema.safeParse(req.params);
+
+    if (!parsedReq.success) {
+      return reply.code(400).send({ error: 'Invalid user Id' });
+    }
+
+    const requestId: UserIdType = parsedReq.data;
+
+    if (requestId.userId !== req.user.id) {
+      return reply.code(403).send({ error: 'Forbidden: You can only delete your own profile' });
+    }
+
+    const ret = await apiClientBackend.delete(`/user/${req.user.id}`);
+
+    return reply.code(200).send({ message: 'User deleted successfully', ret });
   });
 };
 
