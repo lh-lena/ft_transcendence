@@ -100,7 +100,7 @@ export default function createGameLoopService(app: FastifyInstance): GameLoopSer
 
   function stopGameLoop(game: GameSession): void {
     unregisterGame(game.gameId);
-    // stopAIGame(game);
+    stopAIGame(game);
   }
 
   function startCountdownSequence(game: GameSession, infoMsg: string, count: number = 3): void {
@@ -132,7 +132,7 @@ export default function createGameLoopService(app: FastifyInstance): GameLoopSer
         game.countdownInterval = undefined;
         respond.notificationToGame(game.gameId, NotificationType.INFO, infoMsg);
         registerGame(game);
-        // startAIGame(game);
+        startAIGame(game);
       }
     }, PONG_CONFIG.COUNTDOWN_INTERVAL);
   }
