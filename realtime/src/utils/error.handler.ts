@@ -4,6 +4,7 @@ import type { FastifyInstance } from 'fastify';
 import type { RespondService } from '../websocket/types/ws.types.js';
 import type { User, UserIdType } from '../schemas/user.schema.js';
 import { z } from 'zod';
+import { GAME_EVENTS, GameEventType } from '../constants/game.constants.js';
 
 function formatLogDetails(details?: string): string {
   return details !== undefined && details !== null && details.trim() !== '' ? `: ${details}` : '';
@@ -61,11 +62,11 @@ export function safeErrorToString(error: unknown): string {
 function sendErrorResponse(
   respond: RespondService,
   userId: UserIdType,
-  type: 'error' | 'notification',
+  type: GameEventType,
   message: string,
   notificationType?: NotificationType,
 ): void {
-  if (type === 'notification' && notificationType !== undefined) {
+  if (type === GAME_EVENTS.NOTIFICATION && notificationType !== undefined) {
     respond.notification(userId, notificationType, message);
   } else {
     respond.error(userId, message);
@@ -89,10 +90,10 @@ export function handleWebSocketError(
       `Invalid JSON message from user ${userId}`,
       message,
     );
-    sendErrorResponse(respond, userId, 'error', `Invalid JSON format: ${error.message}`);
+    sendErrorResponse(respond, userId, GAME_EVENTS.ERROR, `Invalid JSON format: ${error.message}`);
   } else if (error instanceof GameError) {
     logMessage(app, 'error', 'websocket-service', `Game error for user ${userId}`, error.message);
-    sendErrorResponse(respond, userId, 'notification', error.message, NotificationType.ERROR);
+    sendErrorResponse(respond, userId, GAME_EVENTS.NOTIFICATION, error.message, NotificationType.ERROR);
   } else if (error instanceof Error) {
     logMessage(
       app,
@@ -101,10 +102,10 @@ export function handleWebSocketError(
       `Error processing message from user ${userId}`,
       error.message,
     );
-    sendErrorResponse(respond, userId, 'error', `Error processing message: ${error.message}`);
+    sendErrorResponse(respond, userId, GAME_EVENTS.ERROR, `Error processing message: ${error.message}`);
   } else {
     logMessage(app, 'error', 'websocket-service', `Unknown error for user ${userId}`, errorMsg);
-    sendErrorResponse(respond, userId, 'error', 'Unknown error occurred');
+    sendErrorResponse(respond, userId, GAME_EVENTS.ERROR, 'Unknown error occurred');
   }
 }
 
@@ -119,14 +120,18 @@ export function processGameError(
 
   const respond = app.respond as RespondService;
   const { userId } = user;
-  const errorMsg = safeErrorToString(error);
-  const responseMsg = message + errorMsg;
+  let errorMsg = safeErrorToString(error);
 
   if (error instanceof GameError) {
-    sendErrorResponse(respond, userId, 'notification', errorMsg, NotificationType.WARN);
-    logMessage(app, 'debug', service, message, errorMsg);
+    sendErrorResponse(respond, userId, GAME_EVENTS.NOTIFICATION, errorMsg, NotificationType.WARN);
+    if (error.error === undefined) {
+      logMessage(app, 'debug', service, message, errorMsg);
+      return;
+    }
+    errorMsg += `: ${error.error}`;
+    logMessage(app, 'error', service, message, errorMsg);
   } else if (error instanceof Error) {
-    sendErrorResponse(respond, userId, 'error', responseMsg);
+    sendErrorResponse(respond, userId, GAME_EVENTS.ERROR, errorMsg);
     logMessage(app, 'error', service, message, errorMsg);
   } else {
     logMessage(app, 'error', service, message, errorMsg);

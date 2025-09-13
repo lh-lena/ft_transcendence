@@ -238,11 +238,12 @@ export default function createConnectionService(app: FastifyInstance): Connectio
         body: JSON.stringify({ online }),
       });
       if (!res.ok) {
-        log.error(
-          `[connection-service] Failed to update user ${userId} online status: ${res.statusText}`,
+        processErrorLog(
+          app,
+          'connection-service',
+          `Failed to update user ${userId} online status`,
+          `Status: ${res.status} - ${res.statusText}`,
         );
-      } else {
-        log.debug(`[connection-service] User ID ${userId}: online status updated`);
       }
     } catch (error: unknown) {
       processErrorLog(
