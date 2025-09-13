@@ -93,7 +93,13 @@ export function handleWebSocketError(
     sendErrorResponse(respond, userId, GAME_EVENTS.ERROR, `Invalid JSON format: ${error.message}`);
   } else if (error instanceof GameError) {
     logMessage(app, 'error', 'websocket-service', `Game error for user ${userId}`, error.message);
-    sendErrorResponse(respond, userId, GAME_EVENTS.NOTIFICATION, error.message, NotificationType.ERROR);
+    sendErrorResponse(
+      respond,
+      userId,
+      GAME_EVENTS.NOTIFICATION,
+      error.message,
+      NotificationType.ERROR,
+    );
   } else if (error instanceof Error) {
     logMessage(
       app,
@@ -102,7 +108,12 @@ export function handleWebSocketError(
       `Error processing message from user ${userId}`,
       error.message,
     );
-    sendErrorResponse(respond, userId, GAME_EVENTS.ERROR, `Error processing message: ${error.message}`);
+    sendErrorResponse(
+      respond,
+      userId,
+      GAME_EVENTS.ERROR,
+      `Error processing message: ${error.message}`,
+    );
   } else {
     logMessage(app, 'error', 'websocket-service', `Unknown error for user ${userId}`, errorMsg);
     sendErrorResponse(respond, userId, GAME_EVENTS.ERROR, 'Unknown error occurred');

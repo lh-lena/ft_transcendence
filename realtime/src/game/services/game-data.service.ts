@@ -39,7 +39,10 @@ export default function createGameDataService(app: FastifyInstance): GameDataSer
 
       return gameData;
     } else {
-      throw new GameError('invalid game data received. try to create a new game', ValidationResult.error.issues);
+      throw new GameError(
+        'invalid game data received. try to create a new game',
+        ValidationResult.error.issues,
+      );
     }
   }
 
@@ -54,10 +57,7 @@ export default function createGameDataService(app: FastifyInstance): GameDataSer
 
       if (response.status !== 201) {
         const errorDetails = await response.text();
-        throw new GameError(
-          `failed to send game result for ${result.gameId}`,
-          errorDetails,
-        );
+        throw new GameError(`failed to send game result for ${result.gameId}`, errorDetails);
       }
 
       log.debug({ gameId: result.gameId }, `[game-data] Game result sent successfully`);
