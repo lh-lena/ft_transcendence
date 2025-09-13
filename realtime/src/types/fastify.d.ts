@@ -10,6 +10,7 @@ import type {
   createGameDataService,
 } from '../game/services/game-session.service.js';
 import type { createGameStateService } from '../game/services/game-state.service.js';
+import type { createGameLoopService } from '../game/services/game-loop.service.js';
 import type { createChatService } from '../chat/services/chat.service.js';
 import type { authService } from '../auth/services/auth.service.js';
 import type { createAIService } from '../ai/ai.js';
@@ -26,6 +27,7 @@ declare module 'fastify' {
     respond: ReturnType<typeof createRespondService>;
     wsService: ReturnType<typeof createWSService>;
     gameService: ReturnType<typeof createGameService>;
+    gameLoopService: ReturnType<typeof createGameLoopService>;
     gameSessionService: ReturnType<typeof createGameSessionService>;
     gameDataService: ReturnType<typeof createGameDataService>;
     gameStateService: ReturnType<typeof createGameStateService>;
@@ -39,7 +41,7 @@ declare module 'fastify' {
     user: {
       userId: UserIdType;
       username: string;
-      userAlias: string;
+      userAlias?: string;
     };
     gameId?: GameIdType | null;
     lastPing: number;
