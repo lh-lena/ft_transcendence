@@ -5,7 +5,7 @@ export const UserIdSchema = z.uuidv4();
 export const UserSchema = z.object({
   userId: UserIdSchema,
   username: z.string().min(1),
-  userAlias: z.string().min(1),
+  userAlias: z.string().min(1).optional(),
 });
 
 export type User = z.infer<typeof UserSchema>;
