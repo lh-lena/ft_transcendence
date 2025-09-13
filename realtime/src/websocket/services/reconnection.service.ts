@@ -36,7 +36,7 @@ export default function createReconnectionService(app: FastifyInstance): Reconne
       `[reconnection-service] Handling disconnect for user ${userId} (${userAlias}) in game ${gameId}`,
     );
 
-    setPlayerDisconnectInfo(userId, userAlias, gameId);
+    setPlayerDisconnectInfo(userId, userAlias ?? '', gameId);
     gameSessionService.setPlayerConnectionStatus(userId, gameId, false);
     respond.notificationToGame(
       gameId,
