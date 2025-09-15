@@ -1,19 +1,11 @@
 import { NotificationType } from '../constants/game.constants.js';
 import type { UserIdType } from './user.schema.js';
 
-export const NotificationParamsSchema = {
-  type: 'object',
-  properties: {
-    id: { type: 'number' },
-  },
-  required: ['id'],
-};
-
 export const NotificationRequestSchema = {
   type: 'object',
   properties: {
-    reciver: { type: 'number' },
-    sender: { type: 'number' },
+    reciver: { type: 'string', format: 'uuid' },
+    sender: { type: 'string', format: 'uuid' },
     payload: {
       type: 'object',
       properties: {
@@ -37,10 +29,6 @@ export const NotificationResponseSchema = {
     message: { type: 'string' },
   },
   required: ['success'],
-};
-
-export type NotificationParams = {
-  id: number;
 };
 
 export type NotificationRequest = {
