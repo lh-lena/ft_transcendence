@@ -1,0 +1,60 @@
+import fp from 'fastify-plugin';
+import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
+
+import { apiClientBackend } from '../utils/apiClient';
+
+const backendFriendsRoute = async (fastify: FastifyInstance) => {
+
+  //-----------------Friend Routes-----------------
+  fastify.get('/friend', async (req: FastifyRequest, reply: FastifyReply) => {
+    const parsedReq = friendQuerySchema.parse(request.query);
+
+    if (!parsedReq.success) {
+      return reply.status(400).send({ error: 'Invalid query parameters' });
+    }
+
+    const friendQuery: FriendQueryType = parsedReq.data;
+
+    if (friendQuery.userId !== req.user.id) {
+      return reply.code(403).send({ error: 'Forbidden' });
+    }
+
+    const friends: FriendType[] = await apiClientBackend.get('/friend', { params: friendQuery });
+
+    const ret = friendResponseArraySchema.safeParse(friends);
+
+    if (!ret.success) {
+      return reply.code(500).send({ error: 'Failed to parse Friend Data' });
+    }
+
+    const friendRet = ret.data;
+
+    return reply.code(200).send(friendRet);
+  });
+
+  fastify.post('/friend', async (req: FastifyRequest, reply: FastifyReply) => {
+    const parsedReq = friendPostSchema.safeParse(req.body);
+
+    if (!parsedReq.success) {
+      return reply.code(400).send({ error: 'Invalid Friend Schema' });
+    }
+
+    const friend: FriendType = parsedReq.data;
+
+    if (friend.userId !== req.user.id)
+      return reply.code(403).send({ error: 'Forbidden' }),
+    }
+
+    const postedFriend: FriendType = await apiClientBackend.post('/friend', { params: friend });
+
+  const ret = friendResponseSchema.safeParse(postedFriend);
+
+  if (!ret.success) {
+    return reply.code(500).send({ error: 'Failed to parse Friend Data' });
+  }
+
+  const friendRet: FriendResponseType = ret.data;
+
+  return reply.code(201).send(friendRet);
+});
+    };
