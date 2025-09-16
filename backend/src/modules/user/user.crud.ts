@@ -1,32 +1,35 @@
 import { prisma } from '../../plugins/001_prisma';
 import { Prisma, User } from '@prisma/client'; // Adjust the import as needed
 
-const options = { include: { gamePlayed: true } };
-
 export const userModel = {
   findAll: async (): Promise<User[]> => {
-    return await prisma.user.findMany(options);
+    const tmp = await prisma.user.findMany();
+    console.log(tmp);
+    return tmp;
   },
 
   findById: async (userId: string): Promise<User | null> => {
-    return await prisma.user.findUnique({ where: { userId }, ...options });
+    return await prisma.user.findUnique({ where: { userId } });
   },
 
   findBy: async (where: Prisma.UserWhereInput): Promise<User[]> => {
-    return await prisma.user.findMany({ where, ...options });
+    console.log(where);
+    const ret = await prisma.user.findMany({ where });
+    console.log(ret);
+    return ret;
   },
 
   insert: async (data: Prisma.UserCreateInput): Promise<User> => {
-    return await prisma.user.create({ data, ...options });
+    return await prisma.user.create({ data });
   },
 
   patch: async (userId: string, data: Prisma.UserUpdateInput): Promise<User> => {
-    return await prisma.user.update({ where: { userId }, data, ...options });
+    return await prisma.user.update({ where: { userId }, data });
   },
 
   deleteOne: async (userId: string): Promise<boolean> => {
     try {
-      await prisma.user.delete({ where: { userId }, ...options });
+      await prisma.user.delete({ where: { userId } });
       return true;
     } catch {
       return false;

@@ -1,12 +1,17 @@
 -- CreateTable
 CREATE TABLE "User" (
-    "id" TEXT NOT NULL PRIMARY KEY,
+    "userId" TEXT NOT NULL PRIMARY KEY,
     "email" TEXT NOT NULL,
     "username" TEXT NOT NULL,
-    "password_hash" TEXT NOT NULL,
-    "is_2fa_enabled" BOOLEAN NOT NULL DEFAULT false,
-    "twofa_secret" TEXT,
+    "alias" TEXT NOT NULL,
     "guest" BOOLEAN NOT NULL DEFAULT false,
+    "password_hash" TEXT NOT NULL,
+    "tfaEnabled" BOOLEAN NOT NULL DEFAULT false,
+    "tfaSecret" TEXT,
+    "tfaMethod" TEXT,
+    "tfaTempCode" TEXT,
+    "tfaCodeExpires" DATETIME,
+    "backupCodes" TEXT,
     "color" TEXT NOT NULL,
     "colormap" TEXT NOT NULL,
     "avatar" TEXT,
@@ -20,8 +25,8 @@ CREATE TABLE "Friendship" (
     "userId" TEXT NOT NULL,
     "friendId" TEXT NOT NULL,
     "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT "Friendship_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
-    CONSTRAINT "Friendship_friendId_fkey" FOREIGN KEY ("friendId") REFERENCES "User" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+    CONSTRAINT "Friendship_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("userId") ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT "Friendship_friendId_fkey" FOREIGN KEY ("friendId") REFERENCES "User" ("userId") ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 -- CreateTable
@@ -30,8 +35,8 @@ CREATE TABLE "Blocked" (
     "userId" TEXT NOT NULL,
     "blockedId" TEXT NOT NULL,
     "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT "Blocked_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
-    CONSTRAINT "Blocked_blockedId_fkey" FOREIGN KEY ("blockedId") REFERENCES "User" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+    CONSTRAINT "Blocked_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("userId") ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT "Blocked_blockedId_fkey" FOREIGN KEY ("blockedId") REFERENCES "User" ("userId") ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 -- CreateTable
@@ -50,8 +55,8 @@ CREATE TABLE "ChatMessage" (
     "reciverId" TEXT NOT NULL,
     "message" TEXT NOT NULL,
     "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT "ChatMessage_senderId_fkey" FOREIGN KEY ("senderId") REFERENCES "User" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
-    CONSTRAINT "ChatMessage_reciverId_fkey" FOREIGN KEY ("reciverId") REFERENCES "User" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+    CONSTRAINT "ChatMessage_senderId_fkey" FOREIGN KEY ("senderId") REFERENCES "User" ("userId") ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT "ChatMessage_reciverId_fkey" FOREIGN KEY ("reciverId") REFERENCES "User" ("userId") ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 -- CreateTable
@@ -61,7 +66,7 @@ CREATE TABLE "GamePlayed" (
     "resultId" INTEGER,
     "score" INTEGER,
     "isWinner" BOOLEAN,
-    CONSTRAINT "GamePlayed_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT "GamePlayed_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("userId") ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT "GamePlayed_resultId_fkey" FOREIGN KEY ("resultId") REFERENCES "Result" ("id") ON DELETE CASCADE ON UPDATE CASCADE
 );
 

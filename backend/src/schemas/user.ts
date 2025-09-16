@@ -1,5 +1,5 @@
 import { z } from 'zod/v4';
-import { dtString } from './basics';
+import { dtString, tfaType } from './basics';
 
 export const userBase = z.object({
   userId: z.uuid(),
@@ -13,13 +13,14 @@ export const userBase = z.object({
 
   password_hash: z.string(),
 
-  is_2fa_enabled: z.boolean().default(false),
-  twofa_secret: z.string().nullable().optional().default(null),
-  twofa_method: z.string().nullable().optional().default(null),
-  twofa_temp_code: z.string().nullable().optional().default(null),
-  twofa_code_expires: dtString.nullable().optional().default(null),
+  tfaEnabled: z.boolean(),
+  tfaSecret: z.string().nullable(),
+  tfaMethod: tfaType.nullable(),
+  tfaTempCode: z.string().nullable(),
+  tfaCodeExpires: dtString.nullable(),
+  backupCodes: z.string().nullable(),
 
-  guest: z.boolean().default(false),
+  guest: z.boolean(),
 
   color: z.string(),
   colormap: z.string(),

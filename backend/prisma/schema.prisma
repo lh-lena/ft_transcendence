@@ -24,13 +24,12 @@ model User {
 
   password_hash  String
 
-  is_2fa_enabled Boolean      @default(false)
-  twofa_method   String?
-  twofa_secret   String?
-  twofa_temp_code String?
-  twofa_code_expires_at DateTime?
-
-  backup_codes   String?
+  tfaEnabled     Boolean @default(false)
+  tfaSecret      String?
+  tfaMethod      String?
+  tfaTempCode    String?
+  tfaCodeExpires DateTime?
+  backupCodes    String? 
 
   color          String
   colormap       String
