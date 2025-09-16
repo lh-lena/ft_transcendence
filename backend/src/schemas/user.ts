@@ -27,12 +27,6 @@ export const userBase = z.object({
 });
 export const userBaseArray = z.array(userBase);
 
-export const userInfo = userBase.pick({
-  userId: true,
-  username: true,
-  alias: true,
-});
-
 //define schema for POST
 const userPostBase = userBase.omit({
   userId: true,
@@ -55,7 +49,11 @@ const userAvatarUpload = z
   .meta({ $id: 'userAvatarUpload' });
 
 //define schemas for GET
-const userId = userBase.pick({ userId: true }).meta({ $id: 'userId' });
+export const userIdBase = userBase.pick({
+  userId: true,
+});
+
+const userId = userIdBase.meta({ $id: 'userId' });
 
 export const userQueryBase = userBase.partial();
 const userQuery = userQueryBase
@@ -87,7 +85,7 @@ export const userSchemas = [
 ////export types
 export type userType = z.infer<typeof userBase>;
 export type userIdType = z.infer<typeof userId>;
-export type userInfoType = z.infer<typeof userInfo>;
+export type userInfoType = z.infer<typeof userIdBase>;
 export type userCreateType = z.infer<typeof userCreate>;
 export type userAvatarUploadType = z.infer<typeof userAvatarUpload>;
 export type userUpdateType = z.infer<typeof userUpdate>;

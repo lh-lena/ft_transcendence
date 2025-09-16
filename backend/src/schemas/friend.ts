@@ -27,7 +27,9 @@ const friendQuery = friendBase
   );
 
 const friendResponse = friendBase.omit({ id: true }).meta({ $id: 'friendResponse' });
-const friendResponseArray = z.array(friendBase).meta({ $id: 'friendResponseArray' });
+const friendResponseArray = z
+  .array(friendBase.omit({ id: true }))
+  .meta({ $id: 'friendResponseArray' });
 
 export const friendSchemas = [
   friend,

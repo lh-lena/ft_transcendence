@@ -95,13 +95,12 @@ curl -X POST \
 }'
 
 curl -X POST \
-  'http://[::1]:8080/api/game' \
+  'http://127.0.0.1:8080/api/game' \
   -H 'accept: application/json' \
   -H 'Content-Type: application/json' \
   -d '{
-  "userId": 10,
+  "playerId": "a2225abd-bb5c-586b-9f5b-184d16bf2c3d",
   "mode": "pvp_remote",
-  "gameId": "string",
   "visibility": "private"
 }'
 

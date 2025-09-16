@@ -27,7 +27,9 @@ const blockedQuery = blockedBase
   );
 
 const blockedResponse = blockedBase.omit({ id: true }).meta({ $id: 'blockedResponse' });
-const blockedResponseArray = z.array(blockedBase).meta({ $id: 'blockedResponseArray' });
+const blockedResponseArray = z
+  .array(blockedBase.omit({ id: true }))
+  .meta({ $id: 'blockedResponseArray' });
 
 export const blockedSchemas = [
   blocked,

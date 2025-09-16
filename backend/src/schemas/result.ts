@@ -48,8 +48,7 @@ const resultQuery = resultQueryBase.meta({ $id: 'resultQuery' });
 
 //leaderboard
 const leaderboardBase = z.object({
-  id: z.number(),
-  username: z.string(),
+  userId: z.uuid(),
   wins: z.number(),
 });
 const leaderboard = z

@@ -16,7 +16,7 @@ export const gameService = {
   async create(data: gameCreateType): Promise<gameType> {
     let game = await gamemaker.create(data as gameCreateType);
 
-    game = await gamemaker.join(game, data.playerId);
+    game = await gamemaker.join(game, data.userId);
 
     return game;
   },
@@ -24,10 +24,10 @@ export const gameService = {
   async join(data: gameJoinType): Promise<gameType> {
     if (data.gameId) {
       let game = await this.getById(data.gameId);
-      game = await gamemaker.join(game, data.playerId);
+      game = await gamemaker.join(game, data.userId);
       return game;
     }
-    const game = await gamemaker.findAvailableGame(data.playerId);
+    const game = await gamemaker.findAvailableGame(data.userId);
     return game;
   },
 
@@ -35,7 +35,7 @@ export const gameService = {
     const game = await gamemaker.create({
       mode: 'pvp_remote',
       visibility: 'private',
-      playerId: player1,
+      userId: player1,
     });
     await gamemaker.join(game, player2);
     return game;

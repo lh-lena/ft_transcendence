@@ -36,13 +36,13 @@ export class gameClass {
     this.activeGames = this.activeGames.filter((g) => g.gameId !== gameId);
   }
 
-  async join(game: gameType, playerId: string): Promise<gameType> {
-    game.players.push(await userService.getInfoById(playerId));
+  async join(game: gameType, userId: string): Promise<gameType> {
+    game.players.push(await userService.getInfoById(userId));
     this.startGame(game);
     return game;
   }
 
-  async findAvailableGame(playerId: string): Promise<gameType> {
+  async findAvailableGame(userId: string): Promise<gameType> {
     let freeGame = this.activeGames.find(
       (g) => g.players.length < 2 && g.visibility === 'public' && g.status === 'waiting',
     );
@@ -51,7 +51,7 @@ export class gameClass {
       freeGame = await this.create({
         mode: 'pvp_remote',
         visibility: 'public',
-        playerId: playerId,
+        userId: userId,
       });
     }
 
