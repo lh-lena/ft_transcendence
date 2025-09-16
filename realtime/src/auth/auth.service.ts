@@ -51,24 +51,6 @@ export default function createAuthService(app: FastifyInstance): AuthService {
       `[auth-service]: Attempting client verification for origin: ${info.origin}, secure: ${info.secure}`,
     );
     try {
-      if (info.origin && !isAllowedOrigin(info.origin, config.websocket.allowedOrigins)) {
-        log.debug(`[auth-service]: Connection rejected - Forbidden Origin: ${info.origin}`);
-        return false;
-      }
-
-      // TODO: Keep only this check for production !info.secure
-      if (
-        !info.secure &&
-        info.origin !== undefined &&
-        !info.origin.includes('127.0.0.1') &&
-        !info.origin.includes('localhost')
-      ) {
-        log.debug(
-          '[auth-service]: Connection rejected - Only secure (WSS) connections are allowed',
-        );
-        return false;
-      }
-
       const token = extractTokenFromRequest(info);
       if (token === null) {
         log.debug('[auth-service] Connection rejected - No authentication token provided');
@@ -83,7 +65,6 @@ export default function createAuthService(app: FastifyInstance): AuthService {
         );
         return false;
       }
-
       info.req.socket._user = user;
       log.debug(`auth-service: Finished verification for user ID ${user.userId}`);
       return true;
@@ -91,26 +72,6 @@ export default function createAuthService(app: FastifyInstance): AuthService {
       processDebugLog(app, 'auth-service', 'Error verifying client:', error);
       return false;
     }
-  }
-
-  function verifyServerOrigin(
-    request: FastifyRequest,
-    reply: FastifyReply,
-    done: () => void,
-  ): void {
-    const origin = request.headers.origin;
-
-    if (origin !== undefined && isAllowedOrigin(origin, config.websocket.allowedServiceIPs)) {
-      request.server.log.debug(`[auth-service] Server origin verified successfully: ${origin}`);
-      return done();
-    }
-
-    request.server.log.debug(`[auth-service] Server origin rejected: ${origin}`);
-    reply.code(403).send({ success: false, message: 'Forbidden: Origin not allowed' });
-  }
-
-  function isAllowedOrigin(origin: string, expectedOrigins: string[]): boolean {
-    return expectedOrigins.includes(origin);
   }
 
   function extractTokenFromRequest(info: VerifyClientInfo): string | null {
@@ -152,6 +113,5 @@ export default function createAuthService(app: FastifyInstance): AuthService {
   return {
     verifyClient,
     validateUser,
-    verifyServerOrigin,
   };
 }

@@ -13,7 +13,6 @@ export const setupNotificationRoutes = (server: FastifyInstance): void => {
   const respond = server.respond as RespondService;
 
   server.post('/notify', {
-    preHandler: (request, reply, done) => auth.verifyServerOrigin(request, reply, done),
     schema: {
       body: NotificationRequestSchema,
       response: {

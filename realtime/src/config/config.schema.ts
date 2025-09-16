@@ -14,29 +14,7 @@ export const configSchema = z.object({
   BACKEND_URL: z.string().default('http://backend:8080'),
   AUTH_URL: z.string().default('http://auth-service:8082'),
 
-  ALLOWED_ORIGINS: z
-    .string()
-    .transform((str) =>
-      str
-        .split(',')
-        .map((s) => s.trim())
-        .filter(Boolean),
-    )
-    .default([
-      'http://localhost:3000,http://localhost:3001,http://127.0.0.1:5500,http://127.0.0.1:5000',
-    ]),
-
-  ALLOWED_SERVICE_IPS: z
-    .string()
-    .transform((str) =>
-      str
-        .split(',')
-        .map((s) => s.trim())
-        .filter(Boolean),
-    )
-    .default(['http://backend:8080']),
-
-  AI_INTERVAL: z.coerce.number().int().positive().default(1), // 1 second
+  AI_INTERVAL: z.coerce.number().int().positive().default(1),
 });
 
 export type EnvironmentConfig = z.infer<typeof configSchema>;
