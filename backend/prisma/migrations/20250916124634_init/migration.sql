@@ -70,6 +70,12 @@ CREATE TABLE "GamePlayed" (
     CONSTRAINT "GamePlayed_resultId_fkey" FOREIGN KEY ("resultId") REFERENCES "Result" ("id") ON DELETE CASCADE ON UPDATE CASCADE
 );
 
+-- CreateTable
+CREATE TABLE "BlackList" (
+    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "token" TEXT NOT NULL
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
@@ -84,3 +90,6 @@ CREATE UNIQUE INDEX "Blocked_userId_blockedId_key" ON "Blocked"("userId", "block
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Result_gameId_key" ON "Result"("gameId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "BlackList_token_key" ON "BlackList"("token");
