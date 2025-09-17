@@ -22,11 +22,19 @@ export async function transformInput(data: resultCreateType): Promise<Prisma.Res
   addPlayer(data.winnerId, winnerScore, true);
   addPlayer(data.loserId, loserScore, false);
 
+  const started = !isNaN(Number(data.startedAt))
+    ? new Date(Number(data.startedAt))
+    : new Date(data.startedAt);
+
+  const finished = !isNaN(Number(data.finishedAt))
+    ? new Date(Number(data.finishedAt))
+    : new Date(data.finishedAt);
+
   return {
     gameId: data.gameId,
     status: data.status,
-    startedAt: new Date(Number(data.startedAt)),
-    finishedAt: new Date(Number(data.finishedAt)),
+    startedAt: started,
+    finishedAt: finished,
     gamePlayed: { create: gamePlayed },
   };
 }

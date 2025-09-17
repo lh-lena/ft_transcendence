@@ -137,6 +137,6 @@ curl -X POST \
 "finishedAt":"1758120262082",
 "status":"finished",
 "winnerName":"WilmaMacej",
-"winnerId":"a03b79f1-d711-4e83-b701-79807f332691",
-"loserId":"8ac759cb-e788-428a-a563-8a56b90e9b9f"
+"winnerId":"aa8bf1d8-64f9-45cd-80df-4b39000d0ce9",
+"loserId":"ea3680c0-1d78-4ada-9e42-da25e0b75575"
 }'
