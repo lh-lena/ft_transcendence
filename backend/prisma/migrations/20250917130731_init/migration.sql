@@ -63,10 +63,10 @@ CREATE TABLE "ChatMessage" (
 -- CreateTable
 CREATE TABLE "GamePlayed" (
     "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-    "userId" TEXT,
-    "resultId" INTEGER,
-    "score" INTEGER,
-    "isWinner" BOOLEAN,
+    "userId" TEXT NOT NULL,
+    "resultId" INTEGER NOT NULL,
+    "score" INTEGER NOT NULL,
+    "isWinner" BOOLEAN NOT NULL,
     CONSTRAINT "GamePlayed_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("userId") ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT "GamePlayed_resultId_fkey" FOREIGN KEY ("resultId") REFERENCES "Result" ("resultId") ON DELETE CASCADE ON UPDATE CASCADE
 );

@@ -1,5 +1,9 @@
-import { Prisma, Result } from '@prisma/client';
-import type { resultType, resultCreateType } from '../../schemas/result';
+import { Prisma } from '@prisma/client';
+import type { resultCreateType, resultResponseType } from '../../schemas/result';
+import type { gamePlayedType } from '../../schemas/shared';
+
+type options = { include: { gamePlayed: true } };
+type ResultWithGP = Prisma.ResultGetPayload<options>;
 
 export async function transformInput(data: resultCreateType): Promise<Prisma.ResultCreateInput> {
   const gamePlayed: Prisma.GamePlayedCreateWithoutResultInput[] = [];
@@ -27,10 +31,22 @@ export async function transformInput(data: resultCreateType): Promise<Prisma.Res
   };
 }
 
-export async function transformResult(result: Result): Promise<resultType> {
+export function transformResult(result: ResultWithGP): resultResponseType {
+  const winner = result.gamePlayed.find((gp: gamePlayedType) => gp.isWinner);
+  const loser = result.gamePlayed.find((gp: gamePlayedType) => !gp.isWinner);
   return {
-    ...result,
+    resultId: result.resultId,
+    gameId: result.gameId,
     startedAt: result.startedAt.toISOString(),
     finishedAt: result.finishedAt.toISOString(),
+    status: result.status,
+    winnerId: winner?.userId,
+    loserId: loser?.userId,
+    winnerScore: winner?.score,
+    loserScore: loser?.score,
   };
+}
+
+export function transformResultArray(resultArray: ResultWithGP[]): resultResponseType[] {
+  return resultArray.map(transformResult);
 }

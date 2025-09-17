@@ -1,23 +1,24 @@
 import { prisma } from '../../plugins/001_prisma';
-import { Prisma, Result } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { leaderboardType, resultIdType } from '../../schemas/result';
 
-const options = { include: { gamePlayed: { include: { user: true } } } };
+const options = { include: { gamePlayed: true } };
+type ResultWithGP = Prisma.ResultGetPayload<typeof options>;
 
 export const resultModel = {
-  findAll: async (): Promise<Result[]> => {
+  findAll: async (): Promise<ResultWithGP[]> => {
     return await prisma.result.findMany(options);
   },
 
-  findById: async (id: resultIdType): Promise<Result | null> => {
+  findById: async (id: resultIdType): Promise<ResultWithGP | null> => {
     return await prisma.result.findUnique({ where: id, ...options });
   },
 
-  findBy: async (where: Prisma.ResultWhereInput): Promise<Result[]> => {
+  findBy: async (where: Prisma.ResultWhereInput): Promise<ResultWithGP[]> => {
     return await prisma.result.findMany({ where, ...options });
   },
 
-  insert: async (data: Prisma.ResultCreateInput): Promise<Result> => {
+  insert: async (data: Prisma.ResultCreateInput): Promise<ResultWithGP> => {
     return await prisma.result.create({ data, ...options });
   },
 

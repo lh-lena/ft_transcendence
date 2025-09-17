@@ -96,12 +96,12 @@ model ChatMessage {
 
 model GamePlayed {
   id       Int      @id @default(autoincrement())
-  user     User?    @relation(fields: [userId], references: [userId], onDelete: Cascade)
-  userId   String?
-  result   Result?  @relation(fields: [resultId], references: [resultId], onDelete: Cascade)
-  resultId Int?
-  score    Int?
-  isWinner Boolean?
+  user     User    @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  userId   String
+  result   Result  @relation(fields: [resultId], references: [resultId], onDelete: Cascade)
+  resultId Int
+  score    Int
+  isWinner Boolean
 }
 
 model BlackList {

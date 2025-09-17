@@ -57,21 +57,18 @@ const leaderboard = z
   .describe('Leaderboard with user id, username and number of wins');
 
 //schemas for response
-const resultResponseBase = resultBase.transform((result) => {
-  const winner = result.gamePlayed?.find((gp) => gp.isWinner);
-  const loser = result.gamePlayed?.find((gp) => !gp.isWinner);
-  return {
-    resultId: result.resultId,
-    gameId: result.gameId,
-    startedAt: result.startedAt,
-    finishedAt: result.finishedAt,
-    status: result.status,
-    winnerId: winner?.userId,
-    loserId: loser?.userId,
-    winnerScore: winner?.score,
-    loserScore: loser?.score,
-  };
+const resultResponseBase = z.object({
+  resultId: z.number(),
+  gameId: z.uuid(),
+  startedAt: dtString,
+  finishedAt: dtString,
+  status: resultStatusBase,
+  winnerId: z.uuid().optional(),
+  loserId: z.uuid().optional(),
+  winnerScore: z.number().optional(),
+  loserScore: z.number().optional(),
 });
+
 export const resultResponse = resultResponseBase.meta({ $id: 'resultResponse' });
 export const resultResponseArray = z.array(resultResponseBase).meta({ $id: 'resultResponseArray' });
 
