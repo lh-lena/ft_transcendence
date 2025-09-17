@@ -4,7 +4,6 @@ import { Prisma, User } from '@prisma/client'; // Adjust the import as needed
 export const userModel = {
   findAll: async (): Promise<User[]> => {
     const tmp = await prisma.user.findMany();
-    console.log(tmp);
     return tmp;
   },
 
@@ -15,7 +14,6 @@ export const userModel = {
   findBy: async (where: Prisma.UserWhereInput): Promise<User[]> => {
     console.log(where);
     const ret = await prisma.user.findMany({ where });
-    console.log(ret);
     return ret;
   },
 

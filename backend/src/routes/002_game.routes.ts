@@ -18,7 +18,7 @@ const gameRoutes = async (server: FastifyInstance) => {
     schema: {
       summary: 'Join a random or private game',
       description:
-        'Endpoin to join a game. If gameId provided you join this game  if possbile otherwise player get joined random game',
+        'Endpoint to join a game. If gameId provided you join this game if possible. Otherwise player get joined random game',
       tags: ['game'],
       body: { $ref: 'gameJoin' },
       response: {
@@ -29,7 +29,7 @@ const gameRoutes = async (server: FastifyInstance) => {
       const body = req.body as gameJoinType;
       const ret = await gameController.join(body);
 
-      return reply.code(201).send(ret);
+      return reply.code(200).send(ret);
     },
   });
 };
