@@ -6,6 +6,7 @@ import type {
   resultCreateType,
   resultResponseType,
   resultResponseArrayType,
+  resultIdType,
   leaderboardType,
 } from '../../schemas/result';
 
@@ -40,7 +41,7 @@ export const resultController = {
     return resultRet;
   },
 
-  async getById(id: number): Promise<resultResponseType> {
+  async getById(id: resultIdType): Promise<resultResponseType> {
     const ret = await resultService.getById(id);
 
     const result = resultResponse.safeParse(ret);

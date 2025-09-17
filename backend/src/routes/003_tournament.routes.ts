@@ -4,15 +4,18 @@ import fp from 'fastify-plugin';
 import crudRoutes from '../utils/crudRoutes';
 
 import { tournamentController } from '../modules/tournament/tournament.controller';
-import type { tournamentType, tournamentCreateType } from '../schemas/tournament';
+import type { tournamentType, tournamentCreateType, tournamentIdType } from '../schemas/tournament';
 
 const tournamentRoutes = async (server: FastifyInstance) => {
-  server.register(crudRoutes<tournamentType, null, tournamentCreateType, null, string>(), {
-    basePath: '/api/tournament',
-    entityName: 'tournament',
-    controller: tournamentController,
-    routes: ['getById', 'create'],
-  });
+  server.register(
+    crudRoutes<tournamentType, null, tournamentCreateType, null, tournamentIdType>(),
+    {
+      basePath: '/api/tournament',
+      entityName: 'tournament',
+      controller: tournamentController,
+      routes: ['getById', 'create'],
+    },
+  );
 };
 
 export default fp(tournamentRoutes);

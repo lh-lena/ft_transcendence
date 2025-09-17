@@ -9,16 +9,16 @@ export const userBase = z.object({
 
   email: z.email(),
   username: z.string(),
-  alias: z.string(),
+  alias: z.string().nullable().optional(),
 
   password_hash: z.string(),
 
   tfaEnabled: z.boolean(),
-  tfaSecret: z.string().nullable(),
-  tfaMethod: tfaType.nullable(),
-  tfaTempCode: z.string().nullable(),
-  tfaCodeExpires: dtString.nullable(),
-  backupCodes: z.string().nullable(),
+  tfaSecret: z.string().nullable().optional(),
+  tfaMethod: tfaType.nullable().optional(),
+  tfaTempCode: z.string().nullable().optional(),
+  tfaCodeExpires: dtString.nullable().optional(),
+  backupCodes: z.string().nullable().optional(),
 
   guest: z.boolean(),
 

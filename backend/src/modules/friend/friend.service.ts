@@ -1,6 +1,6 @@
 import { Prisma, Friendship } from '@prisma/client';
 import { friendModel } from './friend.crud';
-import type { friendCreateType } from '../../schemas/friend';
+import type { friendCreateType, friendIdType } from '../../schemas/friend';
 
 import { NotFoundError } from '../../utils/error';
 
@@ -26,7 +26,7 @@ export const friendService = {
     return ret;
   },
 
-  async deleteOne(id: number): Promise<void> {
+  async deleteOne(id: friendIdType): Promise<void> {
     const ret = await friendModel.deleteOne(id);
     if (!ret) {
       throw new NotFoundError('friend not found');

@@ -1,6 +1,6 @@
 import { prisma } from '../../plugins/001_prisma';
 import { Prisma, Result } from '@prisma/client';
-import { leaderboardType } from '../../schemas/result';
+import { leaderboardType, resultIdType } from '../../schemas/result';
 
 const options = { include: { gamePlayed: { include: { user: true } } } };
 
@@ -9,8 +9,8 @@ export const resultModel = {
     return await prisma.result.findMany(options);
   },
 
-  findById: async (id: number): Promise<Result | null> => {
-    return await prisma.result.findUnique({ where: { id }, ...options });
+  findById: async (id: resultIdType): Promise<Result | null> => {
+    return await prisma.result.findUnique({ where: id, ...options });
   },
 
   findBy: async (where: Prisma.ResultWhereInput): Promise<Result[]> => {

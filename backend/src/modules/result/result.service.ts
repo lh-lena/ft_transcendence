@@ -2,7 +2,7 @@ import { resultModel } from './result.crud';
 import { NotFoundError, ConflictError } from '../../utils/error';
 import { Prisma, Result } from '@prisma/client';
 
-import { resultCreateType, leaderboardType } from '../../schemas/result';
+import { resultCreateType, resultIdType, leaderboardType } from '../../schemas/result';
 
 import { transformInput } from './result.helper';
 import { gameService } from '../game/game.service';
@@ -37,7 +37,7 @@ export const resultService = {
     return ret;
   },
 
-  async getById(id: number): Promise<Result> {
+  async getById(id: resultIdType): Promise<Result> {
     const ret = await resultModel.findById(id);
 
     if (!ret) throw new NotFoundError(`result with ${id} not found`);
