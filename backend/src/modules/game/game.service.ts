@@ -9,7 +9,6 @@ export const gameService = {
   async getById(id: string): Promise<gameType> {
     const game = await gamemaker.getById(id);
     if (!game) throw new NotFoundError(`game ${id} not found`);
-    console.log(game);
 
     return game;
   },

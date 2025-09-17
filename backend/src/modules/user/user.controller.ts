@@ -17,7 +17,6 @@ export const userController = {
 
   //update user
   async update(id: userIdType, data: Prisma.UserUpdateInput): Promise<userType> {
-    console.log(data);
     const ret = await userService.update(id.userId, data);
     const user = userBase.safeParse(ret);
 

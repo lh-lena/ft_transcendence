@@ -56,9 +56,7 @@ const crudRoutes =
           },
         },
         handler: async (request: FastifyRequest<crudDefines.GetById<TId>>, reply: FastifyReply) => {
-          console.log(request.params);
           const id = request.params as TId;
-          console.log(id);
           const ret = await controller.getById!(id);
 
           return reply.code(200).send(ret);
@@ -83,7 +81,6 @@ const crudRoutes =
           reply: FastifyReply,
         ) => {
           const body = request.body as TCreate;
-          console.log(body);
           const ret = await controller.create!(body);
 
           return reply.code(201).send(ret);

@@ -41,7 +41,6 @@ export class gameClass {
 
   async join(game: gameType, userId: string): Promise<gameType> {
     game.players.push({ userId: userId });
-    console.log('game after push', game);
     this.startGame(game);
     return game;
   }
