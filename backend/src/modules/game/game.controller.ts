@@ -1,6 +1,6 @@
 import { gameService } from './game.service';
 
-import type { gameCreateType, gameJoinType, gameType } from '../../schemas/game';
+import type { gameCreateType, gameJoinType, gameType, gameIdType } from '../../schemas/game';
 
 export const gameController = {
   async create(data: gameCreateType): Promise<gameType> {
@@ -13,8 +13,8 @@ export const gameController = {
     return ret;
   },
 
-  async getById(id: string): Promise<gameType> {
-    const ret = await gameService.getById(id);
+  async getById(id: gameIdType): Promise<gameType> {
+    const ret = await gameService.getById(id.gameId);
     return ret;
   },
 };

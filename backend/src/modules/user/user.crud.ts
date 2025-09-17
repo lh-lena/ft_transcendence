@@ -12,7 +12,6 @@ export const userModel = {
   },
 
   findBy: async (where: Prisma.UserWhereInput): Promise<User[]> => {
-    console.log(where);
     const ret = await prisma.user.findMany({ where });
     return ret;
   },

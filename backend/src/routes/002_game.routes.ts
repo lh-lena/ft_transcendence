@@ -4,10 +4,10 @@ import fp from 'fastify-plugin';
 import crudRoutes from '../utils/crudRoutes';
 import { gameController } from '../modules/game/game.controller';
 
-import { gameType, gameCreateType, gameJoinType } from '../schemas/game';
+import { gameType, gameCreateType, gameJoinType, gameIdType } from '../schemas/game';
 
 const gameRoutes = async (server: FastifyInstance) => {
-  server.register(crudRoutes<gameType, null, gameCreateType, null, string>(), {
+  server.register(crudRoutes<gameType, null, gameCreateType, null, gameIdType>(), {
     basePath: '/api/game',
     entityName: 'game',
     controller: gameController,
