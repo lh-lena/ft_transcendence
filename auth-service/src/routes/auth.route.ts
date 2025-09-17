@@ -10,13 +10,8 @@ import { apiClientBackend } from '../utils/apiClient';
 import { tfaHandler } from '../utils/tfa';
 import { tfaVerifySchema, tfaSetupSchema } from '../schemas/tfa';
 
-import {
-  userSchema,
-  userRegisterSchema,
-  userLoginSchema,
-  userResponseSchema,
-} from '../schemas/user';
-import type { UserType } from '../schemas/user';
+import { userSchema, userRegisterSchema, userLoginSchema, guestSchema } from '../schemas/user';
+import type { UserType, GuestType } from '../schemas/user';
 
 const authRoutes = async (server: FastifyInstance) => {
   const tfa = new tfaHandler(server);
@@ -33,12 +28,7 @@ const authRoutes = async (server: FastifyInstance) => {
 
     const ret: UserType = await apiClientBackend.post('/user', newUser);
 
-    const parsedRet = userResponseSchema.safeParse(ret);
-
-    return reply.status(201).send({
-      message: 'User registered successfully',
-      data: parsedRet,
-    });
+    return await tfa.sendJwt(ret, reply);
   });
 
   server.post('/api/login', async (req: FastifyRequest, reply: FastifyReply) => {
@@ -161,6 +151,28 @@ const authRoutes = async (server: FastifyInstance) => {
     reply.clearCookie('refreshToken', { path: '/api/refresh' });
 
     return reply.send({ message: 'Logged out successfully' });
+  });
+
+  //TODO add guest login
+  server.post('/api/guest/login', async (req: FastifyRequest, reply: FastifyReply) => {
+    const parsedReq = guestSchema.safeParse(req.body);
+
+    if (!parsedReq.success) {
+      return reply.status(400).send({ error: parsedReq.error.issues });
+    }
+
+    const newGuest: GuestType = parsedReq.data;
+
+    newGuest.username = newGuest.alias;
+
+    const ret: UserType = await apiClientBackend.post('/user', newGuest);
+
+    return await tfa.sendJwt(ret, reply);
+  });
+
+  server.get('/api/auth/me', async (req: FastifyRequest, _) => {
+    const user = userSchema.parse(req.user);
+    return user;
   });
 };
 

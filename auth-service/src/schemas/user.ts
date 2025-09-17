@@ -82,8 +82,17 @@ export const userInfoResponseSchema = userResponseSchema.omit({
 });
 export const userInfoResponseArraySchema = z.array(userInfoResponseSchema);
 
+export const guestSchema = z.object({
+  alias: z.string(),
+  username: z.string().optional(),
+  color: z.string(),
+  colormap: z.string(),
+  guest: z.boolean().default(true),
+});
+
 //typed
 export type UserType = z.infer<typeof userSchema>;
 export type UserIdType = z.infer<typeof userIdSchema>;
 export type UserQueryType = z.infer<typeof userQuerySchema>;
 export type UserPatchType = z.infer<typeof userPatchSchema>;
+export type GuestType = z.infer<typeof guestSchema>;
