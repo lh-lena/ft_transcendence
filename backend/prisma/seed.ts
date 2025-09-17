@@ -1,4 +1,4 @@
-// Prisma seed script for the provided schema
+// Prisma seed script for the updated schema
 const { PrismaClient } = require('@prisma/client');
 const { faker } = require('@faker-js/faker');
 
@@ -9,17 +9,9 @@ const GAME_STATUS = ['finished', 'cancled', 'cancled_server_error'];
 const GAME_MODES = ['pvp_remote', 'pvp_ai', 'tournamnet'];
 
 async function main() {
-  // Exit if users already exist
-  //  const userCount = await prisma.user.count();
-  //  if (userCount > 0) {
-  //    console.log('Users already exist. Exiting seed.');
-  //    return;
-  //  }
-
   // Seed Users
   const users = [];
   for (let i = 0; i < 100; i++) {
-    // Generate a username of max 5 chars
     let username = faker.internet
       .username()
       .replace(/[^a-zA-Z0-9]/g, '')
@@ -49,6 +41,7 @@ async function main() {
   }
 
   // Seed Friendships
+  // Use correct relation fields: userId, friendUserId
   const friendshipPairs = new Set();
   let friendshipEntries = 0;
   while (friendshipEntries < 100) {
@@ -61,7 +54,7 @@ async function main() {
     await prisma.friendship.create({
       data: {
         userId: users[userIdx].userId,
-        friendId: users[friendIdx].userId,
+        friendUserId: users[friendIdx].userId,
       },
     });
     friendshipPairs.add(pairKey);
@@ -69,6 +62,7 @@ async function main() {
   }
 
   // Seed Blocked relationships
+  // Use correct relation fields: userId, blockedUserId
   const blockedPairs = new Set();
   let blockedEntries = 0;
   while (blockedEntries < 40) {
@@ -81,7 +75,7 @@ async function main() {
     await prisma.blocked.create({
       data: {
         userId: users[userIdx].userId,
-        blockedId: users[blockedIdx].userId,
+        blockedUserId: users[blockedIdx].userId,
       },
     });
     blockedPairs.add(pairKey);
@@ -89,6 +83,7 @@ async function main() {
   }
 
   // Seed Results
+  // Use correct IDs: resultId for relation, not id
   const results = [];
   for (let i = 0; i < 100; i++) {
     results.push(
@@ -104,11 +99,12 @@ async function main() {
   }
 
   // Seed GamePlayed
+  // Use resultId for relation
   for (let i = 0; i < 100; i++) {
     await prisma.gamePlayed.create({
       data: {
         userId: faker.helpers.arrayElement(users).userId,
-        resultId: faker.helpers.arrayElement(results).id,
+        resultId: faker.helpers.arrayElement(results).resultId,
         score: faker.number.int({ min: 0, max: 100 }),
         isWinner: faker.datatype.boolean(),
       },
@@ -127,6 +123,15 @@ async function main() {
         senderId: users[senderIdx].userId,
         reciverId: users[receiverIdx].userId,
         message: faker.lorem.sentence(),
+      },
+    });
+  }
+
+  // Optionally: Seed BlackList table with random tokens
+  for (let i = 0; i < 10; i++) {
+    await prisma.blackList.create({
+      data: {
+        token: faker.string.alphanumeric(64),
       },
     });
   }

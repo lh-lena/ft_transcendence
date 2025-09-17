@@ -1,15 +1,18 @@
 import { resultModel } from './result.crud';
 import { NotFoundError, ConflictError } from '../../utils/error';
-import { Prisma, Result } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 
-import { resultCreateType, leaderboardType } from '../../schemas/result';
+import { resultCreateType, resultIdType, leaderboardType } from '../../schemas/result';
 
 import { transformInput } from './result.helper';
 import { gameService } from '../game/game.service';
 import { tournamentService } from '../tournament/tournament.service';
 
+type options = { include: { gamePlayed: true } };
+type ResultWithGP = Prisma.ResultGetPayload<options>;
+
 export const resultService = {
-  async create(data: resultCreateType): Promise<Result> {
+  async create(data: resultCreateType): Promise<ResultWithGP> {
     const prismaData = await transformInput(data);
     gameService.update(data.gameId);
     tournamentService.update(data.gameId, data.loserId);
@@ -25,7 +28,7 @@ export const resultService = {
     }
   },
 
-  async getQuery(query?: Prisma.ResultWhereInput): Promise<Result[]> {
+  async getQuery(query?: Prisma.ResultWhereInput): Promise<ResultWithGP[]> {
     //const ret = query
     //  ? await resultModel.findBy(transformQuery(query))
     //  : await resultModel.findAll();
@@ -37,7 +40,7 @@ export const resultService = {
     return ret;
   },
 
-  async getById(id: number): Promise<Result> {
+  async getById(id: resultIdType): Promise<ResultWithGP> {
     const ret = await resultModel.findById(id);
 
     if (!ret) throw new NotFoundError(`result with ${id} not found`);

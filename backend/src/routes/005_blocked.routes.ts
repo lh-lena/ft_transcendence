@@ -13,7 +13,7 @@ import type {
 
 const blockedRoutes = async (server: FastifyInstance) => {
   server.register(
-    crudRoutes<blockedType, blockedQueryType, blockedCreateType, blockedIdType, number>(),
+    crudRoutes<blockedType, blockedQueryType, blockedCreateType, blockedIdType, blockedIdType>(),
     {
       basePath: '/api/blocked',
       entityName: 'blocked',

@@ -1,11 +1,12 @@
 import { Prisma } from '@prisma/client';
 import { resultService } from './result.service';
-
+import { transformResult, transformResultArray } from './result.helper';
 import { resultResponse, resultResponseArray } from '../../schemas/result';
 import type {
   resultCreateType,
   resultResponseType,
   resultResponseArrayType,
+  resultIdType,
   leaderboardType,
 } from '../../schemas/result';
 
@@ -14,7 +15,7 @@ export const resultController = {
   async create(data: resultCreateType): Promise<resultResponseType> {
     const ret = await resultService.create(data);
 
-    const result = resultResponse.safeParse(ret);
+    const result = resultResponse.safeParse(transformResult(ret));
 
     if (!result.success) {
       throw new Error('Result parsing failed');
@@ -29,7 +30,7 @@ export const resultController = {
   async getQuery(query?: Prisma.ResultWhereInput): Promise<resultResponseArrayType> {
     const ret = await resultService.getQuery(query);
 
-    const result = resultResponseArray.safeParse(ret);
+    const result = resultResponseArray.safeParse(transformResultArray(ret));
 
     if (!result.success) {
       throw new Error('Result parsing failed');
@@ -40,10 +41,10 @@ export const resultController = {
     return resultRet;
   },
 
-  async getById(id: number): Promise<resultResponseType> {
+  async getById(id: resultIdType): Promise<resultResponseType> {
     const ret = await resultService.getById(id);
 
-    const result = resultResponse.safeParse(ret);
+    const result = resultResponse.safeParse(transformResult(ret));
 
     if (!result.success) {
       throw new Error('Result parsing failed');
