@@ -1,5 +1,5 @@
 import { Prisma } from '@prisma/client';
-import type { userType } from '../../schemas/user';
+import type { userType, userIdType } from '../../schemas/user';
 
 import { userService } from './user.service';
 import { userBase, userBaseArray } from '../../schemas/user';
@@ -16,9 +16,8 @@ export const userController = {
   },
 
   //update user
-  async update(id: string, data: Prisma.UserUpdateInput): Promise<userType> {
-    console.log(data);
-    const ret = await userService.update(id, data);
+  async update(id: userIdType, data: Prisma.UserUpdateInput): Promise<userType> {
+    const ret = await userService.update(id.userId, data);
     const user = userBase.safeParse(ret);
 
     if (!user.success) throw new Error('User update failed');
@@ -37,8 +36,8 @@ export const userController = {
     return user.data;
   },
 
-  async getById(id: string): Promise<userType> {
-    const ret = await userService.getById(id);
+  async getById(id: userIdType): Promise<userType> {
+    const ret = await userService.getById(id.userId);
     const user = userBase.safeParse(ret);
 
     if (!user.success) throw new Error('User creation failed');
@@ -47,8 +46,8 @@ export const userController = {
   },
 
   //delete user
-  async deleteOne(id: string): Promise<{ success: boolean }> {
-    await userService.deleteOne(id);
+  async deleteOne(id: userIdType): Promise<{ success: boolean }> {
+    await userService.deleteOne(id.userId);
     return { success: true };
   },
 
