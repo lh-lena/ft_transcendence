@@ -1,9 +1,8 @@
 import { v4 as uuid } from 'uuid';
 
 import type { gameType, gameCreateType } from '../../schemas/game';
-import { userService } from '../user/user.service';
 
-import { notifyPlayer } from '../../utils/notify';
+//import { notifyPlayer } from '../../utils/notify';
 
 export class gameClass {
   private activeGames: gameType[] = [];
@@ -28,6 +27,10 @@ export class gameClass {
       aiDifficulty: game.aiDifficulty || 'easy',
     };
 
+    if (game.userId) {
+      newGame.players.push({ userId: game.userId });
+    }
+
     this.activeGames.push(newGame);
     return newGame;
   }
@@ -37,7 +40,8 @@ export class gameClass {
   }
 
   async join(game: gameType, userId: string): Promise<gameType> {
-    game.players.push(await userService.getInfoById(userId));
+    game.players.push({ userId: userId });
+    console.log('game after push', game);
     this.startGame(game);
     return game;
   }
@@ -53,6 +57,8 @@ export class gameClass {
         visibility: 'public',
         userId: userId,
       });
+    } else {
+      await this.join(freeGame, userId);
     }
 
     this.startGame(freeGame);
@@ -67,9 +73,10 @@ export class gameClass {
     ) {
       game.status = 'ready';
       game.createdAt = new Date().toISOString();
-      for (const player of game.players) {
-        notifyPlayer(player.userId, '0000-0000-0000-0000', 'INFO: Your next Game starts soon');
-      }
+      //TODO enable notification about new game
+      //for (const player of game.players) {
+      //  notifyPlayer(player.userId, '0000-0000-0000-0000', 'INFO: Your next Game starts soon');
+      //}
     }
   }
 }

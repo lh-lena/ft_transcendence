@@ -44,7 +44,7 @@ const crudRoutes =
     }
 
     if (routes.includes('getById') && controller.getById) {
-      server.get(`${basePath}/:id`, {
+      server.get(`${basePath}/:${entityName}Id`, {
         schema: {
           summary: `get one ${entityName}`,
           description: `Endpoint to get one ${entityName} by its Id`,
@@ -56,7 +56,9 @@ const crudRoutes =
           },
         },
         handler: async (request: FastifyRequest<crudDefines.GetById<TId>>, reply: FastifyReply) => {
+          console.log(request.params);
           const id = request.params as TId;
+          console.log(id);
           const ret = await controller.getById!(id);
 
           return reply.code(200).send(ret);
@@ -90,7 +92,7 @@ const crudRoutes =
     }
 
     if (routes.includes('update') && controller.update) {
-      server.patch(`${basePath}/:id`, {
+      server.patch(`${basePath}/:${entityName}Id`, {
         schema: {
           summary: `update atributes of ${entityName}`,
           description: `Endpoint to update one or more atributes of ${entityName}`,
@@ -117,7 +119,7 @@ const crudRoutes =
     }
 
     if (routes.includes('delete') && controller.deleteOne) {
-      server.delete(`${basePath}/:id`, {
+      server.delete(`${basePath}/:${entityName}Id`, {
         schema: {
           summary: `delete one ${entityName}`,
           description: `Endpoint to delete one ${entityName} via its Id`,
