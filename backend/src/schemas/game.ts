@@ -1,5 +1,5 @@
 import { z } from 'zod/v4';
-import { userInfo } from './user';
+import { userIdBase } from './user';
 import { dtString, status } from './basics';
 
 //define game mode
@@ -14,7 +14,7 @@ const gameVisibilityBase = z.enum(['public', 'private']);
 //game object
 export const gameBase = z.object({
   gameId: z.uuid(),
-  players: z.array(userInfo),
+  players: z.array(userIdBase),
   mode: gameModeBase,
   status: status.default('waiting'),
   visibility: gameVisibilityBase.default('public'),
@@ -23,25 +23,27 @@ export const gameBase = z.object({
 });
 
 //schemas for POST
-const gameCreateBase = gameBase.pick({
-  mode: true,
-  visibility: true,
-  aiDifficulty: true,
-});
+const gameCreateBase = gameBase
+  .pick({
+    mode: true,
+    visibility: true,
+    aiDifficulty: true,
+  })
+  .extend({
+    userId: z.uuid(),
+  });
 export const gameCreate = gameCreateBase.meta({ $id: 'gameCreate' });
 
-const gameJoinBase = gameCreateBase.extend({
+const gameJoinBase = z.object({
   gameId: z.uuid().optional(),
-  playerId: z.uuid(),
+  userId: z.uuid(),
 });
 const gameJoin = gameJoinBase
   .meta({ $id: 'gameJoin' })
   .describe('Join a game, optionally with gameId to join specific game.');
 
 //schemas for GET
-export const gameIdBase = z.object({
-  id: z.uuid(),
-});
+export const gameIdBase = gameBase.pick({ gameId: true });
 export const gameId = gameIdBase.meta({ $id: 'gameId' });
 
 //schemas for response

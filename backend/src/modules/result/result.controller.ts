@@ -1,25 +1,57 @@
 import { Prisma } from '@prisma/client';
 import { resultService } from './result.service';
 
-import type { resultType, resultCreateType, leaderboardType } from '../../schemas/result';
-import { transformResult } from './result.helper';
+import { resultResponse, resultResponseArray } from '../../schemas/result';
+import type {
+  resultCreateType,
+  resultResponseType,
+  resultResponseArrayType,
+  leaderboardType,
+} from '../../schemas/result';
 
 export const resultController = {
   //controller to create an result
-  async create(data: resultCreateType): Promise<resultType> {
+  async create(data: resultCreateType): Promise<resultResponseType> {
     const ret = await resultService.create(data);
-    return transformResult(ret);
+
+    const result = resultResponse.safeParse(ret);
+
+    if (!result.success) {
+      throw new Error('Result parsing failed');
+    }
+
+    const resultRet: resultResponseType = result.data;
+
+    return resultRet;
   },
 
   //controller for result get All or by Id
-  async getQuery(query?: Prisma.ResultWhereInput): Promise<resultType[]> {
+  async getQuery(query?: Prisma.ResultWhereInput): Promise<resultResponseArrayType> {
     const ret = await resultService.getQuery(query);
-    return Promise.all(ret.map((r) => transformResult(r)));
+
+    const result = resultResponseArray.safeParse(ret);
+
+    if (!result.success) {
+      throw new Error('Result parsing failed');
+    }
+
+    const resultRet: resultResponseArrayType = result.data;
+
+    return resultRet;
   },
 
-  async getById(id: number): Promise<resultType> {
+  async getById(id: number): Promise<resultResponseType> {
     const ret = await resultService.getById(id);
-    return transformResult(ret);
+
+    const result = resultResponse.safeParse(ret);
+
+    if (!result.success) {
+      throw new Error('Result parsing failed');
+    }
+
+    const resultRet: resultResponseType = result.data;
+
+    return resultRet;
   },
 
   async getLeaderboard(): Promise<leaderboardType> {

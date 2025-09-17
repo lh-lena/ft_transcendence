@@ -34,4 +34,10 @@ export const chatService = {
     }
     return ret;
   },
+
+  async getOverview(userId: string): Promise<ChatMessage[]> {
+    const ret = await chatModel.getOverview(userId);
+
+    return ret;
+  },
 };

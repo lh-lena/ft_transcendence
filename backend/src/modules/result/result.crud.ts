@@ -23,11 +23,11 @@ export const resultModel = {
 
   getLeaderboard: async (): Promise<leaderboardType> => {
     const ret: leaderboardType = await prisma.$queryRaw`
-      SELECT u.id, u.username, COUNT(gp.id) AS wins 
+      SELECT u.userId, COUNT(gp.id) AS wins 
       FROM user u 
-      JOIN gamePlayed gp ON u.id = gp.userId 
+      JOIN gamePlayed gp ON u.userId = gp.userId 
       WHERE gp.isWinner = true AND u.guest = false
-      GROUP BY u.id, u.username 
+      GROUP BY u.userId 
       ORDER BY wins DESC 
       LIMIT 5 OFFSET 0 
       `;

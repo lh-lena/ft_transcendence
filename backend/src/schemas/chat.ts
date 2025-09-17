@@ -24,10 +24,7 @@ const chatQueryBase = chatBase
     senderId: true,
     reciverId: true,
   })
-  .extend({
-    senderId: z.uuid().optional(),
-    reciverId: z.uuid().optional(),
-  });
+  .partial();
 const chatQuery = chatQueryBase
   .meta({ $id: 'chatQuery' })
   .describe(

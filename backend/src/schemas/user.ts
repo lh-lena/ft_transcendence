@@ -1,29 +1,36 @@
 import { z } from 'zod/v4';
-import { dtString } from './basics';
+import { dtString, tfaType } from './basics';
 
 export const userBase = z.object({
-  id: z.uuid(),
+  userId: z.uuid(),
+
   createdAt: dtString,
   updatedAt: dtString,
+
   email: z.email(),
   username: z.string(),
+  alias: z.string(),
+
   password_hash: z.string(),
-  is_2fa_enabled: z.boolean().optional(),
-  twofa_secret: z.string().nullable().optional(),
-  guest: z.boolean().default(false),
+
+  tfaEnabled: z.boolean(),
+  tfaSecret: z.string().nullable(),
+  tfaMethod: tfaType.nullable(),
+  tfaTempCode: z.string().nullable(),
+  tfaCodeExpires: dtString.nullable(),
+  backupCodes: z.string().nullable(),
+
+  guest: z.boolean(),
+
   color: z.string(),
   colormap: z.string(),
   avatar: z.url().optional().nullable(),
 });
-
-export const userInfo = userBase.pick({
-  id: true,
-  username: true,
-});
+export const userBaseArray = z.array(userBase);
 
 //define schema for POST
 const userPostBase = userBase.omit({
-  id: true,
+  userId: true,
   createdAt: true,
   updatedAt: true,
 });
@@ -37,13 +44,17 @@ const userUpdate = userPostBase
 
 const userAvatarUpload = z
   .object({
-    id: z.number(),
+    userId: z.uuid(),
     avatar: z.string(),
   })
   .meta({ $id: 'userAvatarUpload' });
 
 //define schemas for GET
-const userId = userBase.pick({ id: true }).meta({ $id: 'userId' });
+export const userIdBase = userBase.pick({
+  userId: true,
+});
+
+const userId = userIdBase.meta({ $id: 'userId' });
 
 export const userQueryBase = userBase.partial();
 const userQuery = userQueryBase
@@ -58,11 +69,7 @@ const userCount = z
   .describe('Count of users');
 
 //define schemas for responses
-export const userResponse = userBase
-  .extend({
-    colormap: z.string(),
-  })
-  .meta({ $id: 'userResponse' });
+export const userResponse = userBase.meta({ $id: 'userResponse' });
 export const userResponseArray = z.array(userBase).meta({ $id: 'userResponseArray' });
 
 export const userSchemas = [
@@ -78,8 +85,9 @@ export const userSchemas = [
 //
 ////export types
 export type userType = z.infer<typeof userBase>;
+export type userIdType = z.infer<typeof userId>;
+export type userInfoType = z.infer<typeof userIdBase>;
 export type userCreateType = z.infer<typeof userCreate>;
 export type userAvatarUploadType = z.infer<typeof userAvatarUpload>;
 export type userUpdateType = z.infer<typeof userUpdate>;
 export type userQueryType = z.infer<typeof userQuery>;
-export type userInfoType = z.infer<typeof userInfo>;

@@ -38,7 +38,6 @@ const crudRoutes =
           const query = request.query as TQuery;
           const ret = await controller.getQuery!(query);
 
-          //TODO:: parse return
           return reply.code(200).send(ret);
         },
       });

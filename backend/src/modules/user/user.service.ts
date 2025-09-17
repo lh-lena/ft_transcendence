@@ -1,7 +1,6 @@
 import { userModel } from './user.crud';
 import { NotFoundError, ConflictError } from '../../utils/error';
 import { Prisma, User } from '@prisma/client';
-
 import { userInfoType } from '../../schemas/user';
 
 export const userService = {
@@ -49,8 +48,8 @@ export const userService = {
   },
 
   async getInfoById(id: string): Promise<userInfoType> {
-    const user = await this.getById(id);
-    return user as userInfoType;
+    const user: userInfoType = await this.getById(id);
+    return user;
   },
 
   async deleteOne(id: string): Promise<void> {

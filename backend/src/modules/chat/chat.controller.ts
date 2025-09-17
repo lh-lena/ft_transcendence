@@ -14,4 +14,9 @@ export const chatController = {
     const ret = await chatService.getQuery(query);
     return ret.map((ret) => chatBase.parse(ret));
   },
+
+  async getOverview(userId: string): Promise<chatType[]> {
+    const ret = await chatService.getOverview(userId);
+    return ret.map((ret) => chatBase.parse(ret));
+  },
 };

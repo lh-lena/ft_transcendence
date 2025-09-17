@@ -52,13 +52,12 @@ curl -X PATCH http://localhost:8080/api/game/user/49612 \
 curl -X DELETE http://localhost:8080/api/user/1
 
 curl -X POST \
-  'http://[::1]:8080/api/game' \
+  'http://127.0.0.1:8080/api/game' \
   -H 'accept: application/json' \
   -H 'Content-Type: application/json' \
   -d '{
-  "userId": 2,
+  "userId": "8ac759cb-e788-428a-a563-8a56b90e9b9f",
   "mode": "pvp_remote",
-  "matchId": "string",
   "visibility": "public"
 }'
 
@@ -95,25 +94,21 @@ curl -X POST \
 }'
 
 curl -X POST \
-  'http://[::1]:8080/api/game' \
+  'http://127.0.0.1:8080/api/game' \
   -H 'accept: application/json' \
   -H 'Content-Type: application/json' \
   -d '{
-  "userId": 10,
+  "playerId": "a2225abd-bb5c-586b-9f5b-184d16bf2c3d",
   "mode": "pvp_remote",
-  "gameId": "string",
   "visibility": "private"
 }'
 
 curl -X POST \
-  'http://[::1]:8080/api/match/join/4b43024b-a7f4-42a7-bb80-ead483621da6' \
+  'http://127.0.0.1:8080/api/game/join' \
   -H 'accept: application/json' \
   -H 'Content-Type: application/json' \
   -d '{
-  "userId": 19,
-  "mode": "pvp_remote",
-  "gameId": "string",
-  "visibility": "private"
+  "userId": "4b43024b-a7f4-42a7-bb80-ead483621da6"
 }'
 
 curl -X POST \

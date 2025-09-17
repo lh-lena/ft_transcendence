@@ -14,7 +14,7 @@ export class gameClass {
   }
 
   async getByUser(userId: string): Promise<gameType | undefined> {
-    const game = this.activeGames.find((g) => g.players.some((p) => p.id === userId));
+    const game = this.activeGames.find((g) => g.players.some((p) => p.userId === userId));
     return game;
   }
 
@@ -36,22 +36,25 @@ export class gameClass {
     this.activeGames = this.activeGames.filter((g) => g.gameId !== gameId);
   }
 
-  async join(game: gameType, playerId: string): Promise<gameType> {
-    game.players.push(await userService.getInfoById(playerId));
+  async join(game: gameType, userId: string): Promise<gameType> {
+    game.players.push(await userService.getInfoById(userId));
     this.startGame(game);
     return game;
   }
 
-  async findAvailableGame(playerId: string): Promise<gameType> {
+  async findAvailableGame(userId: string): Promise<gameType> {
     let freeGame = this.activeGames.find(
       (g) => g.players.length < 2 && g.visibility === 'public' && g.status === 'waiting',
     );
 
     if (!freeGame) {
-      freeGame = await this.create({ mode: 'pvp_remote', visibility: 'public' });
+      freeGame = await this.create({
+        mode: 'pvp_remote',
+        visibility: 'public',
+        userId: userId,
+      });
     }
 
-    this.join(freeGame, playerId);
     this.startGame(freeGame);
 
     return freeGame;
@@ -65,7 +68,7 @@ export class gameClass {
       game.status = 'ready';
       game.createdAt = new Date().toISOString();
       for (const player of game.players) {
-        notifyPlayer(player.id, '0000-0000-0000-0000', 'INFO: Your next Game starts soon');
+        notifyPlayer(player.userId, '0000-0000-0000-0000', 'INFO: Your next Game starts soon');
       }
     }
   }
