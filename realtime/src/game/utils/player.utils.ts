@@ -1,11 +1,5 @@
-import type {
-  Player,
-  GameSession,
-  StartGame,
-  Paddle,
-  GameState,
-} from '../../schemas/game.schema.js';
-import { GameMode, PaddleName } from '../../constants/game.constants.js';
+import type { Player, GameSession, Paddle, GameState } from '../../schemas/game.schema.js';
+import { AIDifficulty, GameMode, PaddleName } from '../../constants/index.js';
 import { UserIdType } from '../../schemas/user.schema.js';
 
 export function isAIPlayer(player: Player): boolean {
@@ -19,8 +13,12 @@ export function getAIPaddle(gameState: GameState): Paddle | undefined {
   return gameState.paddleA;
 }
 
-export function addAIPlayerToGame(game: StartGame): void {
-  if (game.gameMode !== GameMode.PVB_AI) {
+export function addAIPlayerToGame(
+  game: GameSession,
+  mode: GameMode,
+  aiDifficulty?: AIDifficulty,
+): void {
+  if (mode !== GameMode.PVB_AI) {
     return;
   }
   const player: Player = {
@@ -28,7 +26,7 @@ export function addAIPlayerToGame(game: StartGame): void {
     userAlias: 'AI Bot',
     username: 'AI Bot',
     isAI: true,
-    aiDifficulty: game.aiDifficulty,
+    aiDifficulty: aiDifficulty ?? AIDifficulty.MEDIUM,
   };
   game.players.push(player);
 }

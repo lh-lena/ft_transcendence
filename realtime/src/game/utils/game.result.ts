@@ -41,7 +41,7 @@ function formatBaseResult(game: GameSession, status: GameSessionStatus): Partial
     scorePlayer2: game.gameState.paddleB.score,
     player1Username: player1Username,
     player2Username: player2Username,
-    mode: game.gameMode,
+    mode: game.mode,
     startedAt: game.startedAt,
     finishedAt: finishedAt,
     status: status,

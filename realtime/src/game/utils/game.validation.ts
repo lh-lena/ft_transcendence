@@ -4,7 +4,7 @@ import type { PausedGameState } from '../../websocket/types/network.types.js';
 import type { GameIdType, GameSession, Player } from '../../schemas/game.schema.js';
 import { GameError } from '../../utils/game.error.js';
 import type { GameSessionService, GameValidator } from '../types/game.types.js';
-import type { UserIdType } from '../../schemas/user.schema.js';
+import type { UserIdType, UserIdObject } from '../../schemas/user.schema.js';
 
 export default function createGameValidator(app: FastifyInstance): GameValidator {
   const { log } = app;
@@ -29,12 +29,16 @@ export default function createGameValidator(app: FastifyInstance): GameValidator
   }
 
   function isGameFull(game: GameSession): void {
-    if (game.gameMode === GameMode.PVP_REMOTE && game.players.length >= 2) {
+    if (game.mode === GameMode.PVP_REMOTE && game.players.length >= 2) {
       throw new GameError(`game ${game.gameId} is already full`);
     }
   }
 
   function isExpectedPlayer(players: Player[], userId: UserIdType): boolean {
+    return players.some((p) => p.userId === userId);
+  }
+
+  function isExpectedUserId(players: UserIdObject[], userId: UserIdType): boolean {
     return players.some((p) => p.userId === userId);
   }
 
@@ -62,10 +66,14 @@ export default function createGameValidator(app: FastifyInstance): GameValidator
   function allPlayersConnected(game: GameSession): boolean {
     const { gameId } = game;
     app.log.debug(`[game-service] Checking players' connection status in game ${gameId}`);
-    if (game.gameMode === GameMode.PVB_AI) {
+    if (game.mode === GameMode.PVB_AI) {
       return game.isConnected.size === 1;
     }
     return game.isConnected.size === game.players.length;
+  }
+
+  function isPlayerInGame(players: Player[], userId: UserIdType): boolean {
+    return players.some((p) => p.userId === userId);
   }
 
   function gameReadyToStart(game: GameSession): boolean {
@@ -84,7 +92,7 @@ export default function createGameValidator(app: FastifyInstance): GameValidator
       log.debug(`[game-service] Cannot start game ${game.gameId} - no players in the game`);
       return false;
     }
-    if (game.gameMode === GameMode.PVP_REMOTE && game.players.length !== 2) {
+    if (game.mode === GameMode.PVP_REMOTE && game.players.length !== 2) {
       log.debug(
         `[game-service] Cannot start game ${game.gameId} - not enough players for remote game`,
       );
@@ -95,11 +103,6 @@ export default function createGameValidator(app: FastifyInstance): GameValidator
       return false;
     }
 
-    // if (game.gameLoopInterval !== undefined && game.gameLoopInterval !== null) {
-    //   clearInterval(game.gameLoopInterval);
-    //   game.gameLoopInterval = undefined;
-    // }
-
     return true;
   }
 
@@ -108,6 +111,8 @@ export default function createGameValidator(app: FastifyInstance): GameValidator
     validateGameStatus,
     getValidGameCheckPlayer,
     isExpectedPlayer,
+    isExpectedUserId,
+    isPlayerInGame,
     allPlayersConnected,
     gameReadyToStart,
     isGameFull,

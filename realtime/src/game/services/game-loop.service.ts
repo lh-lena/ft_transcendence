@@ -45,7 +45,7 @@ export default function createGameLoopService(app: FastifyInstance): GameLoopSer
           }
 
           if (gameState.countdown <= 0) {
-            if (game.gameMode === GameMode.PVB_AI) {
+            if (game.mode === GameMode.PVB_AI) {
               const aiService = app.aiService as AIService;
               aiService.processAILogic(gameState, deltaTime);
             }
@@ -149,14 +149,14 @@ export default function createGameLoopService(app: FastifyInstance): GameLoopSer
   }
 
   function startAIGame(game: GameSession): void {
-    if (game.gameMode !== GameMode.PVB_AI) return;
+    if (game.mode !== GameMode.PVB_AI) return;
     const aiService = app.aiService as AIService;
     aiService.startAI(game.gameId, game.aiDifficulty as AIDifficulty);
     log.info(`[game-loop] AI system started for game ${game.gameId}`);
   }
 
   function stopAIGame(game: GameSession): void {
-    if (game.gameMode !== GameMode.PVB_AI) return;
+    if (game.mode !== GameMode.PVB_AI) return;
     const aiService = app.aiService as AIService;
     aiService.stopAI(game.gameId);
     log.info(`[game-loop] AI system stopped for game ${game.gameId}`);
