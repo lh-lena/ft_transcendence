@@ -4,12 +4,11 @@ import type { StartGame, GameSession, GameIdType } from '../../schemas/game.sche
 import { initializeGameState } from '../../game/engines/pong/pong.engine.js';
 import type { RespondService } from '../../websocket/types/ws.types.js';
 import type { GameStateService, GameSessionService } from '../types/game.types.js';
-import { processErrorLog } from '../../utils/error.handler.js';
+import { processErrorLog, processDebugLog, processInfoLog } from '../../utils/error.handler.js';
 import type { UserIdType } from '../../schemas/user.schema.js';
 
 export default function createGameSessionService(app: FastifyInstance): GameSessionService {
   const gameSessions: Map<GameIdType, GameSession> = new Map();
-  const { log } = app;
 
   function getAllActiveGameSessions(): GameSession[] {
     const activeSessions: GameSession[] = [];
@@ -27,7 +26,7 @@ export default function createGameSessionService(app: FastifyInstance): GameSess
 
   function createGameSession(gameId: GameIdType, gameData: StartGame): GameSession | null {
     if (gameSessions.has(gameId)) {
-      log.debug(`[game-session] Game session ${gameId} already exists. Replacing it`);
+      processDebugLog(app, 'game-session', `Game session ${gameId} already exists. Replacing it`);
     }
 
     const newGame: GameSession = {
@@ -50,13 +49,13 @@ export default function createGameSessionService(app: FastifyInstance): GameSess
 
   function storeGameSession(game: GameSession): void {
     gameSessions.set(game.gameId, game);
-    log.debug(`[game-session] Stored game session ${game.gameId}`);
+    processDebugLog(app, 'game-session', `Stored game session ${game.gameId}`);
   }
 
   function removeGameSession(gameId: GameIdType): boolean {
     const removed = gameSessions.delete(gameId);
     if (removed) {
-      log.debug(`[game-session] Removed game session ${gameId}`);
+      processDebugLog(app, 'game-session', `Removed game session ${gameId}`);
     }
     return removed;
   }
@@ -75,21 +74,25 @@ export default function createGameSessionService(app: FastifyInstance): GameSess
     } else {
       gameSession.isConnected.delete(userId);
     }
-    log.debug(
-      `[game-session] Player ${userId} in the game ${gameId} is ${connected ? 'connected' : 'disconnected'}`,
+    processDebugLog(
+      app,
+      'game-session',
+      `Player ${userId} in the game ${gameId} is ${connected ? 'connected' : 'disconnected'}`,
     );
   }
 
   function updateGameSession(gameId: GameIdType, updates: Partial<GameSession>): boolean {
     const game = gameSessions.get(gameId);
     if (game === undefined || game === null) {
-      log.debug(`[game-session] Cannot update - game not found ${gameId}`);
+      processErrorLog(app, 'game-session', `Cannot update - game not found ${gameId}`);
       return false;
     }
 
     Object.assign(game, updates);
-    log.debug(
-      `[game-session] Updated game session ${gameId}. Updates: ${Object.keys(updates).join(', ')}`,
+    processDebugLog(
+      app,
+      'game-session',
+      `Updated game session ${gameId}. Updates: ${Object.keys(updates).join(', ')}`,
     );
     return true;
   }
@@ -100,7 +103,7 @@ export default function createGameSessionService(app: FastifyInstance): GameSess
     const gameStateService = app.gameStateService as GameStateService;
     for (const session of activeSessions) {
       try {
-        log.debug(`[game-session] Closing a game session ${session.gameId}`);
+        processDebugLog(app, 'game-session', `Closing a game session ${session.gameId}`);
         respond.notificationToGame(
           session.gameId,
           NotificationType.ERROR,
@@ -112,7 +115,7 @@ export default function createGameSessionService(app: FastifyInstance): GameSess
       }
     }
     gameSessions.clear();
-    log.info('[game-session] All game sessions cleared');
+    processInfoLog(app, 'game-session', 'All game sessions cleared');
   }
 
   return {

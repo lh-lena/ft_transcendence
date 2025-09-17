@@ -20,20 +20,22 @@ export default function createGameStateService(app: FastifyInstance): GameStateS
   const pauseTimeouts: Map<GameIdType, NodeJS.Timeout> = new Map();
   const config = app.config as EnvironmentConfig;
   const validator = createGameValidator(app);
-  const { log } = app;
 
   function updateGameToActive(game: GameSession): void {
     if (game === undefined || game === null) return;
     const gameSessionService = app.gameSessionService as GameSessionService;
-    const startedAt = game.startedAt !== null ? game.startedAt : Date.now().toString();
+    const startedAt =
+      game.startedAt !== null && game.startedAt !== undefined
+        ? game.startedAt
+        : Date.now().toString();
     const { gameState } = game;
     gameState.status = GameSessionStatus.ACTIVE;
     gameState.countdown = PONG_CONFIG.COUNTDOWN;
     gameSessionService.updateGameSession(game.gameId, {
-      startedAt,
+      startedAt: startedAt,
       status: GameSessionStatus.ACTIVE,
     });
-    log.debug(`[game-state] Game ${game.gameId} updated to ACTIVE status`);
+    processDebugLog(app, 'game-state', `Game ${game.gameId} updated to ACTIVE status`);
   }
 
   function updateGameToPaused(game: GameSession): void {
@@ -45,7 +47,7 @@ export default function createGameStateService(app: FastifyInstance): GameStateS
     gameSessionService.updateGameSession(game.gameId, {
       status: GameSessionStatus.PAUSED,
     });
-    log.debug(`[game-state] Game ${game.gameId} updated to PAUSED status`);
+    processDebugLog(app, 'game-state', `Game ${game.gameId} updated to PAUSED status`);
   }
 
   function updateGameToEnded(game: GameSession, status: GameSessionStatus): void {
@@ -54,10 +56,10 @@ export default function createGameStateService(app: FastifyInstance): GameStateS
     gameState.status = status;
     gameState.countdown = 0;
     gameSessionService.updateGameSession(game.gameId, {
-      status,
+      status: status,
       finishedAt: Date.now().toString(),
     });
-    log.debug(`[game-state] Game ${game.gameId} updated to ENDED status: ${status}`);
+    processDebugLog(app, 'game-state', `Game ${game.gameId} updated to ENDED status: ${status}`);
   }
 
   function storePausedGameInfo(game: GameSession, pausedByPlayerId: UserIdType): void {
@@ -95,8 +97,10 @@ export default function createGameStateService(app: FastifyInstance): GameStateS
     const { gameId } = game;
     const pauseTimeout = setTimeout(() => {
       try {
-        log.info(
-          `[game-state] Auto-resuming game ${gameId} after pause timeout ${config.websocket.pauseTimeout / 1000}s`,
+        processDebugLog(
+          app,
+          'game-state',
+          `Auto-resuming game ${gameId} after pause timeout ${config.websocket.pauseTimeout / 1000}s`,
         );
         pauseTimeouts.delete(gameId);
         resumeGame(game);
@@ -111,11 +115,11 @@ export default function createGameStateService(app: FastifyInstance): GameStateS
     const gameSessionService = app.gameSessionService as GameSessionService;
     const connectionService = app.connectionService as ConnectionService;
     if (game === undefined || game === null) {
-      log.warn(`[game-state] Game not found during cleanup`);
+      processErrorLog(app, 'game-state', `Game not found during cleanup`);
       return;
     }
     const { gameId } = game;
-    log.debug(`[game-state] Cleaning up resources for game ${gameId}`);
+    processDebugLog(app, 'game-state', `Cleaning up resources for game ${gameId}`);
     try {
       const pauseTimeout = pauseTimeouts.get(gameId);
       if (pauseTimeout) {
@@ -129,14 +133,14 @@ export default function createGameStateService(app: FastifyInstance): GameStateS
       });
       gameSessionService.removeGameSession(gameId);
       pausedGames.delete(gameId);
-      log.debug(`[game-state] Successfully cleaned up game ${gameId}`);
+      processDebugLog(app, 'game-state', `Successfully cleaned up game ${gameId}`);
     } catch (error: unknown) {
       processErrorLog(app, 'game-state', `Error cleaning up game ${gameId}: `, error);
     }
   }
 
   function startGame(game: GameSession): void {
-    log.info(`[game-state] Starting the game ${game.gameId}`);
+    processDebugLog(app, 'game-state', `Starting the game ${game.gameId}`);
     const gameLoopService = app.gameLoopService as GameLoopService;
     const respond = app.respond as RespondService;
     updateGameToActive(game);
@@ -148,13 +152,13 @@ export default function createGameStateService(app: FastifyInstance): GameStateS
 
   function pauseGame(game: GameSession, pausedByPlayerId: UserIdType): boolean {
     if (game === undefined || game === null) {
-      log.warn(`[game-state] Cannot pause - game not found`);
+      processErrorLog(app, 'game-state', `Cannot pause - game not found`);
       return false;
     }
     const respond = app.respond as RespondService;
     const { gameId, status } = game;
     if (status === GameSessionStatus.PAUSED) {
-      log.debug(`[game-state] Game ${gameId} is already paused, skipping pause`);
+      processDebugLog(app, 'game-state', `Game ${gameId} is already paused, skipping pause`);
       return false;
     }
     const existingPausedGame = pausedGames.get(gameId);
@@ -162,8 +166,10 @@ export default function createGameStateService(app: FastifyInstance): GameStateS
       existingPausedGame !== undefined &&
       existingPausedGame.playersWhoPaused.has(pausedByPlayerId)
     ) {
-      log.debug(
-        `[game-state] Player ${pausedByPlayerId} has already used their pause in game ${gameId}`,
+      processDebugLog(
+        app,
+        'game-state',
+        `Player ${pausedByPlayerId} has already used their pause in game ${gameId}`,
       );
       respond.notification(
         pausedByPlayerId,
@@ -182,7 +188,7 @@ export default function createGameStateService(app: FastifyInstance): GameStateS
 
   function resumeGame(game: GameSession, resumeByPlayerId?: UserIdType): void {
     if (game === undefined || game === null) {
-      log.warn(`[game-state] Cannot resume - game not found`);
+      processErrorLog(app, 'game-state', `Cannot resume - game not found`);
       return;
     }
     const { gameId } = game;
@@ -205,28 +211,36 @@ export default function createGameStateService(app: FastifyInstance): GameStateS
     leftPlayerId?: UserIdType,
   ): Promise<void> {
     if (game === undefined || game === null) {
-      log.warn(`[game-state] Cannot end - game not found`);
+      processErrorLog(app, 'game-state', `Cannot end - game not found`);
       return;
     }
     const respond = app.respond as RespondService;
     const gameDataService = app.gameDataService as GameDataService;
     const { gameId } = game;
-    log.debug(`[game-state] Ending game ${gameId} with status: ${status}`);
+    processDebugLog(app, 'game-state', `Ending game ${gameId} with status: ${status}`);
     const gameLoopService = app.gameLoopService as GameLoopService;
     gameLoopService.stopCountdownSequence(game);
     gameLoopService.stopGameLoop(game);
     updateGameToEnded(game, status);
     removePausedGameInfo(gameId);
     const result = createGameResult(game, status, leftPlayerId);
-    log.debug(`[game-state] Creating game result for game ${gameId}: ${JSON.stringify(result)}`);
+    processDebugLog(
+      app,
+      'game-state',
+      `Creating game result for game ${gameId}: ${JSON.stringify(result)}`,
+    );
     if (result.isErr()) {
-      log.error(`[game-state] Error creating game result for game ${gameId}: ${result.error}`);
+      processErrorLog(
+        app,
+        'game-state',
+        `Error creating game result for game ${gameId}: ${result.error}`,
+      );
       return;
     }
     respond.gameEnded(gameId, result.value);
     await gameDataService.sendGameResult(result.value);
     cleanupGameResources(game);
-    log.debug(`[game-state] Game ${gameId} ended. Status: ${status}`);
+    processDebugLog(app, 'game-state', `Game ${gameId} ended. Status: ${status}`);
   }
 
   return {
