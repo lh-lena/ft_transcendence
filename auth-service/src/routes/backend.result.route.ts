@@ -52,32 +52,32 @@ const backendResultRoutes = async (fastify: FastifyInstance) => {
     return reply.code(200).send(resultRet);
   });
 
-  fastify.post('/result', async (req: FastifyRequest, reply: FastifyReply) => {
-    const parsedReq = resultPostSchema.safeParse(req.body);
+  //fastify.post('/result', async (req: FastifyRequest, reply: FastifyReply) => {
+  //  const parsedReq = resultPostSchema.safeParse(req.body);
 
-    if (!parsedReq.success) {
-      return reply.code(400).send({ error: 'Invalid Result Message' });
-    }
+  //  if (!parsedReq.success) {
+  //    return reply.code(400).send({ error: 'Invalid Result Message' });
+  //  }
 
-    const resultMessage: ResultPostType = parsedReq.data;
+  //  const resultMessage: ResultPostType = parsedReq.data;
 
-    if (resultMessage.winnerId !== req.user.id && resultMessage.loserId !== req.user.id) {
-      return reply.code(403).send({ error: 'Forbidden' });
-    }
+  //  if (resultMessage.winnerId !== req.user.id && resultMessage.loserId !== req.user.id) {
+  //    return reply.code(403).send({ error: 'Forbidden' });
+  //  }
 
-    const postedResult: ResultResponseType = await apiClientBackend.post(`/result`, {
-      params: resultMessage,
-    });
+  //  const postedResult: ResultResponseType = await apiClientBackend.post(`/result`, {
+  //    params: resultMessage,
+  //  });
 
-    const ret = resultResponseSchema.safeParse(postedResult);
+  //  const ret = resultResponseSchema.safeParse(postedResult);
 
-    if (!ret.success) {
-      return reply.code(500).send({ error: 'Failed to parse result data' });
-    }
+  //  if (!ret.success) {
+  //    return reply.code(500).send({ error: 'Failed to parse result data' });
+  //  }
 
-    const resultRet: ResultResponseType = ret.data;
-    return reply.code(201).send(resultRet);
-  });
+  //  const resultRet: ResultResponseType = ret.data;
+  //  return reply.code(201).send(resultRet);
+  //});
 };
 
 export default fp(backendResultRoutes);
