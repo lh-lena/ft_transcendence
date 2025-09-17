@@ -12,12 +12,15 @@ function formatLogDetails(details?: string): string {
 
 function logMessage(
   app: FastifyInstance,
-  level: 'error' | 'debug',
+  level: 'error' | 'debug' | 'info',
   service: string,
   message: string,
   details?: string,
 ): void {
-  const detailsText = formatLogDetails(details);
+  let detailsText = formatLogDetails(details);
+  if (detailsText === undefined) {
+    detailsText = '';
+  }
   app.log[level](`[${service}] ${message} ${detailsText}`);
 }
 
@@ -37,6 +40,10 @@ export function processDebugLog(
   error?: unknown,
 ): void {
   logMessage(app, 'debug', service, message, safeErrorToString(error));
+}
+
+export function processInfoLog(app: FastifyInstance, service: string, message: string = ''): void {
+  logMessage(app, 'info', service, message);
 }
 
 export function safeErrorToString(error: unknown): string {
