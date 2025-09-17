@@ -70,7 +70,6 @@ export default function createGameService(app: FastifyInstance): GameService {
     const respond = app.respond as RespondService;
     const gameSessionService = app.gameSessionService as GameSessionService;
     const gameDataService = app.gameDataService as GameDataService;
-    processDebugLog(app, 'game-service', `Creating game ${gameId} for user ${user.userId}`);
     const backendGameData = await gameDataService.fetchGameData(gameId);
     const userInfo = await authService.getUserInfo(user.userId);
     if (userInfo === null) {
@@ -94,7 +93,7 @@ export default function createGameService(app: FastifyInstance): GameService {
     respond.notification(
       user.userId,
       NotificationType.INFO,
-      `game ${gameId} created successfully. waiting for players to join...`,
+      `game created successfully. waiting for players to join...`,
     );
     processDebugLog(
       app,
@@ -112,19 +111,17 @@ export default function createGameService(app: FastifyInstance): GameService {
     const respond = app.respond as RespondService;
     const gameSessionService = app.gameSessionService as GameSessionService;
     const gameDataService = app.gameDataService as GameDataService;
-    processDebugLog(app, 'game-service', `Handling join user ${user.userId} to game ${gameId}`);
     const backendGameData = await gameDataService.fetchGameData(gameId);
     const userInfo = await authService.getUserInfo(user.userId);
     if (userInfo === null) {
-      throw new GameError(`server failed to join game ${gameId}. user info not found`);
+      throw new GameError(`server failed to join game. user info not found`, `${gameId}`);
     }
     const isValidPlayer2 = validator.isExpectedUserId(backendGameData.players, user.userId);
     if (!isValidPlayer2) {
-      throw new GameError(`you are not an expected player for game ${gameId}`);
+      throw new GameError(`you are not an expected player for game`, `${gameId}`);
     }
     if (validator.isPlayerInGame(existingGameSession.players, user.userId)) {
-      processDebugLog(app, 'game-service', `User ${user.userId} already in game ${gameId}`);
-      respond.notification(user.userId, NotificationType.INFO, `you are already in game ${gameId}`);
+      respond.notification(user.userId, NotificationType.INFO, `you are already in the game`);
       assignPlayerToGame(user.userId, gameId);
       gameSessionService.setPlayerConnectionStatus(user.userId, gameId, true);
       respond.notificationToGame(
@@ -184,7 +181,7 @@ export default function createGameService(app: FastifyInstance): GameService {
         app,
         user,
         'game-service',
-        `Failed to initialize game ID ${gameId} for user ID ${userId}: `,
+        `Failed to initialize game ID ${gameId} for user ID ${userId}`,
         error,
       );
     }
@@ -215,7 +212,7 @@ export default function createGameService(app: FastifyInstance): GameService {
         app,
         user,
         'game-service',
-        `failed to pause game ID ${gameId} for user ID ${userId}: `,
+        `failed to pause game ID ${gameId} for user ID ${userId}`,
         error,
       );
     }
@@ -291,7 +288,7 @@ export default function createGameService(app: FastifyInstance): GameService {
     try {
       const currentGameId = extractGameIdForUser(user);
       if (currentGameId !== gameId) {
-        throw new GameError(`you are not in game ${gameId}`);
+        throw new GameError(`you are not in the game`);
       }
       const game = validator.getValidGameCheckPlayer(gameId, userId);
       validator.validateGameStatus(game.status, [

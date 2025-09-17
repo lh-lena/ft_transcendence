@@ -224,16 +224,12 @@ export default function createGameStateService(app: FastifyInstance): GameStateS
     updateGameToEnded(game, status);
     removePausedGameInfo(gameId);
     const result = createGameResult(game, status, leftPlayerId);
-    processDebugLog(
-      app,
-      'game-state',
-      `Creating game result for game ${gameId}: ${JSON.stringify(result)}`,
-    );
     if (result.isErr()) {
       processErrorLog(
         app,
         'game-state',
-        `Error creating game result for game ${gameId}: ${result.error}`,
+        `Error creating game result for game ${gameId}`,
+        result.error,
       );
       return;
     }
