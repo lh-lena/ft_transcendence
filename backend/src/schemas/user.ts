@@ -11,6 +11,8 @@ export const userBase = z.object({
   username: z.string(),
   alias: z.string().nullable().optional(),
 
+  online: z.boolean().optional(),
+
   password_hash: z.string(),
 
   tfaEnabled: z.boolean(),

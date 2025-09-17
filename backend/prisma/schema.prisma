@@ -22,6 +22,8 @@ model User {
   alias          String?     
   guest          Boolean      @default(false)
 
+  online        Boolean      @default(false)
+
   password_hash  String
 
   tfaEnabled     Boolean @default(false)
