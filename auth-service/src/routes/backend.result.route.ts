@@ -10,7 +10,6 @@ import {
   resultResponseArraySchema,
 } from '../schemas/result';
 import type {
-  ResultType,
   ResultQueryType,
   ResultPostType,
   ResultResponseType,
@@ -34,11 +33,13 @@ const backendResultRoutes = async (fastify: FastifyInstance) => {
 
     const resultQuery: ResultQueryType = parsedReq.data;
 
-    if (resultQuery.senderId !== req.user.id && resultQuery.reciverId !== req.user.id) {
+    if (resultQuery.winnerId !== req.user.id && resultQuery.loserId !== req.user.id) {
       return reply.code(403).send({ error: 'Forbidden: You can only access your own results' });
     }
 
-    const results: ResultType[] = await apiClientBackend.get('/result', { params: resultQuery });
+    const results: ResultResponseType[] = await apiClientBackend.get('/result', {
+      params: resultQuery,
+    });
 
     const ret = resultResponseArraySchema.safeParse(results);
 
@@ -60,11 +61,11 @@ const backendResultRoutes = async (fastify: FastifyInstance) => {
 
     const resultMessage: ResultPostType = parsedReq.data;
 
-    if (resultMessage.senderId !== req.user.id && resultMessage.reciverId !== req.user.id) {
+    if (resultMessage.winnerId !== req.user.id && resultMessage.loserId !== req.user.id) {
       return reply.code(403).send({ error: 'Forbidden' });
     }
 
-    const postedResult: ResultType = await apiClientBackend.post(`/result`, {
+    const postedResult: ResultResponseType = await apiClientBackend.post(`/result`, {
       params: resultMessage,
     });
 

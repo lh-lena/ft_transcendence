@@ -1,4 +1,5 @@
 import fp from 'fastify-plugin';
+import fastifyHttpProxy from '@fastify/http-proxy';
 import { FastifyRequest, FastifyReply } from 'fastify';
 
 import type { JwTPayloadType } from '../schemas/jwt';
@@ -44,5 +45,11 @@ export default fp(async function onRequestHook(server) {
     } catch (err) {
       return reply.code(401).send({ error: 'Unauthorised' });
     }
+  });
+
+  server.register(fastifyHttpProxy, {
+    upstream: 'http://backend:8080/api/upload',
+    prefix: '/api/upload',
+    http2: false,
   });
 });
