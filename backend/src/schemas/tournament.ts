@@ -1,13 +1,13 @@
 import { z } from 'zod/v4';
 import { status } from './basics';
-import { userInfo } from './user';
+import { userIdBase } from './user';
 import { gameBase } from './game';
 
 const tournamentBase = z.object({
   tournamentId: z.uuid(),
   round: z.number().default(1),
   playerAmount: z.number().min(4).max(32).default(4),
-  players: z.array(userInfo),
+  players: z.array(userIdBase),
   status: status,
   games: z.array(gameBase),
 });

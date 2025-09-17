@@ -1,14 +1,20 @@
-const { PrismaClient, GameStatus, GameMode } = require('@prisma/client');
+// Prisma seed script for the provided schema
+const { PrismaClient } = require('@prisma/client');
 const { faker } = require('@faker-js/faker');
 
 const prisma = new PrismaClient();
 
+const COLORMAPS = ['warm', 'cool', 'neutral'];
+const GAME_STATUS = ['finished', 'cancled', 'cancled_server_error'];
+const GAME_MODES = ['pvp_remote', 'pvp_ai', 'tournamnet'];
+
 async function main() {
   // Exit if users already exist
-  const userCount = await prisma.user.count();
-  if (userCount > 0) {
-    return;
-  }
+  //  const userCount = await prisma.user.count();
+  //  if (userCount > 0) {
+  //    console.log('Users already exist. Exiting seed.');
+  //    return;
+  //  }
 
   // Seed Users
   const users = [];
@@ -17,8 +23,7 @@ async function main() {
     let username = faker.internet
       .username()
       .replace(/[^a-zA-Z0-9]/g, '')
-      .slice(0, 5);
-    // Ensure not empty, fallback if needed
+      .slice(0, 10);
     if (!username || username.length === 0) {
       username = faker.string.alpha({ length: 5 });
     }
@@ -27,52 +32,56 @@ async function main() {
         data: {
           email: faker.internet.email(),
           username,
-          password_hash: faker.internet.password(),
-          is_2fa_enabled: faker.datatype.boolean(),
-          twofa_secret: faker.datatype.boolean() ? faker.string.alphanumeric(32) : null,
+          alias: username,
           guest: faker.datatype.boolean(),
+          password_hash: faker.internet.password(),
+          tfaEnabled: faker.datatype.boolean(),
+          tfaSecret: faker.datatype.boolean() ? faker.string.alphanumeric(32) : null,
+          tfaMethod: faker.helpers.arrayElement([null, 'email', 'totp', 'backup']),
+          tfaTempCode: faker.datatype.boolean() ? faker.string.alphanumeric(6) : null,
+          tfaCodeExpires: faker.datatype.boolean() ? faker.date.future() : null,
+          backupCodes: faker.datatype.boolean() ? faker.string.alphanumeric(16) : null,
           color: faker.color.rgb(),
-          colormap: faker.helpers.arrayElement(['warm', 'cool', 'neutral']),
-          // avatar: not initialized
+          colormap: faker.helpers.arrayElement(COLORMAPS),
         },
       }),
     );
   }
 
-  // Seed Friendships (no duplicates, no self-friend)
+  // Seed Friendships
   const friendshipPairs = new Set();
   let friendshipEntries = 0;
   while (friendshipEntries < 100) {
     const userIdx = faker.number.int({ min: 0, max: users.length - 1 });
     const friendIdx = faker.number.int({ min: 0, max: users.length - 1 });
     if (userIdx === friendIdx) continue;
-    const pairKey = `${users[userIdx].id}-${users[friendIdx].id}`;
+    const pairKey = `${users[userIdx].userId}-${users[friendIdx].userId}`;
     if (friendshipPairs.has(pairKey)) continue;
 
     await prisma.friendship.create({
       data: {
-        userId: users[userIdx].id,
-        friendId: users[friendIdx].id,
+        userId: users[userIdx].userId,
+        friendId: users[friendIdx].userId,
       },
     });
     friendshipPairs.add(pairKey);
     friendshipEntries++;
   }
 
-  // Seed Blocked relationships (no duplicates, no self-block)
+  // Seed Blocked relationships
   const blockedPairs = new Set();
   let blockedEntries = 0;
   while (blockedEntries < 40) {
     const userIdx = faker.number.int({ min: 0, max: users.length - 1 });
     const blockedIdx = faker.number.int({ min: 0, max: users.length - 1 });
     if (userIdx === blockedIdx) continue;
-    const pairKey = `${users[userIdx].id}-${users[blockedIdx].id}`;
+    const pairKey = `${users[userIdx].userId}-${users[blockedIdx].userId}`;
     if (blockedPairs.has(pairKey)) continue;
 
     await prisma.blocked.create({
       data: {
-        userId: users[userIdx].id,
-        blockedId: users[blockedIdx].id,
+        userId: users[userIdx].userId,
+        blockedId: users[blockedIdx].userId,
       },
     });
     blockedPairs.add(pairKey);
@@ -86,11 +95,7 @@ async function main() {
       await prisma.result.create({
         data: {
           gameId: faker.string.uuid(),
-          status: faker.helpers.arrayElement([
-            GameStatus.finished,
-            GameStatus.cancled,
-            GameStatus.cancled_server_error,
-          ]),
+          status: faker.helpers.arrayElement(GAME_STATUS),
           startedAt: faker.date.past(),
           finishedAt: faker.date.recent(),
         },
@@ -102,7 +107,7 @@ async function main() {
   for (let i = 0; i < 100; i++) {
     await prisma.gamePlayed.create({
       data: {
-        userId: faker.helpers.arrayElement(users).id,
+        userId: faker.helpers.arrayElement(users).userId,
         resultId: faker.helpers.arrayElement(results).id,
         score: faker.number.int({ min: 0, max: 100 }),
         isWinner: faker.datatype.boolean(),
@@ -110,7 +115,7 @@ async function main() {
     });
   }
 
-  // Seed Chat Messages (random sender/receiver, no self-message)
+  // Seed Chat Messages
   for (let i = 0; i < 100; i++) {
     let senderIdx = faker.number.int({ min: 0, max: users.length - 1 });
     let receiverIdx = faker.number.int({ min: 0, max: users.length - 1 });
@@ -119,8 +124,8 @@ async function main() {
     }
     await prisma.chatMessage.create({
       data: {
-        senderId: users[senderIdx].id,
-        reciverId: users[receiverIdx].id,
+        senderId: users[senderIdx].userId,
+        reciverId: users[receiverIdx].userId,
         message: faker.lorem.sentence(),
       },
     });

@@ -6,7 +6,7 @@ export async function transformInput(data: resultCreateType): Promise<Prisma.Res
 
   const addPlayer = (userId: string, score: number, isWinner: boolean) => {
     gamePlayed.push({
-      user: { connect: { id: userId } },
+      user: { connect: { userId: userId } },
       score: score,
       isWinner,
     });
