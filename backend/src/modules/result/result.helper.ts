@@ -25,8 +25,8 @@ export async function transformInput(data: resultCreateType): Promise<Prisma.Res
   return {
     gameId: data.gameId,
     status: data.status,
-    startedAt: new Date(data.startedAt),
-    finishedAt: new Date(data.finishedAt),
+    startedAt: new Date(Number(data.startedAt)),
+    finishedAt: new Date(Number(data.finishedAt)),
     gamePlayed: { create: gamePlayed },
   };
 }
