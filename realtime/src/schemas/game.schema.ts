@@ -14,9 +14,16 @@ export const PlayerSchema = UserSchema.extend({
   paddle: PaddleNameSchema.optional(),
 });
 
+export const BackendStartGameSchema = z.object({
+  gameId: GameIdSchema,
+  mode: z.enum(GameMode),
+  players: z.array(z.object({ userId: UserIdSchema })),
+  aiDifficulty: z.enum(AIDifficulty).optional(),
+});
+
 export const StartGameSchema = z.object({
   gameId: GameIdSchema,
-  gameMode: z.enum(GameMode),
+  mode: z.enum(GameMode),
   players: z.array(PlayerSchema),
   aiDifficulty: z.enum(AIDifficulty).optional(),
 });
@@ -73,7 +80,7 @@ export const GameStateSchema = z.object({
 
 export const GameSessionSchema = z.object({
   gameId: GameIdSchema,
-  gameMode: z.enum(GameMode),
+  mode: z.enum(GameMode),
   players: z.array(PlayerSchema),
   isConnected: z.map(UserIdSchema, z.boolean()),
   status: z.enum(GameSessionStatus),
@@ -86,6 +93,7 @@ export const GameSessionSchema = z.object({
 });
 
 export type StartGame = z.infer<typeof StartGameSchema>;
+export type BackendStartGame = z.infer<typeof BackendStartGameSchema>;
 export type GameResult = z.infer<typeof GameResultSchema>;
 export type GameState = z.infer<typeof GameStateSchema>;
 export type GameSession = z.infer<typeof GameSessionSchema>;

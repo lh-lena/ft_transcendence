@@ -1,5 +1,4 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
-import type { AuthService } from '../../auth/auth.js';
 import type { RespondService } from '../../websocket/types/ws.types.js';
 import {
   NotificationRequestSchema,
@@ -9,7 +8,6 @@ import type { NotificationRequest } from '../../schemas/notification.schema.js';
 import { processErrorLog } from '../../utils/error.handler.js';
 
 export const setupNotificationRoutes = (server: FastifyInstance): void => {
-  const auth = server.auth as AuthService;
   const respond = server.respond as RespondService;
 
   server.post('/notify', {
