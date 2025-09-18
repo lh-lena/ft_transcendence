@@ -18,6 +18,7 @@ const authRoutes = async (server: FastifyInstance) => {
 
   server.post('/api/register', async (req: FastifyRequest, reply: FastifyReply) => {
     const parseResult = userRegisterSchema.safeParse(req.body);
+    console.log('Registering User', parseResult);
 
     if (!parseResult.success) {
       return reply.status(400).send({ error: parseResult.error.issues });
@@ -26,7 +27,9 @@ const authRoutes = async (server: FastifyInstance) => {
     const password_hash = await hashPassword(parseResult.data.password);
     const newUser: UserType = userSchema.parse({ ...parseResult.data, password_hash });
 
+    console.log('New User to register', newUser);
     const ret: UserType = await apiClientBackend.post('/user', newUser);
+    console.log('Registered User', ret);
 
     return await tfa.sendJwt(ret, reply);
   });
