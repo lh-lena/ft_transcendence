@@ -1,4 +1,5 @@
 import Fastify from 'fastify';
+import cors from '@fastify/cors';
 import fastifyCookie from '@fastify/cookie';
 import fastifyCsrf from '@fastify/csrf-protection';
 import fastifyOauth2 from '@fastify/oauth2';
@@ -80,6 +81,10 @@ server.register(AutoLoad, {
 
 server.register(AutoLoad, {
   dir: path.join(__dirname, '/hooks'),
+});
+
+server.register(cors, {
+  origin: true,
 });
 
 //// Health check endpoint with metrics update
