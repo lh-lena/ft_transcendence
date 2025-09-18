@@ -52,8 +52,26 @@ export default function createGameDataService(app: FastifyInstance): GameDataSer
     }
   }
 
+  async function deleteAIGame(gameId: GameIdType): Promise<boolean> {
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/game/${gameId}`, {
+        method: 'DELETE',
+      });
+      if (response.status !== 200) {
+        const errorDetails = await response.text();
+        throw new GameError(`failed to delete AI game. ID ${gameId}`, errorDetails);
+      }
+      return true;
+    }
+    catch (error: unknown) {
+      processErrorLog(app, 'game-data', `Failed to delete AI game. ID ${gameId}`, error);
+      return false;
+    }
+  }
+
   return {
     fetchGameData,
     sendGameResult,
+    deleteAIGame,
   };
 }

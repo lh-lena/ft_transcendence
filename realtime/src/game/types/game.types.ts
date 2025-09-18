@@ -46,6 +46,7 @@ export interface GameSessionService {
 export interface GameDataService {
   fetchGameData: (gameId: GameIdType) => Promise<BackendStartGame>;
   sendGameResult: (result: GameResult) => Promise<boolean>;
+  deleteAIGame: (gameId: GameIdType) => Promise<boolean>;
 }
 
 export interface GameLoopService {

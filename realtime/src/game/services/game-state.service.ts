@@ -1,7 +1,7 @@
 import type { FastifyInstance } from 'fastify';
-import type { GameSession, GameIdType, UserIdType } from '../../schemas/index.js';
+import type { GameSession, GameIdType, UserIdType, GameResult } from '../../schemas/index.js';
 import type { PausedGameState } from '../../websocket/types/network.types.js';
-import { PONG_CONFIG, NotificationType, GameSessionStatus } from '../../constants/index.js';
+import { PONG_CONFIG, NotificationType, GameSessionStatus, GameMode } from '../../constants/index.js';
 import { processErrorLog, processDebugLog } from '../../utils/error.handler.js';
 import { resetGameState } from '../../game/engines/pong/pong.engine.js';
 import createGameValidator from '../utils/game.validation.js';
@@ -215,7 +215,6 @@ export default function createGameStateService(app: FastifyInstance): GameStateS
       return;
     }
     const respond = app.respond as RespondService;
-    const gameDataService = app.gameDataService as GameDataService;
     const { gameId } = game;
     processDebugLog(app, 'game-state', `Ending game ${gameId} with status: ${status}`);
     const gameLoopService = app.gameLoopService as GameLoopService;
@@ -234,9 +233,19 @@ export default function createGameStateService(app: FastifyInstance): GameStateS
       return;
     }
     respond.gameEnded(gameId, result.value);
-    await gameDataService.sendGameResult(result.value);
+    await processGameResult(result.value);
     cleanupGameResources(game);
     processDebugLog(app, 'game-state', `Game ${gameId} ended. Status: ${status}`);
+  }
+
+  async function processGameResult(result: GameResult): Promise<void> {
+    const gameDataService = app.gameDataService as GameDataService;
+    const { mode, gameId } = result;
+    if (mode === GameMode.PVB_AI) {
+      await gameDataService.deleteAIGame(gameId);
+    } else {
+      await gameDataService.sendGameResult(result);
+    }
   }
 
   return {
