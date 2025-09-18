@@ -1,5 +1,6 @@
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
+import jwt from '@fastify/jwt';
 import fastifyCookie from '@fastify/cookie';
 import fastifyCsrf from '@fastify/csrf-protection';
 import fastifyOauth2 from '@fastify/oauth2';
@@ -195,29 +196,49 @@ export const server = Fastify({ logger: true });
 // ------------ Start Server ------------
 const start = async () => {
   // ------------ Plugins ------------
-  server.register(fastifyCookie);
-  server.register(fastifyCsrf);
-  server.register(cronPlugin);
+  await server.register(fastifyCookie);
+  await server.register(fastifyCsrf);
+  await server.register(cronPlugin);
+
+  //set secrets in docker-compose.yml
+  const accessSecret = process.env.ACCESS_TOKEN_SECRET;
+  const refreshSecret = process.env.REFRESH_TOKEN_SECRET;
+
+  if (!accessSecret || !refreshSecret) {
+    throw new Error('JWT secrets are not defined in environment variables');
+  }
+
+  await server.register(jwt, {
+    secret: accessSecret,
+    namespace: 'access',
+    sign: { expiresIn: '15m' },
+  });
+
+  await server.register(jwt, {
+    secret: refreshSecret,
+    namespace: 'refresh',
+    sign: { expiresIn: '7d' },
+  });
 
   //----------Loader--------------------
-  server.register(AutoLoad, {
+  await server.register(AutoLoad, {
     dir: path.join(__dirname, '/plugins'),
   });
 
-  server.register(AutoLoad, {
+  await server.register(AutoLoad, {
     dir: path.join(__dirname, '/routes'),
   });
 
-  server.register(AutoLoad, {
+  await server.register(AutoLoad, {
     dir: path.join(__dirname, '/hooks'),
   });
 
-  server.register(cors, {
+  await server.register(cors, {
     origin: true,
   });
 
   // ------------ Google OAuth2 ------------
-  server.register(fastifyOauth2, {
+  await server.register(fastifyOauth2, {
     name: 'googleOAuth2',
     scope: ['profile', 'email'],
     credentials: {
@@ -227,6 +248,18 @@ const start = async () => {
     startRedirectPath: '/api/auth/google',
     callbackUri: 'http://localhost:8082/api/auth/google/callback',
   });
+  // Print routes
+  console.log('\n=== Registered Routes ===');
+  console.log(server.printRoutes());
+
+  // Print decorated properties
+  console.log('\n=== Decorated Properties ===');
+  console.log(Object.keys(server));
+
+  // Print plugins (symbol property)
+  console.log('\n=== Registered Plugins ===');
+  // @ts-expect-error this is an error
+  console.log(server[Symbol.for('server.registeredPlugins')]);
 
   try {
     await server.listen({ port: config.port, host: config.host });
