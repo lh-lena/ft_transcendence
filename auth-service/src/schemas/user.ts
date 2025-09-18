@@ -31,16 +31,18 @@ export const userIdSchema = userSchema.pick({
   userId: true,
 });
 
-export const userQuerySchema = userSchema.pick({
-  userId: true,
+export const userQuerySchema = userSchema
+  .pick({
+    userId: true,
 
-  createdAt: true,
-  updatedAt: true,
+    createdAt: true,
+    updatedAt: true,
 
-  email: true,
-  username: true,
-  alias: true,
-});
+    email: true,
+    username: true,
+    alias: true,
+  })
+  .partial();
 
 export const userRegisterSchema = userSchema
   .pick({
@@ -78,11 +80,12 @@ export const userPatchSchema = userSchema.pick({
 
 export const userResponseSchema = userSchema.omit({
   password_hash: true,
-  is_2fa_enabled: true,
-  twofa_secret: true,
-  twofa_method: true,
-  twofa_temp_code: true,
-  twofa_code_expires: true,
+  tfaEnabled: true,
+  tfaSecret: true,
+  tfaMethod: true,
+  tfaTempCode: true,
+  tfaCodeExpires: true,
+  backupCodes: true,
 });
 
 export const userInfoResponseSchema = userResponseSchema.omit({

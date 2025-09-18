@@ -13,8 +13,8 @@ declare module 'fastify' {
     cleanupExpiredSession(): Promise<void>;
     generateAccessToken(payload: object): string;
     generateRefreshToken(payload: object): string;
-    verifyAccessToken(token: string): object;
-    verifyRefreshToken(token: string): object;
+    verifyAccessToken(token: string): JwTReturnType;
+    verifyRefreshToken(token: string): JwTReturnType;
   }
   interface FastifyRequest {
     user: {

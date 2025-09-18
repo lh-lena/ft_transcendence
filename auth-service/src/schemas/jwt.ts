@@ -1,9 +1,9 @@
 import { z } from 'zod/v4';
 
-export const JwTPayloadSchema = z.object({
+export const JwTReturnSchema = z.object({
   id: z.uuid(),
   iat: z.number(),
   exp: z.number(),
 });
 
-export type JwTPayloadType = z.infer<typeof JwTPayloadSchema>;
+export type JwTReturnType = z.infer<typeof JwTReturnSchema>;

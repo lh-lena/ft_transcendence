@@ -91,7 +91,7 @@ export class tfaHandler {
       path: '/api/refresh',
     });
 
-    return reply.code(200).send({ accessToken });
+    return reply.code(200).send({ jwt: accessToken });
   }
 
   async checkMail(

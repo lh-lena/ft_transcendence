@@ -1,7 +1,7 @@
 import fp from 'fastify-plugin';
 import { FastifyInstance } from 'fastify';
-import { JwTPayloadSchema } from '../schemas/jwt';
-import type { JwTPayloadType } from '../schemas/jwt';
+import { JwTReturnSchema } from '../schemas/jwt';
+import type { JwTReturnType } from '../schemas/jwt';
 
 export default fp(async (fastify: FastifyInstance) => {
   if (!fastify.jwt.access || !fastify.jwt.refresh) {
@@ -14,38 +14,31 @@ export default fp(async (fastify: FastifyInstance) => {
     return fastify.jwt.access.sign(payload);
   });
 
-  fastify.decorate('verifyAccessToken', async (token: string): Promise<JwTPayloadType> => {
-    try {
-      const decoded = fastify.jwt.access.verify(token);
+  fastify.decorate('verifyAccessToken', async (token: string): Promise<JwTReturnType> => {
+    const decoded = await fastify.jwt.access.verify(token);
 
-      const result = JwTPayloadSchema.safeParse(decoded);
-      if (!result.success) {
-        throw new Error('Invalid token payload');
-      }
+    const result = JwTReturnSchema.safeParse(decoded);
 
-      return result.data;
-    } catch (err) {
-      throw new Error('Invalid token');
+    if (!result.success) {
+      throw new Error('Invalid token payload');
     }
+
+    return result.data;
   });
 
   fastify.decorate('generateRefreshToken', (payload: { id: string }) => {
     return fastify.jwt.refresh.sign(payload);
   });
 
-  fastify.decorate('verifyRefreshToken', async (token: string): Promise<JwTPayloadType> => {
-    try {
-      const decoded = fastify.jwt.refresh.verify(token);
+  fastify.decorate('verifyRefreshToken', async (token: string): Promise<JwTReturnType> => {
+    const decoded = await fastify.jwt.refresh.verify(token);
 
-      const result = JwTPayloadSchema.safeParse(decoded);
-      if (!result.success) {
-        throw new Error('Invalid token payload');
-      }
+    const result = JwTReturnSchema.safeParse(decoded);
 
-      return result.data;
-    } catch (err) {
-      throw new Error('Invalid token');
+    if (!result.success) {
+      throw new Error('Invalid token payload');
     }
+
+    return result.data;
   });
-  console.log('registered jwt plugin');
 });

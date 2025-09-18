@@ -17,7 +17,7 @@ import {
 const backendUserRoutes = async (fastify: FastifyInstance) => {
   //-------User Routes-------//
 
-  fastify.get('/user/:id', async (req: FastifyRequest, reply: FastifyReply) => {
+  fastify.get('/api/user/:id', async (req: FastifyRequest, reply: FastifyReply) => {
     const parsedReq = userIdSchema.safeParse(req.params);
 
     if (!parsedReq.success) {
@@ -51,7 +51,7 @@ const backendUserRoutes = async (fastify: FastifyInstance) => {
     return reply.code(200).send(userRet);
   });
 
-  fastify.get('/user', async (req: FastifyRequest, reply: FastifyReply) => {
+  fastify.get('/api/user', async (req: FastifyRequest, reply: FastifyReply) => {
     const parsedReq = userQuerySchema.safeParse(req.query);
 
     if (!parsedReq.success) {

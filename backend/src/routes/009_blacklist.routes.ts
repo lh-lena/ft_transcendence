@@ -28,8 +28,9 @@ const blacklistRoutes = async (server: FastifyInstance) => {
     }
   });
 
-  server.get('/blacklist/:token', async (req: FastifyRequest, reply: FastifyReply) => {
-    const parsedReq = blacklistSchema.safeParse(req.params);
+  server.get('/api/blacklist', async (req: FastifyRequest, reply: FastifyReply) => {
+    console.log(req.params);
+    const parsedReq = blacklistSchema.safeParse(req.query);
 
     if (!parsedReq.success) return reply.status(400).send({ error: 'Token required' });
 

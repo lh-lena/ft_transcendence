@@ -64,23 +64,20 @@ const authRoutes = async (server: FastifyInstance) => {
       return reply.status(400).send({ error: parseResult.error.issues });
     }
 
-    const method = 'get';
-    const url = `/user`;
-
     const config: AxiosRequestConfig = {
-      method,
-      url,
+      method: 'get',
+      url: '/user',
       headers: req.headers,
       params: { email: parseResult.data.email },
     };
 
-    const user: UserType = await apiClientBackend(config);
+    const userArr: UserType[] = await apiClientBackend(config);
 
-    console.log('Found user', user);
-
-    if (!user) {
+    if (userArr.length !== 1) {
       return reply.status(401).send({ error: 'Invalid credentials' });
     }
+
+    const user = userArr[0];
 
     const valid = await verifyPassword(user.password_hash, parseResult.data.password);
     console.log('Password valid', valid);
