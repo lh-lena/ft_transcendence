@@ -10,7 +10,7 @@ import { notifyPlayer } from '../../utils/notify';
 
 export const chatService = {
   async create(data: chatCreateType): Promise<ChatMessage> {
-    if (!(await blockedService.isBlocked(data.senderId, data.reciverId))) {
+    if (await blockedService.isBlocked(data.senderId, data.reciverId)) {
       throw new BlockedError('You are blocked');
     }
     const prismaData = await transformInput(data);

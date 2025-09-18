@@ -34,6 +34,7 @@ export const blockedService = {
 
   async isBlocked(userId: string, blockedUserId: string): Promise<boolean> {
     const ret = await blockedModel.findBy({ userId: userId, blockedUserId: blockedUserId });
+    console.log(ret);
     if (ret.length > 0) return true;
     return false;
   },
