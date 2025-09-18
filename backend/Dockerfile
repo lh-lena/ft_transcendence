@@ -4,12 +4,12 @@ RUN apk add --no-cache curl
 
 WORKDIR /app
 
-EXPOSE 8080
-
-COPY package*.json ./
-
-COPY . .
+COPY package.json ./
 
 RUN npm install
 
-CMD [ "npm", "run", "run" ]
+COPY . .
+
+RUN npm exec prisma generate
+
+CMD [ "/bin/sh", "-c", "npx prisma migrate deploy && npx prisma db seed && npm run run" ]

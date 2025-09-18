@@ -1,37 +1,33 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import fp from 'fastify-plugin';
-import { Update } from '../utils/crudDefines';
 
 import crudRoutes from '../utils/crudRoutes';
 import { gameController } from '../modules/game/game.controller';
 
-import { game, gameQueryType, gameCreateType, gameIdType } from '../schemas/game';
+import { gameType, gameCreateType, gameJoinType, gameIdType } from '../schemas/game';
 
 const gameRoutes = async (server: FastifyInstance) => {
-  server.register(crudRoutes<game, gameQueryType, gameCreateType, null, gameIdType>(), {
+  server.register(crudRoutes<gameType, null, gameCreateType, null, gameIdType>(), {
     basePath: '/api/game',
     entityName: 'game',
     controller: gameController,
-    routes: ['getQuery', 'getById', 'create'],
+    routes: ['getById', 'create'],
   });
 
-  server.post('/api/game/join/:id', {
+  server.post('/api/game/join', {
     schema: {
-      params: { $ref: 'gameId' },
-      body: { $ref: 'gameCreate' },
+      summary: 'Join a random or private game',
+      description:
+        'Endpoint to join a game. If gameId provided you join this game if possible. Otherwise player get joined random game',
+      tags: ['game'],
+      body: { $ref: 'gameJoin' },
       response: {
         200: { $ref: 'gameResponse' },
-        404: { $ref: 'NotFound' },
       },
-      summary: 'Join a private game',
     },
-    handler: async (
-      request: FastifyRequest<Update<gameIdType, gameCreateType>>,
-      reply: FastifyReply,
-    ) => {
-      const id = request.params.id;
-      const body = request.body as gameCreateType;
-      const ret = await gameController.join({ id: id }, body);
+    handler: async (req: FastifyRequest, reply: FastifyReply) => {
+      const body = req.body as gameJoinType;
+      const ret = await gameController.join(body);
 
       return reply.code(200).send(ret);
     },

@@ -1,11 +1,11 @@
 import fp from 'fastify-plugin';
 import { FastifyInstance } from 'fastify';
 
-import swagger from '@fastify/swagger';
-import swaggerUi from '@fastify/swagger-ui';
+import FastifySwagger from '@fastify/swagger';
+import FastifySwaggerUi from '@fastify/swagger-ui';
 
 const openAiPlugin = async (server: FastifyInstance) => {
-  await server.register(swagger, {
+  await server.register(FastifySwagger, {
     openapi: {
       info: {
         title: 'transendence API Docs',
@@ -15,8 +15,8 @@ const openAiPlugin = async (server: FastifyInstance) => {
     },
   });
 
-  await server.register(swaggerUi, {
-    routePrefix: 'api/docs',
+  await server.register(FastifySwaggerUi, {
+    routePrefix: '/api/docs',
     uiConfig: {
       docExpansion: 'list',
       deepLinking: false,

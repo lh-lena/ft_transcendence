@@ -9,7 +9,7 @@ export const friendController = {
     return ret;
   },
 
-  async getQuery(query?: Prisma.friendWhereInput): Promise<friendType[]> {
+  async getQuery(query?: Prisma.FriendshipWhereInput): Promise<friendType[]> {
     const ret = await friendService.getQuery(query);
     return ret;
   },

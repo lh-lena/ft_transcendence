@@ -1,15 +1,18 @@
 import { resultModel } from './result.crud';
 import { NotFoundError, ConflictError } from '../../utils/error';
-import { Prisma, result } from '@prisma/client';
+import { Prisma, Result } from '@prisma/client';
 
 import { resultCreateType, leaderboardType } from '../../schemas/result';
 
 import { transformInput } from './result.helper';
-import { transformQuery } from '../..//utils/crudQueryBuilder';
+import { gameService } from '../game/game.service';
+import { tournamentService } from '../tournament/tournament.service';
 
 export const resultService = {
-  async create(data: resultCreateType): Promise<result> {
+  async create(data: resultCreateType): Promise<Result> {
     const prismaData = await transformInput(data);
+    gameService.update(data.gameId);
+    tournamentService.update(data.gameId, data.loserId);
 
     try {
       const ret = await resultModel.insert(prismaData);
@@ -22,10 +25,11 @@ export const resultService = {
     }
   },
 
-  async getQuery(query?: Prisma.resultWhereInput): Promise<result[]> {
-    const ret = query
-      ? await resultModel.findBy(transformQuery(query))
-      : await resultModel.findAll();
+  async getQuery(query?: Prisma.ResultWhereInput): Promise<Result[]> {
+    //const ret = query
+    //  ? await resultModel.findBy(transformQuery(query))
+    //  : await resultModel.findAll();
+    const ret = query ? await resultModel.findBy(query) : await resultModel.findAll();
 
     if (ret.length === 0) {
       throw new NotFoundError('No result found');
@@ -33,7 +37,7 @@ export const resultService = {
     return ret;
   },
 
-  async getById(id: number): Promise<result> {
+  async getById(id: number): Promise<Result> {
     const ret = await resultModel.findById(id);
 
     if (!ret) throw new NotFoundError(`result with ${id} not found`);

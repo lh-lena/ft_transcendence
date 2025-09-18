@@ -32,3 +32,9 @@ export class DatabaseError extends AppError {
     super(message, 500, 'Database');
   }
 }
+
+export class BlockedError extends AppError {
+  constructor(message = 'Blocked') {
+    super(message, 403, 'BLOCKED');
+  }
+}

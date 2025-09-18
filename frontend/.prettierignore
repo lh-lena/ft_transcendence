@@ -1,7 +1,3 @@
-node_modules
-dist
+# Ignore artifacts:
 build
 coverage
-.env
-*.min.js
-*.min.css

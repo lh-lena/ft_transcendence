@@ -30,7 +30,9 @@
     "nodemailer": "^7.0.6",
     "otplib": "^12.0.1",
     "qrcode": "^1.5.4",
-    "zod": "^4.1.5"
+    "zod": "^4.1.5",
+    "prom-client": "^15.1.3",
+    "ts-node": "^10.9.2"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.13",

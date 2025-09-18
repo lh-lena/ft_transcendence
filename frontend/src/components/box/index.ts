@@ -1,1 +1,1 @@
-export * from './SimpleBox';
+export * from "./SimpleBox";

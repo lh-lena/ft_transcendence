@@ -1,4 +1,4 @@
-import { Prisma, friend } from '@prisma/client';
+import { Prisma, Friendship } from '@prisma/client';
 import { friendModel } from './friend.crud';
 import type { friendCreateType } from '../../schemas/friend';
 
@@ -7,7 +7,7 @@ import { NotFoundError } from '../../utils/error';
 import { transformInput } from './friend.helper';
 
 export const friendService = {
-  async create(data: friendCreateType): Promise<friend> {
+  async create(data: friendCreateType): Promise<Friendship> {
     const prismaData = await transformInput(data);
     try {
       const ret = await friendModel.insert(prismaData);
@@ -20,12 +20,9 @@ export const friendService = {
     }
   },
 
-  async getQuery(query?: Prisma.friendWhereInput): Promise<friend[]> {
+  async getQuery(query?: Prisma.FriendshipWhereInput): Promise<Friendship[]> {
     const ret = query ? await friendModel.findBy(query) : await friendModel.findAll();
 
-    if (ret.length === 0) {
-      throw new NotFoundError('no friends found');
-    }
     return ret;
   },
 

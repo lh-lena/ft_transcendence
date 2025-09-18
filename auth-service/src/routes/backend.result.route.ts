@@ -3,15 +3,9 @@ import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 
 import { apiClientBackend } from '../utils/apiClient';
 
-import {
-  resultQuerySchema,
-  resultPostSchema,
-  resultResponseSchema,
-  resultResponseArraySchema,
-} from '../schemas/result';
+import { resultQuerySchema, resultResponseArraySchema } from '../schemas/result';
 import type {
   ResultQueryType,
-  ResultPostType,
   ResultResponseType,
   ResultResponseArrayType,
   LeaderboardType,
