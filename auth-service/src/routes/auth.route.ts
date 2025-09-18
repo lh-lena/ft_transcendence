@@ -4,13 +4,20 @@ import fp from 'fastify-plugin';
 import { hashPassword, verifyPassword } from '../auth/passwords';
 //import { verifyJWT } from '../utils/jwt';
 
-import { isBlacklisted } from '../services/userService';
+import { isBlacklistedToken } from '../utils/blacklistToken';
 import { apiClientBackend } from '../utils/apiClient';
+import type { AxiosRequestConfig } from 'axios';
 
 import { tfaHandler } from '../utils/tfa';
 import { tfaVerifySchema, tfaSetupSchema } from '../schemas/tfa';
 
-import { userSchema, userRegisterSchema, userLoginSchema, guestSchema } from '../schemas/user';
+import {
+  userSchema,
+  userRegisterSchema,
+  userLoginSchema,
+  userPostSchema,
+  guestSchema,
+} from '../schemas/user';
 import type { UserType, GuestType } from '../schemas/user';
 
 const authRoutes = async (server: FastifyInstance) => {
@@ -21,35 +28,63 @@ const authRoutes = async (server: FastifyInstance) => {
     console.log('Registering User', parseResult);
 
     if (!parseResult.success) {
+      console.log('Registration error', parseResult.error.message);
       return reply.status(400).send({ error: parseResult.error.issues });
     }
 
     const password_hash = await hashPassword(parseResult.data.password);
-    const newUser: UserType = userSchema.parse({ ...parseResult.data, password_hash });
+    const newUser = userPostSchema.parse({ ...parseResult.data, password_hash });
 
     console.log('New User to register', newUser);
-    const ret: UserType = await apiClientBackend.post('/user', newUser);
+
+    const config: AxiosRequestConfig = {
+      method: 'post',
+      url: '/user',
+      //     headers: req.headers,
+      data: newUser,
+    };
+    const ret = await apiClientBackend(config);
     console.log('Registered User', ret);
 
-    return await tfa.sendJwt(ret, reply);
+    const createdUser = userSchema.safeParse(ret);
+
+    if (!createdUser.success) {
+      console.log('Created user parsing error', createdUser.error);
+      return reply.status(500).send({ error: 'User creation failed' });
+    }
+
+    return await tfa.sendJwt(createdUser.data, reply);
   });
 
   server.post('/api/login', async (req: FastifyRequest, reply: FastifyReply) => {
     const parseResult = userLoginSchema.safeParse(req.body);
+    console.log('Login attempt', parseResult);
 
     if (!parseResult.success) {
       return reply.status(400).send({ error: parseResult.error.issues });
     }
 
-    const user: UserType = await apiClientBackend.get(`/user`, {
+    const method = 'get';
+    const url = `/user`;
+
+    const config: AxiosRequestConfig = {
+      method,
+      url,
+      headers: req.headers,
       params: { email: parseResult.data.email },
-    });
+    };
+
+    const user: UserType = await apiClientBackend(config);
+
+    console.log('Found user', user);
 
     if (!user) {
       return reply.status(401).send({ error: 'Invalid credentials' });
     }
 
     const valid = await verifyPassword(user.password_hash, parseResult.data.password);
+    console.log('Password valid', valid);
+
     if (!valid) {
       return reply.status(401).send({ error: 'Invalid credentials' });
     }
@@ -67,7 +102,7 @@ const authRoutes = async (server: FastifyInstance) => {
     if (!refreshToken) {
       return reply.status(401).send({ error: 'No refresh token' });
     }
-    if (await isBlacklisted(refreshToken)) {
+    if (await isBlacklistedToken(refreshToken)) {
       return reply.status(401).send({ error: 'Token revoked. Login again' });
     }
 
@@ -97,9 +132,17 @@ const authRoutes = async (server: FastifyInstance) => {
       return reply.code(400).send({ error: 'Invalid or expired 2FA-Session' });
     }
 
-    const user: UserType = await apiClientBackend.get(`/user`, {
+    const method = 'get';
+    const url = `/user/${parseResult.data.userId}`;
+
+    const config: AxiosRequestConfig = {
+      method,
+      url,
+      headers: req.headers,
       params: { id: parseResult.data.userId },
-    });
+    };
+
+    const user: UserType = await apiClientBackend(config);
 
     if (!user) {
       return reply.status(404).send({ error: 'User not found' });
@@ -126,10 +169,17 @@ const authRoutes = async (server: FastifyInstance) => {
     if (!parseResult.success) {
       return reply.status(400).send({ error: parseResult.error.issues });
     }
+    const method = 'get';
+    const url = `/user/${parseResult.data.userId}`;
 
-    const user: UserType = await apiClientBackend.get(`/user`, {
+    const config: AxiosRequestConfig = {
+      method,
+      url,
+      headers: req.headers,
       params: { id: parseResult.data.userId },
-    });
+    };
+
+    const user: UserType = await apiClientBackend(config);
 
     if (!user) {
       return reply.status(404).send({ error: 'User not found' });
@@ -148,7 +198,16 @@ const authRoutes = async (server: FastifyInstance) => {
     const refreshToken = req.cookies.refreshToken;
 
     if (refreshToken) {
-      await apiClientBackend.post('/blacklist', { token: refreshToken });
+      const method = req.method.toLowerCase();
+      const url = '/blacklist';
+
+      const config: AxiosRequestConfig = {
+        method,
+        url,
+        headers: req.headers,
+        data: { token: refreshToken },
+      };
+      await apiClientBackend(config);
     }
 
     reply.clearCookie('refreshToken', { path: '/api/refresh' });
@@ -168,7 +227,17 @@ const authRoutes = async (server: FastifyInstance) => {
 
     newGuest.username = newGuest.alias;
 
-    const ret: UserType = await apiClientBackend.post('/user', newGuest);
+    const method = req.method.toLowerCase();
+    const url = '/user';
+
+    const config: AxiosRequestConfig = {
+      method,
+      url,
+      headers: req.headers,
+      data: newGuest,
+    };
+
+    const ret: UserType = await apiClientBackend(config);
 
     return await tfa.sendJwt(ret, reply);
   });

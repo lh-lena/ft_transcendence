@@ -1,5 +1,6 @@
 import fp from 'fastify-plugin';
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
+import { AxiosRequestConfig } from 'axios';
 
 import { apiClientBackend } from '../utils/apiClient';
 import type { UserType, UserIdType, UserQueryType, UserPatchType } from '../schemas/user';
@@ -25,7 +26,17 @@ const backendUserRoutes = async (fastify: FastifyInstance) => {
 
     const requestId: UserIdType = parsedReq.data;
 
-    const user: UserType = await apiClientBackend.get(`/user/${requestId.userId}`);
+    const method = req.method.toLowerCase();
+    const url = `/user/${requestId.userId}`;
+
+    const config: AxiosRequestConfig = {
+      method,
+      url,
+      headers: req.headers,
+      params: requestId,
+    };
+
+    const user: UserType = await apiClientBackend(config);
 
     const isSelf = requestId.userId === req.user.id;
     const schema = isSelf ? userResponseSchema : userInfoResponseSchema;
@@ -49,11 +60,19 @@ const backendUserRoutes = async (fastify: FastifyInstance) => {
 
     const userQuery: UserQueryType = parsedReq.data;
 
-    const users: UserType[] = await apiClientBackend.get('/user', { params: userQuery });
+    const method = req.method.toLowerCase();
+    const url = `/user`;
 
-    const schema = userInfoResponseArraySchema;
+    const config: AxiosRequestConfig = {
+      method,
+      url,
+      headers: req.headers,
+      params: userQuery,
+    };
 
-    const ret = schema.safeParse(users);
+    const users: UserType[] = await apiClientBackend(config);
+
+    const ret = userInfoResponseArraySchema.safeParse(users);
 
     if (!ret.success) {
       return reply.code(500).send({ error: 'Failed to parse user data' });
@@ -82,7 +101,18 @@ const backendUserRoutes = async (fastify: FastifyInstance) => {
       return reply.code(403).send({ error: 'Forbidden: You can only update your own profile' });
     }
 
-    const updatedUser: UserType = await apiClientBackend.patch(`/user/${req.user.id}`, updateData);
+    const method = req.method.toLowerCase();
+    const url = `/user/${requestId.userId}`;
+
+    const config: AxiosRequestConfig = {
+      method,
+      url,
+      headers: req.headers,
+      params: requestId,
+      data: updateData,
+    };
+
+    const updatedUser: UserType = await apiClientBackend(config);
 
     const ret = userResponseSchema.safeParse(updatedUser);
 
@@ -107,7 +137,17 @@ const backendUserRoutes = async (fastify: FastifyInstance) => {
       return reply.code(403).send({ error: 'Forbidden: You can only delete your own profile' });
     }
 
-    const ret = await apiClientBackend.delete(`/user/${req.user.id}`);
+    const method = req.method.toLowerCase();
+    const url = `/user/${requestId.userId}`;
+
+    const config: AxiosRequestConfig = {
+      method,
+      url,
+      headers: req.headers,
+      params: requestId,
+    };
+
+    const ret = await apiClientBackend(config);
 
     return reply.code(200).send({ message: 'User deleted successfully', ret });
   });

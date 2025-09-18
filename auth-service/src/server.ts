@@ -10,6 +10,7 @@ import AutoLoad from '@fastify/autoload';
 import path from 'path';
 
 import { config } from './config/index';
+
 // Initialize Prometheus registry
 //const register = new client.Registry();
 //
@@ -56,36 +57,6 @@ import { config } from './config/index';
 //};
 
 export const server = Fastify({ logger: true });
-
-// ------------ Plugins ------------
-server.register(fastifyCookie);
-server.register(fastifyCsrf);
-server.register(cronPlugin);
-
-// ------------ Google OAuth2 ------------
-server.register(fastifyOauth2, {
-  name: 'googleOAuth2',
-  scope: ['profile', 'email'],
-  credentials: {
-    client: { id: config.googleClientId, secret: config.googleClientSecret },
-    auth: fastifyOauth2.GOOGLE_CONFIGURATION,
-  },
-  startRedirectPath: '/api/auth/google',
-  callbackUri: 'http://localhost:8082/api/auth/google/callback',
-});
-
-//----------Loader--------------------
-server.register(AutoLoad, {
-  dir: path.join(__dirname, '/routes'),
-});
-
-server.register(AutoLoad, {
-  dir: path.join(__dirname, '/hooks'),
-});
-
-server.register(cors, {
-  origin: true,
-});
 
 //// Health check endpoint with metrics update
 //server.get('/api/auth/health', async (request, reply) => {
@@ -223,6 +194,40 @@ server.register(cors, {
 
 // ------------ Start Server ------------
 const start = async () => {
+  // ------------ Plugins ------------
+  server.register(fastifyCookie);
+  server.register(fastifyCsrf);
+  server.register(cronPlugin);
+
+  //----------Loader--------------------
+  server.register(AutoLoad, {
+    dir: path.join(__dirname, '/plugins'),
+  });
+
+  server.register(AutoLoad, {
+    dir: path.join(__dirname, '/routes'),
+  });
+
+  server.register(AutoLoad, {
+    dir: path.join(__dirname, '/hooks'),
+  });
+
+  server.register(cors, {
+    origin: true,
+  });
+
+  // ------------ Google OAuth2 ------------
+  server.register(fastifyOauth2, {
+    name: 'googleOAuth2',
+    scope: ['profile', 'email'],
+    credentials: {
+      client: { id: config.googleClientId, secret: config.googleClientSecret },
+      auth: fastifyOauth2.GOOGLE_CONFIGURATION,
+    },
+    startRedirectPath: '/api/auth/google',
+    callbackUri: 'http://localhost:8082/api/auth/google/callback',
+  });
+
   try {
     await server.listen({ port: config.port, host: config.host });
     server.log.info(`Server listening on ${config.host}:${config.port}`);

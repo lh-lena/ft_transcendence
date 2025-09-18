@@ -32,7 +32,7 @@ const backendFriendsRoute = async (fastify: FastifyInstance) => {
 
     const config: AxiosRequestConfig = {
       method,
-      url: url,
+      url,
       headers: req.headers,
     };
 
@@ -42,7 +42,7 @@ const backendFriendsRoute = async (fastify: FastifyInstance) => {
       config.data = req.body;
     }
 
-    const resp = await apiClientBackend.request(config);
+    const resp = await apiClientBackend(config);
 
     const ret = blockedResponseSchema.safeParse(resp);
 

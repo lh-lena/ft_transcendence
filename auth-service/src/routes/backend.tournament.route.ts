@@ -1,5 +1,7 @@
 import fp from 'fastify-plugin';
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
+
+import { AxiosRequestConfig } from 'axios';
 import { apiClientBackend } from '../utils/apiClient';
 
 import { tournamentCreateSchema, tournamentIdSchema } from '../schemas/tournament';
@@ -15,9 +17,17 @@ const backendTournamentRoutes = async (fastify: FastifyInstance) => {
 
     const tournamentId: TournamentIdType = parsedReq.data;
 
-    const tournament: TournamentType = await apiClientBackend.get('/game', {
+    const method = req.method.toLowerCase();
+    const url = `/tournament/${tournamentId.tournamentId}`;
+
+    const config: AxiosRequestConfig = {
+      method,
+      url,
+      headers: req.headers,
       params: tournamentId,
-    });
+    };
+
+    const tournament: TournamentType = await apiClientBackend(config);
 
     return reply.code(200).send(tournament);
   });
@@ -35,9 +45,17 @@ const backendTournamentRoutes = async (fastify: FastifyInstance) => {
       return reply.code(403).send({ error: 'Forbidden' });
     }
 
-    const createdTournament: TournamentType = await apiClientBackend.post('/tournament', {
-      body: newTournament,
-    });
+    const method = req.method.toLowerCase();
+    const url = `/tournament`;
+
+    const config: AxiosRequestConfig = {
+      method,
+      url,
+      headers: req.headers,
+      data: newTournament,
+    };
+
+    const createdTournament: TournamentType = await apiClientBackend(config);
 
     return reply.code(201).send({ createdTournament });
   });

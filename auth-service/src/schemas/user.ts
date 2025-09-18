@@ -9,7 +9,7 @@ export const userSchema = z.object({
 
   email: z.email(),
   username: z.string().min(3).max(15),
-  alias: z.string().optional(),
+  alias: z.string().nullable().optional(),
 
   password_hash: z.string(),
 
@@ -54,6 +54,17 @@ export const userRegisterSchema = userSchema
   .extend({
     password: z.string().min(8),
   });
+
+export const userPostSchema = userSchema.pick({
+  email: true,
+  username: true,
+  alias: true,
+  password_hash: true,
+  guest: true,
+  color: true,
+  colormap: true,
+  tfaEnabled: true,
+});
 
 export const userLoginSchema = userSchema
   .pick({ email: true })

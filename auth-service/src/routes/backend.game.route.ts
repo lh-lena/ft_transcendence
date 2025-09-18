@@ -1,5 +1,6 @@
 import fp from 'fastify-plugin';
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
+import { AxiosRequestConfig } from 'axios';
 import { apiClientBackend } from '../utils/apiClient';
 
 import {
@@ -26,7 +27,16 @@ const backendGameRoutes = async (fastify: FastifyInstance) => {
 
     const gameId: GameIdType = parsedReq.data;
 
-    const game: GameType = await apiClientBackend.get('/game', { params: gameId });
+    const method = req.method.toLowerCase();
+    const url = `/game/${gameId.gameId}`;
+
+    const config: AxiosRequestConfig = {
+      method,
+      url,
+      headers: req.headers,
+      params: gameId,
+    };
+    const game: GameType = await apiClientBackend(config);
 
     const ret = gameResponseSchema.safeParse(game);
 
@@ -51,7 +61,16 @@ const backendGameRoutes = async (fastify: FastifyInstance) => {
       return reply.code(403).send({ error: 'Forbidden' });
     }
 
-    const createdGame: GameType = await apiClientBackend.post('/game', { body: newGame });
+    const method = req.method.toLowerCase();
+    const url = '/game';
+
+    const config: AxiosRequestConfig = {
+      method,
+      url,
+      headers: req.headers,
+      data: newGame,
+    };
+    const createdGame: GameType = await apiClientBackend(config);
 
     const ret = gameResponseSchema.safeParse(createdGame);
 
@@ -77,7 +96,16 @@ const backendGameRoutes = async (fastify: FastifyInstance) => {
       return reply.code(403).send({ error: 'Forbidden' });
     }
 
-    const joinedGame: GameType = await apiClientBackend.post(`/chat`, { params: gameToJoin });
+    const method = req.method.toLowerCase();
+    const url = '/game/join';
+
+    const config: AxiosRequestConfig = {
+      method,
+      url,
+      headers: req.headers,
+      data: gameToJoin,
+    };
+    const joinedGame: GameType = await apiClientBackend(config);
 
     const ret = gameResponseSchema.safeParse(joinedGame);
 

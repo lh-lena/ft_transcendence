@@ -2,6 +2,7 @@
 import { FastifyInstance, FastifyReply } from 'fastify';
 import { v4 as uuidv4 } from 'uuid';
 import { apiClientBackend } from '../utils/apiClient';
+import { AxiosRequestConfig } from 'axios';
 import { sendMail } from '../services/mailer';
 import { generate6DigitCode, nowPlusMinutes, sha256 } from '../services/twofa';
 import { authenticator } from 'otplib';
@@ -41,15 +42,22 @@ export class tfaHandler {
     if (user.tfaMethod === 'email') {
       const code = generate6DigitCode();
       const expires = nowPlusMinutes(5);
-      await apiClientBackend.patch(`/user/${user.userId}`, {
-        tfaTempCode: code,
-        tfaCodeExpires: expires,
-      });
+
+      const config: AxiosRequestConfig = {
+        method: 'patch',
+        url: `/user/${user.userId}`,
+        params: user.userId,
+        data: { tfaTempCode: code, tfaCodeExpires: expires },
+      };
+
+      await apiClientBackend(config);
+
       await sendMail(
         user.email,
         'Your 2FA Code',
         `Your 2FA code is: ${code}. It expires in 5 minutes.`,
       );
+
       return reply.code(200).send((tfaRequiredMessage.message = '2FA code sent to email'));
     }
 
@@ -103,10 +111,15 @@ export class tfaHandler {
       return reply.code(401).send({ message: 'Invalid 2FA code. Please try again.' });
     }
 
-    await apiClientBackend.patch('/user/${user.userId}', {
-      tfaTempCode: null,
-      tfaCodeExpires: null,
-    });
+    const config: AxiosRequestConfig = {
+      method: 'patch',
+      url: `/user/${user.userId}`,
+      params: user.userId,
+      data: { tfaTempCode: null, tfaCodeExpires: null },
+    };
+
+    await apiClientBackend(config);
+
     return await this.sendJwt(user, reply);
   }
 
@@ -138,7 +151,15 @@ export class tfaHandler {
 
     const updatedList = backupList.slice();
     updatedList.splice(idx, 1);
-    await apiClientBackend.patch(`/user/${user.userId}`, { backupCodes: updatedList });
+
+    const config: AxiosRequestConfig = {
+      method: 'patch',
+      url: `/user/${user.userId}`,
+      params: user.userId,
+      data: { backupCodes: updatedList },
+    };
+
+    await apiClientBackend(config);
 
     return await this.sendJwt(user, reply);
   }
@@ -148,12 +169,19 @@ export class tfaHandler {
     const otpauth = authenticator.keyuri(user.email, 'ft_transcendence', secret);
     const codes = Array.from({ length: 8 }, () => crypto.randomBytes(8).toString('hex'));
 
-    await apiClientBackend.patch(`/user/${user.userId}`, {
-      tfaEnabled: true,
-      tfaMethod: 'totp',
-      tfaSecret: secret,
-      backupCodes: codes.map(sha256),
-    });
+    const config: AxiosRequestConfig = {
+      method: 'patch',
+      url: `/user/${user.userId}`,
+      params: user.userId,
+      data: {
+        tfaEnabled: true,
+        tfaMethod: 'totp',
+        tfaSecret: secret,
+        backupCodes: codes.map(sha256),
+      },
+    };
+
+    await apiClientBackend(config);
 
     const qrCodeDataUrl = await QRCode.toDataURL(otpauth);
 
@@ -167,10 +195,18 @@ export class tfaHandler {
   }
 
   async setupEmail(user: UserType, reply: FastifyReply): Promise<FastifyReply> {
-    await apiClientBackend.patch(`/user/${user.userId}`, {
-      tfaEnabled: true,
-      tfaMethod: 'email',
-    });
+    const config: AxiosRequestConfig = {
+      method: 'patch',
+      url: `/user/${user.userId}`,
+      params: user.userId,
+      data: {
+        tfaEnabled: true,
+        tfaMethod: 'email',
+      },
+    };
+
+    await apiClientBackend(config);
+
     return reply.code(200).send({ message: 'Email 2FA setup complete.' });
   }
 }

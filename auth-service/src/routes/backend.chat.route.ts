@@ -1,6 +1,7 @@
 import fp from 'fastify-plugin';
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 
+import { AxiosRequestConfig } from 'axios';
 import { apiClientBackend } from '../utils/apiClient';
 
 import {
@@ -36,7 +37,17 @@ const backendChatRoutes = async (fastify: FastifyInstance) => {
       return reply.code(403).send({ error: 'Forbidden: You can only access your own chats' });
     }
 
-    const chats: ChatType[] = await apiClientBackend.get('/chat/overview', { params: userId });
+    const method = req.method.toLowerCase();
+    const url = '/chat/overview/' + userId.userId;
+
+    const config: AxiosRequestConfig = {
+      method,
+      url,
+      headers: req.headers,
+      params: userId,
+    };
+
+    const chats: ChatType[] = await apiClientBackend(config);
 
     const ret = chatResponseArraySchema.safeParse(chats);
 
@@ -62,7 +73,17 @@ const backendChatRoutes = async (fastify: FastifyInstance) => {
       return reply.code(403).send({ error: 'Forbidden: You can only access your own chats' });
     }
 
-    const chats: ChatType[] = await apiClientBackend.get('/chat', { params: chatQuery });
+    const method = req.method.toLowerCase();
+    const url = req.url.replace('/^/chat/', '/chat/');
+
+    const config: AxiosRequestConfig = {
+      method,
+      url,
+      headers: req.headers,
+      params: chatQuery,
+    };
+
+    const chats: ChatType[] = await apiClientBackend(config);
 
     const ret = chatResponseArraySchema.safeParse(chats);
 
@@ -88,7 +109,16 @@ const backendChatRoutes = async (fastify: FastifyInstance) => {
       return reply.code(403).send({ error: 'Forbidden' });
     }
 
-    const postedChat: ChatType = await apiClientBackend.post(`/chat`, { params: chatMessage });
+    const method = req.method.toLowerCase();
+    const url = '/chat';
+
+    const config: AxiosRequestConfig = {
+      method,
+      url,
+      headers: req.headers,
+      data: chatMessage,
+    };
+    const postedChat: ChatType = await apiClientBackend(config);
 
     const ret = chatResponseSchema.safeParse(postedChat);
 

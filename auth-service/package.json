@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "scripts": {
     "start": "tsx src/server.ts",
-    "dev": "npm run lint && npm run type-check && tsx src/server.ts",
+    "dev": "npm run lint && npm run type-check && tsx --watch src/server.ts",
     "lint": "eslint . --ext .ts,.tsx",
     "lint:fix": "eslint . --ext .ts,.tsx --fix",
     "format": "prettier --write .",

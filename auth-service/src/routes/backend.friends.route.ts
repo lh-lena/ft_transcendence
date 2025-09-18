@@ -28,11 +28,11 @@ const backendFriendsRoute = async (fastify: FastifyInstance) => {
     }
 
     const method = req.method.toLowerCase();
-    const url = req.url.replace('/^/friend/', '');
+    const url = req.url.replace('/^/friend/', '/friend/');
 
     const config: AxiosRequestConfig = {
       method,
-      url: url,
+      url,
       headers: req.headers,
     };
 
@@ -42,7 +42,7 @@ const backendFriendsRoute = async (fastify: FastifyInstance) => {
       config.data = req.body;
     }
 
-    const resp = await apiClientBackend.request(config);
+    const resp = await apiClientBackend(config);
 
     const ret = friendResponseSchema.safeParse(resp);
 

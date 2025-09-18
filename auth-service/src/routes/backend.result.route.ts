@@ -1,6 +1,7 @@
 import fp from 'fastify-plugin';
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 
+import { AxiosRequestConfig } from 'axios';
 import { apiClientBackend } from '../utils/apiClient';
 
 import { resultQuerySchema, resultResponseArraySchema } from '../schemas/result';
@@ -13,8 +14,17 @@ import type {
 
 const backendResultRoutes = async (fastify: FastifyInstance) => {
   //-------Result Routes-------//
-  fastify.get('/result/leaderboard', async (_, reply: FastifyReply) => {
-    const results: LeaderboardType[] = await apiClientBackend.get('/result/leaderboard');
+  fastify.get('/result/leaderboard', async (req: FastifyRequest, reply: FastifyReply) => {
+    const method = req.method.toLowerCase();
+    const url = '/result/leaderboard';
+
+    const config: AxiosRequestConfig = {
+      method,
+      url,
+      headers: req.headers,
+    };
+
+    const results: LeaderboardType[] = await apiClientBackend(config);
     return reply.code(200).send(results);
   });
 
@@ -31,9 +41,17 @@ const backendResultRoutes = async (fastify: FastifyInstance) => {
       return reply.code(403).send({ error: 'Forbidden: You can only access your own results' });
     }
 
-    const results: ResultResponseType[] = await apiClientBackend.get('/result', {
+    const method = req.method.toLowerCase();
+    const url = req.url.replace('/^/result/', '/result/');
+
+    const config: AxiosRequestConfig = {
+      method,
+      url,
+      headers: req.headers,
       params: resultQuery,
-    });
+    };
+
+    const results: ResultResponseType[] = await apiClientBackend(config);
 
     const ret = resultResponseArraySchema.safeParse(results);
 

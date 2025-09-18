@@ -6,7 +6,7 @@ import type { JwTPayloadType } from '../schemas/jwt';
 
 export default fp(async (fastify: FastifyInstance) => {
   //set secrets in docker-compose.yml
-  const accessSecret = process.env.ACCESS_TOKE_SECRET;
+  const accessSecret = process.env.ACCESS_TOKEN_SECRET;
   const refreshSecret = process.env.REFRESH_TOKEN_SECRET;
 
   if (!accessSecret || !refreshSecret) {
@@ -67,4 +67,6 @@ export default fp(async (fastify: FastifyInstance) => {
     },
     { prefix: '/refresh' },
   );
+
+  console.log('registered jwt plugin');
 });
