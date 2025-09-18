@@ -17,4 +17,9 @@ export const gameController = {
     const ret = await gameService.getById(id.gameId);
     return ret;
   },
+
+  async deleteOne(id: gameIdType): Promise<{ success: boolean }> {
+    await gameService.update(id.gameId);
+    return { success: true };
+  },
 };

@@ -11,7 +11,7 @@ const gameRoutes = async (server: FastifyInstance) => {
     basePath: '/api/game',
     entityName: 'game',
     controller: gameController,
-    routes: ['getById', 'create'],
+    routes: ['getById', 'create', 'delete'],
   });
 
   server.post('/api/game/join', {

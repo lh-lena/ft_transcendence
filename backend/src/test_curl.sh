@@ -56,8 +56,8 @@ curl -X POST \
   -H 'accept: application/json' \
   -H 'Content-Type: application/json' \
   -d '{
-  "userId": "8ac759cb-e788-428a-a563-8a56b90e9b9f",
-  "mode": "pvp_remote",
+  "userId": "aa8bf1d8-64f9-45cd-80df-4b39000d0ce9",
+  "mode": "pvb_ai",
   "visibility": "public"
 }'
 
@@ -150,4 +150,7 @@ curl -X POST \
     "reciverId": "ea3680c0-1d78-4ada-9e42-da25e0b75575",
     "message": "Hello, how are you?"
   }'
+
+curl -X DELETE \
+  'http://127.0.0.1:8080/api/game/ccb21619-fa64-4db7-b1b2-0514f5928093'
 
