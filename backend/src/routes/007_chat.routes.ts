@@ -15,7 +15,7 @@ const chatRoutes = async (server: FastifyInstance) => {
     routes: ['getQuery', 'create'],
   });
 
-  server.get('/api/chat/overview/:id', {
+  server.get('/api/chat/overview/:userId', {
     schema: {
       summary: 'Get chat overview by ID',
       description: 'Endpoint to retrieve the users chats, including last message and participants.',

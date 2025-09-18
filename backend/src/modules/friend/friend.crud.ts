@@ -1,5 +1,6 @@
 import { prisma } from '../../plugins/001_prisma';
 import { Prisma, Friendship } from '@prisma/client';
+import { friendIdType } from '../../schemas/friend';
 
 export const friendModel = {
   findAll: async (): Promise<Friendship[]> => {
@@ -16,9 +17,9 @@ export const friendModel = {
     return await prisma.friendship.create({ data });
   },
 
-  deleteOne: async (id: number): Promise<boolean> => {
+  deleteOne: async (id: friendIdType): Promise<boolean> => {
     try {
-      await prisma.friendship.delete({ where: { id } });
+      await prisma.friendship.delete({ where: id });
       return true;
     } catch {
       return false;

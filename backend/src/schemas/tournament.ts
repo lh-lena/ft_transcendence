@@ -37,5 +37,6 @@ const tournamentResponse = tournamentBase.meta({ $id: 'tournamentResponse' });
 export const tournamentSchemas = [tournament, tournamentCreate, tournamentId, tournamentResponse];
 
 export type tournamentType = z.infer<typeof tournamentBase>;
+export type tournamentIdType = z.infer<typeof tournamentId>;
 export type tournamentCreateType = z.infer<typeof tournamentCreate>;
 export type tournamentResponseType = z.infer<typeof tournamentResponse>;

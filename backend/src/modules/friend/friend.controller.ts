@@ -1,5 +1,5 @@
 import { Prisma } from '@prisma/client';
-import type { friendType, friendCreateType } from '../../schemas/friend';
+import type { friendType, friendCreateType, friendIdType } from '../../schemas/friend';
 
 import { friendService } from './friend.service';
 
@@ -14,7 +14,7 @@ export const friendController = {
     return ret;
   },
 
-  async deleteOne(id: number): Promise<{ success: boolean }> {
+  async deleteOne(id: friendIdType): Promise<{ success: boolean }> {
     await friendService.deleteOne(id);
     return { success: true };
   },

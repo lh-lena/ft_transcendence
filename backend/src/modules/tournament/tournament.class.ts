@@ -5,11 +5,13 @@ import { userService } from '../user/user.service';
 import { gameService } from '../game/game.service';
 import { notifyPlayer } from '../../utils/notify';
 
+import type { tournamentIdType } from '../../schemas/tournament';
+
 export class tournamentClass {
   private activeTournaments: tournamentType[] = [];
 
-  async getById(id: string): Promise<tournamentType | undefined> {
-    const tournament = this.activeTournaments.find((t) => t.tournamentId === id);
+  async getById(id: tournamentIdType): Promise<tournamentType | undefined> {
+    const tournament = this.activeTournaments.find((t) => t.tournamentId === id.tournamentId);
     return tournament;
   }
 
@@ -35,8 +37,10 @@ export class tournamentClass {
     return newTournament;
   }
 
-  async remove(tournamentId: string): Promise<void> {
-    this.activeTournaments = this.activeTournaments.filter((t) => t.tournamentId !== tournamentId);
+  async remove(tournamentId: tournamentIdType): Promise<void> {
+    this.activeTournaments = this.activeTournaments.filter(
+      (t) => t.tournamentId !== tournamentId.tournamentId,
+    );
   }
 
   async join(tournament: tournamentType, playerId: string): Promise<tournamentType> {
@@ -96,7 +100,7 @@ export class tournamentClass {
         '0000-0000-0000-0000',
         'INFO: You won the tournament!',
       );
-      this.remove(tournament.tournamentId);
+      this.remove(tournament);
     } else if (tournament.games.length === 0) {
       tournament.round += 1;
       await this.createGames(tournament);
