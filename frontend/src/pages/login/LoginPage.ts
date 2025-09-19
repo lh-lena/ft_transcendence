@@ -1,6 +1,7 @@
-import { ServiceContainer, Router } from "../../services";
+import { ServiceContainer, Router, Backend } from "../../services";
 import { Menu } from "../../components/menu";
 import { PongButton } from "../../components/pongButton";
+import { UserLogin } from "../../types";
 
 export class LoginPage {
   private main: HTMLElement;
@@ -10,11 +11,13 @@ export class LoginPage {
   private serviceContainer: ServiceContainer;
   private router: Router;
   private loginForm!: HTMLElement;
+  private backend: Backend;
 
   constructor(serviceContainer: ServiceContainer) {
     // router / services container
     this.serviceContainer = serviceContainer;
     this.router = this.serviceContainer.get<Router>("router");
+    this.backend = this.serviceContainer.get<Backend>("backend");
 
     this.main = document.createElement("div");
     this.main.className =
@@ -64,11 +67,38 @@ export class LoginPage {
     const loginMenu = [
       {
         name: "log in",
-        onClick: () => this.check2FA(),
+        onClick: () => this.attemptLogin(),
       },
     ];
     this.loginMenu = new Menu(this.router, loginMenu);
     this.main.appendChild(this.loginMenu.getMenuElement());
+  }
+
+  private attemptLogin() {
+    const emailInput = document.getElementById(
+      "text_email",
+    ) as HTMLInputElement;
+    const passwordInput = document.getElementById(
+      "text_password",
+    ) as HTMLInputElement;
+
+    const email = emailInput?.value;
+    const password = passwordInput?.value;
+
+    // Basic validation
+    if (!email || !password) {
+      console.error("Email and password are required");
+      return;
+    }
+
+    const userLoginData: UserLogin = {
+      email: email,
+      password: password,
+    };
+
+    this.backend.loginUser(userLoginData);
+    // this should only happen if we get the user (but i think try catch interceptor handles this)
+    this.router.navigate("/chat");
   }
 
   private check2FA(): void {

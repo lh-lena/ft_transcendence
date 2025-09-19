@@ -2,6 +2,7 @@ import axios from "axios";
 import {
   FriendsList,
   UserLocal,
+  UserLogin,
   UserRegistration,
   UserResponse,
 } from "../types";
@@ -28,12 +29,31 @@ export class Backend {
       return config;
     });
 
+    // add response interceptor to handle errors globally
+    this.api.interceptors.response.use(
+      (response) => {
+        // If response is successful (2xx status codes), return it
+        return response;
+      },
+      (error) => {
+        // Handle any response that isn't 2xx
+        console.error("API Error:", error.response?.data || error.message);
+        // You can add specific error handling logic here
+        // if (error.response?.status === 401) {
+        //   // Handle unauthorized - maybe redirect to login
+        //   localStorage.removeItem("jwt");
+        //   localStorage.removeItem("user");
+        // }
+        // Re-throw the error so individual methods can still catch it if needed
+        return Promise.reject(error);
+      },
+    );
+
     // if user exists grab old user form storage
     this.loadUserFromStorage();
   }
 
   async registerUser(data: UserRegistration) {
-    console.log(data);
     let response = await this.api.post("/api/register", data);
 
     // save JWT token if it's returned in the response
@@ -46,6 +66,12 @@ export class Backend {
     return response;
   }
 
+  async loginUser(data: UserLogin) {
+    const response = await this.api.post("/api/login", data);
+    localStorage.setItem("jwt", response.data.jwt);
+    this.fetchUserById(response.data.userId);
+  }
+
   async fetchUserById(userId: string) {
     const response = await this.api.get(`/api/user`, {
       params: {
@@ -54,7 +80,7 @@ export class Backend {
     });
 
     // Extract user data from the array and map it to UserResponse format
-    if (response.status == 200 && response.data && response.data.length > 0) {
+    if (response.data && response.data.length > 0) {
       const userData = response.data[0];
 
       // Map the backend response to UserResponse format expected by setUser

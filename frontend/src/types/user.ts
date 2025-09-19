@@ -16,6 +16,11 @@ export type UserRegistration = {
   avatar?: string;
 };
 
+export type UserLogin = {
+  email: string;
+  password: string;
+};
+
 // user obj we store locally -> notice we use a colormap array instead of string
 export type UserLocal = {
   userId: string;
