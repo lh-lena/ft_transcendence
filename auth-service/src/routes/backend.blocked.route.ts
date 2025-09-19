@@ -10,7 +10,7 @@ import { blockedQuerySchema, blockedResponseSchema } from '../schemas/blocked';
 
 const backendFriendsRoute = async (fastify: FastifyInstance) => {
   //-----------------Friend Routes-----------------
-  fastify.all('/blocked/*', async (req: FastifyRequest, reply: FastifyReply) => {
+  fastify.all('/api/blocked/*', async (req: FastifyRequest, reply: FastifyReply) => {
     let parsedReq;
 
     if (req.params) {

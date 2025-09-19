@@ -235,7 +235,9 @@ const start = async () => {
   });
 
   await server.register(cors, {
+    //TODO set to frontend
     origin: true,
+    credentials: true,
   });
 
   // ------------ Google OAuth2 ------------

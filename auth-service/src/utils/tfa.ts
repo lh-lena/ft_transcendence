@@ -89,7 +89,9 @@ export class tfaHandler {
     reply.setCookie('refreshToken', refreshToken, {
       httpOnly: true,
       path: '/api/refresh',
+      //TODO set to true with https upgrade
       secure: false,
+      maxAge: 60 * 60 * 24 * 7, // 7 days
     });
 
     return reply.code(200).send({ jwt: accessToken, userId: user.userId });

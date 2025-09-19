@@ -8,7 +8,7 @@ import { tournamentCreateSchema, tournamentIdSchema } from '../schemas/tournamen
 import type { TournamentCreateType, TournamentIdType, TournamentType } from '../schemas/tournament';
 
 const backendTournamentRoutes = async (fastify: FastifyInstance) => {
-  fastify.get('/tournament/:id', async (req: FastifyRequest, reply: FastifyReply) => {
+  fastify.get('/api/tournament/:id', async (req: FastifyRequest, reply: FastifyReply) => {
     const parsedReq = tournamentIdSchema.safeParse(req.params);
 
     if (!parsedReq.success) {
@@ -32,7 +32,7 @@ const backendTournamentRoutes = async (fastify: FastifyInstance) => {
     return reply.code(200).send(tournament);
   });
 
-  fastify.post('/tournament', async (req: FastifyRequest, reply: FastifyReply) => {
+  fastify.post('/api/tournament', async (req: FastifyRequest, reply: FastifyReply) => {
     const parsedReq = tournamentCreateSchema.safeParse(req.body);
 
     if (!parsedReq.success) {

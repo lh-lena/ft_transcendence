@@ -14,7 +14,7 @@ import type {
 
 const backendResultRoutes = async (fastify: FastifyInstance) => {
   //-------Result Routes-------//
-  fastify.get('/result/leaderboard', async (req: FastifyRequest, reply: FastifyReply) => {
+  fastify.get('/api/result/leaderboard', async (req: FastifyRequest, reply: FastifyReply) => {
     const method = req.method.toLowerCase();
     const url = '/result/leaderboard';
 
@@ -28,7 +28,7 @@ const backendResultRoutes = async (fastify: FastifyInstance) => {
     return reply.code(200).send(results);
   });
 
-  fastify.get('/result/*', async (req: FastifyRequest, reply: FastifyReply) => {
+  fastify.get('/api/result/*', async (req: FastifyRequest, reply: FastifyReply) => {
     const parsedReq = resultQuerySchema.safeParse(req.query);
 
     if (!parsedReq.success) {
