@@ -23,6 +23,7 @@ export class Backend {
       const token = localStorage.getItem("jwt");
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
+        console.log("founf jwt, sending with request");
       }
       return config;
     });
