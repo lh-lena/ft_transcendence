@@ -115,8 +115,8 @@ export class ChatPage {
       30,
       30,
       2,
-    );
-    addYouButton.appendChild(youButtonAvatar.getElement());
+    ).getElement();
+    addYouButton.appendChild(youButtonAvatar);
     const addYouButtonText = document.createElement("h1");
     addYouButtonText.textContent = user.username;
     addYouButton.appendChild(addYouButtonText);

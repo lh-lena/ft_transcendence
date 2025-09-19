@@ -9,6 +9,7 @@ export class LoginPage {
   private pongButton: PongButton;
   private serviceContainer: ServiceContainer;
   private router: Router;
+  private loginForm: HTMLElement;
 
   constructor(serviceContainer: ServiceContainer) {
     // router / services container
@@ -40,6 +41,44 @@ export class LoginPage {
     this.main.removeChild(this.firstMenu.getMenuElement());
 
     // form
+    this.loginForm = document.createElement("form");
+    this.loginForm.className = "flex flex-col gap-3 w-48";
+    this.main.appendChild(this.loginForm);
+
+    // email input
+    const inputEmail = document.createElement("input");
+    inputEmail.type = "email";
+    inputEmail.id = "text_email";
+    inputEmail.placeholder = "email";
+    inputEmail.style.paddingLeft = "0.5em";
+    this.loginForm.appendChild(inputEmail);
+
+    // password input
+    const inputPassword = document.createElement("input");
+    inputPassword.type = "password";
+    inputPassword.id = "text_password";
+    inputPassword.placeholder = "password";
+    inputPassword.style.paddingLeft = "0.5em";
+    this.loginForm.appendChild(inputPassword);
+
+    const loginMenu = [
+      {
+        name: "log in",
+        onClick: () => this.check2FA(),
+      },
+    ];
+    this.loginMenu = new Menu(this.router, loginMenu);
+    this.main.appendChild(this.loginMenu.getMenuElement());
+  }
+
+  private check2FA(): void {
+    // check to see if user has 2FA enabled
+
+    // get rid of
+    this.loginMenu.unmount();
+    this.loginForm.remove();
+
+    // form
     const form = document.createElement("form");
     form.className = "flex flex-col gap-3 w-48";
     this.main.appendChild(form);
@@ -48,21 +87,23 @@ export class LoginPage {
     const inputEmail = document.createElement("input");
     inputEmail.type = "email";
     inputEmail.id = "text_email";
-    inputEmail.placeholder = "email";
+    inputEmail.placeholder = "code";
     inputEmail.style.paddingLeft = "0.5em";
     form.appendChild(inputEmail);
 
-    // password input
-    const inputPassword = document.createElement("input");
-    inputPassword.type = "password";
-    inputPassword.id = "text_password";
-    inputPassword.placeholder = "password";
-    inputPassword.style.paddingLeft = "0.5em";
-    form.appendChild(inputPassword);
+    const verificationButton = document.createElement("button");
+    verificationButton.className = "btn w-36 mx-auto mt-4";
+    verificationButton.onclick = (e) => {
+      e.preventDefault();
+      const code = inputEmail.value;
+      this.verify2FACode(code);
+    };
+    verificationButton.innerText = "verify";
+    form.appendChild(verificationButton);
+  }
 
-    const loginMenu = [{ name: "log in", link: "/chat" }];
-    this.loginMenu = new Menu(this.router, loginMenu);
-    this.main.appendChild(this.loginMenu.getMenuElement());
+  private verify2FACode(code: string): void {
+    console.log(code);
   }
 
   public mount(parent: HTMLElement): void {

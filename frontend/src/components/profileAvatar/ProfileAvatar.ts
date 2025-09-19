@@ -14,6 +14,7 @@ export class ProfileAvatar {
     height: number = 40,
     gridSize: number = 2,
     style?: string,
+    imageUrl?: string,
   ) {
     this.color = color;
     this.colorMap = colorMap;
@@ -27,35 +28,48 @@ export class ProfileAvatar {
     this.element.style.height = `${height}px`;
     this.element.className = "flex items-center justify-center";
 
-    const canvas = document.createElement("canvas");
-    canvas.width = width + 5;
-    canvas.height = height + 5;
-    const ctx = canvas.getContext("2d")!;
-
-    const squareWidth = width / gridSize;
-    const squareHeight = height / gridSize;
-
-    // Draw squares based on colorMap
-    let i = 0;
-    for (let y = 0; y < gridSize; y++) {
-      for (let x = 0; x < gridSize; x++) {
-        ctx.fillStyle = this.colorMap[i] || "white";
-        ctx.fillRect(
-          x * squareWidth,
-          y * squareHeight,
-          squareWidth,
-          squareHeight,
-        );
-        i++;
-      }
+    // use image instead of canvas
+    if (style && style === "image" && imageUrl) {
+      const img = document.createElement("img");
+      img.src = imageUrl;
+      img.width = width;
+      img.height = height;
+      img.style.objectFit = "cover";
+      img.style.border = `2px solid ${this.color}`;
+      this.element.appendChild(img);
     }
+    // default canvas style
+    else {
+      const canvas = document.createElement("canvas");
+      canvas.width = width + 5;
+      canvas.height = height + 5;
+      const ctx = canvas.getContext("2d")!;
 
-    // Draw border around the edge using the primary color
-    ctx.strokeStyle = this.color;
-    ctx.lineWidth = 4;
-    ctx.strokeRect(2, 2, width - 1, height - 1);
+      const squareWidth = width / gridSize;
+      const squareHeight = height / gridSize;
 
-    this.element.appendChild(canvas);
+      // draw squares based on colorMap
+      let i = 0;
+      for (let y = 0; y < gridSize; y++) {
+        for (let x = 0; x < gridSize; x++) {
+          ctx.fillStyle = this.colorMap[i] || "white";
+          ctx.fillRect(
+            x * squareWidth,
+            y * squareHeight,
+            squareWidth,
+            squareHeight,
+          );
+          i++;
+        }
+      }
+
+      // draw border around the edge using the primary color
+      ctx.strokeStyle = this.color;
+      ctx.lineWidth = 4;
+      ctx.strokeRect(2, 2, width - 1, height - 1);
+
+      this.element.appendChild(canvas);
+    }
   }
 
   public mount(parent: HTMLElement): void {
