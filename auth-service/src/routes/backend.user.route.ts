@@ -17,7 +17,13 @@ import {
 const backendUserRoutes = async (fastify: FastifyInstance) => {
   //-------User Routes-------//
 
-  fastify.get('/api/user/:id', async (req: FastifyRequest, reply: FastifyReply) => {
+  fastify.get('/api/user/:userId', async (req: FastifyRequest, reply: FastifyReply) => {
+    console.log(
+      '\n[DEBUG] GET /api/user/:id called with params:',
+      req.params,
+      'and user:',
+      req.user,
+    );
     const parsedReq = userIdSchema.safeParse(req.params);
 
     if (!parsedReq.success) {
