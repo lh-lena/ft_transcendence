@@ -57,7 +57,9 @@ export class App {
 
     // Define routes from single source
     Object.entries(PAGE_ROUTES).forEach(([route, PageClass]) => {
-      this.router.add(route, () => this.showPage(PageClass));
+      this.router.add(route, async () => {
+        await this.showPage(PageClass);
+      });
     });
     this.router.init();
   }
@@ -66,7 +68,7 @@ export class App {
     parent.appendChild(this.container);
   }
 
-  private showPage(PageClass: PageConstructor) {
+  private async showPage(PageClass: PageConstructor) {
     if (this.currentPage) {
       this.currentPage.unmount();
     }
@@ -74,12 +76,16 @@ export class App {
     const loading = new Loading("pong");
     loading.mount(this.container);
     // show loading screen
-    const randomLoadingTime = Math.random() * 400 + 400;
     // random range between 400 and 800
-    setTimeout(() => {
-      loading.hide();
+    loading.hide();
+
+    // Handle ChatPage's async initialization
+    if (PageClass === ChatPage) {
+      this.currentPage = await ChatPage.create(this.serviceContainer);
+    } else {
       this.currentPage = new PageClass(this.serviceContainer);
-      this.currentPage.mount(this.container);
-    }, randomLoadingTime);
+    }
+
+    this.currentPage.mount(this.container);
   }
 }

@@ -22,7 +22,7 @@ export type UserLogin = {
 };
 
 // user obj we store locally -> notice we use a colormap array instead of string
-export type UserLocal = {
+export type User = {
   userId: string;
   createdAt: string;
   updatedAt: string;
@@ -35,23 +35,10 @@ export type UserLocal = {
   color: string;
   colormap: string[];
   avatar: string | null;
+  online?: string;
 };
 
-// user obj we get back from backend
-export type UserResponse = {
-  id: string;
-  createdAt: string;
-  updatedAt: string;
-  email: string;
-  username: string;
-  password_hash: string;
-  is_2fa_enabled: boolean;
-  twofa_secret: string;
-  guest: boolean;
-  color: string;
-  colormap: string;
-  avatar: string | null;
-};
+export type UsersAll = User[];
 
 export type FriendsList = {
   id: number;

@@ -1,17 +1,11 @@
 import axios from "axios";
-import {
-  FriendsList,
-  UserLocal,
-  UserLogin,
-  UserRegistration,
-  UserResponse,
-} from "../types";
+import { FriendsList, User, UserLogin, UserRegistration } from "../types";
 
 // utils
 import { profilePrintToArray } from "../utils/profilePrintFunctions";
 
 export class Backend {
-  private user!: UserLocal;
+  private user!: User;
   private friends!: FriendsList;
   private api = axios.create({
     baseURL: import.meta.env.VITE_AUTH_URL,
@@ -60,8 +54,8 @@ export class Backend {
     // save JWT token if it's returned in the response
     if (response.data.jwt && response.data.userId) {
       localStorage.setItem("jwt", response.data.jwt);
-      response = await this.fetchUserById(response.data.userId);
-      console.log(response);
+      const userResponse = await this.fetchUserById(response.data.userId);
+      this.setUser(userResponse.data);
     }
 
     return response;
@@ -70,17 +64,12 @@ export class Backend {
   async loginUser(data: UserLogin) {
     const response = await this.api.post("/api/login", data);
     localStorage.setItem("jwt", response.data.jwt);
-    this.fetchUserById(response.data.userId);
+    const userResponse = await this.fetchUserById(response.data.userId);
+    this.setUser(userResponse.data);
   }
 
   async fetchUserById(userId: string) {
     const response = await this.api.get(`/api/user/${userId}`);
-
-    // Extract user data from the array and map it to UserResponse format
-    const userData: UserResponse = response.data;
-
-    this.setUser(userData);
-
     return response;
   }
 
@@ -89,41 +78,33 @@ export class Backend {
     return this.user;
   }
 
-  setUser(response: UserResponse) {
+  setUser(response: User) {
     console.log(response);
-    this.user = {} as UserLocal;
-    this.user.userId = response.id;
-    this.user.createdAt = response.createdAt;
-    this.user.updatedAt = response.updatedAt;
-    this.user.email = response.email;
-    this.user.username = response.username;
-    this.user.password_hash = response.password_hash;
-    this.user.is_2fa_enabled = response.is_2fa_enabled;
-    this.user.twofa_secret = response.twofa_secret;
-    this.user.guest = response.guest;
-    this.user.color = response.color;
-    // take string color map to array
-    this.user.colormap = profilePrintToArray(response.colormap);
-    console.log(this.user.colormap);
-    this.user.avatar = response.avatar;
+    this.user = response;
+    this.user = {
+      ...response,
+      colormap:
+        typeof response.colormap === "string"
+          ? profilePrintToArray(response.colormap)
+          : response.colormap, // keep existing if already processed
+    };
 
     // save to local
     this.saveUserToStorage();
   }
 
-  async fetchFriends() {
-    const response = await this.api.get("/friend", {
-      params: {
-        // fetch friends using user id we've stored locally
-        userId: this.user.userId,
-      },
-    });
-    console.log(response);
-    return response.data;
-  }
+  // async fetchFriendsById(userId: string) {
+  //   const response = await this.api.get("/api/friend", {
+  //     params: {
+  //       // fetch friends using user id we've stored locally
+  //       userId: userId,
+  //     },
+  //   });
+  //   return response.data;
+  // }
 
   async fetchAllUsers() {
-    const response = await this.api.get("user");
+    const response = await this.api.get("/api/user");
     return response;
   }
 
@@ -159,7 +140,7 @@ export class Backend {
 
   // get leaderboard results
   async getLeaderboard() {
-    const response = await this.api.get(`/result/leaderboard`);
+    const response = await this.api.get(`/api/result/leaderboard`);
     return response.data;
   }
 

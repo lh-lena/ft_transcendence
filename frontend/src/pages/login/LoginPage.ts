@@ -74,7 +74,7 @@ export class LoginPage {
     this.main.appendChild(this.loginMenu.getMenuElement());
   }
 
-  private attemptLogin() {
+  private async attemptLogin() {
     const emailInput = document.getElementById(
       "text_email",
     ) as HTMLInputElement;
@@ -96,7 +96,7 @@ export class LoginPage {
       password: password,
     };
 
-    this.backend.loginUser(userLoginData);
+    await this.backend.loginUser(userLoginData);
     // this should only happen if we get the user (but i think try catch interceptor handles this)
     this.router.navigate("/chat");
   }

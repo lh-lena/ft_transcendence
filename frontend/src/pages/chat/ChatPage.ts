@@ -1,85 +1,92 @@
 import { ServiceContainer, Router, Backend } from "../../services";
 import { Window } from "../../components/window";
-import { CANVAS_DEFAULTS } from "../../types";
+import { CANVAS_DEFAULTS, FriendsList, UsersAll } from "../../types";
 import { MenuBar } from "../../components/menuBar";
 import { ProfileAvatar } from "../../components/profileAvatar";
 import { sampleChatHistory } from "../../constants/backend";
 import { InformationIcon } from "../../components/informationIcon";
 import { ProfilePopUp } from "../../components/profilePopUp";
 
-// new backend types
-import { UserLocal } from "../../types";
-
 // pretend backend -> change
 import { sampleFriends } from "../../constants/backend";
 import { FriendsIcon } from "../../components/friendsIcon";
-// fake leaderboard data
-export const sampleLeaderboard = [
-  {
-    id: 1,
-    username: "alice",
-    wins: 12,
-  },
-  {
-    id: 2,
-    username: "bob",
-    wins: 8,
-  },
-  {
-    id: 3,
-    username: "charlie",
-    wins: 15,
-  },
-  {
-    id: 4,
-    username: "dana",
-    wins: 5,
-  },
-  {
-    id: 5,
-    username: "eve",
-    wins: 20,
-  },
-];
+import { Leaderboard } from "../../types/leaderboard";
+import { profilePrintToArray } from "../../utils/profilePrintFunctions";
+
+import { User } from "../../types";
 
 export class ChatPage {
   private serviceContainer: ServiceContainer;
   private router: Router;
-  private container;
+  private container!: HTMLDivElement;
   private clickedContact!: HTMLDivElement;
-  private bottomBar: HTMLDivElement;
-  private inputBox: HTMLDivElement;
-  private actionButton: HTMLElement;
-  private inputMessage: HTMLInputElement;
-  private sendButton: HTMLElement;
+  private bottomBar!: HTMLDivElement;
+  private inputBox!: HTMLDivElement;
+  private actionButton!: HTMLElement;
+  private inputMessage!: HTMLInputElement;
+  private sendButton!: HTMLElement;
   private sendInvite!: HTMLDivElement;
-  private chatPanel: HTMLDivElement;
-  private addFriendsPanel: HTMLDivElement;
-  private chatRow: HTMLDivElement;
-  private leaderboardPanel: HTMLDivElement;
-  private profilePopUp: HTMLElement;
+  private chatPanel!: HTMLDivElement;
+  private addFriendsPanel!: HTMLDivElement;
+  private chatRow!: HTMLDivElement;
+  private leaderboardPanel!: HTMLDivElement;
+  private profilePopUp!: HTMLElement;
   private backend: Backend;
   // keeps track of what panel is on left
-  private leftPanel: HTMLDivElement;
+  private leftPanel!: HTMLDivElement;
   // keeps track of what panel is on right
-  private rightPanel: HTMLElement;
+  private rightPanel!: HTMLElement;
+  private leaderboardData!: Leaderboard;
+  private allUserData!: UsersAll;
+  private searchInput!: HTMLInputElement;
+  private friendsList!: FriendsList;
+  private searchResults!: HTMLDivElement;
 
   constructor(serviceContainer: ServiceContainer) {
     // router / services container
     this.serviceContainer = serviceContainer;
     this.router = this.serviceContainer.get<Router>("router");
     this.backend = this.serviceContainer.get<Backend>("backend");
+  }
 
-    // grab user data from backend
-    const user: UserLocal = this.backend.getUser();
-    console.log(user);
+  public static async create(
+    serviceContainer: ServiceContainer,
+  ): Promise<ChatPage> {
+    const instance = new ChatPage(serviceContainer);
 
-    // grab leaderboard data from backend
-    // const leaderboard = this.backend.getLeaderboard();
-    // console.log(leaderboard);
+    // handle async operations
 
-    // get friend data from backend
-    this.backend.fetchFriends();
+    // all users fetch
+    instance.allUserData = (await instance.backend.fetchAllUsers()).data;
+    for (const element of instance.allUserData) {
+      element.colormap =
+        typeof element.colormap === "string"
+          ? profilePrintToArray(element.colormap)
+          : element.colormap;
+    }
+    // leaderboard fetch
+    const initLeaderboardData: Leaderboard =
+      await instance.backend.getLeaderboard();
+    for (const element of initLeaderboardData) {
+      const userResponse = await instance.backend.fetchUserById(element.userId);
+      element.username = userResponse.data.username;
+      element.colormap = profilePrintToArray(userResponse.data.colormap);
+      element.color = userResponse.data.color;
+      element.avatar = userResponse.data.avatar;
+    }
+    instance.leaderboardData = initLeaderboardData;
+    // instance.friendsList = await instance.backend.fetchFriendsById(
+    //   instance.backend.getUser().userId,
+    // );
+
+    // Complete the UI setup
+    instance.setupUI();
+
+    return instance;
+  }
+
+  private setupUI() {
+    const user: User = this.backend.getUser();
 
     // main container
     this.container = document.createElement("div");
@@ -213,13 +220,25 @@ export class ChatPage {
     leaderboardResults.className =
       "grid grid-cols-2 gap-2 p-2 w-full my-3 overflow-y-auto";
     this.leaderboardPanel.appendChild(leaderboardResults);
-    sampleLeaderboard.forEach((user) => {
+    this.leaderboardData.forEach((user) => {
       const resultBox = document.createElement("div");
       resultBox.className =
         "flex flex-row gap-2 box standard-dialog w-full items-center";
-      // add avatar to this
+      if (user.color && user.colormap) {
+        const avatar = new ProfileAvatar(
+          user.color,
+          user.colormap,
+          30,
+          30,
+          2,
+        ).getElement();
+        resultBox.appendChild(avatar);
+      }
       const username = document.createElement("h1");
-      username.textContent = user.username;
+      if (user.username) {
+        username.textContent = user.username;
+        username.className = "truncate flex-1 min-w-0 ml-2";
+      }
       resultBox.appendChild(username);
       const userScore = document.createElement("h1");
       userScore.textContent = `wins: ${user.wins}`;
@@ -269,45 +288,24 @@ export class ChatPage {
     friendsInputBox.className =
       "flex flex-row gap-2 w-full pt-2 items-center px-2";
     this.addFriendsPanel.appendChild(friendsInputBox);
-    const friendsInputBoxSearch = document.createElement("input");
-    friendsInputBoxSearch.className = "w-4/5 rounded h-10";
-    friendsInputBoxSearch.type = "text";
-    friendsInputBoxSearch.style.paddingLeft = "0.5em";
-    friendsInputBoxSearch.placeholder = "search";
-    friendsInputBox.appendChild(friendsInputBoxSearch);
+    this.searchInput = document.createElement("input");
+    this.searchInput.className = "w-4/5 rounded h-10";
+    this.searchInput.type = "text";
+    this.searchInput.style.paddingLeft = "0.5em";
+    this.searchInput.placeholder = "search";
+    friendsInputBox.appendChild(this.searchInput);
     const searchButton = document.createElement("button");
     searchButton.textContent = "search";
     searchButton.className =
       "btn flex items-center justify-center text-center h-10 w-1/5";
-    searchButton.onclick = () => this.sendButtonHook();
+    searchButton.onclick = () => this.searchButtonHook();
     friendsInputBox.appendChild(searchButton);
-
     // search results add friends
-    const searchResults = document.createElement("div");
-    searchResults.className =
+    this.searchResults = document.createElement("div");
+    this.searchResults.className =
       "grid grid-cols-3 gap-2 p-2 w-full my-3 overflow-y-auto";
-    this.addFriendsPanel.appendChild(searchResults);
-    sampleFriends.forEach((friend) => {
-      const contact = document.createElement("div");
-      contact.className =
-        "flex flex-row gap-2 box standard-dialog w-full items-center";
-      const clickableContact = document.createElement("a");
-      clickableContact.onclick = () => this.toggleProfilePopUp(user);
-      clickableContact.style.cursor = "pointer";
-      const contactName = document.createElement("h1");
-      contactName.textContent = friend.username;
-      const contactAvatar = new ProfileAvatar(
-        friend.color,
-        friend.colorMap,
-        30,
-        30,
-        2,
-      ).getElement();
-      clickableContact.appendChild(contact);
-      contact.appendChild(contactAvatar);
-      contact.appendChild(contactName);
-      searchResults.appendChild(clickableContact);
-    });
+    this.addFriendsPanel.appendChild(this.searchResults);
+    this.populateAddFriends(this.allUserData);
 
     // input at bottom
     this.inputBox = document.createElement("div");
@@ -326,7 +324,7 @@ export class ChatPage {
     this.sendButton = document.createElement("button");
     this.sendButton.textContent = "send";
     this.sendButton.className = "btn items-center justify-center h-10 w-1/5";
-    this.sendButton.onclick = () => this.sendButtonHook();
+    this.sendButton.onclick = () => this.chatStuff();
 
     this.inputBox.appendChild(this.inputMessage);
     this.inputBox.appendChild(this.sendButton);
@@ -421,12 +419,11 @@ export class ChatPage {
 
   // add friend panel: left panel type
   private toggleAddFriendPanel(): void {
-    console.log("toggleAddFriendPanel");
     this.replaceLeftPanel(this.addFriendsPanel);
   }
 
   // right side panel (only type that populates right side panel as of rn)
-  private toggleProfilePopUp(user: UserLocal): void {
+  private toggleProfilePopUp(user: User): void {
     // remove profile pop up if it is already shown on screen
     if (this.profilePopUp && this.chatRow.contains(this.rightPanel)) {
       this.chatRow.removeChild(this.rightPanel);
@@ -434,7 +431,7 @@ export class ChatPage {
     }
 
     // create new popup and show it
-    if (user === this.backend.getUser()) {
+    if (user.userId === this.backend.getUser().userId) {
       // case is pop up for local user
       this.profilePopUp = new ProfilePopUp(
         () => this.toggleProfilePopUp(user),
@@ -447,14 +444,51 @@ export class ChatPage {
         "friend",
       ).getNode();
     }
+    this.rightPanel = this.profilePopUp;
     this.chatRow.appendChild(this.rightPanel);
   }
 
   // HOOKS:
 
-  private sendButtonHook(): void {
+  private searchButtonHook(): void {
     // release toggle
-    if (this.inputBox.contains(this.sendInvite)) this.toggleInvitePrompt();
+    const searchValue = this.searchInput.value.toLowerCase().trim();
+    this.searchResults.innerHTML = "";
+    // Filter users based on search value
+    const filteredUsers = this.allUserData.filter((user) => 
+      user.username.toLowerCase().includes(searchValue),
+    );
+    // populate with filtered results, or show all if search is empty
+    const usersToShow = searchValue === "" ? this.allUserData : filteredUsers;
+    this.populateAddFriends(usersToShow);
+  }
+
+  private populateAddFriends(userList: UsersAll): void {
+    userList.forEach((friend) => {
+      // skip yourself (cant add yourself)
+      if (friend.userId !== this.backend.getUser().userId) {
+        const contact = document.createElement("div");
+        contact.className =
+          "flex flex-row gap-2 box standard-dialog w-full items-center";
+        const clickableContact = document.createElement("a");
+        clickableContact.onclick = () => this.toggleProfilePopUp(friend);
+        clickableContact.style.cursor = "pointer";
+        const contactName = document.createElement("h1");
+        contactName.textContent = friend.username;
+        contactName.className = "truncate flex-1 min-w-0";
+        const contactAvatar = new ProfileAvatar(
+          friend.color,
+          friend.colormap,
+          30,
+          30,
+          2,
+        ).getElement();
+        clickableContact.appendChild(contact);
+        contact.appendChild(contactAvatar);
+        contact.appendChild(contactName);
+        this.searchResults.appendChild(clickableContact);
+      }
+    });
   }
 
   // standard mount unmount:
