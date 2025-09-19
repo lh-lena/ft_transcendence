@@ -55,12 +55,13 @@ export class Backend {
 
   async registerUser(data: UserRegistration) {
     let response = await this.api.post("/api/register", data);
+    console.log(response);
 
     // save JWT token if it's returned in the response
     if (response.data.jwt && response.data.userId) {
-      console.log(`userId ${response.data.userId}`);
       localStorage.setItem("jwt", response.data.jwt);
       response = await this.fetchUserById(response.data.userId);
+      console.log(response);
     }
 
     return response;
@@ -76,27 +77,9 @@ export class Backend {
     const response = await this.api.get(`/api/user/${userId}`);
 
     // Extract user data from the array and map it to UserResponse format
-    if (response.data && response.data.length > 0) {
-      const userData = response.data[0];
+    const userData: UserResponse = response.data;
 
-      // Map the backend response to UserResponse format expected by setUser
-      const userResponse: UserResponse = {
-        id: userData.userId,
-        createdAt: "", // Not provided by backend, set default
-        updatedAt: "", // Not provided by backend, set default
-        email: "", // Not provided by backend, set default
-        username: userData.username,
-        password_hash: "", // Not provided by backend, set default
-        is_2fa_enabled: false, // Not provided by backend, set default
-        twofa_secret: "", // Not provided by backend, set default
-        guest: false, // Not provided by backend, set default
-        color: userData.color,
-        colormap: userData.colormap,
-        avatar: userData.avatar || "", // Handle null avatar
-      };
-
-      this.setUser(userResponse);
-    }
+    this.setUser(userData);
 
     return response;
   }
@@ -107,6 +90,7 @@ export class Backend {
   }
 
   setUser(response: UserResponse) {
+    console.log(response);
     this.user = {} as UserLocal;
     this.user.userId = response.id;
     this.user.createdAt = response.createdAt;

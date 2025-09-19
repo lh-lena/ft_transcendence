@@ -77,16 +77,11 @@ export class RegisterPage {
       colormap: profilePrintToString(colorMap), // Default or get from form
     };
 
-    try {
-      const response = await this.backend.registerUser(userRegistrationData);
-      // if user object was received
-      if (response.status === 200) {
-        this.router.navigate("/chat");
-      }
-    } catch (error) {
-      console.error(error);
-      alert(`Registration failed: ${error}`);
-    }
+    await this.backend.registerUser(userRegistrationData);
+    console.log(this.backend.getUser());
+    console.log(`local storj: ${localStorage.getItem("user")}`);
+    // if user object was received
+    this.router.navigate("/chat");
   }
 
   private toggleRegisterMenu(): void {
