@@ -73,11 +73,7 @@ export class Backend {
   }
 
   async fetchUserById(userId: string) {
-    const response = await this.api.get(`/api/user`, {
-      params: {
-        userId: userId,
-      },
-    });
+    const response = await this.api.get(`/api/user/${userId}`);
 
     // Extract user data from the array and map it to UserResponse format
     if (response.data && response.data.length > 0) {
