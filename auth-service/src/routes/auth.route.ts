@@ -40,7 +40,7 @@ const authRoutes = async (server: FastifyInstance) => {
     const config: AxiosRequestConfig = {
       method: 'post',
       url: '/user',
-      //     headers: req.headers,
+      //headers: req.headers,
       data: newUser,
     };
     const ret = await apiClientBackend(config);
