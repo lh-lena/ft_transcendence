@@ -70,8 +70,8 @@ export class RegisterPage {
     const userRegistrationData: UserRegistration = {
       email: email,
       username: username,
-      password_hash: password, // You might want to hash this on the backend
-      is_2fa_enabled: "false", // Default values for now
+      password: password, // You might want to hash this on the backend
+      tfaEnabled: "false", // Default values for now
       twofa_secret: "",
       color: color, // Default or get from form
       colormap: profilePrintToString(colorMap), // Default or get from form

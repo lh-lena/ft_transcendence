@@ -9,7 +9,7 @@ export class LoginPage {
   private pongButton: PongButton;
   private serviceContainer: ServiceContainer;
   private router: Router;
-  private loginForm: HTMLElement;
+  private loginForm!: HTMLElement;
 
   constructor(serviceContainer: ServiceContainer) {
     // router / services container

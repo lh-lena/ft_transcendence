@@ -13,14 +13,14 @@ export class Backend {
   private user!: UserLocal;
   private friends!: FriendsList;
   private api = axios.create({
-    baseURL: import.meta.env.VITE_BACKEND_URL,
+    baseURL: import.meta.env.VITE_AUTH_URL,
     timeout: 10000,
   });
 
   constructor() {
     // Add request interceptor for auth tokens
     this.api.interceptors.request.use((config) => {
-      const token = localStorage.getItem("authToken");
+      const token = localStorage.getItem("jwt");
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
       }
@@ -32,7 +32,14 @@ export class Backend {
 
   async registerUser(data: UserRegistration) {
     console.log(data);
-    const response = await this.api.post("/user", data);
+    const response = await this.api.post("/api/register", data);
+
+    // save JWT token if it's returned in the response
+    if (response.data.jwt) {
+      localStorage.setItem("jwt", response.data.jwt);
+    }
+
+    console.log(response);
     return response;
   }
 

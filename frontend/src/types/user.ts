@@ -7,8 +7,8 @@ export interface UserProfile {
 export type UserRegistration = {
   email: string;
   username: string;
-  password_hash: string;
-  is_2fa_enabled?: string;
+  password: string;
+  tfaEnabled?: string;
   twofa_secret?: string;
   guest?: string;
   color: string;
