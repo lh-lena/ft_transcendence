@@ -8,7 +8,7 @@ export const userSchema = z.object({
   updatedAt: dtString.optional(),
 
   email: z.email(),
-  username: z.string().min(3).max(15),
+  username: z.string().min(1).max(6),
   alias: z.string().nullable().optional(),
 
   password_hash: z.string(),

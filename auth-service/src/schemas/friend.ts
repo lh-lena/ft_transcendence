@@ -6,6 +6,8 @@ export const friendSchema = z.object({
   friendId: z.uuid().optional(),
   createdAt: dtString.optional(),
 });
+
+export const friendPostSchema = friendSchema.pick({ userId: true }).extend({ friendId: z.uuid() });
 export const friendArraySchema = z.array(friendSchema);
 
 export const friendQuerySchema = friendSchema;

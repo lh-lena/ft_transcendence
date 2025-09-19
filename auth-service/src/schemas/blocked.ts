@@ -6,6 +6,11 @@ export const blockedSchema = z.object({
   blockedId: z.uuid().optional(),
   createdAt: dtString.optional(),
 });
+
+export const blockedPostSchema = blockedSchema
+  .pick({ userId: true })
+  .extend({ blockedId: z.uuid() });
+
 export const blockedArraySchema = z.array(blockedSchema);
 
 export const blockedQuerySchema = blockedSchema;
