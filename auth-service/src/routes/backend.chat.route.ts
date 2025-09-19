@@ -24,8 +24,9 @@ import type { UserIdType } from '../schemas/user';
 const backendChatRoutes = async (fastify: FastifyInstance) => {
   //-------Chat Routes-------//
 
-  fastify.get('/chat/overview/:id', async (req: FastifyRequest, reply: FastifyReply) => {
+  fastify.get('/api/chat/overview/:userId', async (req: FastifyRequest, reply: FastifyReply) => {
     const parsedReq = userIdSchema.safeParse(req.params);
+    console.log(req.params, ' in chat route');
 
     if (!parsedReq.success) {
       return reply.code(400).send({ error: 'Invalid user Id' });
@@ -60,7 +61,7 @@ const backendChatRoutes = async (fastify: FastifyInstance) => {
     return reply.code(200).send(chatRet);
   });
 
-  fastify.get('/chat/*', async (req: FastifyRequest, reply: FastifyReply) => {
+  fastify.get('/api/chat/*', async (req: FastifyRequest, reply: FastifyReply) => {
     const parsedReq = chatQuerySchema.safeParse(req.query);
 
     if (!parsedReq.success) {
@@ -96,7 +97,7 @@ const backendChatRoutes = async (fastify: FastifyInstance) => {
     return reply.code(200).send(chatRet);
   });
 
-  fastify.post('/chat', async (req: FastifyRequest, reply: FastifyReply) => {
+  fastify.post('/api/chat', async (req: FastifyRequest, reply: FastifyReply) => {
     const parsedReq = chatPostSchema.safeParse(req.body);
 
     if (!parsedReq.success) {

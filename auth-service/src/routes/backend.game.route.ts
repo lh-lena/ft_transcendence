@@ -18,7 +18,7 @@ import type {
 } from '../schemas/game';
 
 const backendGameRoutes = async (fastify: FastifyInstance) => {
-  fastify.get('/game/:id', async (req: FastifyRequest, reply: FastifyReply) => {
+  fastify.get('/api/game/:id', async (req: FastifyRequest, reply: FastifyReply) => {
     const parsedReq = gameIdSchema.safeParse(req.params);
 
     if (!parsedReq.success) {
@@ -48,7 +48,7 @@ const backendGameRoutes = async (fastify: FastifyInstance) => {
     return reply.code(200).send(gameRet);
   });
 
-  fastify.post('/game', async (req: FastifyRequest, reply: FastifyReply) => {
+  fastify.post('/api/game', async (req: FastifyRequest, reply: FastifyReply) => {
     const parsedReq = gameCreateSchema.safeParse(req.body);
 
     if (!parsedReq.success) {
@@ -83,7 +83,7 @@ const backendGameRoutes = async (fastify: FastifyInstance) => {
     return reply.code(201).send({ gameRet });
   });
 
-  fastify.post('/game/join', async (req: FastifyRequest, reply: FastifyReply) => {
+  fastify.post('/api/game/join', async (req: FastifyRequest, reply: FastifyReply) => {
     const parsedReq = gameJoinSchema.safeParse(req.body);
 
     if (!parsedReq.success) {

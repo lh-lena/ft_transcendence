@@ -88,7 +88,7 @@ const backendUserRoutes = async (fastify: FastifyInstance) => {
     return reply.code(200).send(usersRet);
   });
 
-  fastify.patch('/user/:id', async (req: FastifyRequest, reply: FastifyReply) => {
+  fastify.patch('/api/user/:id', async (req: FastifyRequest, reply: FastifyReply) => {
     const parsedParams = userIdSchema.safeParse(req.params);
     const parsedBody = userPatchSchema.safeParse(req.body);
 
@@ -130,7 +130,7 @@ const backendUserRoutes = async (fastify: FastifyInstance) => {
     return reply.code(201).send(userRet);
   });
 
-  fastify.delete('/user/:id', async (req: FastifyRequest, reply: FastifyReply) => {
+  fastify.delete('/api/user/:id', async (req: FastifyRequest, reply: FastifyReply) => {
     const parsedReq = userIdSchema.safeParse(req.params);
 
     if (!parsedReq.success) {

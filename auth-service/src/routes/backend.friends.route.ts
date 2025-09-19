@@ -10,7 +10,7 @@ import { friendQuerySchema, friendResponseSchema } from '../schemas/friend';
 
 const backendFriendsRoute = async (fastify: FastifyInstance) => {
   //-----------------Friend Routes-----------------
-  fastify.all('/friend/*', async (req: FastifyRequest, reply: FastifyReply) => {
+  fastify.all('/api/friend*', async (req: FastifyRequest, reply: FastifyReply) => {
     let parsedReq;
 
     if (req.params) {
