@@ -6,17 +6,26 @@ import { AxiosRequestConfig } from 'axios';
 
 import { userIdSchema } from '../schemas/user';
 
-import { friendQuerySchema, friendResponseSchema } from '../schemas/friend';
+import { friendQuerySchema, friendPostSchema, friendResponseSchema } from '../schemas/friend';
 
 const backendFriendsRoute = async (fastify: FastifyInstance) => {
   //-----------------Friend Routes-----------------
-  fastify.all('/api/friend*', async (req: FastifyRequest, reply: FastifyReply) => {
+  fastify.all('/api/friend', async (req: FastifyRequest, reply: FastifyReply) => {
     let parsedReq;
+    let parsedBody;
 
-    if (req.params) {
-      parsedReq = userIdSchema.safeParse(req.params);
-    } else if (req.query) {
+    if (req.query) {
       parsedReq = friendQuerySchema.safeParse(req.query);
+    } else if (req.params) {
+      parsedReq = userIdSchema.safeParse(req.params);
+    }
+
+    if (req.body) {
+      console.log(req.body);
+      parsedBody = friendPostSchema.safeParse(req.body);
+      if (!parsedBody.success) {
+        return reply.status(400).send({ error: 'Invalid input parameters' });
+      }
     }
 
     if (!parsedReq || !parsedReq.success) {
@@ -28,11 +37,10 @@ const backendFriendsRoute = async (fastify: FastifyInstance) => {
     }
 
     const method = req.method.toLowerCase();
-    const url = req.url.replace('/^/friend/', '/friend/');
 
     const config: AxiosRequestConfig = {
       method,
-      url,
+      url: '/friend',
       headers: req.headers,
     };
 
@@ -52,7 +60,7 @@ const backendFriendsRoute = async (fastify: FastifyInstance) => {
 
     const friendRet = ret.data;
 
-    return reply.code(resp.status).send(friendRet);
+    return reply.code(200).send(friendRet);
   });
 };
 

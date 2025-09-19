@@ -6,17 +6,25 @@ import { AxiosRequestConfig } from 'axios';
 
 import { userIdSchema } from '../schemas/user';
 
-import { blockedQuerySchema, blockedResponseSchema } from '../schemas/blocked';
+import { blockedQuerySchema, blockedPostSchema, blockedResponseSchema } from '../schemas/blocked';
 
 const backendFriendsRoute = async (fastify: FastifyInstance) => {
   //-----------------Friend Routes-----------------
-  fastify.all('/api/blocked/*', async (req: FastifyRequest, reply: FastifyReply) => {
+  fastify.all('/api/blocked', async (req: FastifyRequest, reply: FastifyReply) => {
     let parsedReq;
+    let parsedBody;
 
-    if (req.params) {
-      parsedReq = userIdSchema.safeParse(req.params);
-    } else if (req.query) {
+    if (req.query) {
       parsedReq = blockedQuerySchema.safeParse(req.query);
+    } else if (req.params) {
+      parsedReq = userIdSchema.safeParse(req.params);
+    }
+
+    if (req.body) {
+      parsedBody = blockedPostSchema.safeParse(req.body);
+      if (!parsedBody.success) {
+        return reply.status(400).send({ error: 'Invalid input parameters' });
+      }
     }
 
     if (!parsedReq || !parsedReq.success) {
@@ -28,16 +36,15 @@ const backendFriendsRoute = async (fastify: FastifyInstance) => {
     }
 
     const method = req.method.toLowerCase();
-    const url = req.url.replace('/^/blocked/', '');
 
     const config: AxiosRequestConfig = {
       method,
-      url,
+      url: '/blocked',
       headers: req.headers,
     };
 
     if (method === 'get' || method === 'delete') {
-      config.params = req.query;
+      config.params = req.user.id;
     } else if (method === 'post') {
       config.data = req.body;
     }
@@ -52,7 +59,7 @@ const backendFriendsRoute = async (fastify: FastifyInstance) => {
 
     const blockedRet = ret.data;
 
-    return reply.code(resp.status).send(blockedRet);
+    return reply.code(200).send(blockedRet);
   });
 };
 

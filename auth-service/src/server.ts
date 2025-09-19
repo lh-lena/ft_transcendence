@@ -251,18 +251,6 @@ const start = async () => {
     startRedirectPath: '/api/auth/google',
     callbackUri: 'http://localhost:8082/api/auth/google/callback',
   });
-  // Print routes
-  console.log('\n=== Registered Routes ===');
-  console.log(server.printRoutes());
-
-  // Print decorated properties
-  console.log('\n=== Decorated Properties ===');
-  console.log(Object.keys(server));
-
-  // Print plugins (symbol property)
-  console.log('\n=== Registered Plugins ===');
-  // @ts-expect-error this is an error
-  console.log(server[Symbol.for('server.registeredPlugins')]);
 
   try {
     await server.listen({ port: config.port, host: config.host });

@@ -106,13 +106,16 @@ const authRoutes = async (server: FastifyInstance) => {
     //TODO add proper typing to payload -> only use id
     try {
       const payload = server.verifyRefreshToken(refreshToken);
+
       const newAccessToken = server.generateAccessToken(payload);
       const newRefreshToken = server.generateRefreshToken(payload);
+
       reply.setCookie('refreshToken', newRefreshToken, {
         httpOnly: true,
         path: '/api/refresh',
       });
-      return reply.send({ accessToken: newAccessToken });
+
+      return reply.send({ jwt: newAccessToken });
     } catch {
       return reply.status(401).send({ error: 'Invalid refresh token' });
     }
