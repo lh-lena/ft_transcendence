@@ -38,14 +38,13 @@ const crudRoutes =
           const query = request.query as TQuery;
           const ret = await controller.getQuery!(query);
 
-          //TODO:: parse return
           return reply.code(200).send(ret);
         },
       });
     }
 
     if (routes.includes('getById') && controller.getById) {
-      server.get(`${basePath}/:id`, {
+      server.get(`${basePath}/:${entityName}Id`, {
         schema: {
           summary: `get one ${entityName}`,
           description: `Endpoint to get one ${entityName} by its Id`,
@@ -82,7 +81,6 @@ const crudRoutes =
           reply: FastifyReply,
         ) => {
           const body = request.body as TCreate;
-          console.log(body);
           const ret = await controller.create!(body);
 
           return reply.code(201).send(ret);
@@ -91,7 +89,7 @@ const crudRoutes =
     }
 
     if (routes.includes('update') && controller.update) {
-      server.patch(`${basePath}/:id`, {
+      server.patch(`${basePath}/:${entityName}Id`, {
         schema: {
           summary: `update atributes of ${entityName}`,
           description: `Endpoint to update one or more atributes of ${entityName}`,
@@ -118,7 +116,7 @@ const crudRoutes =
     }
 
     if (routes.includes('delete') && controller.deleteOne) {
-      server.delete(`${basePath}/:id`, {
+      server.delete(`${basePath}/:${entityName}Id`, {
         schema: {
           summary: `delete one ${entityName}`,
           description: `Endpoint to delete one ${entityName} via its Id`,

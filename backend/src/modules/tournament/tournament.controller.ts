@@ -1,6 +1,10 @@
 import { tournamentService } from './tournament.service';
 
-import type { tournamentCreateType, tournamentResponseType } from '../../schemas/tournament';
+import type {
+  tournamentCreateType,
+  tournamentIdType,
+  tournamentResponseType,
+} from '../../schemas/tournament';
 
 export const tournamentController = {
   //join player to tournament
@@ -10,7 +14,7 @@ export const tournamentController = {
   },
 
   //get tournament by id
-  async getById(id: string): Promise<tournamentResponseType> {
+  async getById(id: tournamentIdType): Promise<tournamentResponseType> {
     const ret = await tournamentService.getById(id);
     return ret;
   },

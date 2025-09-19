@@ -1,7 +1,6 @@
 import { userModel } from './user.crud';
 import { NotFoundError, ConflictError } from '../../utils/error';
 import { Prisma, User } from '@prisma/client';
-
 import { userInfoType } from '../../schemas/user';
 
 export const userService = {
@@ -19,7 +18,12 @@ export const userService = {
 
   async update(id: string, data: Prisma.UserUpdateInput): Promise<User> {
     try {
-      return await userModel.patch(id, data);
+      const updated = await userModel.patch(id, data);
+      if (updated.guest === true && updated.online === false) {
+        await userModel.deleteOne(id);
+        return updated;
+      }
+      return updated;
     } catch (err: unknown) {
       if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
         throw new ConflictError(`user already exists`);
@@ -49,8 +53,8 @@ export const userService = {
   },
 
   async getInfoById(id: string): Promise<userInfoType> {
-    const user = await this.getById(id);
-    return user as userInfoType;
+    const user: userInfoType = await this.getById(id);
+    return user;
   },
 
   async deleteOne(id: string): Promise<void> {

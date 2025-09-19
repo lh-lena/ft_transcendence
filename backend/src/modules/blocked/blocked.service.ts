@@ -1,6 +1,6 @@
 import { Prisma, Blocked } from '@prisma/client';
 import { blockedModel } from './blocked.crud';
-import type { blockedCreateType } from '../../schemas/blocked';
+import type { blockedCreateType, blockedIdType } from '../../schemas/blocked';
 
 import { NotFoundError } from '../../utils/error';
 
@@ -25,15 +25,16 @@ export const blockedService = {
     return ret;
   },
 
-  async deleteOne(id: number): Promise<void> {
+  async deleteOne(id: blockedIdType): Promise<void> {
     const ret = await blockedModel.deleteOne(id);
     if (!ret) {
       throw new NotFoundError('blocked not found');
     }
   },
 
-  async isBlocked(userId: string, blockedId: string): Promise<boolean> {
-    const ret = await blockedModel.findBy({ userId: userId, blockedId: blockedId });
+  async isBlocked(userId: string, blockedUserId: string): Promise<boolean> {
+    const ret = await blockedModel.findBy({ userId: userId, blockedUserId: blockedUserId });
+    console.log(ret);
     if (ret.length > 0) return true;
     return false;
   },

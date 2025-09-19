@@ -1,142 +1,220 @@
-# Authentication Service Documentation
+# Auth-Service Documentation
 
 ## Overview
 
-This service provides secure user registration and login using Argon2 password hashing and JWT-based authentication.
+The `auth-service` handles authentication, two-factor authentication (2FA), privacy compliance, and JWT security.
+
+It provides:
+
+- User registration and login
+- Email / TOTP-based 2FA
+- Backup codes
+- Privacy features (export data, delete account, manage consent)
+- Secure JWT handling with refresh tokens, token rotation, blacklisting, and CSRF protection
 
 ---
 
-## Registration
+## 1. Authentication
 
-**Endpoint:**
-`POST /api/auth/register`
+### Registration
 
-**Request Body:**
+**Endpoint:** `POST /api/auth/register`
+
+**Body:**
 
 ```json
 {
   "email": "user@example.com",
-  "username": "username",
-  "password": "yourpassword"
+  "username": "user123",
+  "password": "secret123",
+  "alias": "nickname"
 }
-```
 
-**Success Response:**
-`201 Created`
+    Validates email, username, password
 
-```json
-{ "message": "User registered successfully." }
-```
+    Stores hashed password
 
-**Possible Errors:**
+    Initializes 2FA, backup codes, and privacy flags
 
-- `400 Bad Request` – Missing or invalid fields
-- `409 Conflict` – Email or username already in use
-- `500 Internal Server Error` – Server error
+Login
 
----
+Endpoint: POST /api/auth/login
 
-## Login
+Body:
 
-**Endpoint:**
-`POST /api/auth/login`
-
-**Request Body:**
-
-```json
 {
   "email": "user@example.com",
-  "password": "yourpassword"
+  "password": "secret123"
 }
-```
 
-**Success Response:**
-`200 OK`
+Flow:
 
-```json
-{ "token": "<jwt_token>" }
-```
+    Verify credentials
 
-**Possible Errors:**
+    If 2FA is enabled:
 
-- `400 Bad Request` – Missing fields
-- `401 Unauthorized` – Invalid credentials
+        Email: send temporary code to email
 
----
+        TOTP: prompt for code
 
-## JWT Payload Example
+    If 2FA not enabled: issue access and refresh tokens
 
-```json
+Response:
+
 {
-  "sub": 1,
-  "username": "username",
-  "email": "user@example.com",
-  "is_2fa_enabled": 0,
-  "iat": 1234567890,
-  "exp": 1234568490
+  "accessToken": "<JWT access token>",
+  "requires2fa": true|false,
+  "method": "email"|"totp"
 }
-```
 
----
+Two-Factor Authentication (2FA)
 
-## Authenticated Requests
+Supports:
 
-- Client sends JWT in the `Authorization` header:
-  `Authorization: Bearer <token>`
-- Backend or realtime verifies the JWT using the shared secret.
-- If valid, access is granted to protected resources.
+    Email 2FA
 
----
+        Sends a 6-digit code via email
 
-## Protected Endpoint Example
+        Temporary code expires in 5 minutes
 
-**Endpoint:**
-`GET /api/auth/me`
-**Headers:**
-`Authorization: Bearer <jwt_token>`
+    TOTP 2FA
 
-**Success Response:**
+        Client scans QR code
 
-```json
+        Secret stored in backend
+
+    Backup Codes
+
+        One-time use
+
+        Hashed in backend
+
+        Can be regenerated
+
+Endpoints:
+
+    POST /api/auth/2fa/verify – verify code
+
+    POST /api/auth/2fa/email/enable / disable
+
+    POST /api/auth/2fa/totp/setup – returns QR code data URL
+
+    POST /api/auth/2fa/totp/verify – confirm TOTP
+
+    POST /api/auth/2fa/backup/regenerate – generate new backup codes
+
+2. JWT Security
+Access Tokens
+
+    Short-lived (default 15 minutes)
+
+    Stored in frontend memory
+
+Refresh Tokens
+
+    Long-lived (default 7 days)
+
+    Stored in httpOnly cookie
+
+    Used to obtain new access tokens
+
+    Rotates on each use
+
+    Revoked tokens are blacklisted
+
+Endpoints
+
+    POST /api/auth/refresh – rotate tokens
+
+    POST /api/auth/logout – blacklist refresh token
+
+Security:
+
+    Blacklisting prevents reuse of old refresh tokens
+
+    CSRF protection enabled for cookie-based endpoints
+
+3. Privacy Compliance
+Export Data
+
+Endpoint: GET /api/privacy/export
+
+Returns all user data in JSON.
+Delete Account
+
+Endpoint: DELETE /api/privacy/delete
+
+Removes the user account from backend.
+Privacy Settings
+
+Endpoint: PUT /api/privacy/settings
+
+Body Example:
+
 {
-  "user": {
-    "sub": 1,
-    "username": "username",
-    "email": "user@example.com",
-    "is_2fa_enabled": 0,
-    "iat": 1234567890,
-    "exp": 1234568490
-  }
+  "marketingEmails": true,
+  "dataSharingConsent": false
 }
-```
 
-**Possible Errors:**
+Updates user preferences and consent.
+4. Backend Requirements
 
-- `401 Unauthorized` – Missing or invalid token
+    Store 2FA secrets, backup codes, privacy flags
 
----
+    Implement /user CRUD
 
-## Logout
+    Implement /auth/blacklist for refresh token revocation
 
-- Client deletes the JWT (and refresh token if used).
+    JWT secrets:
 
----
+        JWT_SECRET – for access tokens
 
-## Flow Summary
+        REFRESH_TOKEN_SECRET – for refresh tokens
 
-1. **Registration:**
-   User submits email, username, and password. Backend validates input, hashes password with Argon2, and stores the user.
-2. **Login:**
-   User submits email and password. Backend verifies credentials and issues a JWT.
-3. **Authenticated Requests:**
-   Client includes JWT in requests. Backend verifies JWT for access.
-4. **Logout:**
-   Client removes JWT.
+5. Frontend Requirements
 
----
+    Prompt for 2FA codes
 
-## Notes for Integrators
+    Handle backup codes
 
-- Other services (backend, realtime) should use the same `JWT_SECRET` to verify tokens.
-- The JWT payload contains user id (`sub`), username, email, and 2FA status.
-- See `src/jwt.ts` for token generation and verification logic.
+    Store access token in memory
+
+    Store refresh token in httpOnly cookie
+
+    Automatically call /api/auth/refresh to rotate tokens
+
+    CSRF-safe requests if using cookies
+
+    UI for privacy export, delete, and settings
+
+6. Dependencies
+
+npm install axios fastify @fastify/multipart @fastify/oauth2 @fastify/cookie @fastify/csrf-protection nodemailer otplib qrcode jsonwebtoken
+npm install --save-dev @types/nodemailer @types/jsonwebtoken
+
+7. Environment Variables
+
+JWT_SECRET=<access_token_secret>
+REFRESH_TOKEN_SECRET=<refresh_token_secret>
+GOOGLE_CLIENT_ID=<google_client_id>
+GOOGLE_CLIENT_SECRET=<google_client_secret>
+SMTP_HOST=<smtp_host>
+SMTP_PORT=<smtp_port>
+SMTP_USER=<smtp_user>
+SMTP_PASS=<smtp_pass>
+
+8. Flow Summary
+
+    User registers → account created
+
+    User logs in → credentials verified
+
+    If 2FA enabled → email or TOTP code sent
+
+    User verifies code → JWT issued
+
+    Access token used for API calls
+
+    Refresh token rotates automatically → old token blacklisted
+
+    Users can manage privacy → export data, delete account, consent

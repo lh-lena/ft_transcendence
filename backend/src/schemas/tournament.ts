@@ -1,13 +1,13 @@
 import { z } from 'zod/v4';
 import { status } from './basics';
-import { userInfo } from './user';
+import { userIdBase } from './user';
 import { gameBase } from './game';
 
 const tournamentBase = z.object({
   tournamentId: z.uuid(),
   round: z.number().default(1),
   playerAmount: z.number().min(4).max(32).default(4),
-  players: z.array(userInfo),
+  players: z.array(userIdBase),
   status: status,
   games: z.array(gameBase),
 });
@@ -37,5 +37,6 @@ const tournamentResponse = tournamentBase.meta({ $id: 'tournamentResponse' });
 export const tournamentSchemas = [tournament, tournamentCreate, tournamentId, tournamentResponse];
 
 export type tournamentType = z.infer<typeof tournamentBase>;
+export type tournamentIdType = z.infer<typeof tournamentId>;
 export type tournamentCreateType = z.infer<typeof tournamentCreate>;
 export type tournamentResponseType = z.infer<typeof tournamentResponse>;

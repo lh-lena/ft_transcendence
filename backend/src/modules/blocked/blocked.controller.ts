@@ -1,5 +1,5 @@
 import { Prisma } from '@prisma/client';
-import type { blockedType, blockedCreateType } from '../../schemas/blocked';
+import type { blockedType, blockedCreateType, blockedIdType } from '../../schemas/blocked';
 
 import { blockedService } from './blocked.service';
 
@@ -14,7 +14,7 @@ export const blockedController = {
     return ret;
   },
 
-  async deleteOne(id: number): Promise<{ success: boolean }> {
+  async deleteOne(id: blockedIdType): Promise<{ success: boolean }> {
     await blockedService.deleteOne(id);
     return { success: true };
   },

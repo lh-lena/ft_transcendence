@@ -1,29 +1,25 @@
 import { z } from 'zod/v4';
 
 const friendBase = z.object({
-  id: z.number(),
+  friendId: z.number(),
   userId: z.uuid(),
-  friendId: z.uuid(),
+  friendUserId: z.uuid(),
 });
 const friend = friendBase
   .meta({ $id: 'friend' })
   .describe('A friend relationship. Containes userId(user) and friendId(who is friend)');
 
 const friendCreate = friendBase
-  .omit({ id: true })
+  .omit({ friendId: true })
   .meta({ $id: 'friendCreate' })
   .describe(
     'Create a new friend relationship. Containes userId(user) and friendId(who becomes friend)',
   );
 
-const friendId = friendBase.pick({ id: true }).meta({ $id: 'friendId' });
+const friendId = friendBase.pick({ friendId: true }).meta({ $id: 'friendId' });
 
 const friendQuery = friendBase
-  .extend({
-    id: z.coerce.number().optional(),
-    userId: z.uuid().optional(),
-    friendId: z.uuid().optional(),
-  })
+  .extend({ id: z.coerce.number().optional() })
   .partial()
   .meta({ $id: 'friendQuery' })
   .describe(

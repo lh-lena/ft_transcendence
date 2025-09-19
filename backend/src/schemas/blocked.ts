@@ -1,29 +1,25 @@
 import { z } from 'zod/v4';
 
 const blockedBase = z.object({
-  id: z.number(),
+  blockedId: z.number(),
   userId: z.uuid(),
-  blockedId: z.uuid(),
+  blockedUserId: z.uuid(),
 });
 const blocked = blockedBase
   .meta({ $id: 'blocked' })
   .describe('A blocked user relationship. Containes userId(user) and blockedId(who is blocked)');
 
 const blockedCreate = blockedBase
-  .omit({ id: true })
+  .omit({ blockedId: true })
   .meta({ $id: 'blockedCreate' })
   .describe(
     'Create a new blocked user relationship. Containes userId(user) and blockedId(who is blocked)',
   );
 
-const blockedId = blockedBase.pick({ id: true }).meta({ $id: 'blockedId' });
+const blockedId = blockedBase.pick({ blockedId: true }).meta({ $id: 'blockedId' });
 
 const blockedQuery = blockedBase
-  .extend({
-    id: z.coerce.number().optional(),
-    userId: z.uuid().optional(),
-    blockedId: z.uuid().optional(),
-  })
+  .extend({ id: z.coerce.number().optional() })
   .partial()
   .meta({ $id: 'blockedQuery' })
   .describe(

@@ -24,7 +24,7 @@ const resultCreate = resultTypeBase
 
 //result base
 export const resultBase = z.object({
-  id: z.number(),
+  resultId: z.number(),
   gameId: z.uuid(),
   status: resultStatusBase,
   startedAt: dtString,
@@ -33,11 +33,11 @@ export const resultBase = z.object({
 });
 
 //define schema for GET
-const resultId = resultBase.pick({ id: true }).meta({ $id: 'resultId' });
+const resultId = resultBase.pick({ resultId: true }).meta({ $id: 'resultId' });
 
 const resultQueryBase = z
   .object({
-    id: z.coerce.number().optional(),
+    resultId: z.coerce.number().optional(),
     gameId: z.uuid().optional(),
     startedAt: dtString.optional(),
     finishedAt: dtString.optional(),
@@ -48,8 +48,7 @@ const resultQuery = resultQueryBase.meta({ $id: 'resultQuery' });
 
 //leaderboard
 const leaderboardBase = z.object({
-  id: z.number(),
-  username: z.string(),
+  userId: z.uuid(),
   wins: z.number(),
 });
 const leaderboard = z
@@ -58,8 +57,21 @@ const leaderboard = z
   .describe('Leaderboard with user id, username and number of wins');
 
 //schemas for response
-const resultResponse = resultBase.meta({ $id: 'resultResponse' });
-const resultResponseArray = z.array(resultBase).meta({ $id: 'resultResponseArray' });
+const resultResponseBase = z.object({
+  resultId: z.number(),
+  gameId: z.uuid(),
+  startedAt: dtString,
+  finishedAt: dtString,
+  status: resultStatusBase,
+  winnerId: z.uuid().optional(),
+  loserId: z.uuid().optional(),
+  winnerScore: z.number().optional(),
+  loserScore: z.number().optional(),
+});
+
+export const resultResponse = resultResponseBase.meta({ $id: 'resultResponse' });
+export const resultResponseArray = z.array(resultResponseBase).meta({ $id: 'resultResponseArray' });
+
 //export schemas
 export const resultSchemas = [
   //  resultStatusSchema,
@@ -72,6 +84,9 @@ export const resultSchemas = [
 ];
 //
 export type resultType = z.infer<typeof resultBase>;
+export type resultIdType = z.infer<typeof resultId>;
 export type resultCreateType = z.infer<typeof resultCreate>;
 export type resultQueryType = z.infer<typeof resultQuery>;
+export type resultResponseType = z.infer<typeof resultResponse>;
+export type resultResponseArrayType = z.infer<typeof resultResponseArray>;
 export type leaderboardType = z.infer<typeof leaderboard>;

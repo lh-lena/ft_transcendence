@@ -5,16 +5,20 @@ import { userService } from '../user/user.service';
 import { gameService } from '../game/game.service';
 import { notifyPlayer } from '../../utils/notify';
 
+import type { tournamentIdType } from '../../schemas/tournament';
+
 export class tournamentClass {
   private activeTournaments: tournamentType[] = [];
 
-  async getById(id: string): Promise<tournamentType | undefined> {
-    const tournament = this.activeTournaments.find((t) => t.tournamentId === id);
+  async getById(id: tournamentIdType): Promise<tournamentType | undefined> {
+    const tournament = this.activeTournaments.find((t) => t.tournamentId === id.tournamentId);
     return tournament;
   }
 
   async getByUser(userId: string): Promise<tournamentType | undefined> {
-    const tournament = this.activeTournaments.find((t) => t.players.some((p) => p.id === userId));
+    const tournament = this.activeTournaments.find((t) =>
+      t.players.some((p) => p.userId === userId),
+    );
 
     return tournament;
   }
@@ -33,8 +37,10 @@ export class tournamentClass {
     return newTournament;
   }
 
-  async remove(tournamentId: string): Promise<void> {
-    this.activeTournaments = this.activeTournaments.filter((t) => t.tournamentId !== tournamentId);
+  async remove(tournamentId: tournamentIdType): Promise<void> {
+    this.activeTournaments = this.activeTournaments.filter(
+      (t) => t.tournamentId !== tournamentId.tournamentId,
+    );
   }
 
   async join(tournament: tournamentType, playerId: string): Promise<tournamentType> {
@@ -63,8 +69,8 @@ export class tournamentClass {
   private async createGames(tournament: tournamentType): Promise<void> {
     for (let i = 0; i < tournament.playerAmount; i += 2) {
       const game = await gameService.createTournamentGame(
-        tournament.players[i].id,
-        tournament.players[i + 1].id,
+        tournament.players[i].userId,
+        tournament.players[i + 1].userId,
       );
       tournament.games.push(game);
     }
@@ -74,7 +80,7 @@ export class tournamentClass {
     if (tournament.players.length === tournament.playerAmount && tournament.status === 'waiting') {
       tournament.status = 'ready';
       for (const player of tournament.players) {
-        notifyPlayer(player.id, '0000-0000-0000-0000', 'INFO: Tournament starts soon');
+        notifyPlayer(player.userId, '0000-0000-0000-0000', 'INFO: Tournament starts soon');
       }
       await this.createGames(tournament);
     }
@@ -86,15 +92,15 @@ export class tournamentClass {
     if (!tournament) return undefined;
 
     tournament.games = tournament.games.filter((g) => g.gameId !== gameId);
-    tournament.players = tournament.players.filter((p) => p.id !== loserId);
+    tournament.players = tournament.players.filter((p) => p.userId !== loserId);
 
     if (tournament.players.length === 1) {
       notifyPlayer(
-        tournament.players[0].id,
+        tournament.players[0].userId,
         '0000-0000-0000-0000',
         'INFO: You won the tournament!',
       );
-      this.remove(tournament.tournamentId);
+      this.remove(tournament);
     } else if (tournament.games.length === 0) {
       tournament.round += 1;
       await this.createGames(tournament);

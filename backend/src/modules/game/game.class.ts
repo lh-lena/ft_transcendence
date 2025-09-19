@@ -1,9 +1,8 @@
 import { v4 as uuid } from 'uuid';
 
 import type { gameType, gameCreateType } from '../../schemas/game';
-import { userService } from '../user/user.service';
 
-import { notifyPlayer } from '../../utils/notify';
+//import { notifyPlayer } from '../../utils/notify';
 
 export class gameClass {
   private activeGames: gameType[] = [];
@@ -14,7 +13,7 @@ export class gameClass {
   }
 
   async getByUser(userId: string): Promise<gameType | undefined> {
-    const game = this.activeGames.find((g) => g.players.some((p) => p.id === userId));
+    const game = this.activeGames.find((g) => g.players.some((p) => p.userId === userId));
     return game;
   }
 
@@ -28,6 +27,10 @@ export class gameClass {
       aiDifficulty: game.aiDifficulty || 'easy',
     };
 
+    if (game.userId) {
+      newGame.players.push({ userId: game.userId });
+    }
+
     this.activeGames.push(newGame);
     return newGame;
   }
@@ -36,22 +39,27 @@ export class gameClass {
     this.activeGames = this.activeGames.filter((g) => g.gameId !== gameId);
   }
 
-  async join(game: gameType, playerId: string): Promise<gameType> {
-    game.players.push(await userService.getInfoById(playerId));
+  async join(game: gameType, userId: string): Promise<gameType> {
+    game.players.push({ userId: userId });
     this.startGame(game);
     return game;
   }
 
-  async findAvailableGame(playerId: string): Promise<gameType> {
+  async findAvailableGame(userId: string): Promise<gameType> {
     let freeGame = this.activeGames.find(
       (g) => g.players.length < 2 && g.visibility === 'public' && g.status === 'waiting',
     );
 
     if (!freeGame) {
-      freeGame = await this.create({ mode: 'pvp_remote', visibility: 'public' });
+      freeGame = await this.create({
+        mode: 'pvp_remote',
+        visibility: 'public',
+        userId: userId,
+      });
+    } else {
+      await this.join(freeGame, userId);
     }
 
-    this.join(freeGame, playerId);
     this.startGame(freeGame);
 
     return freeGame;
@@ -64,9 +72,10 @@ export class gameClass {
     ) {
       game.status = 'ready';
       game.createdAt = new Date().toISOString();
-      for (const player of game.players) {
-        notifyPlayer(player.id, '0000-0000-0000-0000', 'INFO: Your next Game starts soon');
-      }
+      //TODO enable notification about new game
+      //for (const player of game.players) {
+      //  notifyPlayer(player.userId, '0000-0000-0000-0000', 'INFO: Your next Game starts soon');
+      //}
     }
   }
 }
