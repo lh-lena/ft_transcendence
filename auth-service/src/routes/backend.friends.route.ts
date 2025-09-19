@@ -10,23 +10,8 @@ import { friendQuerySchema, friendPostSchema, friendResponseSchema } from '../sc
 
 const backendFriendsRoute = async (fastify: FastifyInstance) => {
   //-----------------Friend Routes-----------------
-  fastify.all('/api/friend', async (req: FastifyRequest, reply: FastifyReply) => {
-    let parsedReq;
-    let parsedBody;
-
-    if (req.query) {
-      parsedReq = friendQuerySchema.safeParse(req.query);
-    } else if (req.params) {
-      parsedReq = userIdSchema.safeParse(req.params);
-    }
-
-    if (req.body) {
-      console.log(req.body);
-      parsedBody = friendPostSchema.safeParse(req.body);
-      if (!parsedBody.success) {
-        return reply.status(400).send({ error: 'Invalid input parameters' });
-      }
-    }
+  fastify.get('/api/friend', async (req: FastifyRequest, reply: FastifyReply) => {
+    const parsedReq = friendQuerySchema.safeParse(req.query);
 
     if (!parsedReq || !parsedReq.success) {
       return reply.status(400).send({ error: 'Invalid input parameters' });
@@ -36,19 +21,70 @@ const backendFriendsRoute = async (fastify: FastifyInstance) => {
       return reply.code(403).send({ error: 'Forbidden' });
     }
 
-    const method = req.method.toLowerCase();
-
     const config: AxiosRequestConfig = {
-      method,
+      method: 'get',
       url: '/friend',
-      headers: req.headers,
+      params: parsedReq.data,
     };
 
-    if (method === 'get' || method === 'delete') {
-      config.params = req.query;
-    } else if (method === 'post') {
-      config.data = req.body;
+    const resp = await apiClientBackend(config);
+
+    const ret = friendResponseSchema.safeParse(resp);
+
+    if (!ret.success) {
+      return reply.code(500).send({ error: 'Failed to parse Friend Data' });
     }
+
+    const friendRet = ret.data;
+
+    return reply.code(200).send(friendRet);
+  });
+
+  fastify.post('/api/friend', async (req: FastifyRequest, reply: FastifyReply) => {
+    const parsedReq = friendPostSchema.safeParse(req.body);
+
+    if (!parsedReq || !parsedReq.success) {
+      return reply.status(400).send({ error: 'Invalid input parameters' });
+    }
+
+    if (parsedReq.data.userId !== req.user.id) {
+      return reply.code(403).send({ error: 'Forbidden' });
+    }
+
+    const config: AxiosRequestConfig = {
+      method: 'get',
+      url: '/friend',
+      data: parsedReq.data,
+    };
+
+    const resp = await apiClientBackend(config);
+
+    const ret = friendResponseSchema.safeParse(resp);
+
+    if (!ret.success) {
+      return reply.code(500).send({ error: 'Failed to parse Friend Data' });
+    }
+
+    const friendRet = ret.data;
+
+    return reply.code(200).send(friendRet);
+  });
+
+  fastify.delete('/api/friend', async (req: FastifyRequest, reply: FastifyReply) => {
+    const parsedReq = userIdSchema.safeParse(req.params);
+
+    if (!parsedReq || !parsedReq.success) {
+      return reply.status(400).send({ error: 'Invalid input parameters' });
+    }
+
+    if (parsedReq.data.userId !== req.user.id) {
+      return reply.code(403).send({ error: 'Forbidden' });
+    }
+
+    const config: AxiosRequestConfig = {
+      method: 'delete',
+      url: `/friend/${parsedReq.data.userId}`,
+    };
 
     const resp = await apiClientBackend(config);
 
