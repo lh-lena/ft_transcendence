@@ -11,13 +11,13 @@ const GAME_MODES = ['pvp_remote', 'pvp_ai', 'tournamnet'];
 async function main() {
   // Seed Users
   const users = [];
-  for (let i = 0; i < 100; i++) {
+  for (let i = 0; i < 25; i++) {
     let username = faker.internet
       .username()
       .replace(/[^a-zA-Z0-9]/g, '')
-      .slice(0, 10);
+      .slice(0, 6);
     if (!username || username.length === 0) {
-      username = faker.string.alpha({ length: 5 });
+      username = faker.string.alpha({ length: 6 });
     }
     users.push(
       await prisma.user.create({

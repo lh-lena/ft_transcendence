@@ -23,6 +23,7 @@
     "@prisma/client": "^6.14.0",
     "argon2": "^0.28.5",
     "axios": "^1.11.0",
+    "axios-retry": "^4.5.0",
     "better-sqlite3": "^9.1.1",
     "eslint": "^8.57.1",
     "fastify-plugin": "^5.0.1",

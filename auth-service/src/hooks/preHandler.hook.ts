@@ -3,7 +3,6 @@ import fastifyHttpProxy from '@fastify/http-proxy';
 import { FastifyRequest, FastifyReply } from 'fastify';
 
 import type { JwTReturnType } from '../schemas/jwt';
-import { isBlacklistedToken } from '../utils/blacklistToken';
 
 export default fp(async function onRequestHook(server) {
   server.addHook('preHandler', async (req: FastifyRequest, reply: FastifyReply) => {
@@ -33,12 +32,9 @@ export default fp(async function onRequestHook(server) {
       return reply.code(401).send({ error: 'Missing Authentication Token' });
     }
 
-    if (await isBlacklistedToken(token)) {
-      return reply.code(401).send({ error: 'Token revoked' });
-    }
-
     try {
       const decoded: JwTReturnType = await server.verifyAccessToken(token);
+      console.log('\n\nUSER VERIFIED\n', decoded, '\n');
       req.user = decoded;
     } catch (err) {
       return reply.code(401).send({ error: 'Unauthorised' });

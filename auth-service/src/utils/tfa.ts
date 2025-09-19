@@ -86,15 +86,19 @@ export class tfaHandler {
     const accessToken = this.server.generateAccessToken({ id: user.userId });
     const refreshToken = this.server.generateRefreshToken({ id: user.userId });
 
-    reply.setCookie('refreshToken', refreshToken, {
-      httpOnly: true,
-      path: '/api/refresh',
-      //TODO set to true with https upgrade
-      secure: false,
-      maxAge: 60 * 60 * 24 * 7, // 7 days
-    });
+    try {
+      reply.setCookie('refreshToken', refreshToken, {
+        httpOnly: true,
+        path: '/api/refresh',
+        //TODO set to true with https upgrade
+        secure: false,
+        maxAge: 60 * 60 * 24 * 7, // 7 days
+      });
+    } catch (err) {
+      console.log('Cookie set error: ', err);
+    }
 
-    return reply.code(200).send({ jwt: accessToken, userId: user.userId });
+    return await reply.code(200).send({ jwt: accessToken, userId: user.userId });
   }
 
   async checkMail(

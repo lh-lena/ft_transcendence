@@ -32,14 +32,10 @@ const backendUserRoutes = async (fastify: FastifyInstance) => {
 
     const requestId: UserIdType = parsedReq.data;
 
-    const method = req.method.toLowerCase();
-    const url = `/user/${requestId.userId}`;
-
     const config: AxiosRequestConfig = {
-      method,
-      url,
-      headers: req.headers,
-      params: requestId,
+      method: 'get',
+      url: `/user/${requestId.userId}`,
+      //headers: req.headers,
     };
 
     const user: UserType = await apiClientBackend(config);

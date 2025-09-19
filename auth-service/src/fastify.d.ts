@@ -8,8 +8,10 @@ interface FastifyJwtNamespace {
 
 declare module 'fastify' {
   interface FastifyInstance {
-    access: FastifyJwtNamespace;
-    refresh: FastifyJwtNamespace;
+    jwt: {
+      access: FastifyJwtNamespace;
+      refresh: FastifyJwtNamespace;
+    };
     cleanupExpiredSession(): Promise<void>;
     generateAccessToken(payload: object): string;
     generateRefreshToken(payload: object): string;
