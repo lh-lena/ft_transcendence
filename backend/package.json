@@ -1,8 +1,16 @@
 {
   "name": "ft_transcendence_backend",
   "version": "1.0.0",
+  "prisma": {
+    "seed": "node prisma/seed.ts"
+  },
   "scripts": {
-    "dev": "tsx watch src/server.ts"
+    "dev": "npm run lint && npm run typecheck && npm run run",
+    "run": "tsx watch --trace-warnings src/server.ts",
+    "lint": "eslint --fix 'src/**/*.{ts,tsx,d.ts}'",
+    "format:check": "prettier --check .",
+    "format": "prettier --write .",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@fastify/autoload": "^6.3.1",
@@ -28,8 +36,21 @@
     "zod": "^4.1.3"
   },
   "devDependencies": {
-    "@types/node": "^20.0.0",
-    "tsx": "^3.12.7",
-    "typescript": "^5.2.2"
+    "@eslint/eslintrc": "^3.3.1",
+    "@eslint/js": "^9.34.0",
+    "@faker-js/faker": "^10.0.0",
+    "@types/node": "^24.3.0",
+    "@types/qs": "^6.14.0",
+    "@typescript-eslint/eslint-plugin": "^8.41.0",
+    "@typescript-eslint/parser": "^8.41.0",
+    "dotenv": "^17.2.1",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.4",
+    "globals": "^16.3.0",
+    "prettier": "^3.6.2",
+    "prisma": "^6.14.0",
+    "sqlite3": "^5.1.7",
+    "tsx": "^4.20.5",
+    "typescript": "^5.9.2"
   }
 }
