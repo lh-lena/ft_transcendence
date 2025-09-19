@@ -23,24 +23,59 @@ export class Backend {
       const token = localStorage.getItem("jwt");
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
-        console.log("founf jwt, sending with request");
+        console.log(`jwt: ${token}`);
       }
       return config;
     });
 
+    // if user exists grab old user form storage
     this.loadUserFromStorage();
   }
 
   async registerUser(data: UserRegistration) {
     console.log(data);
-    const response = await this.api.post("/api/register", data);
+    let response = await this.api.post("/api/register", data);
 
     // save JWT token if it's returned in the response
-    if (response.data.jwt) {
+    if (response.data.jwt && response.data.userId) {
+      console.log(`userId ${response.data.userId}`);
       localStorage.setItem("jwt", response.data.jwt);
+      response = await this.fetchUserById(response.data.userId);
     }
 
-    console.log(response);
+    return response;
+  }
+
+  async fetchUserById(userId: string) {
+    const response = await this.api.get(`/api/user`, {
+      params: {
+        userId: userId,
+      },
+    });
+
+    // Extract user data from the array and map it to UserResponse format
+    if (response.status == 200 && response.data && response.data.length > 0) {
+      const userData = response.data[0];
+
+      // Map the backend response to UserResponse format expected by setUser
+      const userResponse: UserResponse = {
+        id: userData.userId,
+        createdAt: "", // Not provided by backend, set default
+        updatedAt: "", // Not provided by backend, set default
+        email: "", // Not provided by backend, set default
+        username: userData.username,
+        password_hash: "", // Not provided by backend, set default
+        is_2fa_enabled: false, // Not provided by backend, set default
+        twofa_secret: "", // Not provided by backend, set default
+        guest: false, // Not provided by backend, set default
+        color: userData.color,
+        colormap: userData.colormap,
+        avatar: userData.avatar || "", // Handle null avatar
+      };
+
+      this.setUser(userResponse);
+    }
+
     return response;
   }
 

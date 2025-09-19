@@ -81,7 +81,6 @@ export class RegisterPage {
       const response = await this.backend.registerUser(userRegistrationData);
       // if user object was received
       if (response.status === 200) {
-        // fetch user obj with user it and jwt
         this.router.navigate("/chat");
       }
     } catch (error) {
