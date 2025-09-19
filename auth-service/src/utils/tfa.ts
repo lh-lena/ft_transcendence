@@ -88,14 +88,11 @@ export class tfaHandler {
 
     reply.setCookie('refreshToken', refreshToken, {
       httpOnly: true,
-      path: '/api/register',
-    });
-    reply.setCookie('refreshToken', refreshToken, {
-      httpOnly: true,
-      path: '/api/login',
+      path: '/api/refresh',
+      secure: false,
     });
 
-    return reply.code(200).send({ jwt: accessToken });
+    return reply.code(200).send({ jwt: accessToken, userId: user.userId });
   }
 
   async checkMail(
