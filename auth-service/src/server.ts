@@ -196,6 +196,7 @@ export const server = Fastify({ logger: true });
 // ------------ Start Server ------------
 const start = async () => {
   // ------------ Plugins ------------
+
   await server.register(fastifyCookie);
   await server.register(fastifyCsrf);
   await server.register(cronPlugin);

@@ -88,7 +88,11 @@ export class tfaHandler {
 
     reply.setCookie('refreshToken', refreshToken, {
       httpOnly: true,
-      path: '/api/refresh',
+      path: '/api/register',
+    });
+    reply.setCookie('refreshToken', refreshToken, {
+      httpOnly: true,
+      path: '/api/login',
     });
 
     return reply.code(200).send({ jwt: accessToken });
