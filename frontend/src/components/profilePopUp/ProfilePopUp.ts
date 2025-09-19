@@ -1,11 +1,11 @@
 import { CloseIcon } from "../closeIcon/CloseIcon";
 import { ProfileAvatar } from "../profileAvatar";
-import { UserLocal } from "../../types";
+import { User } from "../../types";
 
 export class ProfilePopUp {
   private main: HTMLElement;
 
-  constructor(closeCallBack: () => void, user: UserLocal, style?: string) {
+  constructor(closeCallBack: () => void, user: User, style?: string) {
     this.main = document.createElement("div");
     this.main.className =
       "standard-dialog w-48 flex justify-center flex-col gap-5 pb-4";

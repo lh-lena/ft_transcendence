@@ -324,7 +324,7 @@ export class ChatPage {
     this.sendButton = document.createElement("button");
     this.sendButton.textContent = "send";
     this.sendButton.className = "btn items-center justify-center h-10 w-1/5";
-    this.sendButton.onclick = () => this.chatStuff();
+    this.sendButton.onclick = () => this.toggleProfilePopUp(user);
 
     this.inputBox.appendChild(this.inputMessage);
     this.inputBox.appendChild(this.sendButton);
@@ -455,7 +455,7 @@ export class ChatPage {
     const searchValue = this.searchInput.value.toLowerCase().trim();
     this.searchResults.innerHTML = "";
     // Filter users based on search value
-    const filteredUsers = this.allUserData.filter((user) => 
+    const filteredUsers = this.allUserData.filter((user) =>
       user.username.toLowerCase().includes(searchValue),
     );
     // populate with filtered results, or show all if search is empty
