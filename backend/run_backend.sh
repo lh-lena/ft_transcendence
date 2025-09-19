@@ -1,6 +1,7 @@
 #!/bin/sh
 
 export DATABASE_URL="file:../../data/db.sqlite"
+echo "Hello DR Eastmann"
 
 if [ ! -f ../data/db.sqlite ]
 then
