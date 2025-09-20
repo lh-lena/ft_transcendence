@@ -15,7 +15,7 @@ export const userBase = z.object({
 
   password_hash: z.string().optional().nullable(),
 
-  tfaEnabled: z.boolean().optional().nullable(),
+  tfaEnabled: z.boolean().optional(),
   tfaSecret: z.string().nullable().optional(),
   tfaMethod: tfaType.nullable().optional(),
   tfaTempCode: z.string().nullable().optional(),

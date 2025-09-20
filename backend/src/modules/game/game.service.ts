@@ -14,7 +14,7 @@ export const gameService = {
   },
 
   async create(data: gameCreateType): Promise<gameType> {
-    let game = await gamemaker.create(data as gameCreateType);
+    const game = await gamemaker.create(data as gameCreateType);
 
     return game;
   },
