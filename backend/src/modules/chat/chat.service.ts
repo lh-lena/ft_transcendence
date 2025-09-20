@@ -27,9 +27,6 @@ export const chatService = {
   async getQuery(query?: Prisma.ChatMessageWhereInput): Promise<ChatMessage[]> {
     const ret = query ? await chatModel.findBy(query) : await chatModel.findAll();
 
-    if (ret.length === 0) {
-      throw new NotFoundError('No chat messages found');
-    }
     return ret;
   },
 

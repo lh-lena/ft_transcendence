@@ -34,7 +34,7 @@ const backendTournamentRoutes = async (fastify: FastifyInstance) => {
 
   fastify.post('/api/tournament', async (req: FastifyRequest, reply: FastifyReply) => {
     const parsedReq = tournamentCreateSchema.safeParse(req.body);
-
+    console.log('Parsed Request:', parsedReq);
     if (!parsedReq.success) {
       return reply.code(400).send({ error: 'Invalid tournament creation data' });
     }
@@ -45,13 +45,9 @@ const backendTournamentRoutes = async (fastify: FastifyInstance) => {
       return reply.code(403).send({ error: 'Forbidden' });
     }
 
-    const method = req.method.toLowerCase();
-    const url = `/tournament`;
-
     const config: AxiosRequestConfig = {
-      method,
-      url,
-      headers: req.headers,
+      method: 'post',
+      url: '/tournament',
       data: newTournament,
     };
 

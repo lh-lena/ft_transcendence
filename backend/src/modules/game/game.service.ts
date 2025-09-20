@@ -16,8 +16,6 @@ export const gameService = {
   async create(data: gameCreateType): Promise<gameType> {
     let game = await gamemaker.create(data as gameCreateType);
 
-    game = await gamemaker.join(game, data.userId);
-
     return game;
   },
 

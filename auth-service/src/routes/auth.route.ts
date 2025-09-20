@@ -109,7 +109,7 @@ const authRoutes = async (server: FastifyInstance) => {
     }
 
     try {
-      const payload = server.verifyRefreshToken(refreshToken);
+      const payload = await server.verifyRefreshToken(refreshToken);
 
       const newAccessToken = server.generateAccessToken(payload);
       const newRefreshToken = server.generateRefreshToken(payload);

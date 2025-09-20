@@ -18,7 +18,7 @@ import type {
 } from '../schemas/game';
 
 const backendGameRoutes = async (fastify: FastifyInstance) => {
-  fastify.get('/api/game/:id', async (req: FastifyRequest, reply: FastifyReply) => {
+  fastify.get('/api/game/:gameId', async (req: FastifyRequest, reply: FastifyReply) => {
     const parsedReq = gameIdSchema.safeParse(req.params);
 
     if (!parsedReq.success) {
@@ -85,9 +85,9 @@ const backendGameRoutes = async (fastify: FastifyInstance) => {
 
   fastify.post('/api/game/join', async (req: FastifyRequest, reply: FastifyReply) => {
     const parsedReq = gameJoinSchema.safeParse(req.body);
-
+    console.log('Parsed Request:', parsedReq);
     if (!parsedReq.success) {
-      return reply.code(400).send({ error: 'Invalid Chat Message' });
+      return reply.code(400).send({ error: 'Invalid Game Parameters' });
     }
 
     const gameToJoin: GameJoinType = parsedReq.data;
@@ -96,25 +96,21 @@ const backendGameRoutes = async (fastify: FastifyInstance) => {
       return reply.code(403).send({ error: 'Forbidden' });
     }
 
-    const method = req.method.toLowerCase();
-    const url = '/game/join';
-
     const config: AxiosRequestConfig = {
-      method,
-      url,
-      headers: req.headers,
+      method: 'post',
+      url: '/game/join',
       data: gameToJoin,
     };
     const joinedGame: GameType = await apiClientBackend(config);
 
     const ret = gameResponseSchema.safeParse(joinedGame);
-
+    console.log('Parsed Response:', ret);
     if (!ret.success) {
-      return reply.code(500).send({ error: 'Failed to parse chat data' });
+      return reply.code(500).send({ error: 'Failed to parse game data' });
     }
 
-    const chatRet: GameResponseType = ret.data;
-    return reply.code(201).send(chatRet);
+    const gameRet: GameResponseType = ret.data;
+    return reply.code(201).send(gameRet);
   });
 };
 

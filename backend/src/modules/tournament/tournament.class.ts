@@ -1,7 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 import type { tournamentType, tournamentCreateType } from '../../schemas/tournament';
 
-import { userService } from '../user/user.service';
 import { gameService } from '../game/game.service';
 import { notifyPlayer } from '../../utils/notify';
 
@@ -44,7 +43,7 @@ export class tournamentClass {
   }
 
   async join(tournament: tournamentType, playerId: string): Promise<tournamentType> {
-    tournament.players.push(await userService.getInfoById(playerId));
+    tournament.players.push({ userId: playerId });
     this.startTournament(tournament);
     return tournament;
   }
