@@ -4,6 +4,7 @@ import jwt from '@fastify/jwt';
 import fastifyCookie from '@fastify/cookie';
 import fastifyCsrf from '@fastify/csrf-protection';
 import fastifyOauth2 from '@fastify/oauth2';
+import fastifyHttpProxy from '@fastify/http-proxy';
 //import * as client from 'prom-client';
 
 import cronPlugin from './plugins/000_cron';
@@ -240,6 +241,12 @@ const start = async () => {
     credentials: true,
     methods: ['GET', 'POST', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
+  });
+
+  server.register(fastifyHttpProxy, {
+    upstream: 'http://127.0.0.1:8080/api/upload',
+    prefix: '/api/upload',
+    http2: false,
   });
 
   // ------------ Google OAuth2 ------------

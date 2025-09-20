@@ -8,7 +8,7 @@ export const friendSchema = z.object({
   createdAt: dtString.optional(),
 });
 
-export const friendIdSchema = z.object({ friendId: z.number() });
+export const friendIdSchema = z.object({ friendId: z.coerce.number() });
 
 export const friendPostSchema = friendSchema
   .pick({ userId: true })
