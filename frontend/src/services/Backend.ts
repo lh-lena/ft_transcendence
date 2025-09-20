@@ -31,22 +31,39 @@ export class Backend {
       },
       (error) => {
         // Handle any response that isn't 2xx
-        console.error("API Error:", error.response?.data || error.message);
-        alert(`
-          backend error: ${error.response?.data?.message || error.message}`);
-        // You can add specific error handling logic here
-        // if (error.response?.status === 401) {
-        //   // Handle unauthorized - maybe redirect to login
-        //   localStorage.removeItem("jwt");
-        //   localStorage.removeItem("user");
-        // }
-        // Re-throw the error so individual methods can still catch it if needed
+        // only go in here if we are able to refresh token
+        if (
+          error.response?.status === 401 &&
+          !(error.response?.data?.message === "refresh token expired")
+        ) {
+          this.refreshToken();
+        } else {
+          console.error("API Error:", error.response?.data || error.message);
+          alert(`
+            backend error: ${error.response?.data?.message || error.message}`);
+          // You can add specific error handling logic here
+          // if (error.response?.status === 401) {
+          //   // Handle unauthorized - maybe redirect to login
+          //   localStorage.removeItem("jwt");
+          //   localStorage.removeItem("user");
+          // }
+        }
         return Promise.reject(error);
       },
     );
 
     // if user exists grab old user form storage
     this.loadUserFromStorage();
+  }
+
+  async refreshToken() {
+    localStorage.removeItem("jwt");
+    const response = await this.api.post("/api/refresh", {
+      refreshToken: localStorage.getItem("refreshToken"),
+    });
+    localStorage.setItem("jwt", response.data.jwt);
+    localStorage.setItem("refreshToken", response.data.refreshToken);
+    return response;
   }
 
   async registerUser(data: UserRegistration) {
@@ -200,6 +217,7 @@ export class Backend {
     });
     if (response.status != 200) return response;
     localStorage.setItem("jwt", response.data.jwt);
+    localStorage.setItem("refreshToken", response.data.refreshToken);
     const userResponse = await this.fetchUserById(response.data.userId);
     this.setUser(userResponse.data);
     return response;
