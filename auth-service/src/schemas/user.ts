@@ -18,7 +18,7 @@ export const userSchema = z.object({
   tfaMethod: tfaType.nullable().default(null),
   tfaTempCode: z.string().nullable().default(null),
   tfaCodeExpires: dtString.nullable().default(null),
-  backupCodes: z.array(z.string()).nullable().default(null),
+  backupCodes: z.string().nullable().default(null),
 
   guest: z.boolean().default(false),
 
@@ -72,11 +72,14 @@ export const userLoginSchema = userSchema
   .pick({ email: true })
   .extend({ password: z.string().min(8) });
 
-export const userPatchSchema = userSchema.pick({
-  email: true,
-  username: true,
-  alias: true,
+export const userPatchSchema = z.object({
+  username: z.string().min(1).max(6).optional(),
+  alias: z.string().nullable().optional(),
+  email: z.email().optional(),
+  password: z.string().min(8).optional(),
 });
+
+export const userUpdateSchema = userSchema.partial();
 
 export const userResponseSchema = userSchema.omit({
   password_hash: true,
@@ -109,4 +112,5 @@ export type UserType = z.infer<typeof userSchema>;
 export type UserIdType = z.infer<typeof userIdSchema>;
 export type UserQueryType = z.infer<typeof userQuerySchema>;
 export type UserPatchType = z.infer<typeof userPatchSchema>;
+export type UserUpdateType = z.infer<typeof userUpdateSchema>;
 export type GuestType = z.infer<typeof guestSchema>;

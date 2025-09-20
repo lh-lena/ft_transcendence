@@ -8,7 +8,7 @@ export const blockedSchema = z.object({
   createdAt: dtString.optional(),
 });
 
-export const blockedIdSchema = z.object({ blockedId: z.number });
+export const blockedIdSchema = z.object({ blockedId: z.coerce.number() });
 
 export const blockedPostSchema = blockedSchema
   .pick({ userId: true })

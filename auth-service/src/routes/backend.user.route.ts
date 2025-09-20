@@ -1,9 +1,16 @@
 import fp from 'fastify-plugin';
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { AxiosRequestConfig } from 'axios';
+import { hashPassword } from '../auth/passwords';
 
 import { apiClientBackend } from '../utils/apiClient';
-import type { UserType, UserIdType, UserQueryType, UserPatchType } from '../schemas/user';
+import type {
+  UserType,
+  UserIdType,
+  UserQueryType,
+  UserPatchType,
+  UserUpdateType,
+} from '../schemas/user';
 import {
   userIdSchema,
   userQuerySchema,
@@ -84,7 +91,7 @@ const backendUserRoutes = async (fastify: FastifyInstance) => {
     return reply.code(200).send(usersRet);
   });
 
-  fastify.patch('/api/user/:id', async (req: FastifyRequest, reply: FastifyReply) => {
+  fastify.patch('/api/user/:userId', async (req: FastifyRequest, reply: FastifyReply) => {
     const parsedParams = userIdSchema.safeParse(req.params);
     const parsedBody = userPatchSchema.safeParse(req.body);
 
@@ -103,15 +110,19 @@ const backendUserRoutes = async (fastify: FastifyInstance) => {
       return reply.code(403).send({ error: 'Forbidden: You can only update your own profile' });
     }
 
-    const method = req.method.toLowerCase();
-    const url = `/user/${requestId.userId}`;
+    let password_hash: string | undefined;
+
+    if (updateData.password) {
+      password_hash = await hashPassword(updateData.password);
+    }
+    const updateUser: UserUpdateType = updateData;
+
+    if (password_hash) updateUser.password_hash = password_hash;
 
     const config: AxiosRequestConfig = {
-      method,
-      url,
-      headers: req.headers,
-      params: requestId,
-      data: updateData,
+      method: 'patch',
+      url: `/user/${requestId.userId}`,
+      data: updateUser,
     };
 
     const updatedUser: UserType = await apiClientBackend(config);
@@ -126,7 +137,7 @@ const backendUserRoutes = async (fastify: FastifyInstance) => {
     return reply.code(201).send(userRet);
   });
 
-  fastify.delete('/api/user/:id', async (req: FastifyRequest, reply: FastifyReply) => {
+  fastify.delete('/api/user/:userId', async (req: FastifyRequest, reply: FastifyReply) => {
     const parsedReq = userIdSchema.safeParse(req.params);
 
     if (!parsedReq.success) {
@@ -139,14 +150,9 @@ const backendUserRoutes = async (fastify: FastifyInstance) => {
       return reply.code(403).send({ error: 'Forbidden: You can only delete your own profile' });
     }
 
-    const method = req.method.toLowerCase();
-    const url = `/user/${requestId.userId}`;
-
     const config: AxiosRequestConfig = {
-      method,
-      url,
-      headers: req.headers,
-      params: requestId,
+      method: 'delete',
+      url: `/user/${requestId.userId}`,
     };
 
     const ret = await apiClientBackend(config);

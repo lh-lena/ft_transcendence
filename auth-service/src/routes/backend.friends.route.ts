@@ -74,7 +74,7 @@ const backendFriendsRoute = async (fastify: FastifyInstance) => {
     return reply.code(200).send(friendRet);
   });
 
-  fastify.delete('/api/friend', async (req: FastifyRequest, reply: FastifyReply) => {
+  fastify.delete('/api/friend/:friendId', async (req: FastifyRequest, reply: FastifyReply) => {
     const parsedReq = friendIdSchema.safeParse(req.params);
 
     if (!parsedReq || !parsedReq.success) {
@@ -83,12 +83,15 @@ const backendFriendsRoute = async (fastify: FastifyInstance) => {
 
     let config: AxiosRequestConfig = {
       method: 'get',
-      url: `/friend/${parsedReq.data.friendId}`,
+      url: `/friend`,
+      params: { friendId: parsedReq.data.friendId },
     };
 
     const friendCheck = await apiClientBackend(config);
 
-    if (friendCheck.userId !== req.user.id) {
+    console.log(friendCheck);
+
+    if (friendCheck.length !== 1 || friendCheck[0].userId !== req.user.id) {
       return reply.code(403).send({ error: 'Forbidden' });
     }
 
@@ -99,15 +102,7 @@ const backendFriendsRoute = async (fastify: FastifyInstance) => {
 
     const resp = await apiClientBackend(config);
 
-    const ret = friendResponseSchema.safeParse(resp);
-
-    if (!ret.success) {
-      return reply.code(500).send({ error: 'Failed to parse Friend Data' });
-    }
-
-    const friendRet = ret.data;
-
-    return reply.code(200).send(friendRet);
+    return reply.code(200).send(resp);
   });
 };
 
