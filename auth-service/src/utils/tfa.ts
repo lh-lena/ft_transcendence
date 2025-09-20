@@ -164,6 +164,8 @@ export class tfaHandler {
     const secret = authenticator.generateSecret();
     const otpauth = authenticator.keyuri(user.email, 'ft_transcendence', secret);
     const codes = Array.from({ length: 8 }, () => crypto.randomBytes(8).toString('hex'));
+    const codesToHash = codes.map(sha256);
+    const codesString = codesToHash.join(',');
 
     const config: AxiosRequestConfig = {
       method: 'patch',
@@ -172,7 +174,7 @@ export class tfaHandler {
         tfaEnabled: true,
         tfaMethod: 'totp',
         tfaSecret: secret,
-        backupCodes: codes.map(sha256),
+        backupCodes: codesString,
       },
     };
 
