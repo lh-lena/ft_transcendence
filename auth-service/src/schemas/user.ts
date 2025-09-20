@@ -24,7 +24,7 @@ export const userSchema = z.object({
 
   color: z.string(),
   colormap: z.string(),
-  avatar: z.url().nullable().optional(),
+  avatar: z.string().nullable().optional(),
 });
 
 export const userIdSchema = userSchema.pick({
@@ -77,6 +77,7 @@ export const userPatchSchema = z.object({
   alias: z.string().nullable().optional(),
   email: z.email().optional(),
   password: z.string().min(8).optional(),
+  avatar: z.string().nullable().optional(),
 });
 
 export const userUpdateSchema = userSchema.partial();

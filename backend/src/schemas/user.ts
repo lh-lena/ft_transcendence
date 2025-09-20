@@ -26,7 +26,7 @@ export const userBase = z.object({
 
   color: z.string(),
   colormap: z.string(),
-  avatar: z.url().optional().nullable(),
+  avatar: z.string().optional().nullable(),
 });
 export const userBaseArray = z.array(userBase);
 

@@ -1,6 +1,7 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import fp from 'fastify-plugin';
 import { v4 as uuid } from 'uuid';
+import { multipart } from '@fastify/multipart';
 import { createWriteStream } from 'fs';
 import { pipeline } from 'stream/promises';
 
@@ -18,13 +19,6 @@ const uploadRoutes = async (server: FastifyInstance) => {
           'Endpoint to upload a png image. Validates the file and stores it on the server. Returns the upload path to eg. add to user',
         tags: ['upload'],
         consumes: ['multipart/form-data'],
-        body: {
-          type: 'object',
-          properties: {
-            file: { type: 'string', format: 'binary' },
-          },
-          required: ['file'],
-        },
         response: {
           200: {
             description: 'Successful upload',
