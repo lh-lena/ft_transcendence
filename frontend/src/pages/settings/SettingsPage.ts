@@ -61,7 +61,7 @@ export class SettingsPage {
     // change 2FA settings from user data
     const twoFASetting = securitySettings.find((s) => s.label === "2FA");
     if (twoFASetting)
-      twoFASetting.value = this.backend.getUser().is_2fa_enabled ? "on" : "off";
+      twoFASetting.value = this.backend.getUser().tfaEnabled ? "on" : "off";
 
     // Full page background
     this.main = document.createElement("div");
@@ -230,28 +230,7 @@ export class SettingsPage {
   private toggleEmail2FASettings(): void {
     // async request to backend
     this.backend.twoFAEmail(this.backend.getUser().userId);
-    // hide old 2fa settings
-    this.twoFAMenu.remove();
-
-    this.twoFAMenu = document.createElement("div");
-    this.twoFAMenu.className = "flex h-full pt-4 flex-col gap-5 w-36";
-    this.window.getPane().appendChild(this.twoFAMenu);
-    const twoFATitle = document.createElement("p");
-    twoFATitle.textContent = "Email 2FA:";
-    twoFATitle.className = "font-bold text-center";
-    this.twoFAMenu.appendChild(twoFATitle);
-    // input email code
-    const inputEmailCode = document.createElement("input");
-    inputEmailCode.type = "code";
-    inputEmailCode.id = "text_password";
-    inputEmailCode.placeholder = "code";
-    inputEmailCode.style.paddingLeft = "0.5em";
-    this.twoFAMenu.appendChild(inputEmailCode);
-    const email2FAButton = document.createElement("button");
-    email2FAButton.className = "btn";
-    email2FAButton.onclick = () => this.verifyEmail2FA();
-    email2FAButton.innerText = "verify";
-    this.twoFAMenu.appendChild(email2FAButton);
+    // go back to normal settings pan
   }
 
   private verifyEmail2FA(): void {

@@ -29,7 +29,7 @@ export type User = {
   email: string;
   username: string;
   password_hash: string;
-  is_2fa_enabled: boolean;
+  tfaEnabled: boolean;
   twofa_secret: string;
   guest: boolean;
   color: string;
