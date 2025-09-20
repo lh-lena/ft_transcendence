@@ -9,6 +9,7 @@ import type { AxiosRequestConfig } from 'axios';
 
 import { tfaHandler } from '../utils/tfa';
 import { tfaVerifySchema, tfaSetupSchema } from '../schemas/tfa';
+import { refreshTokenSchema } from '../schemas/jwt';
 
 import {
   userSchema,
@@ -17,6 +18,7 @@ import {
   userPostSchema,
   guestSchema,
 } from '../schemas/user';
+
 import type { UserType, GuestType } from '../schemas/user';
 
 const authRoutes = async (server: FastifyInstance) => {
@@ -94,28 +96,25 @@ const authRoutes = async (server: FastifyInstance) => {
 
   server.post('/api/refresh', async (req: FastifyRequest, reply: FastifyReply) => {
     console.log('Refresh token request', req.cookies);
-    const refreshToken = req.cookies.refreshToken;
+    const parsedReq = refreshTokenSchema.safeParse(req.body);
 
-    if (!refreshToken) {
-      return reply.status(401).send({ error: 'No refresh token' });
+    if (!parsedReq.success) {
+      return reply.status(401).send({ error: 'Wrong Refresh Token.\nLogin Again!' });
     }
+
+    const refreshToken = parsedReq.data.refreshToken;
+
     if (await isBlacklistedToken(refreshToken)) {
       return reply.status(401).send({ error: 'Token revoked. Login again' });
     }
 
-    //TODO add proper typing to payload -> only use id
     try {
       const payload = server.verifyRefreshToken(refreshToken);
 
       const newAccessToken = server.generateAccessToken(payload);
       const newRefreshToken = server.generateRefreshToken(payload);
 
-      reply.setCookie('refreshToken', newRefreshToken, {
-        httpOnly: true,
-        path: '/api/refresh',
-      });
-
-      return reply.send({ jwt: newAccessToken });
+      return reply.send({ jwt: newAccessToken, refreshToken: newRefreshToken });
     } catch {
       return reply.status(401).send({ error: 'Invalid refresh token' });
     }
