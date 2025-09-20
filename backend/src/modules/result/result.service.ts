@@ -29,14 +29,8 @@ export const resultService = {
   },
 
   async getQuery(query?: Prisma.ResultWhereInput): Promise<ResultWithGP[]> {
-    //const ret = query
-    //  ? await resultModel.findBy(transformQuery(query))
-    //  : await resultModel.findAll();
     const ret = query ? await resultModel.findBy(query) : await resultModel.findAll();
 
-    if (ret.length === 0) {
-      throw new NotFoundError('No result found');
-    }
     return ret;
   },
 
@@ -50,9 +44,6 @@ export const resultService = {
 
   async getLeaderboard(): Promise<leaderboardType> {
     const ret = await resultModel.getLeaderboard();
-    if (ret.length === 0) {
-      throw new NotFoundError('No results found');
-    }
     return ret;
   },
 };
