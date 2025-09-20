@@ -106,7 +106,7 @@ export class ChatPage {
       "w-full min-h-screen flex flex-col items-center justify-center bg-brandBlue";
 
     // MENU BAR TOP
-    const menuBar = new MenuBar(this.router, "friends").render();
+    const menuBar = new MenuBar(this.serviceContainer, "friends").render();
 
     // main chat row
     this.chatRow = document.createElement("div");

@@ -1,4 +1,4 @@
-import { ServiceContainer, Router } from "../../services";
+import { ServiceContainer, Router, Backend } from "../../services";
 import { Menu } from "../../components/menu";
 import { PongButton } from "../../components/pongButton";
 import { userStore } from "../../constants/backend";
@@ -13,14 +13,17 @@ export class TournamentAliasPage {
   private main: HTMLElement;
   private serviceContainer: ServiceContainer;
   private router: Router;
+  private backend: Backend;
   private form: HTMLElement;
   private pongButton: PongButton;
   private menu: Menu;
+  private inputAlias: HTMLInputElement;
 
   constructor(serviceContainer: ServiceContainer) {
     // router / services container
     this.serviceContainer = serviceContainer;
     this.router = this.serviceContainer.get<Router>("router");
+    this.backend = this.serviceContainer.get<Backend>("backend");
 
     this.main = document.createElement("div");
     this.main.className =
@@ -34,16 +37,26 @@ export class TournamentAliasPage {
     this.main.appendChild(this.form);
 
     // email input
-    const inputAlias = document.createElement("input");
-    inputAlias.type = "text";
-    inputAlias.id = "text_alias";
-    inputAlias.placeholder = "alias";
-    inputAlias.style.paddingLeft = "0.5em";
-    this.form.appendChild(inputAlias);
+    this.inputAlias = document.createElement("input");
+    this.inputAlias.type = "text";
+    this.inputAlias.id = "text_alias";
+    this.inputAlias.placeholder = "alias";
+    this.inputAlias.style.paddingLeft = "0.5em";
+    this.form.appendChild(this.inputAlias);
 
-    const aliasMenu = [{ name: "play", onClick: () => this.showBracket() }];
+    const aliasMenu = [{ name: "play", onClick: () => this.handlePlay() }];
     this.menu = new Menu(this.router, aliasMenu);
     this.main.appendChild(this.menu.getMenuElement());
+  }
+
+  private handlePlay() {
+    const alias = this.inputAlias.value.trim();
+    if (!alias) {
+      alert("please enter an alias");
+      return;
+    }
+    this.backend.tournamentAliasFlow(alias);
+    this.showBracket();
   }
 
   private showBracket(): void {
@@ -84,7 +97,7 @@ export class TournamentAliasPage {
       // replace with check to see if player is you (reference check)
     });
 
-    setTimeout(() => this.router.navigate("/vs-player"), 5000);
+    // setTimeout(() => this.router.navigate("/vs-player"), 5000);
   }
 
   private createPlayer(username: string): HTMLDivElement {

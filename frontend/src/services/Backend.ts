@@ -2,7 +2,7 @@ import axios from "axios";
 import { FriendsList, User, UserLogin, UserRegistration } from "../types";
 
 // utils
-import { profilePrintToArray } from "../utils/profilePrintFunctions";
+import { generateProfilePrint, profilePrintToArray, profilePrintToString } from "../utils/profilePrintFunctions";
 
 export class Backend {
   private user!: User;
@@ -34,7 +34,8 @@ export class Backend {
         // only go in here if we are able to refresh token
         if (
           error.response?.status === 401 &&
-          !(error.response?.data?.message === "refresh token expired")
+          !(error.response?.data?.message === "refresh token expired") &&
+          localStorage.getItem("refreshToken")
         ) {
           this.refreshToken();
         } else {
@@ -190,14 +191,16 @@ export class Backend {
     }
   }
 
-  // async twoFAEmail(userId: string) {
-  //   const response = this.api.post("/api/tfaSetup", {
-  //     userId: userId,
-  //     type: "email",
-  //   });
-  //   console.log(response);
-  //   return response;
-  // }
+  async logout() {
+    const response = await this.api.post("/api/logout", {
+      refreshToken: localStorage.getItem("refreshToken"),
+    });
+    console.log(response);
+    localStorage.removeItem("jwt");
+    localStorage.removeItem("refreshToken");
+    localStorage.removeItem("user");
+    return response;
+  }
 
   async twoFaTOTP(userId: string) {
     const response = await this.api.post("/api/tfaSetup", {
@@ -221,6 +224,24 @@ export class Backend {
     const userResponse = await this.fetchUserById(response.data.userId);
     this.setUser(userResponse.data);
     return response;
+  }
+
+  async tournamentAliasFlow(alias: string) {
+    if (this.user) {
+      await this.api.patch("/api/user", {
+        userId: this.getUser().userId,
+        alias: alias,
+      });
+    } else {
+      const { color, colorMap } = generateProfilePrint();
+      const response = await this.api.post("/api/guest/login", {
+        alias: alias,
+        color: color,
+        colormap: profilePrintToString(colorMap),
+      });
+      localStorage.setItem("jwt", response.data.jwt);
+      localStorage.setItem("refreshToken", response.data.refreshToken);
+    }
   }
 
   private loadUserFromStorage() {
