@@ -473,7 +473,9 @@ export class ChatPage {
     }
 
     // create new popup and show it
-    console.log(`user.userId: ${user.userId} === backend.userGetUserUserwhtcvg: ${this.backend.getUser().userId}`)
+    console.log(
+      `user.userId: ${user.userId} === backend.userGetUserUserwhtcvg: ${this.backend.getUser().userId}`,
+    );
     if (user.userId === this.backend.getUser().userId) {
       // case is pop up for local user
       this.profilePopUp = new ProfilePopUp(
