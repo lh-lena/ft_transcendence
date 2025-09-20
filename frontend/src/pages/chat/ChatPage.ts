@@ -395,6 +395,32 @@ export class ChatPage {
         }
       }
     }
+    // Check if we have any online friends
+    const hasOnlineFriends = this.friendsList.some(
+      (friend) => friend.online === "online",
+    );
+    // Check if we have any offline friends
+    const hasOfflineFriends = this.friendsList.some(
+      (friend) => friend.online !== "online",
+    );
+
+    // Update online header
+    if (hasOnlineFriends) {
+      this.onlineheader.textContent = "online:";
+      this.onlineheader.className = "text-center text-emerald-800";
+    } else {
+      this.onlineheader.innerHTML = "";
+      this.onlineheader.className = "";
+    }
+
+    // Update offline header
+    if (hasOfflineFriends) {
+      this.offlineheader.textContent = "offline:";
+      this.offlineheader.className = "text-center text-red-800";
+    } else {
+      this.offlineheader.innerHTML = "";
+      this.offlineheader.className = "";
+    }
   }
 
   // toggles invite (in messages)
@@ -480,11 +506,11 @@ export class ChatPage {
 
   // right side panel (only type that populates right side panel as of rn)
   // watch out -> could be a friend thats passed or a user
-  private toggleProfilePopUp(user: any): void {
+  private toggleProfilePopUp(user: any, close?: boolean): void {
     // remove profile pop up if it is already shown on screen
     if (this.profilePopUp && this.chatRow.contains(this.rightPanel)) {
       this.chatRow.removeChild(this.rightPanel);
-      return;
+      if (close) return;
     }
 
     let isFriend = false;
@@ -500,13 +526,13 @@ export class ChatPage {
     if (user.userId === this.backend.getUser().userId && !user.friendId) {
       // case is pop up for local user
       this.profilePopUp = new ProfilePopUp(
-        () => this.toggleProfilePopUp(user),
+        () => this.toggleProfilePopUp(user, true),
         user,
       ).getNode();
       // case user is friend
     } else {
       this.profilePopUp = new ProfilePopUp(
-        () => this.toggleProfilePopUp(user),
+        () => this.toggleProfilePopUp(user, true),
         user,
         "friend",
         () => this.addFriendHook(user.userId),
