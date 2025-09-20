@@ -12,6 +12,7 @@ export default fp(async function onRequestHook(server) {
       '/api/auth/google/callback',
       '/api/register',
       '/api/login',
+      '/api/refresh',
     ];
 
     const routePath = req.routeOptions.url || req.url;
