@@ -26,3 +26,11 @@ export function generateProfilePrint(gridSize: number = 2): {
 
   return { color, colorMap };
 }
+
+export function profilePrintToString(colorMap: string[]): string {
+  return colorMap.join(",");
+}
+
+export function profilePrintToArray(colorMap: string): string[] {
+  return colorMap.split(",");
+}

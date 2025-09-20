@@ -1,6 +1,6 @@
-import { ServiceContainer, Router } from "../../services";
+import { ServiceContainer, Router, Backend } from "../../services";
 import { Window } from "../../components/window";
-import { CANVAS_DEFAULTS } from "../../types";
+import { CANVAS_DEFAULTS, FriendsList, UsersAll } from "../../types";
 import { MenuBar } from "../../components/menuBar";
 import { ProfileAvatar } from "../../components/profileAvatar";
 import { sampleChatHistory } from "../../constants/backend";
@@ -8,34 +8,104 @@ import { InformationIcon } from "../../components/informationIcon";
 import { ProfilePopUp } from "../../components/profilePopUp";
 
 // pretend backend -> change
-import { sampleFriends } from "../../constants/backend";
+import { FriendsIcon } from "../../components/friendsIcon";
+import { Leaderboard } from "../../types/leaderboard";
+import { profilePrintToArray } from "../../utils/profilePrintFunctions";
+
+import { User } from "../../types";
 
 export class ChatPage {
   private serviceContainer: ServiceContainer;
   private router: Router;
-  private container;
+  private container!: HTMLDivElement;
   private clickedContact!: HTMLDivElement;
-  private bottomBar: HTMLDivElement;
-  private inputBox: HTMLDivElement;
-  private actionButton: HTMLElement;
-  private inputMessage: HTMLInputElement;
-  private sendButton: HTMLElement;
+  private bottomBar!: HTMLDivElement;
+  private inputBox!: HTMLDivElement;
+  private actionButton!: HTMLElement;
+  private inputMessage!: HTMLInputElement;
+  private sendButton!: HTMLElement;
   private sendInvite!: HTMLDivElement;
-  private chatPanel: HTMLDivElement;
-  private addFriendsPanel: HTMLDivElement;
-  private chatRow: HTMLDivElement;
-  private profilePopUp: ProfilePopUp;
+  private chatPanel!: HTMLDivElement;
+  private addFriendsPanel!: HTMLDivElement;
+  private chatRow!: HTMLDivElement;
+  private leaderboardPanel!: HTMLDivElement;
+  private profilePopUp!: HTMLElement;
+  private backend: Backend;
+  // keeps track of what panel is on left
+  private leftPanel!: HTMLDivElement;
+  // keeps track of what panel is on right
+  private rightPanel!: HTMLElement;
+  private leaderboardData!: Leaderboard;
+  private allUserData!: UsersAll;
+  private searchInput!: HTMLInputElement;
+  private friendsList!: FriendsList;
+  private searchResults!: HTMLDivElement;
+  private offlineheader!: HTMLElement;
+  private onlineheader!: HTMLElement;
 
   constructor(serviceContainer: ServiceContainer) {
     // router / services container
     this.serviceContainer = serviceContainer;
     this.router = this.serviceContainer.get<Router>("router");
+    this.backend = this.serviceContainer.get<Backend>("backend");
+  }
 
+  public static async create(
+    serviceContainer: ServiceContainer,
+  ): Promise<ChatPage> {
+    const instance = new ChatPage(serviceContainer);
+
+    // handle async operations
+
+    // all users fetch
+    instance.allUserData = (await instance.backend.fetchAllUsers()).data;
+    for (const element of instance.allUserData) {
+      element.colormap =
+        typeof element.colormap === "string"
+          ? profilePrintToArray(element.colormap)
+          : element.colormap;
+    }
+    // leaderboard fetch
+    const initLeaderboardData: Leaderboard =
+      await instance.backend.getLeaderboard();
+    for (const element of initLeaderboardData) {
+      const userResponse = await instance.backend.fetchUserById(element.userId);
+      element.username = userResponse.data.username;
+      element.colormap = profilePrintToArray(userResponse.data.colormap);
+      element.color = userResponse.data.color;
+      element.avatar = userResponse.data.avatar;
+    }
+    instance.leaderboardData = initLeaderboardData;
+    // friends fetch
+    const initFriendsList: FriendsList =
+      await instance.backend.fetchFriendsById(
+        instance.backend.getUser().userId,
+      );
+    for (const element of initFriendsList) {
+      const userResponse = await instance.backend.fetchUserById(element.userId);
+      element.username = userResponse.data.username;
+      element.colormap = profilePrintToArray(userResponse.data.colormap);
+      element.color = userResponse.data.color;
+      element.avatar = userResponse.data.avatar;
+      element.online = userResponse.data.online;
+    }
+    instance.friendsList = initFriendsList;
+
+    // Complete the UI setup
+    instance.setupUI();
+
+    return instance;
+  }
+
+  private setupUI() {
+    const user: User = this.backend.getUser();
+
+    // main container
     this.container = document.createElement("div");
     this.container.className =
       "w-full min-h-screen flex flex-col items-center justify-center bg-brandBlue";
 
-    // menu bar
+    // MENU BAR TOP
     const menuBar = new MenuBar(this.router, "friends").render();
 
     // main chat row
@@ -49,8 +119,56 @@ export class ChatPage {
     contacts.className =
       "flex flex-col gap-2 w-full overflow-y-auto flex-1 pr-2";
     contactsPanel.appendChild(contacts);
+    this.chatRow.appendChild(contactsPanel);
 
-    // adding add friends button in contacts panel to style it the same
+    // YOU BUTTON
+    const clickableYoubutton = document.createElement("a");
+    const addYouButton = document.createElement("div");
+    clickableYoubutton.style.cursor = "pointer";
+    clickableYoubutton.className = "w-full";
+    addYouButton.className =
+      "standard-dialog flex flex-row w-full gap-3 mb-2 justify-center items-center";
+    const youButtonAvatar = new ProfileAvatar(
+      user.color,
+      user.colormap,
+      30,
+      30,
+      2,
+    ).getElement();
+    addYouButton.appendChild(youButtonAvatar);
+    const addYouButtonText = document.createElement("h1");
+    addYouButtonText.textContent = user.username;
+    addYouButton.appendChild(addYouButtonText);
+    clickableYoubutton.appendChild(addYouButton);
+    clickableYoubutton.onclick = () => this.toggleProfilePopUp(user);
+    contacts.appendChild(clickableYoubutton);
+
+    // LEADERBOARD BUTTON
+    const clickableLeaderboardbutton = document.createElement("a");
+    const addLeaderboardButton = document.createElement("div");
+    clickableLeaderboardbutton.style.cursor = "pointer";
+    clickableLeaderboardbutton.className = "w-full";
+    addLeaderboardButton.className =
+      "standard-dialog w-full text-center items-center mb-2";
+    const addLeaderboardButtonText = document.createElement("h1");
+    addLeaderboardButtonText.textContent = "leaderboard";
+    addLeaderboardButton.appendChild(addLeaderboardButtonText);
+    clickableLeaderboardbutton.appendChild(addLeaderboardButton);
+    clickableLeaderboardbutton.onclick = () => this.toggleLeaderboardPanel();
+    contacts.appendChild(clickableLeaderboardbutton);
+
+    // FRIENDS ICON: adds seperation to collumn
+    const friendsHeaderRow = document.createElement("div");
+    friendsHeaderRow.className =
+      "flex flex-row gap-2 mb-2 justify-center items-center";
+    const friendsIcon = new FriendsIcon();
+    friendsHeaderRow.appendChild(friendsIcon.getNode());
+    const friendsHeader = document.createElement("h1");
+    friendsHeader.textContent = "friends";
+    friendsHeaderRow.appendChild(friendsHeader);
+    contacts.appendChild(friendsHeaderRow);
+
+    // ADD FRIENDS ICON
     const clickableAddFriendButton = document.createElement("a");
     const addFriendButton = document.createElement("div");
     clickableAddFriendButton.style.cursor = "pointer";
@@ -61,48 +179,94 @@ export class ChatPage {
     addFriendButtonText.textContent = "add friend +";
     addFriendButton.appendChild(addFriendButtonText);
     clickableAddFriendButton.appendChild(addFriendButton);
-    clickableAddFriendButton.onclick = () =>
-      this.toggleAddFriend(addFriendButton);
+    clickableAddFriendButton.onclick = () => this.toggleAddFriendPanel();
     contacts.appendChild(clickableAddFriendButton);
 
-    const onlineHeader = document.createElement("h1");
-    onlineHeader.textContent = "online:";
-    onlineHeader.className = "text-center text-emerald-800";
-    const offlineHeader = document.createElement("h1");
-    offlineHeader.textContent = "offline:";
-    offlineHeader.className = "text-center text-red-800";
-    contacts.appendChild(onlineHeader);
-    contacts.appendChild(offlineHeader);
+    // online offline headers
+    if (this.friendsList.length > 0) {
+      this.onlineheader = document.createElement("h1");
+      this.onlineheader.textContent = "online:";
+      this.onlineheader.className = "text-center text-emerald-800";
+      this.offlineheader = document.createElement("h1");
+      this.offlineheader.textContent = "offline:";
+      this.offlineheader.className = "text-center text-red-800";
+      contacts.appendChild(this.onlineheader);
+      contacts.appendChild(this.offlineheader);
+    }
 
-    // contacts on left
-    sampleFriends.forEach((friend) => {
+    // CONTACTS
+    this.friendsList.forEach((friend) => {
       const contact = document.createElement("div");
       contact.className =
         "flex flex-row gap-2 box standard-dialog w-full items-center";
       const clickableContact = document.createElement("a");
-      clickableContact.onclick = () => this.clickChatContact(contact);
+      clickableContact.onclick = () => this.toggleChatPanel(contact);
       clickableContact.style.cursor = "pointer";
       const contactName = document.createElement("h1");
       contactName.textContent = friend.username;
-      const contactAvatar = new ProfileAvatar(
-        friend.color,
-        friend.colorMap,
-        30,
-        30,
-        2,
-      ).getElement();
-      clickableContact.appendChild(contact);
-      contact.appendChild(contactAvatar);
-      contact.appendChild(contactName);
-      // insert logic for online offline
-      if (friend.status == "online") {
-        contacts.insertBefore(clickableContact, offlineHeader);
-      } else {
-        contacts.appendChild(clickableContact);
+      if (friend.color && friend.colormap) {
+        const contactAvatar = new ProfileAvatar(
+          friend.color,
+          friend.colormap,
+          30,
+          30,
+          2,
+        ).getElement();
+        clickableContact.appendChild(contact);
+        contact.appendChild(contactAvatar);
+        contact.appendChild(contactName);
+        // insert logic for online offline
+        if (friend.online == "online") {
+          contacts.insertBefore(clickableContact, this.offlineheader);
+        } else {
+          contacts.appendChild(clickableContact);
+        }
       }
     });
 
-    // chat panel
+    // LEADERBOARDPANEL
+    this.leaderboardPanel = document.createElement("div");
+    this.leaderboardPanel.className =
+      "flex-1 w-4/5 h-96 standard-dialog flex flex-col gap-2";
+    const results = document.createElement("h1");
+    results.textContent = "leaderboard";
+    this.leaderboardPanel.appendChild(results);
+    this.leftPanel = this.leaderboardPanel;
+    this.chatRow.appendChild(this.leftPanel);
+    const leaderboardResults = document.createElement("div");
+    leaderboardResults.className =
+      "grid grid-cols-2 gap-2 p-2 w-full my-3 overflow-y-auto";
+    this.leaderboardPanel.appendChild(leaderboardResults);
+    // only try stuff on leaderboard data if array greater than 0
+    if (this.leaderboardData.length > 0) {
+      this.leaderboardData.forEach((user) => {
+        const resultBox = document.createElement("div");
+        resultBox.className =
+          "flex flex-row gap-2 box standard-dialog w-full items-center";
+        if (user.color && user.colormap) {
+          const avatar = new ProfileAvatar(
+            user.color,
+            user.colormap,
+            30,
+            30,
+            2,
+          ).getElement();
+          resultBox.appendChild(avatar);
+        }
+        const username = document.createElement("h1");
+        if (user.username) {
+          username.textContent = user.username;
+          username.className = "truncate flex-1 min-w-0 ml-2";
+        }
+        resultBox.appendChild(username);
+        const userScore = document.createElement("h1");
+        userScore.textContent = `wins: ${user.wins}`;
+        resultBox.appendChild(userScore);
+        leaderboardResults.appendChild(resultBox);
+      });
+    }
+
+    // CHATPANEL
     this.chatPanel = document.createElement("div");
     this.chatPanel.className =
       "flex-1 w-4/5 h-96 standard-dialog flex flex-col";
@@ -110,10 +274,10 @@ export class ChatPage {
     const informationBar = document.createElement("div");
     informationBar.className = "flex flex-row pb-2";
     const informationText = document.createElement("h1");
-    informationText.textContent = "Chat with XXX";
+    informationText.textContent = `chat with ${user.username}`;
     informationBar.appendChild(informationText);
     const informationIcon = new InformationIcon(() =>
-      this.toggleProfilePopUp(),
+      this.toggleProfilePopUp(user),
     );
     informationIcon.mount(informationBar);
     informationIcon.className("ml-auto");
@@ -135,9 +299,6 @@ export class ChatPage {
       messages.appendChild(messageBox);
     });
 
-    this.chatRow.appendChild(contactsPanel);
-    this.chatRow.appendChild(this.chatPanel);
-
     // add friends panel (toggles on add friend)
     this.addFriendsPanel = document.createElement("div");
     this.addFriendsPanel.className =
@@ -147,45 +308,24 @@ export class ChatPage {
     friendsInputBox.className =
       "flex flex-row gap-2 w-full pt-2 items-center px-2";
     this.addFriendsPanel.appendChild(friendsInputBox);
-    const friendsInputBoxSearch = document.createElement("input");
-    friendsInputBoxSearch.className = "w-4/5 rounded h-10";
-    friendsInputBoxSearch.type = "text";
-    friendsInputBoxSearch.style.paddingLeft = "0.5em";
-    friendsInputBoxSearch.placeholder = "search";
-    friendsInputBox.appendChild(friendsInputBoxSearch);
+    this.searchInput = document.createElement("input");
+    this.searchInput.className = "w-4/5 rounded h-10";
+    this.searchInput.type = "text";
+    this.searchInput.style.paddingLeft = "0.5em";
+    this.searchInput.placeholder = "search";
+    friendsInputBox.appendChild(this.searchInput);
     const searchButton = document.createElement("button");
     searchButton.textContent = "search";
     searchButton.className =
       "btn flex items-center justify-center text-center h-10 w-1/5";
-    searchButton.onclick = () => this.sendButtonHook();
+    searchButton.onclick = () => this.searchButtonHook();
     friendsInputBox.appendChild(searchButton);
-
     // search results add friends
-    const searchResults = document.createElement("div");
-    searchResults.className =
+    this.searchResults = document.createElement("div");
+    this.searchResults.className =
       "grid grid-cols-3 gap-2 p-2 w-full my-3 overflow-y-auto";
-    this.addFriendsPanel.appendChild(searchResults);
-    sampleFriends.forEach((friend) => {
-      const contact = document.createElement("div");
-      contact.className =
-        "flex flex-row gap-2 box standard-dialog w-full items-center";
-      const clickableContact = document.createElement("a");
-      clickableContact.onclick = () => this.toggleProfilePopUp();
-      clickableContact.style.cursor = "pointer";
-      const contactName = document.createElement("h1");
-      contactName.textContent = friend.username;
-      const contactAvatar = new ProfileAvatar(
-        friend.color,
-        friend.colorMap,
-        30,
-        30,
-        2,
-      ).getElement();
-      clickableContact.appendChild(contact);
-      contact.appendChild(contactAvatar);
-      contact.appendChild(contactName);
-      searchResults.appendChild(clickableContact);
-    });
+    this.addFriendsPanel.appendChild(this.searchResults);
+    this.populateAddFriends(this.allUserData);
 
     // input at bottom
     this.inputBox = document.createElement("div");
@@ -204,7 +344,7 @@ export class ChatPage {
     this.sendButton = document.createElement("button");
     this.sendButton.textContent = "send";
     this.sendButton.className = "btn items-center justify-center h-10 w-1/5";
-    this.sendButton.onclick = () => this.sendButtonHook();
+    this.sendButton.onclick = () => this.toggleProfilePopUp(user);
 
     this.inputBox.appendChild(this.inputMessage);
     this.inputBox.appendChild(this.sendButton);
@@ -212,7 +352,13 @@ export class ChatPage {
     this.chatPanel.appendChild(this.bottomBar);
     // set input box as initial buttom bar
 
-    this.profilePopUp = new ProfilePopUp(() => this.toggleProfilePopUp());
+    // default profile pop up that shows our own profile at start
+    this.profilePopUp = new ProfilePopUp(
+      () => this.toggleProfilePopUp(user),
+      user,
+    ).getNode();
+    this.rightPanel = this.profilePopUp;
+    this.chatRow.appendChild(this.rightPanel);
 
     // window
     const windowComponent = new Window({
@@ -225,10 +371,7 @@ export class ChatPage {
     this.container.appendChild(windowComponent.getElement());
   }
 
-  public mount(parent: HTMLElement): void {
-    parent.appendChild(this.container);
-  }
-
+  // toggles invite (in messages)
   private toggleInvitePrompt(): void {
     // toggle back to normal state (invite has been sent)
     if (this.inputBox.contains(this.sendInvite)) {
@@ -251,14 +394,37 @@ export class ChatPage {
     this.inputBox.insertBefore(this.sendInvite, this.sendButton);
   }
 
-  private clickChatContact(contact: HTMLDivElement): void {
-    // check if we need to toggle off add friends panel
-    if (this.chatRow.contains(this.addFriendsPanel)) {
-      this.chatRow.removeChild(this.addFriendsPanel);
-      if (this.chatRow.contains(this.profilePopUp.getNode()))
-        this.chatRow.insertBefore(this.chatPanel, this.profilePopUp.getNode());
-      else this.chatRow.appendChild(this.chatPanel);
+  // PANELS:
+
+  // function to correctly switch the left panel
+  private replaceLeftPanel(newPanel: HTMLDivElement) {
+    // remove current left panel if it's in the DOM
+    if (this.chatRow.contains(this.leftPanel)) {
+      this.chatRow.removeChild(this.leftPanel);
+      // remove clicked contact styling in case user clicks any other button outside of clicked contact
+      if (this.leftPanel == this.chatPanel) {
+        this.clickedContact.classList.remove("bg-black");
+        this.clickedContact.classList.remove("text-white");
+      }
     }
+    this.leftPanel = newPanel;
+    // always insert before rightPanel if it exists, else append
+    if (this.chatRow.contains(this.rightPanel)) {
+      this.chatRow.insertBefore(this.leftPanel, this.rightPanel);
+    } else {
+      this.chatRow.appendChild(this.leftPanel);
+    }
+  }
+
+  // leaderboard panel: left panel type
+  private toggleLeaderboardPanel(): void {
+    this.replaceLeftPanel(this.leaderboardPanel);
+  }
+
+  // chat panel: left panel type
+  private toggleChatPanel(contact: HTMLDivElement): void {
+    this.replaceLeftPanel(this.chatPanel);
+
     // remove styling from old contact selected
     if (this.clickedContact) {
       this.clickedContact.classList.remove("bg-black");
@@ -271,27 +437,95 @@ export class ChatPage {
     this.clickedContact = contact;
   }
 
-  private sendButtonHook(): void {
+  // add friend panel: left panel type
+  private toggleAddFriendPanel(): void {
+    this.replaceLeftPanel(this.addFriendsPanel);
+  }
+
+  // right side panel (only type that populates right side panel as of rn)
+  private toggleProfilePopUp(user: User): void {
+    // remove profile pop up if it is already shown on screen
+    if (this.profilePopUp && this.chatRow.contains(this.rightPanel)) {
+      this.chatRow.removeChild(this.rightPanel);
+      return;
+    }
+
+    // create new popup and show it
+    if (user.userId === this.backend.getUser().userId) {
+      // case is pop up for local user
+      this.profilePopUp = new ProfilePopUp(
+        () => this.toggleProfilePopUp(user),
+        user,
+      ).getNode();
+      // case user is friend
+    } else {
+      this.profilePopUp = new ProfilePopUp(
+        () => this.toggleProfilePopUp(user),
+        user,
+        "friend",
+        () =>
+          this.backend.addFriendByIds(
+            this.backend.getUser().userId,
+            user.userId,
+          ),
+        () =>
+          this.backend.blockUserByIds(
+            this.backend.getUser().userId,
+            user.userId,
+          ),
+      ).getNode();
+    }
+    this.rightPanel = this.profilePopUp;
+    this.chatRow.appendChild(this.rightPanel);
+  }
+
+  // HOOKS:
+
+  private searchButtonHook(): void {
     // release toggle
-    if (this.inputBox.contains(this.sendInvite)) this.toggleInvitePrompt();
+    const searchValue = this.searchInput.value.toLowerCase().trim();
+    this.searchResults.innerHTML = "";
+    // Filter users based on search value
+    const filteredUsers = this.allUserData.filter((user) =>
+      user.username.toLowerCase().includes(searchValue),
+    );
+    // populate with filtered results, or show all if search is empty
+    const usersToShow = searchValue === "" ? this.allUserData : filteredUsers;
+    this.populateAddFriends(usersToShow);
   }
 
-  private toggleAddFriend(contact: HTMLDivElement): void {
-    this.clickChatContact(contact);
-    this.chatRow.removeChild(this.chatPanel);
-    if (this.chatRow.contains(this.profilePopUp.getNode())) {
-      // insert before profile pop
-      this.chatRow.insertBefore(
-        this.addFriendsPanel,
-        this.profilePopUp.getNode(),
-      );
-    } else this.chatRow.appendChild(this.addFriendsPanel);
+  private populateAddFriends(userList: UsersAll): void {
+    userList.forEach((friend) => {
+      // skip yourself (cant add yourself)
+      if (friend.userId !== this.backend.getUser().userId) {
+        const contact = document.createElement("div");
+        contact.className =
+          "flex flex-row gap-2 box standard-dialog w-full items-center";
+        const clickableContact = document.createElement("a");
+        clickableContact.onclick = () => this.toggleProfilePopUp(friend);
+        clickableContact.style.cursor = "pointer";
+        const contactName = document.createElement("h1");
+        contactName.textContent = friend.username;
+        contactName.className = "truncate flex-1 min-w-0";
+        const contactAvatar = new ProfileAvatar(
+          friend.color,
+          friend.colormap,
+          30,
+          30,
+          2,
+        ).getElement();
+        clickableContact.appendChild(contact);
+        contact.appendChild(contactAvatar);
+        contact.appendChild(contactName);
+        this.searchResults.appendChild(clickableContact);
+      }
+    });
   }
 
-  private toggleProfilePopUp(): void {
-    if (this.chatRow.contains(this.profilePopUp.getNode())) {
-      this.chatRow.removeChild(this.profilePopUp.getNode());
-    } else this.chatRow.appendChild(this.profilePopUp.getNode());
+  // standard mount unmount:
+
+  public mount(parent: HTMLElement): void {
+    parent.appendChild(this.container);
   }
 
   public unmount(): void {

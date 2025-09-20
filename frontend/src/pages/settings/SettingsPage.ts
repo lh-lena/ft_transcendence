@@ -1,4 +1,4 @@
-import { ServiceContainer, Router } from "../../services";
+import { ServiceContainer, Router, Backend } from "../../services";
 import { CANVAS_DEFAULTS } from "../../types";
 import { Window } from "../../components/window";
 import { MenuBar } from "../../components/menuBar";
@@ -15,8 +15,7 @@ interface settingItem {
 type settingList = settingItem[];
 
 // decided to put this here for now to make it easier to migrate later
-// y not
-const securitySettings: settingList = [
+let securitySettings: settingList = [
   { label: "2FA", value: "on", type: "button" },
   {
     label: "password",
@@ -26,14 +25,14 @@ const securitySettings: settingList = [
   },
 ];
 
-const otherSettings = [
+const profileSettings = [
   // { label: "other", value: "off" },
   { label: "avatar", value: "upload", type: "file" },
 ];
 
 const settingCategories = [
   { label: "security", settingsList: securitySettings },
-  { label: "profile", settingsList: otherSettings },
+  { label: "profile", settingsList: profileSettings },
 ];
 
 export class SettingsPage {
@@ -43,13 +42,23 @@ export class SettingsPage {
   private buttonRow: HTMLDivElement;
   private activeButton!: HTMLElement;
   private inputPasswordDiv!: HTMLDivElement;
+  private twoFAMenu!: HTMLDivElement;
   private serviceContainer: ServiceContainer;
   private router: Router;
+  private backend: Backend;
 
   constructor(serviceContainer: ServiceContainer) {
     // router / services container
     this.serviceContainer = serviceContainer;
     this.router = this.serviceContainer.get<Router>("router");
+    this.backend = this.serviceContainer.get<Backend>("backend");
+
+    // fetch user from backend
+
+    // change 2FA settings from user data
+    const twoFASetting = securitySettings.find((s) => s.label === "2FA");
+    if (twoFASetting)
+      twoFASetting.value = this.backend.getUser().tfaEnabled ? "on" : "off";
 
     // Full page background
     this.main = document.createElement("div");
@@ -78,11 +87,13 @@ export class SettingsPage {
     this.settingsPanel = document.createElement("div");
     this.settingsPanel.className = "flex flex-col w-64 gap-2";
 
-    // on clicks link functions to settings
+    // ON CLICKS link functions to settings
     // needed this object to link functions
     // using optional chaining (!) because we are sure it exists other wise we would write more defensively
     securitySettings.find((setting) => setting.label === "password")!.onClick =
       () => this.changePassword();
+    securitySettings.find((setting) => setting.label === "2FA")!.onClick = () =>
+      this.toggle2FASettings();
 
     // use security settings as default for page
     this.populateSettingsPanel(securitySettings);
@@ -153,7 +164,7 @@ export class SettingsPage {
   }
 
   private changePassword(): void {
-    // hide
+    // hide main settings
     if (this.window.getElement().contains(this.settingsPanel)) {
       this.settingsPanel.remove();
       this.buttonRow.remove();
@@ -161,6 +172,7 @@ export class SettingsPage {
       // new password stuff
       this.inputPasswordDiv = document.createElement("div");
       this.inputPasswordDiv.className = "flex h-full pt-4 flex-col gap-5 w-36";
+      this.window.getPane().appendChild(this.inputPasswordDiv);
       const inputPasswordTitle = document.createElement("p");
       inputPasswordTitle.textContent = "new password:";
       inputPasswordTitle.className = "font-bold text-center";
@@ -173,8 +185,6 @@ export class SettingsPage {
       const inputPasswordSecond = inputPasswordFirst.cloneNode(true);
       this.inputPasswordDiv.appendChild(inputPasswordFirst);
       this.inputPasswordDiv.appendChild(inputPasswordSecond);
-      this.window.getElement().appendChild(this.inputPasswordDiv);
-      this.window.getPane().appendChild(this.inputPasswordDiv);
       const inputPasswordButton = document.createElement("button");
       inputPasswordButton.className = "btn";
       inputPasswordButton.onclick = () => this.changePassword();
@@ -186,6 +196,117 @@ export class SettingsPage {
       this.window.getPane().appendChild(this.buttonRow);
       this.window.getPane().appendChild(this.settingsPanel);
     }
+  }
+
+  private toggle2FASettings(): void {
+    // hide main settings
+    if (this.window.getElement().contains(this.settingsPanel)) {
+      this.settingsPanel.remove();
+      this.buttonRow.remove();
+    }
+
+    this.twoFAMenu = document.createElement("div");
+    this.twoFAMenu.className = "flex h-full pt-4 flex-col gap-5 w-36";
+    this.window.getPane().appendChild(this.twoFAMenu);
+    const twoFATitle = document.createElement("p");
+    twoFATitle.textContent = "2FA Settings:";
+    twoFATitle.className = "font-bold text-center";
+    this.twoFAMenu.appendChild(twoFATitle);
+    // const twoFAButtonEmail = document.createElement("button");
+    // twoFAButtonEmail.className = "btn";
+    // twoFAButtonEmail.onclick = () => this.toggleEmail2FASettings();
+    // twoFAButtonEmail.innerText = "email";
+    // this.twoFAMenu.appendChild(twoFAButtonEmail);
+    const twoFAButtonTOTP = document.createElement("button");
+    twoFAButtonTOTP.className = "btn";
+    twoFAButtonTOTP.onclick = () => this.toggleTOTP2FASettings();
+    twoFAButtonTOTP.innerText = "TOTP";
+    this.twoFAMenu.appendChild(twoFAButtonTOTP);
+  }
+
+  private toggleEmail2FASettings(): void {
+    // async request to backend
+    // go back to normal settings pan
+  }
+
+  // private verifyEmail2FA(): void {
+  //   this.twoFAMenu.remove();
+  //   this.window.getPane().appendChild(this.buttonRow);
+  //   this.window.getPane().appendChild(this.settingsPanel);
+  // }
+
+  private async toggleTOTP2FASettings() {
+    // let auth server know
+    const response = await this.backend.twoFaTOTP(
+      this.backend.getUser().userId,
+    );
+    // hide old 2fa settings
+    this.twoFAMenu.remove();
+
+    this.twoFAMenu = document.createElement("div");
+    this.twoFAMenu.className = "flex h-full pt-4 flex-col gap-5 w-36";
+    this.window.getPane().appendChild(this.twoFAMenu);
+    const twoFATitle = document.createElement("p");
+    twoFATitle.textContent = "TOTP 2FA:";
+    twoFATitle.className = "font-bold text-center";
+    this.twoFAMenu.appendChild(twoFATitle);
+    // qr code
+    // Generate QR code synchronously
+    const qrImage = document.createElement("img");
+    qrImage.className = "mx-auto w-20 h-20";
+    qrImage.src = response.data.qrCodeDataUrl;
+    this.twoFAMenu.appendChild(qrImage);
+    // Generate QR code to canvas
+
+    const recoveryCode2FAButton = document.createElement("button");
+    recoveryCode2FAButton.className = "btn";
+    recoveryCode2FAButton.onclick = () =>
+      this.downloadRecoveryKeys(response.data.codes);
+    recoveryCode2FAButton.innerText = "backup keys";
+    this.twoFAMenu.appendChild(recoveryCode2FAButton);
+  }
+
+  private async downloadRecoveryKeys(recoveryCodes: string[]) {
+    const fileContent = recoveryCodes.join("\n");
+    const blob = new Blob([fileContent], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "recovery-codes.txt";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    // TODO go back to settings
+  }
+
+  private toggleTOTPVerifyCode(): void {
+    // hide old 2fa settings
+    this.twoFAMenu.remove();
+
+    this.twoFAMenu = document.createElement("div");
+    this.twoFAMenu.className = "flex h-full pt-4 flex-col gap-5 w-36";
+    this.window.getPane().appendChild(this.twoFAMenu);
+    const twoFATitle = document.createElement("p");
+    twoFATitle.textContent = "TOTP 2FA:";
+    twoFATitle.className = "font-bold text-center";
+    this.twoFAMenu.appendChild(twoFATitle);
+    // input email code
+    const inputEmailCode = document.createElement("input");
+    inputEmailCode.type = "code";
+    inputEmailCode.id = "text_password";
+    inputEmailCode.placeholder = "code";
+    inputEmailCode.style.paddingLeft = "0.5em";
+    this.twoFAMenu.appendChild(inputEmailCode);
+    const email2FAButton = document.createElement("button");
+    email2FAButton.className = "btn";
+    email2FAButton.onclick = () => this.verififyTOTPCode();
+    email2FAButton.innerText = "verify";
+    this.twoFAMenu.appendChild(email2FAButton);
+  }
+
+  private verififyTOTPCode(): void {
+    // console.log("yo");
   }
 
   public mount(parent: HTMLElement): void {
