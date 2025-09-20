@@ -105,12 +105,16 @@ export class LoginPage {
       password: password,
     };
 
-    await this.backend.loginUser(userLoginData);
+    const response = await this.backend.loginUser(userLoginData);
+    if (response?.data.status === "2FA_REQUIRED") {
+      this.check2FA(response.data.userId, response.data.sessionId);
+      return;
+    }
     // this should only happen if we get the user (but i think try catch interceptor handles this)
     this.router.navigate("/chat");
   }
 
-  private check2FA(): void {
+  private check2FA(userId: string, sessionId: string): void {
     // check to see if user has 2FA enabled
 
     // get rid of
@@ -135,14 +139,21 @@ export class LoginPage {
     verificationButton.onclick = (e) => {
       e.preventDefault();
       const code = inputEmail.value;
-      this.verify2FACode(code);
+      this.verify2FACode(userId, code, sessionId);
     };
     verificationButton.innerText = "verify";
     form.appendChild(verificationButton);
   }
 
-  private verify2FACode(code: string): void {
+  private async verify2FACode(userId: string, code: string, sessionId: string) {
     console.log(code);
+    const response = await this.backend.verify2FARegCode(
+      userId,
+      sessionId,
+      code,
+    );
+    if (response.status === 200) this.router.navigate("/chat");
+    else alert("incorrect 2fa token");
   }
 
   public mount(parent: HTMLElement): void {

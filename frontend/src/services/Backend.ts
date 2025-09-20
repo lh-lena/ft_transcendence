@@ -32,6 +32,8 @@ export class Backend {
       (error) => {
         // Handle any response that isn't 2xx
         console.error("API Error:", error.response?.data || error.message);
+        alert(`
+          backend error: ${error.response?.data?.message || error.message}`);
         // You can add specific error handling logic here
         // if (error.response?.status === 401) {
         //   // Handle unauthorized - maybe redirect to login
@@ -63,6 +65,9 @@ export class Backend {
 
   async loginUser(data: UserLogin) {
     const response = await this.api.post("/api/login", data);
+    console.log(response);
+    // return early if 2fa case
+    if (response.data.status === "2FA_REQUIRED") return response;
     localStorage.setItem("jwt", response.data.jwt);
     const userResponse = await this.fetchUserById(response.data.userId);
     this.setUser(userResponse.data);
@@ -178,11 +183,25 @@ export class Backend {
   // }
 
   async twoFaTOTP(userId: string) {
-    const response = this.api.post("/api/tfaSetup", {
+    const response = await this.api.post("/api/tfaSetup", {
       userId: userId,
       type: "totp",
     });
     console.log(response);
+    return response;
+  }
+
+  async verify2FARegCode(userId: string, sessionId: string, code: string) {
+    const response = await this.api.post("/api/verify", {
+      userId: userId,
+      sessionId: sessionId,
+      type: "totp",
+      code: code,
+    });
+    if (response.status != 200) return response;
+    localStorage.setItem("jwt", response.data.jwt);
+    const userResponse = await this.fetchUserById(response.data.userId);
+    this.setUser(userResponse.data);
     return response;
   }
 

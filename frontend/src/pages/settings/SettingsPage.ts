@@ -2,9 +2,6 @@ import { ServiceContainer, Router, Backend } from "../../services";
 import { CANVAS_DEFAULTS } from "../../types";
 import { Window } from "../../components/window";
 import { MenuBar } from "../../components/menuBar";
-import qrcode from "qrcode";
-
-const mock2FACode = "JBSWY3DPEHPK3PXP";
 
 // shape of settings
 interface settingItem {
@@ -229,7 +226,6 @@ export class SettingsPage {
 
   private toggleEmail2FASettings(): void {
     // async request to backend
-    this.backend.twoFAEmail(this.backend.getUser().userId);
     // go back to normal settings pan
   }
 
@@ -239,9 +235,11 @@ export class SettingsPage {
   //   this.window.getPane().appendChild(this.settingsPanel);
   // }
 
-  private toggleTOTP2FASettings(): void {
+  private async toggleTOTP2FASettings() {
     // let auth server know
-    this.backend.twoFaTOTP(this.backend.getUser().userId);
+    const response = await this.backend.twoFaTOTP(
+      this.backend.getUser().userId,
+    );
     // hide old 2fa settings
     this.twoFAMenu.remove();
 
@@ -254,25 +252,21 @@ export class SettingsPage {
     this.twoFAMenu.appendChild(twoFATitle);
     // qr code
     // Generate QR code synchronously
-    const qrCanvas = document.createElement("canvas");
-    qrCanvas.className = "mx-auto";
-    this.twoFAMenu.appendChild(qrCanvas);
+    const qrImage = document.createElement("img");
+    qrImage.className = "mx-auto w-20 h-20";
+    qrImage.src = response.data.qrCodeDataUrl;
+    this.twoFAMenu.appendChild(qrImage);
     // Generate QR code to canvas
-    qrcode.toCanvas(qrCanvas, mock2FACode, {
-      width: 75,
-      margin: 2,
-    });
-    this.twoFAMenu.appendChild(qrCanvas);
 
     const recoveryCode2FAButton = document.createElement("button");
     recoveryCode2FAButton.className = "btn";
-    recoveryCode2FAButton.onclick = () => this.downloadRecoveryKeys();
+    recoveryCode2FAButton.onclick = () =>
+      this.downloadRecoveryKeys(response.data.codes);
     recoveryCode2FAButton.innerText = "backup keys";
     this.twoFAMenu.appendChild(recoveryCode2FAButton);
   }
 
-  private async downloadRecoveryKeys() {
-    const recoveryCodes = ["djkkjadm", "kfdjbbkjdsf", "kdjkjf"];
+  private async downloadRecoveryKeys(recoveryCodes: string[]) {
     const fileContent = recoveryCodes.join("\n");
     const blob = new Blob([fileContent], { type: "text/plain" });
     const url = URL.createObjectURL(blob);
@@ -283,7 +277,7 @@ export class SettingsPage {
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
-    this.toggleTOTPVerifyCode();
+    // TODO go back to settings
   }
 
   private toggleTOTPVerifyCode(): void {
