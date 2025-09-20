@@ -99,13 +99,13 @@ const authRoutes = async (server: FastifyInstance) => {
     const parsedReq = refreshTokenSchema.safeParse(req.body);
 
     if (!parsedReq.success) {
-      return reply.status(401).send({ error: 'Wrong Refresh Token.\nLogin Again!' });
+      return reply.status(400).send({ error: 'Wrong Refresh Token.\nLogin Again!' });
     }
 
     const refreshToken = parsedReq.data.refreshToken;
 
     if (await isBlacklistedToken(refreshToken)) {
-      return reply.status(401).send({ error: 'Token revoked. Login again' });
+      return reply.status(401).send({ message: 'refresh token expired' });
     }
 
     try {
