@@ -1,5 +1,5 @@
 import axios from "axios";
-import { FriendsList, User, UserLogin, UserRegistration } from "../types";
+import { User, UserLogin, UserRegistration } from "../types";
 
 // utils
 import {
@@ -10,7 +10,6 @@ import {
 
 export class Backend {
   private user!: User;
-  private friends!: FriendsList;
   private api = axios.create({
     baseURL: import.meta.env.VITE_AUTH_URL,
     timeout: 10000,
@@ -135,6 +134,11 @@ export class Backend {
       userId: userId,
       friendUserId: friendId,
     });
+    return response;
+  }
+
+  async removeFriendByFriendId(friendId: number) {
+    const response = await this.api.delete(`/api/friend/${friendId}`);
     return response;
   }
 

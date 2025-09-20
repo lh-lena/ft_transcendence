@@ -1,6 +1,11 @@
-import { ServiceContainer, Router, Backend } from "../../services";
+import { ServiceContainer, Backend } from "../../services";
 import { Window } from "../../components/window";
-import { CANVAS_DEFAULTS, FriendsList, UsersAll } from "../../types";
+import {
+  CANVAS_DEFAULTS,
+  FriendsList,
+  UsersAll,
+  BlockedList,
+} from "../../types";
 import { MenuBar } from "../../components/menuBar";
 import { ProfileAvatar } from "../../components/profileAvatar";
 import { sampleChatHistory } from "../../constants/backend";
@@ -12,8 +17,8 @@ import { profilePrintToArray } from "../../utils/profilePrintFunctions";
 import { User } from "../../types";
 
 export class ChatPage {
+  // jesus christ this is an ugly piece of shieeet
   private serviceContainer: ServiceContainer;
-  private router: Router;
   private container!: HTMLDivElement;
   private clickedContact!: HTMLDivElement;
   private bottomBar!: HTMLDivElement;
@@ -36,6 +41,7 @@ export class ChatPage {
   private allUserData!: UsersAll;
   private searchInput!: HTMLInputElement;
   private friendsList!: FriendsList;
+  private blockedList!: BlockedList;
   private searchResults!: HTMLDivElement;
   private offlineheader!: HTMLElement;
   private onlineheader!: HTMLElement;
@@ -45,7 +51,6 @@ export class ChatPage {
   constructor(serviceContainer: ServiceContainer) {
     // router / services container
     this.serviceContainer = serviceContainer;
-    this.router = this.serviceContainer.get<Router>("router");
     this.backend = this.serviceContainer.get<Backend>("backend");
   }
 
@@ -91,6 +96,7 @@ export class ChatPage {
       element.online = userResponse.data.online;
     }
     instance.friendsList = initFriendsList;
+    // blocked list fetch
 
     // Complete the UI setup
     instance.setupUI();
@@ -364,6 +370,7 @@ export class ChatPage {
         friend.friendUserId,
       );
       const user: User = userResponse.data;
+      user.friendId = friend.friendId;
       user.colormap = profilePrintToArray(userResponse.data.colormap);
       clickableContact.onclick = () => this.toggleChatPanel(contact, user);
       clickableContact.style.cursor = "pointer";
@@ -480,6 +487,16 @@ export class ChatPage {
       return;
     }
 
+    let isFriend = false;
+    // Check if user is a friend and get the friendId
+    const friendRecord = this.friendsList.find(
+      (friend) => friend.friendUserId === user.userId,
+    );
+    if (friendRecord) {
+      isFriend = true;
+      user.friendId = friendRecord.friendId;
+    }
+
     if (user.userId === this.backend.getUser().userId && !user.friendId) {
       // case is pop up for local user
       this.profilePopUp = new ProfilePopUp(
@@ -498,16 +515,21 @@ export class ChatPage {
             this.backend.getUser().userId,
             user.userId,
           ),
-        this.friendsList.some((friend) => friend.friendUserId === user.userId),
+        isFriend,
+        () => this.removeFriendHook(user.friendId),
       ).getNode();
     }
     this.rightPanel = this.profilePopUp;
     this.chatRow.appendChild(this.rightPanel);
   }
 
+  private async removeFriendHook(friendId: number) {
+    await this.backend.removeFriendByFriendId(friendId);
+    await this.refreshFriendsList();
+    this.toggleProfilePopUp(this.backend.getUser());
+  }
+
   private async addFriendHook(userId: string) {
-    console.log(`adding friend with userId: ${userId}`);
-    console.log("Current user userId: ", this.backend.getUser().userId);
     await this.backend.addFriendByIds(this.backend.getUser().userId, userId);
     await this.refreshFriendsList();
     // close on add friend
