@@ -94,6 +94,7 @@ const authRoutes = async (server: FastifyInstance) => {
   });
 
   server.post('/api/refresh', async (req: FastifyRequest, reply: FastifyReply) => {
+    console.log('Refresh token request', req.cookies);
     const refreshToken = req.cookies.refreshToken;
 
     if (!refreshToken) {

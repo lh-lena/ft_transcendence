@@ -2,14 +2,17 @@ import { z } from 'zod/v4';
 import { dtString } from './basics';
 
 export const blockedSchema = z.object({
+  blockedId: z.number().optional(),
   userId: z.uuid(),
-  blockedId: z.uuid().optional(),
+  blockedUserId: z.uuid().optional(),
   createdAt: dtString.optional(),
 });
 
+export const blockedIdSchema = z.object({ blockedId: z.number });
+
 export const blockedPostSchema = blockedSchema
   .pick({ userId: true })
-  .extend({ blockedId: z.uuid() });
+  .extend({ blockedUserId: z.uuid() });
 
 export const blockedArraySchema = z.array(blockedSchema);
 

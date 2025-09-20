@@ -15,7 +15,7 @@ export default fp(async (fastify: FastifyInstance) => {
   });
 
   fastify.decorate('verifyAccessToken', async (token: string): Promise<JwTReturnType> => {
-    const decoded = await fastify.jwt.access.verify(token);
+    const decoded = fastify.jwt.access.verify(token);
 
     const result = JwTReturnSchema.safeParse(decoded);
 
@@ -31,7 +31,7 @@ export default fp(async (fastify: FastifyInstance) => {
   });
 
   fastify.decorate('verifyRefreshToken', async (token: string): Promise<JwTReturnType> => {
-    const decoded = await fastify.jwt.refresh.verify(token);
+    const decoded = fastify.jwt.refresh.verify(token);
 
     const result = JwTReturnSchema.safeParse(decoded);
 
