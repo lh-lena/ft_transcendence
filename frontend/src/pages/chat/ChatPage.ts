@@ -468,6 +468,11 @@ export class ChatPage {
             this.backend.getUser().userId,
             user.userId,
           ),
+        () =>
+          this.backend.blockUserByIds(
+            this.backend.getUser().userId,
+            user.userId,
+          ),
       ).getNode();
     }
     this.rightPanel = this.profilePopUp;

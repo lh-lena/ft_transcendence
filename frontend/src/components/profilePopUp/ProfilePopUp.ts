@@ -11,6 +11,7 @@ export class ProfilePopUp {
     user: User,
     style?: string,
     addFriendCallback?: () => Promise<AxiosResponse<any, any>>,
+    blockFriendCallback?: () => Promise<AxiosResponse<any, any>>,
   ) {
     this.main = document.createElement("div");
     this.main.className =
@@ -34,7 +35,7 @@ export class ProfilePopUp {
     username.innerText = user.username;
     userDiv.appendChild(username);
 
-    if (style == "friend" && addFriendCallback) {
+    if (style == "friend" && addFriendCallback && blockFriendCallback) {
       const addFriendButton = document.createElement("button");
       addFriendButton.innerText = "add";
       addFriendButton.onclick = () => addFriendCallback();
@@ -42,6 +43,7 @@ export class ProfilePopUp {
       const blockFriendButton = document.createElement("button");
       blockFriendButton.innerText = "block";
       blockFriendButton.className = "btn";
+      blockFriendButton.onclick = () => blockFriendCallback();
       this.main.appendChild(addFriendButton);
       this.main.appendChild(blockFriendButton);
     }

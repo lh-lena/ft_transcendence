@@ -104,12 +104,17 @@ export class Backend {
   }
 
   async addFriendByIds(userId: string, friendId: string) {
-    console.log(`user: ${userId}, friend: ${friendId}`);
     const response = await this.api.post("/api/friend", {
-      data: {
-        userId: userId,
-        friendUserId: friendId,
-      },
+      userId: userId,
+      friendUserId: friendId,
+    });
+    return response;
+  }
+
+  async blockUserByIds(userId: string, blockedUserId: string) {
+    const response = await this.api.post("/api/blocked", {
+      userId: userId,
+      blockedUserId: blockedUserId,
     });
     return response;
   }
@@ -162,6 +167,19 @@ export class Backend {
       localStorage.setItem("user", JSON.stringify(this.user));
     }
   }
+
+  async twoFAEmail(userId: string) {
+    const response = this.api.post("/api/tfaSetup", {
+      userId: userId,
+      type: "email",
+    });
+    console.log(response);
+    return response;
+  }
+
+  // async twoFaTOTP(userId: string) {
+
+  // }
 
   private loadUserFromStorage() {
     const savedUser = localStorage.getItem("user");

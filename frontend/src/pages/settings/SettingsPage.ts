@@ -228,6 +228,8 @@ export class SettingsPage {
   }
 
   private toggleEmail2FASettings(): void {
+    // async request to backend
+    this.backend.twoFAEmail(this.backend.getUser().userId);
     // hide old 2fa settings
     this.twoFAMenu.remove();
 
