@@ -116,7 +116,7 @@ const authRoutes = async (server: FastifyInstance) => {
 
       return reply.send({ jwt: newAccessToken, refreshToken: newRefreshToken });
     } catch {
-      return reply.status(401).send({ error: 'Invalid refresh token' });
+      return reply.status(401).send({ message: 'refresh token expired' });
     }
   });
 
