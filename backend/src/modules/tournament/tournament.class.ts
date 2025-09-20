@@ -60,7 +60,7 @@ export class tournamentClass {
       freeTournament = await this.create(join.playerAmount);
     }
 
-    this.join(freeTournament, join.playerId);
+    this.join(freeTournament, join.userId);
     this.startTournament(freeTournament);
     return freeTournament;
   }
