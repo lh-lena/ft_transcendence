@@ -93,15 +93,26 @@ export class Backend {
     this.saveUserToStorage();
   }
 
-  // async fetchFriendsById(userId: string) {
-  //   const response = await this.api.get("/api/friend", {
-  //     params: {
-  //       // fetch friends using user id we've stored locally
-  //       userId: userId,
-  //     },
-  //   });
-  //   return response.data;
-  // }
+  async fetchFriendsById(userId: string) {
+    const response = await this.api.get("/api/friend", {
+      params: {
+        // fetch friends using user id we've stored locally
+        userId: userId,
+      },
+    });
+    return response.data;
+  }
+
+  async addFriendByIds(userId: string, friendId: string) {
+    console.log(`user: ${userId}, friend: ${friendId}`);
+    const response = await this.api.post("/api/friend", {
+      params: {
+        userId: userId,
+        friendUserId: friendId,
+      },
+    });
+    return response;
+  }
 
   async fetchAllUsers() {
     const response = await this.api.get("/api/user");

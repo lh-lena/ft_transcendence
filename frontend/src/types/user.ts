@@ -39,9 +39,3 @@ export type User = {
 };
 
 export type UsersAll = User[];
-
-export type FriendsList = {
-  id: number;
-  userId: string;
-  friendId: string;
-}[];

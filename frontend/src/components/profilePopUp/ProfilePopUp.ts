@@ -1,11 +1,17 @@
 import { CloseIcon } from "../closeIcon/CloseIcon";
 import { ProfileAvatar } from "../profileAvatar";
 import { User } from "../../types";
+import { AxiosResponse } from "axios";
 
 export class ProfilePopUp {
   private main: HTMLElement;
 
-  constructor(closeCallBack: () => void, user: User, style?: string) {
+  constructor(
+    closeCallBack: () => void,
+    user: User,
+    style?: string,
+    addFriendCallback?: () => Promise<AxiosResponse<any, any>>,
+  ) {
     this.main = document.createElement("div");
     this.main.className =
       "standard-dialog w-48 flex justify-center flex-col gap-5 pb-4";
@@ -28,10 +34,10 @@ export class ProfilePopUp {
     username.innerText = user.username;
     userDiv.appendChild(username);
 
-    // if statement checks if the user is the local user
-    if (style == "friend") {
+    if (style == "friend" && addFriendCallback) {
       const addFriendButton = document.createElement("button");
       addFriendButton.innerText = "add";
+      addFriendButton.onclick = () => addFriendCallback();
       addFriendButton.className = "btn mt-auto";
       const blockFriendButton = document.createElement("button");
       blockFriendButton.innerText = "block";

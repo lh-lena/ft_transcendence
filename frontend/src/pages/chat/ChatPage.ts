@@ -8,7 +8,6 @@ import { InformationIcon } from "../../components/informationIcon";
 import { ProfilePopUp } from "../../components/profilePopUp";
 
 // pretend backend -> change
-import { sampleFriends } from "../../constants/backend";
 import { FriendsIcon } from "../../components/friendsIcon";
 import { Leaderboard } from "../../types/leaderboard";
 import { profilePrintToArray } from "../../utils/profilePrintFunctions";
@@ -41,6 +40,8 @@ export class ChatPage {
   private searchInput!: HTMLInputElement;
   private friendsList!: FriendsList;
   private searchResults!: HTMLDivElement;
+  private offlineheader!: HTMLElement;
+  private onlineheader!: HTMLElement;
 
   constructor(serviceContainer: ServiceContainer) {
     // router / services container
@@ -76,9 +77,19 @@ export class ChatPage {
     }
     instance.leaderboardData = initLeaderboardData;
     // friends fetch
-    // instance.friendsList = await instance.backend.fetchFriendsById(
-    //   instance.backend.getUser().userId,
-    // );
+    const initFriendsList: FriendsList =
+      await instance.backend.fetchFriendsById(
+        instance.backend.getUser().userId,
+      );
+    for (const element of initFriendsList) {
+      const userResponse = await instance.backend.fetchUserById(element.userId);
+      element.username = userResponse.data.username;
+      element.colormap = profilePrintToArray(userResponse.data.colormap);
+      element.color = userResponse.data.color;
+      element.avatar = userResponse.data.avatar;
+      element.online = userResponse.data.online;
+    }
+    instance.friendsList = initFriendsList;
 
     // Complete the UI setup
     instance.setupUI();
@@ -171,17 +182,20 @@ export class ChatPage {
     clickableAddFriendButton.onclick = () => this.toggleAddFriendPanel();
     contacts.appendChild(clickableAddFriendButton);
 
-    const onlineHeader = document.createElement("h1");
-    onlineHeader.textContent = "online:";
-    onlineHeader.className = "text-center text-emerald-800";
-    const offlineHeader = document.createElement("h1");
-    offlineHeader.textContent = "offline:";
-    offlineHeader.className = "text-center text-red-800";
-    contacts.appendChild(onlineHeader);
-    contacts.appendChild(offlineHeader);
+    // online offline headers
+    if (this.friendsList.length > 0) {
+      this.onlineheader = document.createElement("h1");
+      this.onlineheader.textContent = "online:";
+      this.onlineheader.className = "text-center text-emerald-800";
+      this.offlineheader = document.createElement("h1");
+      this.offlineheader.textContent = "offline:";
+      this.offlineheader.className = "text-center text-red-800";
+      contacts.appendChild(this.onlineheader);
+      contacts.appendChild(this.offlineheader);
+    }
 
     // CONTACTS
-    sampleFriends.forEach((friend) => {
+    this.friendsList.forEach((friend) => {
       const contact = document.createElement("div");
       contact.className =
         "flex flex-row gap-2 box standard-dialog w-full items-center";
@@ -190,21 +204,23 @@ export class ChatPage {
       clickableContact.style.cursor = "pointer";
       const contactName = document.createElement("h1");
       contactName.textContent = friend.username;
-      const contactAvatar = new ProfileAvatar(
-        friend.color,
-        friend.colorMap,
-        30,
-        30,
-        2,
-      ).getElement();
-      clickableContact.appendChild(contact);
-      contact.appendChild(contactAvatar);
-      contact.appendChild(contactName);
-      // insert logic for online offline
-      if (friend.status == "online") {
-        contacts.insertBefore(clickableContact, offlineHeader);
-      } else {
-        contacts.appendChild(clickableContact);
+      if (friend.color && friend.colormap) {
+        const contactAvatar = new ProfileAvatar(
+          friend.color,
+          friend.colormap,
+          30,
+          30,
+          2,
+        ).getElement();
+        clickableContact.appendChild(contact);
+        contact.appendChild(contactAvatar);
+        contact.appendChild(contactName);
+        // insert logic for online offline
+        if (friend.online == "online") {
+          contacts.insertBefore(clickableContact, this.offlineheader);
+        } else {
+          contacts.appendChild(clickableContact);
+        }
       }
     });
 
@@ -441,11 +457,17 @@ export class ChatPage {
         () => this.toggleProfilePopUp(user),
         user,
       ).getNode();
+      // case user is friend
     } else {
       this.profilePopUp = new ProfilePopUp(
         () => this.toggleProfilePopUp(user),
         user,
         "friend",
+        () =>
+          this.backend.addFriendByIds(
+            this.backend.getUser().userId,
+            user.userId,
+          ),
       ).getNode();
     }
     this.rightPanel = this.profilePopUp;
