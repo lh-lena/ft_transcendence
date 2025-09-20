@@ -12,6 +12,11 @@ export const friendService = {
       userId: data.userId,
       friendUserId: data.friendUserId,
     });
+
+    if (alreadyFriends.length > 0) {
+      return alreadyFriends[0];
+    }
+
     const prismaData = await transformInput(data);
     try {
       const ret = await friendModel.insert(prismaData);
