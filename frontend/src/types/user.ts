@@ -36,6 +36,7 @@ export type User = {
   colormap: string[];
   avatar: string | null;
   online?: string;
+  friendId?: number;
 };
 
 export type UsersAll = User[];

@@ -138,6 +138,11 @@ export class Backend {
     return response;
   }
 
+  async removeFriendByFriendId(friendId: number) {
+    const response = await this.api.delete(`/api/friend/${friendId}`);
+    return response;
+  }
+
   async blockUserByIds(userId: string, blockedUserId: string) {
     const response = await this.api.post("/api/blocked", {
       userId: userId,

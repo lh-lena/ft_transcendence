@@ -364,6 +364,7 @@ export class ChatPage {
         friend.friendUserId,
       );
       const user: User = userResponse.data;
+      user.friendId = friend.friendId;
       user.colormap = profilePrintToArray(userResponse.data.colormap);
       clickableContact.onclick = () => this.toggleChatPanel(contact, user);
       clickableContact.style.cursor = "pointer";
@@ -499,10 +500,16 @@ export class ChatPage {
             user.userId,
           ),
         this.friendsList.some((friend) => friend.friendUserId === user.userId),
+        () => this.removeFriendHook(user.friendId),
       ).getNode();
     }
     this.rightPanel = this.profilePopUp;
     this.chatRow.appendChild(this.rightPanel);
+  }
+
+  private async removeFriendHook(friendId: number) {
+    const response = await this.backend.removeFriendByFriendId(friendId);
+    return response;
   }
 
   private async addFriendHook(userId: string) {
