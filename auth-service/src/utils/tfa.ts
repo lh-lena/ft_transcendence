@@ -169,7 +169,6 @@ export class tfaHandler {
     const config: AxiosRequestConfig = {
       method: 'patch',
       url: `/user/${user.userId}`,
-      params: user.userId,
       data: {
         tfaEnabled: true,
         tfaMethod: 'totp',
