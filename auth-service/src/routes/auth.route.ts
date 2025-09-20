@@ -2,7 +2,6 @@ import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import fp from 'fastify-plugin';
 
 import { hashPassword, verifyPassword } from '../auth/passwords';
-//import { verifyJWT } from '../utils/jwt';
 
 import { isBlacklistedToken } from '../utils/blacklistToken';
 import { apiClientBackend } from '../utils/apiClient';
@@ -149,10 +148,6 @@ const authRoutes = async (server: FastifyInstance) => {
       return reply.status(404).send({ error: 'User not found' });
     }
 
-    if (parseResult.data.type === 'email') {
-      return await tfa.checkMail(parseResult.data, user, reply);
-    }
-
     if (parseResult.data.type === 'totp') {
       return await tfa.checkTotp(parseResult.data, user, reply);
     }
@@ -188,10 +183,6 @@ const authRoutes = async (server: FastifyInstance) => {
 
     if (parseResult.data.type === 'totp') {
       return await tfa.setupTotp(user, reply);
-    }
-
-    if (parseResult.data.type === 'email') {
-      return await tfa.setupEmail(user, reply);
     }
   });
 
