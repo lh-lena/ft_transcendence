@@ -215,11 +215,11 @@ export class SettingsPage {
     twoFATitle.textContent = "2FA Settings:";
     twoFATitle.className = "font-bold text-center";
     this.twoFAMenu.appendChild(twoFATitle);
-    const twoFAButtonEmail = document.createElement("button");
-    twoFAButtonEmail.className = "btn";
-    twoFAButtonEmail.onclick = () => this.toggleEmail2FASettings();
-    twoFAButtonEmail.innerText = "email";
-    this.twoFAMenu.appendChild(twoFAButtonEmail);
+    // const twoFAButtonEmail = document.createElement("button");
+    // twoFAButtonEmail.className = "btn";
+    // twoFAButtonEmail.onclick = () => this.toggleEmail2FASettings();
+    // twoFAButtonEmail.innerText = "email";
+    // this.twoFAMenu.appendChild(twoFAButtonEmail);
     const twoFAButtonTOTP = document.createElement("button");
     twoFAButtonTOTP.className = "btn";
     twoFAButtonTOTP.onclick = () => this.toggleTOTP2FASettings();
@@ -233,13 +233,15 @@ export class SettingsPage {
     // go back to normal settings pan
   }
 
-  private verifyEmail2FA(): void {
-    this.twoFAMenu.remove();
-    this.window.getPane().appendChild(this.buttonRow);
-    this.window.getPane().appendChild(this.settingsPanel);
-  }
+  // private verifyEmail2FA(): void {
+  //   this.twoFAMenu.remove();
+  //   this.window.getPane().appendChild(this.buttonRow);
+  //   this.window.getPane().appendChild(this.settingsPanel);
+  // }
 
   private toggleTOTP2FASettings(): void {
+    // let auth server know
+    this.backend.twoFaTOTP(this.backend.getUser().userId);
     // hide old 2fa settings
     this.twoFAMenu.remove();
 

@@ -168,18 +168,23 @@ export class Backend {
     }
   }
 
-  async twoFAEmail(userId: string) {
+  // async twoFAEmail(userId: string) {
+  //   const response = this.api.post("/api/tfaSetup", {
+  //     userId: userId,
+  //     type: "email",
+  //   });
+  //   console.log(response);
+  //   return response;
+  // }
+
+  async twoFaTOTP(userId: string) {
     const response = this.api.post("/api/tfaSetup", {
       userId: userId,
-      type: "email",
+      type: "totp",
     });
     console.log(response);
     return response;
   }
-
-  // async twoFaTOTP(userId: string) {
-
-  // }
 
   private loadUserFromStorage() {
     const savedUser = localStorage.getItem("user");
