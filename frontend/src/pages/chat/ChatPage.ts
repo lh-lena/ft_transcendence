@@ -64,17 +64,17 @@ export class ChatPage {
           ? profilePrintToArray(element.colormap)
           : element.colormap;
     }
-    // leaderboard fetch
-    const initLeaderboardData: Leaderboard =
-      await instance.backend.getLeaderboard();
-    for (const element of initLeaderboardData) {
-      const userResponse = await instance.backend.fetchUserById(element.userId);
-      element.username = userResponse.data.username;
-      element.colormap = profilePrintToArray(userResponse.data.colormap);
-      element.color = userResponse.data.color;
-      element.avatar = userResponse.data.avatar;
-    }
-    instance.leaderboardData = initLeaderboardData;
+    // // leaderboard fetch
+    // const initLeaderboardData: Leaderboard =
+    //   await instance.backend.getLeaderboard();
+    // for (const element of initLeaderboardData) {
+    //   const userResponse = await instance.backend.fetchUserById(element.userId);
+    //   element.username = userResponse.data.username;
+    //   element.colormap = profilePrintToArray(userResponse.data.colormap);
+    //   element.color = userResponse.data.color;
+    //   element.avatar = userResponse.data.avatar;
+    // }
+    // instance.leaderboardData = initLeaderboardData;
     // instance.friendsList = await instance.backend.fetchFriendsById(
     //   instance.backend.getUser().userId,
     // );
