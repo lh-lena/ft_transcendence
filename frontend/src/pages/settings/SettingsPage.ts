@@ -6,17 +6,6 @@ import qrcode from "qrcode";
 
 const mock2FACode = "JBSWY3DPEHPK3PXP";
 
-// const mockRecoveryCodes = [
-//   "A7B9-C2D4-E6F8",
-//   "G1H3-J5K7-L9M2",
-//   "N4P6-Q8R1-S3T5",
-//   "U7V9-W2X4-Y6Z8",
-//   "B1C3-D5F7-G9H2",
-//   "J4K6-L8M1-N3P5",
-//   "Q7R9-S2T4-V6W8",
-//   "X1Y3-Z5A7-B9C2",
-// ];
-
 // shape of settings
 interface settingItem {
   label: string;
@@ -253,7 +242,7 @@ export class SettingsPage {
     const inputEmailCode = document.createElement("input");
     inputEmailCode.type = "code";
     inputEmailCode.id = "text_password";
-    inputEmailCode.placeholder = "password";
+    inputEmailCode.placeholder = "code";
     inputEmailCode.style.paddingLeft = "0.5em";
     this.twoFAMenu.appendChild(inputEmailCode);
     const email2FAButton = document.createElement("button");
@@ -294,9 +283,24 @@ export class SettingsPage {
 
     const recoveryCode2FAButton = document.createElement("button");
     recoveryCode2FAButton.className = "btn";
-    recoveryCode2FAButton.onclick = () => this.toggleTOTPVerifyCode();
+    recoveryCode2FAButton.onclick = () => this.downloadRecoveryKeys();
     recoveryCode2FAButton.innerText = "backup keys";
     this.twoFAMenu.appendChild(recoveryCode2FAButton);
+  }
+
+  private async downloadRecoveryKeys() {
+    const recoveryCodes = ["djkkjadm", "kfdjbbkjdsf", "kdjkjf"];
+    const fileContent = recoveryCodes.join("\n");
+    const blob = new Blob([fileContent], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "recovery-codes.txt";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    this.toggleTOTPVerifyCode();
   }
 
   private toggleTOTPVerifyCode(): void {

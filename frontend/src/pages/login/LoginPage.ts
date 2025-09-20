@@ -2,6 +2,7 @@ import { ServiceContainer, Router, Backend } from "../../services";
 import { Menu } from "../../components/menu";
 import { PongButton } from "../../components/pongButton";
 import { UserLogin } from "../../types";
+import validator from "validator";
 
 export class LoginPage {
   private main: HTMLElement;
@@ -86,8 +87,16 @@ export class LoginPage {
     const password = passwordInput?.value;
 
     // Basic validation
-    if (!email || !password) {
-      console.error("Email and password are required");
+    if (!email) {
+      alert("please provide an email");
+      return;
+    }
+    if (!validator.isEmail(email)) {
+      alert("please provide a valid email");
+      return;
+    }
+    if (!password) {
+      alert("please provide a password");
       return;
     }
 

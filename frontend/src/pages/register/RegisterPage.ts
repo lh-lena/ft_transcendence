@@ -72,6 +72,10 @@ export class RegisterPage {
       alert("passwords don't match!");
       return;
     }
+    if (!password.length) {
+      alert("please enter a password");
+      return;
+    }
 
     // generate color and color map
     const { color, colorMap } = generateProfilePrint();

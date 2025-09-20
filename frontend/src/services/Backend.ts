@@ -106,7 +106,7 @@ export class Backend {
   async addFriendByIds(userId: string, friendId: string) {
     console.log(`user: ${userId}, friend: ${friendId}`);
     const response = await this.api.post("/api/friend", {
-      params: {
+      data: {
         userId: userId,
         friendUserId: friendId,
       },
