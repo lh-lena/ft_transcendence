@@ -90,7 +90,7 @@ const backendFriendsRoute = async (fastify: FastifyInstance) => {
 
     const blockedCheck = await apiClientBackend(config);
 
-    if (blockedCheck.userId !== req.user.id) {
+    if (blockedCheck.length !== 1 || blockedCheck.userId !== req.user.id) {
       return reply.code(403).send({ error: 'Forbidden' });
     }
 
@@ -99,18 +99,9 @@ const backendFriendsRoute = async (fastify: FastifyInstance) => {
       url: `/blocked/${parsedReq.data.blockedId}`,
     };
 
-    console.log('Delete Config', config);
     const resp = await apiClientBackend(config);
 
-    const ret = blockedResponseSchema.safeParse(resp);
-
-    if (!ret.success) {
-      return reply.code(500).send({ error: 'Failed to parse Friend Data' });
-    }
-
-    const blockedRet = ret.data;
-
-    return reply.code(200).send(blockedRet);
+    return reply.code(200).send(resp);
   });
 };
 
