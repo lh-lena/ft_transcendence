@@ -1,7 +1,7 @@
 -- CreateTable
 CREATE TABLE "User" (
     "userId" TEXT NOT NULL PRIMARY KEY,
-    "email" TEXT NOT NULL,
+    "email" TEXT,
     "username" TEXT NOT NULL,
     "alias" TEXT,
     "guest" BOOLEAN NOT NULL DEFAULT false,

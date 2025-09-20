@@ -7,7 +7,7 @@ export const userBase = z.object({
   createdAt: dtString,
   updatedAt: dtString,
 
-  email: z.email(),
+  email: z.email().optional().nullable(),
   username: z.string(),
   alias: z.string().nullable().optional(),
 

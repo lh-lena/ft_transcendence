@@ -8,6 +8,15 @@ import { transformInput } from './friend.helper';
 
 export const friendService = {
   async create(data: friendCreateType): Promise<Friendship> {
+    const alreadyFriends = await friendModel.findBy({
+      userId: data.userId,
+      friendUserId: data.friendUserId,
+    });
+
+    if (alreadyFriends.length > 0) {
+      return alreadyFriends[0];
+    }
+
     const prismaData = await transformInput(data);
     try {
       const ret = await friendModel.insert(prismaData);

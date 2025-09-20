@@ -8,6 +8,15 @@ import { transformInput } from './blocked.helper';
 
 export const blockedService = {
   async create(data: blockedCreateType): Promise<Blocked> {
+    const alreadyBlocked = await blockedModel.findBy({
+      userId: data.userId,
+      blockedUserId: data.blockedUserId,
+    });
+
+    if (alreadyBlocked.length > 0) {
+      return alreadyBlocked[0];
+    }
+
     const prismaData = await transformInput(data);
     try {
       const ret = await blockedModel.insert(prismaData);
