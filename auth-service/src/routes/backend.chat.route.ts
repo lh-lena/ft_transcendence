@@ -38,12 +38,9 @@ const backendChatRoutes = async (fastify: FastifyInstance) => {
       return reply.code(403).send({ error: 'Forbidden: You can only access your own chats' });
     }
 
-    const method = req.method.toLowerCase();
-    const url = '/chat/overview/' + userId.userId;
-
     const config: AxiosRequestConfig = {
-      method,
-      url,
+      method: 'get',
+      url: '/chat/overview/' + userId.userId,
       headers: req.headers,
       params: userId,
     };
@@ -61,7 +58,7 @@ const backendChatRoutes = async (fastify: FastifyInstance) => {
     return reply.code(200).send(chatRet);
   });
 
-  fastify.get('/api/chat/*', async (req: FastifyRequest, reply: FastifyReply) => {
+  fastify.get('/api/chat', async (req: FastifyRequest, reply: FastifyReply) => {
     const parsedReq = chatQuerySchema.safeParse(req.query);
 
     if (!parsedReq.success) {
@@ -74,13 +71,9 @@ const backendChatRoutes = async (fastify: FastifyInstance) => {
       return reply.code(403).send({ error: 'Forbidden: You can only access your own chats' });
     }
 
-    const method = req.method.toLowerCase();
-    const url = req.url.replace('/^/chat/', '/chat/');
-
     const config: AxiosRequestConfig = {
-      method,
-      url,
-      headers: req.headers,
+      method: 'get',
+      url: '/chat',
       params: chatQuery,
     };
 
@@ -110,12 +103,9 @@ const backendChatRoutes = async (fastify: FastifyInstance) => {
       return reply.code(403).send({ error: 'Forbidden' });
     }
 
-    const method = req.method.toLowerCase();
-    const url = '/chat';
-
     const config: AxiosRequestConfig = {
-      method,
-      url,
+      method: 'post',
+      url: '/chat',
       headers: req.headers,
       data: chatMessage,
     };

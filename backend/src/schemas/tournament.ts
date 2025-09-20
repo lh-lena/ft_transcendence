@@ -19,7 +19,7 @@ const tournamentCreateBase = tournamentBase
     playerAmount: true,
   })
   .extend({
-    playerId: z.uuid(),
+    userId: z.uuid(),
   });
 const tournamentCreate = tournamentCreateBase
   .meta({ $id: 'tournamentCreate' })

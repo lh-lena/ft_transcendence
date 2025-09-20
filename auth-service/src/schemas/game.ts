@@ -13,7 +13,7 @@ export const gameSchema = z.object({
   status: z.string(),
   visibility: z.string(),
   aiDifficulty: z.string().optional(),
-  createdAt: z.string(),
+  createdAt: z.string().optional(),
 });
 
 export const gameIdSchema = gameSchema.pick({ gameId: true });

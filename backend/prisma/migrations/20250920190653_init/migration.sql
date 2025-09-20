@@ -6,7 +6,7 @@ CREATE TABLE "User" (
     "alias" TEXT,
     "guest" BOOLEAN NOT NULL DEFAULT false,
     "online" BOOLEAN NOT NULL DEFAULT false,
-    "password_hash" TEXT NOT NULL,
+    "password_hash" TEXT,
     "tfaEnabled" BOOLEAN NOT NULL DEFAULT false,
     "tfaSecret" TEXT,
     "tfaMethod" TEXT,

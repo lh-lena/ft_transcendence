@@ -109,7 +109,7 @@ const authRoutes = async (server: FastifyInstance) => {
     }
 
     try {
-      const payload = server.verifyRefreshToken(refreshToken);
+      const payload = await server.verifyRefreshToken(refreshToken);
 
       const newAccessToken = server.generateAccessToken(payload);
       const newRefreshToken = server.generateRefreshToken(payload);
@@ -213,15 +213,13 @@ const authRoutes = async (server: FastifyInstance) => {
 
     newGuest.username = newGuest.alias;
 
-    const method = req.method.toLowerCase();
-    const url = '/user';
-
     const config: AxiosRequestConfig = {
-      method,
-      url,
-      headers: req.headers,
+      method: 'post',
+      url: '/user',
       data: newGuest,
     };
+
+    console.log('Creating guest user', config);
 
     const ret: UserType = await apiClientBackend(config);
 
