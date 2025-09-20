@@ -78,9 +78,10 @@ export class tournamentClass {
   private async startTournament(tournament: tournamentType): Promise<void> {
     if (tournament.players.length === tournament.playerAmount && tournament.status === 'waiting') {
       tournament.status = 'ready';
-      for (const player of tournament.players) {
-        notifyPlayer(player.userId, '0000-0000-0000-0000', 'INFO: Tournament starts soon');
-      }
+      //TODO notify players
+      //for (const player of tournament.players) {
+      //  notifyPlayer(player.userId, '0000-0000-0000-0000', 'INFO: Tournament starts soon');
+      //}
       await this.createGames(tournament);
     }
   }
@@ -94,11 +95,11 @@ export class tournamentClass {
     tournament.players = tournament.players.filter((p) => p.userId !== loserId);
 
     if (tournament.players.length === 1) {
-      notifyPlayer(
-        tournament.players[0].userId,
-        '0000-0000-0000-0000',
-        'INFO: You won the tournament!',
-      );
+      //  notifyPlayer(
+      //    tournament.players[0].userId,
+      //    '0000-0000-0000-0000',
+      //    'INFO: You won the tournament!',
+      //  );
       this.remove(tournament);
     } else if (tournament.games.length === 0) {
       tournament.round += 1;

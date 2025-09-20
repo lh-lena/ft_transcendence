@@ -91,7 +91,12 @@ export class tfaHandler {
     user: UserType,
     reply: FastifyReply,
   ): Promise<FastifyReply> {
-    const backupList = user.backupCodes || [];
+    if (!user.backupCodes) {
+      return reply
+        .code(400)
+        .send({ message: 'No backupcodes stored. Say bye bye to your accoutn' });
+    }
+    const backupList = user.backupCodes.split(',');
     const idx = backupList.findIndex((h) => h === sha256(tfaData.code.trim()));
     if (idx === -1) {
       return reply.code(401).send({ message: 'Invalid backup code. Please try again.' });
@@ -99,12 +104,12 @@ export class tfaHandler {
 
     const updatedList = backupList.slice();
     updatedList.splice(idx, 1);
+    const updatedString = updatedList.join(',');
 
     const config: AxiosRequestConfig = {
       method: 'patch',
       url: `/user/${user.userId}`,
-      params: user.userId,
-      data: { backupCodes: updatedList },
+      data: { backupCodes: updatedString },
     };
 
     await apiClientBackend(config);

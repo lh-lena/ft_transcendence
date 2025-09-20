@@ -13,6 +13,7 @@ export default fp(async function onRequestHook(server) {
       '/api/register',
       '/api/login',
       '/api/refresh',
+      '/api/verify',
       '/api/guest/login',
     ];
 
