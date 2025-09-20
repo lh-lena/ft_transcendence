@@ -241,7 +241,7 @@ export default function createGameStateService(app: FastifyInstance): GameStateS
   async function processGameResult(result: GameResult): Promise<void> {
     const gameDataService = app.gameDataService as GameDataService;
     const { mode, gameId } = result;
-    if (mode === GameMode.PVB_AI) {
+    if (mode === GameMode.PVB_AI || result.status === GameSessionStatus.CANCELLED_SERVER_ERROR) {
       await gameDataService.deleteAIGame(gameId);
     } else {
       await gameDataService.sendGameResult(result);
