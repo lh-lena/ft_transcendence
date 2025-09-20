@@ -181,22 +181,22 @@ const authRoutes = async (server: FastifyInstance) => {
   });
 
   server.post('/api/logout', async (req: FastifyRequest, reply: FastifyReply) => {
-    const refreshToken = req.cookies.refreshToken;
+    const parsedReq = refreshTokenSchema.safeParse(req.body);
+
+    if (!parsedReq.success) {
+      return reply.status(400).send({ error: parsedReq.error.issues });
+    }
+
+    const refreshToken = parsedReq.data.refreshToken;
 
     if (refreshToken) {
-      const method = req.method.toLowerCase();
-      const url = '/blacklist';
-
       const config: AxiosRequestConfig = {
-        method,
-        url,
-        headers: req.headers,
+        method: 'post',
+        url: '/blacklist',
         data: { token: refreshToken },
       };
       await apiClientBackend(config);
     }
-
-    reply.clearCookie('refreshToken', { path: '/api/refresh' });
 
     return reply.send({ message: 'Logged out successfully' });
   });
