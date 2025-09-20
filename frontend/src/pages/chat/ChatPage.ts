@@ -481,6 +481,16 @@ export class ChatPage {
       return;
     }
 
+    let isFriend = false;
+    // Check if user is a friend and get the friendId
+    const friendRecord = this.friendsList.find(
+      (friend) => friend.friendUserId === user.userId,
+    );
+    if (friendRecord) {
+      isFriend = true;
+      user.friendId = friendRecord.friendId;
+    }
+
     if (user.userId === this.backend.getUser().userId && !user.friendId) {
       // case is pop up for local user
       this.profilePopUp = new ProfilePopUp(
@@ -499,7 +509,7 @@ export class ChatPage {
             this.backend.getUser().userId,
             user.userId,
           ),
-        this.friendsList.some((friend) => friend.friendUserId === user.userId),
+        isFriend,
         () => this.removeFriendHook(user.friendId),
       ).getNode();
     }
@@ -508,13 +518,12 @@ export class ChatPage {
   }
 
   private async removeFriendHook(friendId: number) {
-    const response = await this.backend.removeFriendByFriendId(friendId);
-    return response;
+    await this.backend.removeFriendByFriendId(friendId);
+    await this.refreshFriendsList();
+    this.toggleProfilePopUp(this.backend.getUser());
   }
 
   private async addFriendHook(userId: string) {
-    console.log(`adding friend with userId: ${userId}`);
-    console.log("Current user userId: ", this.backend.getUser().userId);
     await this.backend.addFriendByIds(this.backend.getUser().userId, userId);
     await this.refreshFriendsList();
     // close on add friend

@@ -43,7 +43,7 @@ export class ProfilePopUp {
       else addFriendButton.innerText = "remove";
       if (addFriendCallback)
         addFriendButton.onclick = () => addFriendCallback();
-      if (removeFriendCallback)
+      if (removeFriendCallback && isFriend)
         addFriendButton.onclick = () => removeFriendCallback();
       addFriendButton.className = "btn mt-auto";
       const blockFriendButton = document.createElement("button");
