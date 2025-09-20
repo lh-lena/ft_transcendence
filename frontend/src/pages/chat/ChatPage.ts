@@ -1,6 +1,11 @@
-import { ServiceContainer, Router, Backend } from "../../services";
+import { ServiceContainer, Backend } from "../../services";
 import { Window } from "../../components/window";
-import { CANVAS_DEFAULTS, FriendsList, UsersAll } from "../../types";
+import {
+  CANVAS_DEFAULTS,
+  FriendsList,
+  UsersAll,
+  BlockedList,
+} from "../../types";
 import { MenuBar } from "../../components/menuBar";
 import { ProfileAvatar } from "../../components/profileAvatar";
 import { sampleChatHistory } from "../../constants/backend";
@@ -12,8 +17,8 @@ import { profilePrintToArray } from "../../utils/profilePrintFunctions";
 import { User } from "../../types";
 
 export class ChatPage {
+  // jesus christ this is an ugly piece of shieeet
   private serviceContainer: ServiceContainer;
-  private router: Router;
   private container!: HTMLDivElement;
   private clickedContact!: HTMLDivElement;
   private bottomBar!: HTMLDivElement;
@@ -36,6 +41,7 @@ export class ChatPage {
   private allUserData!: UsersAll;
   private searchInput!: HTMLInputElement;
   private friendsList!: FriendsList;
+  private blockedList!: BlockedList;
   private searchResults!: HTMLDivElement;
   private offlineheader!: HTMLElement;
   private onlineheader!: HTMLElement;
@@ -45,7 +51,6 @@ export class ChatPage {
   constructor(serviceContainer: ServiceContainer) {
     // router / services container
     this.serviceContainer = serviceContainer;
-    this.router = this.serviceContainer.get<Router>("router");
     this.backend = this.serviceContainer.get<Backend>("backend");
   }
 
@@ -91,6 +96,7 @@ export class ChatPage {
       element.online = userResponse.data.online;
     }
     instance.friendsList = initFriendsList;
+    // blocked list fetch
 
     // Complete the UI setup
     instance.setupUI();
