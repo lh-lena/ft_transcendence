@@ -64,17 +64,18 @@ export class ChatPage {
           ? profilePrintToArray(element.colormap)
           : element.colormap;
     }
-    // // leaderboard fetch
-    // const initLeaderboardData: Leaderboard =
-    //   await instance.backend.getLeaderboard();
-    // for (const element of initLeaderboardData) {
-    //   const userResponse = await instance.backend.fetchUserById(element.userId);
-    //   element.username = userResponse.data.username;
-    //   element.colormap = profilePrintToArray(userResponse.data.colormap);
-    //   element.color = userResponse.data.color;
-    //   element.avatar = userResponse.data.avatar;
-    // }
-    // instance.leaderboardData = initLeaderboardData;
+    // leaderboard fetch
+    const initLeaderboardData: Leaderboard =
+      await instance.backend.getLeaderboard();
+    for (const element of initLeaderboardData) {
+      const userResponse = await instance.backend.fetchUserById(element.userId);
+      element.username = userResponse.data.username;
+      element.colormap = profilePrintToArray(userResponse.data.colormap);
+      element.color = userResponse.data.color;
+      element.avatar = userResponse.data.avatar;
+    }
+    instance.leaderboardData = initLeaderboardData;
+    // friends fetch
     // instance.friendsList = await instance.backend.fetchFriendsById(
     //   instance.backend.getUser().userId,
     // );
@@ -220,31 +221,34 @@ export class ChatPage {
     leaderboardResults.className =
       "grid grid-cols-2 gap-2 p-2 w-full my-3 overflow-y-auto";
     this.leaderboardPanel.appendChild(leaderboardResults);
-    this.leaderboardData.forEach((user) => {
-      const resultBox = document.createElement("div");
-      resultBox.className =
-        "flex flex-row gap-2 box standard-dialog w-full items-center";
-      if (user.color && user.colormap) {
-        const avatar = new ProfileAvatar(
-          user.color,
-          user.colormap,
-          30,
-          30,
-          2,
-        ).getElement();
-        resultBox.appendChild(avatar);
-      }
-      const username = document.createElement("h1");
-      if (user.username) {
-        username.textContent = user.username;
-        username.className = "truncate flex-1 min-w-0 ml-2";
-      }
-      resultBox.appendChild(username);
-      const userScore = document.createElement("h1");
-      userScore.textContent = `wins: ${user.wins}`;
-      resultBox.appendChild(userScore);
-      leaderboardResults.appendChild(resultBox);
-    });
+    // only try stuff on leaderboard data if array greater than 0
+    if (this.leaderboardData.length > 0) {
+      this.leaderboardData.forEach((user) => {
+        const resultBox = document.createElement("div");
+        resultBox.className =
+          "flex flex-row gap-2 box standard-dialog w-full items-center";
+        if (user.color && user.colormap) {
+          const avatar = new ProfileAvatar(
+            user.color,
+            user.colormap,
+            30,
+            30,
+            2,
+          ).getElement();
+          resultBox.appendChild(avatar);
+        }
+        const username = document.createElement("h1");
+        if (user.username) {
+          username.textContent = user.username;
+          username.className = "truncate flex-1 min-w-0 ml-2";
+        }
+        resultBox.appendChild(username);
+        const userScore = document.createElement("h1");
+        userScore.textContent = `wins: ${user.wins}`;
+        resultBox.appendChild(userScore);
+        leaderboardResults.appendChild(resultBox);
+      });
+    }
 
     // CHATPANEL
     this.chatPanel = document.createElement("div");
