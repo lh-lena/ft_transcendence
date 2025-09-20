@@ -132,14 +132,9 @@ const authRoutes = async (server: FastifyInstance) => {
       return reply.code(400).send({ error: 'Invalid or expired 2FA-Session' });
     }
 
-    const method = 'get';
-    const url = `/user/${parseResult.data.userId}`;
-
     const config: AxiosRequestConfig = {
-      method,
-      url,
-      headers: req.headers,
-      params: { id: parseResult.data.userId },
+      method: 'get',
+      url: `/user/${parseResult.data.userId}`,
     };
 
     const user: UserType = await apiClientBackend(config);
