@@ -2,7 +2,6 @@ import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import fp from 'fastify-plugin';
 
 import { hashPassword, verifyPassword } from '../auth/passwords';
-//import { verifyJWT } from '../utils/jwt';
 
 import { isBlacklistedToken } from '../utils/blacklistToken';
 import { apiClientBackend } from '../utils/apiClient';
@@ -10,6 +9,7 @@ import type { AxiosRequestConfig } from 'axios';
 
 import { tfaHandler } from '../utils/tfa';
 import { tfaVerifySchema, tfaSetupSchema } from '../schemas/tfa';
+import { refreshTokenSchema } from '../schemas/jwt';
 
 import {
   userSchema,
@@ -18,6 +18,7 @@ import {
   userPostSchema,
   guestSchema,
 } from '../schemas/user';
+
 import type { UserType, GuestType } from '../schemas/user';
 
 const authRoutes = async (server: FastifyInstance) => {
@@ -95,30 +96,27 @@ const authRoutes = async (server: FastifyInstance) => {
 
   server.post('/api/refresh', async (req: FastifyRequest, reply: FastifyReply) => {
     console.log('Refresh token request', req.cookies);
-    const refreshToken = req.cookies.refreshToken;
+    const parsedReq = refreshTokenSchema.safeParse(req.body);
 
-    if (!refreshToken) {
-      return reply.status(401).send({ error: 'No refresh token' });
+    if (!parsedReq.success) {
+      return reply.status(401).send({ error: 'Wrong Refresh Token.\nLogin Again!' });
     }
+
+    const refreshToken = parsedReq.data.refreshToken;
+
     if (await isBlacklistedToken(refreshToken)) {
       return reply.status(401).send({ error: 'Token revoked. Login again' });
     }
 
-    //TODO add proper typing to payload -> only use id
     try {
       const payload = server.verifyRefreshToken(refreshToken);
 
       const newAccessToken = server.generateAccessToken(payload);
       const newRefreshToken = server.generateRefreshToken(payload);
 
-      reply.setCookie('refreshToken', newRefreshToken, {
-        httpOnly: true,
-        path: '/api/refresh',
-      });
-
-      return reply.send({ jwt: newAccessToken });
+      return reply.send({ jwt: newAccessToken, refreshToken: newRefreshToken });
     } catch {
-      return reply.status(401).send({ error: 'Invalid refresh token' });
+      return reply.status(401).send({ message: 'refresh token expired' });
     }
   });
 
@@ -133,24 +131,15 @@ const authRoutes = async (server: FastifyInstance) => {
       return reply.code(400).send({ error: 'Invalid or expired 2FA-Session' });
     }
 
-    const method = 'get';
-    const url = `/user/${parseResult.data.userId}`;
-
     const config: AxiosRequestConfig = {
-      method,
-      url,
-      headers: req.headers,
-      params: { id: parseResult.data.userId },
+      method: 'get',
+      url: `/user/${parseResult.data.userId}`,
     };
 
     const user: UserType = await apiClientBackend(config);
 
     if (!user) {
       return reply.status(404).send({ error: 'User not found' });
-    }
-
-    if (parseResult.data.type === 'email') {
-      return await tfa.checkMail(parseResult.data, user, reply);
     }
 
     if (parseResult.data.type === 'totp') {
@@ -188,10 +177,6 @@ const authRoutes = async (server: FastifyInstance) => {
 
     if (parseResult.data.type === 'totp') {
       return await tfa.setupTotp(user, reply);
-    }
-
-    if (parseResult.data.type === 'email') {
-      return await tfa.setupEmail(user, reply);
     }
   });
 

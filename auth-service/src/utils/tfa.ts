@@ -3,8 +3,7 @@ import { FastifyInstance, FastifyReply } from 'fastify';
 import { v4 as uuidv4 } from 'uuid';
 import { apiClientBackend } from '../utils/apiClient';
 import { AxiosRequestConfig } from 'axios';
-import { sendMail } from '../services/mailer';
-import { generate6DigitCode, nowPlusMinutes, sha256 } from '../services/twofa';
+import { sha256 } from '../services/twofa';
 import { authenticator } from 'otplib';
 import QRCode from 'qrcode';
 import crypto from 'crypto';
@@ -29,6 +28,7 @@ export class tfaHandler {
       type: user.tfaMethod,
       create: new Date().toISOString(),
     };
+
     this.tfaSessions.push(tfaSession);
 
     const tfaRequiredMessage = {
@@ -38,27 +38,6 @@ export class tfaHandler {
       userId: user.userId,
       message: '2FA verification required',
     };
-
-    if (user.tfaMethod === 'email') {
-      const code = generate6DigitCode();
-      const expires = nowPlusMinutes(5);
-
-      const config: AxiosRequestConfig = {
-        method: 'patch',
-        url: `/user/${user.userId}`,
-        data: { tfaTempCode: code, tfaCodeExpires: expires },
-      };
-
-      await apiClientBackend(config);
-
-      await sendMail(
-        user.email,
-        'Your 2FA Code',
-        `Your 2FA code is: ${code}. It expires in 5 minutes.`,
-      );
-
-      return reply.code(200).send((tfaRequiredMessage.message = '2FA code sent to email'));
-    }
 
     return reply.code(200).send(tfaRequiredMessage);
   }
@@ -90,42 +69,15 @@ export class tfaHandler {
       .send({ jwt: accessToken, refreshToken: refreshToken, userId: user.userId });
   }
 
-  async checkMail(
-    tfaData: TfaVerifyType,
-    user: UserType,
-    reply: FastifyReply,
-  ): Promise<FastifyReply> {
-    if (!user.tfaTempCode || !user.tfaCodeExpires) {
-      return reply.code(401).send({ message: 'No 2FA code found. Please request a new code.' });
-    }
-
-    if (new Date() > new Date(user.tfaCodeExpires)) {
-      return reply.code(401).send({ message: '2FA code has expired. Please request a new code.' });
-    }
-
-    if (user.tfaTempCode !== tfaData.code) {
-      return reply.code(401).send({ message: 'Invalid 2FA code. Please try again.' });
-    }
-
-    const config: AxiosRequestConfig = {
-      method: 'patch',
-      url: `/user/${user.userId}`,
-      params: user.userId,
-      data: { tfaTempCode: null, tfaCodeExpires: null },
-    };
-
-    await apiClientBackend(config);
-
-    return await this.sendJwt(user, reply);
-  }
-
   async checkTotp(
     tfaData: TfaVerifyType,
     user: UserType,
     reply: FastifyReply,
   ): Promise<FastifyReply> {
     if (!user.tfaSecret) {
-      return reply.code(400).send({ message: 'No TOTP secret found. Please set up TOTP 2FA.' });
+      return reply.code(400).send({
+        message: 'No TOTP secret found. Please set up TOTP 2FA.',
+      });
     }
     const isValid = authenticator.check(tfaData.code, user.tfaSecret);
     if (!isValid) {
@@ -161,6 +113,9 @@ export class tfaHandler {
   }
 
   async setupTotp(user: UserType, reply: FastifyReply): Promise<FastifyReply> {
+    if (user.tfaEnabled && user.tfaMethod === 'totp') {
+      return reply.code(400).send({ message: 'TOTP 2FA is already enabled.' });
+    }
     const secret = authenticator.generateSecret();
     const otpauth = authenticator.keyuri(user.email, 'ft_transcendence', secret);
     const codes = Array.from({ length: 8 }, () => crypto.randomBytes(8).toString('hex'));
@@ -190,23 +145,7 @@ export class tfaHandler {
         'TOTP 2FA setup complete. Dont lose the Backup Codes and Store the QRCode! Otherwise you wont have access to your acount!',
     });
   }
-
-  async setupEmail(user: UserType, reply: FastifyReply): Promise<FastifyReply> {
-    const config: AxiosRequestConfig = {
-      method: 'patch',
-      url: `/user/${user.userId}`,
-      data: {
-        tfaEnabled: true,
-        tfaMethod: 'email',
-      },
-    };
-
-    await apiClientBackend(config);
-
-    return reply.code(200).send({ message: 'Email 2FA setup complete.' });
-  }
 }
-
 // TOTP Verify & Enable
 //const totpVerifySchema = z.object({ token: z.string() });
 //server.post('/api/auth/2fa/totp/verify', { preHandler: authMiddleware }, async (req, reply) => {
