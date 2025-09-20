@@ -90,7 +90,7 @@ const backendFriendsRoute = async (fastify: FastifyInstance) => {
 
     const blockedCheck = await apiClientBackend(config);
 
-    if (blockedCheck.length !== 1 || blockedCheck.userId !== req.user.id) {
+    if (blockedCheck.length !== 1 || blockedCheck[0].userId !== req.user.id) {
       return reply.code(403).send({ error: 'Forbidden' });
     }
 
