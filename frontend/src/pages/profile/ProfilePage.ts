@@ -30,7 +30,7 @@ export class ProfilePage {
     // Window content
 
     // skips profile menuBar
-    this.menuBar = new MenuBar(this.router, "profile");
+    this.menuBar = new MenuBar(serviceContainer, "profile");
     const menuBarElement = this.menuBar.render();
 
     const profilePic = new ProfileAvatar(

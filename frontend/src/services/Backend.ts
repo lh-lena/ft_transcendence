@@ -2,7 +2,11 @@ import axios from "axios";
 import { FriendsList, User, UserLogin, UserRegistration } from "../types";
 
 // utils
-import { generateProfilePrint, profilePrintToArray, profilePrintToString } from "../utils/profilePrintFunctions";
+import {
+  generateProfilePrint,
+  profilePrintToArray,
+  profilePrintToString,
+} from "../utils/profilePrintFunctions";
 
 export class Backend {
   private user!: User;
@@ -18,7 +22,6 @@ export class Backend {
       const token = localStorage.getItem("jwt");
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
-        console.log(`jwt: ${token}`);
       }
       return config;
     });
@@ -74,6 +77,7 @@ export class Backend {
     // save JWT token if it's returned in the response
     if (response.data.jwt && response.data.userId) {
       localStorage.setItem("jwt", response.data.jwt);
+      localStorage.setItem("refreshToken", response.data.refreshToken);
       const userResponse = await this.fetchUserById(response.data.userId);
       this.setUser(userResponse.data);
     }
