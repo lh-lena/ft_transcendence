@@ -2,7 +2,7 @@ import { v4 as uuidv4 } from 'uuid';
 import type { tournamentType, tournamentCreateType } from '../../schemas/tournament';
 
 import { gameService } from '../game/game.service';
-import { notifyPlayer } from '../../utils/notify';
+//import { notifyPlayer } from '../../utils/notify';
 
 import type { tournamentIdType } from '../../schemas/tournament';
 
