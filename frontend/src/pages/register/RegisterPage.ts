@@ -6,6 +6,7 @@ import {
   generateProfilePrint,
   profilePrintToString,
 } from "../../utils/profilePrintFunctions";
+import validator from "validator";
 
 export class RegisterPage {
   private main: HTMLElement;
@@ -59,8 +60,16 @@ export class RegisterPage {
     ).value;
 
     // basic validation -> add more
+    if (username.length > 6) {
+      alert("username must be smaller than 6 characters");
+      return;
+    }
+    if (!validator.isEmail(email)) {
+      alert("invalid email detected");
+      return;
+    }
     if (password != passwordConfirm) {
-      alert("Passwords don't match!");
+      alert("passwords don't match!");
       return;
     }
 
@@ -78,8 +87,6 @@ export class RegisterPage {
     };
 
     await this.backend.registerUser(userRegistrationData);
-    console.log(this.backend.getUser());
-    console.log(`local storj: ${localStorage.getItem("user")}`);
     // if user object was received
     this.router.navigate("/chat");
   }
