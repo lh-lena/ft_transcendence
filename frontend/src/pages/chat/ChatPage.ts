@@ -297,6 +297,7 @@ export class ChatPage {
   }
 
   private populateChatPanel(user: User) {
+    console.log(user);
     // clear old chatpanel
     this.chatPanel.innerHTML = "";
     // information bar "chat with" information button
@@ -305,6 +306,7 @@ export class ChatPage {
     const informationText = document.createElement("h1");
     informationText.textContent = `chat with ${user.username}`;
     informationBar.appendChild(informationText);
+    console.log(`populateChatPanel: user: ${user.username}`);
     const informationIcon = new InformationIcon(() =>
       this.toggleProfilePopUp(user),
     );
@@ -352,13 +354,18 @@ export class ChatPage {
     this.chatPanel.appendChild(this.bottomBar);
   }
 
-  private populateFriends() {
-    this.friendsList.forEach((friend) => {
+  private async populateFriends() {
+    for (const friend of this.friendsList) {
       const contact = document.createElement("div");
       contact.className =
         "flex flex-row gap-2 box standard-dialog w-full items-center";
       const clickableContact = document.createElement("a");
-      clickableContact.onclick = () => this.toggleChatPanel(contact, friend);
+      const userResponse = await this.backend.fetchUserById(
+        friend.friendUserId,
+      );
+      const user: User = userResponse.data;
+      user.colormap = profilePrintToArray(userResponse.data.colormap);
+      clickableContact.onclick = () => this.toggleChatPanel(contact, user);
       clickableContact.style.cursor = "pointer";
       const contactName = document.createElement("h1");
       contactName.textContent = friend.username;
@@ -380,7 +387,7 @@ export class ChatPage {
           this.friends.appendChild(clickableContact);
         }
       }
-    });
+    }
   }
 
   // toggles invite (in messages)
@@ -465,18 +472,15 @@ export class ChatPage {
   }
 
   // right side panel (only type that populates right side panel as of rn)
-  private toggleProfilePopUp(user: User): void {
+  // watch out -> could be a friend thats passed or a user
+  private toggleProfilePopUp(user: any): void {
     // remove profile pop up if it is already shown on screen
     if (this.profilePopUp && this.chatRow.contains(this.rightPanel)) {
       this.chatRow.removeChild(this.rightPanel);
       return;
     }
 
-    // create new popup and show it
-    console.log(
-      `user.userId: ${user.userId} === backend.userGetUserUserwhtcvg: ${this.backend.getUser().userId}`,
-    );
-    if (user.userId === this.backend.getUser().userId) {
+    if (user.userId === this.backend.getUser().userId && !user.friendId) {
       // case is pop up for local user
       this.profilePopUp = new ProfilePopUp(
         () => this.toggleProfilePopUp(user),
