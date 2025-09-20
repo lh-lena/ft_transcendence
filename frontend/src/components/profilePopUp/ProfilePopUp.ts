@@ -10,8 +10,9 @@ export class ProfilePopUp {
     closeCallBack: () => void,
     user: User,
     style?: string,
-    addFriendCallback?: () => Promise<AxiosResponse<any, any>>,
+    addFriendCallback?: () => void,
     blockFriendCallback?: () => Promise<AxiosResponse<any, any>>,
+    isFriend?: boolean,
   ) {
     this.main = document.createElement("div");
     this.main.className =
@@ -37,7 +38,8 @@ export class ProfilePopUp {
 
     if (style == "friend" && addFriendCallback && blockFriendCallback) {
       const addFriendButton = document.createElement("button");
-      addFriendButton.innerText = "add";
+      if (!isFriend) addFriendButton.innerText = "add";
+      else addFriendButton.innerText = "remove";
       addFriendButton.onclick = () => addFriendCallback();
       addFriendButton.className = "btn mt-auto";
       const blockFriendButton = document.createElement("button");

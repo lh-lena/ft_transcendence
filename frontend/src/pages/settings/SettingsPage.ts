@@ -81,7 +81,7 @@ export class SettingsPage {
       this.buttonRow.appendChild(button);
     });
 
-    const menuBar = new MenuBar(this.router, "settings");
+    const menuBar = new MenuBar(serviceContainer, "settings");
 
     // settings main
     this.settingsPanel = document.createElement("div");

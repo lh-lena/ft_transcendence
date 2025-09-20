@@ -2,7 +2,11 @@ import axios from "axios";
 import { FriendsList, User, UserLogin, UserRegistration } from "../types";
 
 // utils
-import { profilePrintToArray } from "../utils/profilePrintFunctions";
+import {
+  generateProfilePrint,
+  profilePrintToArray,
+  profilePrintToString,
+} from "../utils/profilePrintFunctions";
 
 export class Backend {
   private user!: User;
@@ -18,7 +22,6 @@ export class Backend {
       const token = localStorage.getItem("jwt");
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
-        console.log(`jwt: ${token}`);
       }
       return config;
     });
@@ -31,22 +34,40 @@ export class Backend {
       },
       (error) => {
         // Handle any response that isn't 2xx
-        console.error("API Error:", error.response?.data || error.message);
-        alert(`
-          backend error: ${error.response?.data?.message || error.message}`);
-        // You can add specific error handling logic here
-        // if (error.response?.status === 401) {
-        //   // Handle unauthorized - maybe redirect to login
-        //   localStorage.removeItem("jwt");
-        //   localStorage.removeItem("user");
-        // }
-        // Re-throw the error so individual methods can still catch it if needed
+        // only go in here if we are able to refresh token
+        if (
+          error.response?.status === 401 &&
+          !(error.response?.data?.message === "refresh token expired") &&
+          localStorage.getItem("refreshToken")
+        ) {
+          this.refreshToken();
+        } else {
+          console.error("API Error:", error.response?.data || error.message);
+          alert(`
+            backend error: ${error.response?.data?.message || error.message}`);
+          // You can add specific error handling logic here
+          // if (error.response?.status === 401) {
+          //   // Handle unauthorized - maybe redirect to login
+          //   localStorage.removeItem("jwt");
+          //   localStorage.removeItem("user");
+          // }
+        }
         return Promise.reject(error);
       },
     );
 
     // if user exists grab old user form storage
     this.loadUserFromStorage();
+  }
+
+  async refreshToken() {
+    localStorage.removeItem("jwt");
+    const response = await this.api.post("/api/refresh", {
+      refreshToken: localStorage.getItem("refreshToken"),
+    });
+    localStorage.setItem("jwt", response.data.jwt);
+    localStorage.setItem("refreshToken", response.data.refreshToken);
+    return response;
   }
 
   async registerUser(data: UserRegistration) {
@@ -56,6 +77,7 @@ export class Backend {
     // save JWT token if it's returned in the response
     if (response.data.jwt && response.data.userId) {
       localStorage.setItem("jwt", response.data.jwt);
+      localStorage.setItem("refreshToken", response.data.refreshToken);
       const userResponse = await this.fetchUserById(response.data.userId);
       this.setUser(userResponse.data);
     }
@@ -173,14 +195,16 @@ export class Backend {
     }
   }
 
-  // async twoFAEmail(userId: string) {
-  //   const response = this.api.post("/api/tfaSetup", {
-  //     userId: userId,
-  //     type: "email",
-  //   });
-  //   console.log(response);
-  //   return response;
-  // }
+  async logout() {
+    const response = await this.api.post("/api/logout", {
+      refreshToken: localStorage.getItem("refreshToken"),
+    });
+    console.log(response);
+    localStorage.removeItem("jwt");
+    localStorage.removeItem("refreshToken");
+    localStorage.removeItem("user");
+    return response;
+  }
 
   async twoFaTOTP(userId: string) {
     const response = await this.api.post("/api/tfaSetup", {
@@ -200,9 +224,28 @@ export class Backend {
     });
     if (response.status != 200) return response;
     localStorage.setItem("jwt", response.data.jwt);
+    localStorage.setItem("refreshToken", response.data.refreshToken);
     const userResponse = await this.fetchUserById(response.data.userId);
     this.setUser(userResponse.data);
     return response;
+  }
+
+  async tournamentAliasFlow(alias: string) {
+    if (this.user) {
+      await this.api.patch("/api/user", {
+        userId: this.getUser().userId,
+        alias: alias,
+      });
+    } else {
+      const { color, colorMap } = generateProfilePrint();
+      const response = await this.api.post("/api/guest/login", {
+        alias: alias,
+        color: color,
+        colormap: profilePrintToString(colorMap),
+      });
+      localStorage.setItem("jwt", response.data.jwt);
+      localStorage.setItem("refreshToken", response.data.refreshToken);
+    }
   }
 
   private loadUserFromStorage() {
