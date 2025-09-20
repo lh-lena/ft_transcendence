@@ -13,6 +13,7 @@ export default fp(async function onRequestHook(server) {
       '/api/register',
       '/api/login',
       '/api/refresh',
+      '/api/guest/login',
     ];
 
     const routePath = req.routeOptions.url || req.url;
