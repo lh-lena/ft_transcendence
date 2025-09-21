@@ -30,7 +30,7 @@ const tournamentRoutes = async (server: FastifyInstance) => {
     handler: async (req: FastifyRequest, reply: FastifyReply) => {
       const userId = req.params as userIdType;
 
-      const ret = await tournamentController.leave(userId);
+      const ret = await tournamentController.leave(userId.userId);
 
       return reply.code(200).send(ret);
     },
