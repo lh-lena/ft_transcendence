@@ -2,7 +2,7 @@ import { v4 as uuid } from 'uuid';
 
 import type { gameType, gameCreateType } from '../../schemas/game';
 
-//import { notifyPlayer } from '../../utils/notify';
+import { sendGameStartRealtime } from '../../utils/realtime';
 
 export class gameClass {
   private activeGames: gameType[] = [];
@@ -84,10 +84,7 @@ export class gameClass {
     ) {
       game.status = 'ready';
       game.createdAt = new Date().toISOString();
-      //TODO enable notification about new game
-      // for (const player of game.players) {
-      //   notifyPlayer(player.userId, 'INFO: Your next Game starts soon');
-      // }
+      sendGameStartRealtime(game);
     }
   }
 }

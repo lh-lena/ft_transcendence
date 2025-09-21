@@ -121,7 +121,7 @@ async function main() {
     await prisma.chatMessage.create({
       data: {
         senderId: users[senderIdx].userId,
-        reciverId: users[receiverIdx].userId,
+        recieverId: users[receiverIdx].userId,
         message: faker.lorem.sentence(),
       },
     });
