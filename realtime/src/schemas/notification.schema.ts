@@ -22,23 +22,9 @@ export const NotificationRequestSchema = {
   required: ['reciever', 'sender', 'payload'],
 };
 
-export const NotificationResponseSchema = {
-  type: 'object',
-  properties: {
-    success: { type: 'boolean' },
-    message: { type: 'string' },
-  },
-  required: ['success'],
-};
-
 export type NotificationRequest = {
   event: NotificationType;
   reciever: UserIdType;
   sender: UserIdType;
   payload: { message: string };
-};
-
-export type NotificationResponse = {
-  success: boolean;
-  message: string;
 };

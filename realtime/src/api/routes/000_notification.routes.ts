@@ -2,8 +2,8 @@ import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import type { RespondService } from '../../websocket/types/ws.types.js';
 import {
   NotificationRequestSchema,
-  NotificationResponseSchema,
 } from '../../schemas/notification.schema.js';
+import { ResponseSchema } from '../../schemas/response.schema.js';
 import type { NotificationRequest } from '../../schemas/notification.schema.js';
 import { processErrorLog } from '../../utils/error.handler.js';
 
@@ -14,8 +14,8 @@ export const setupNotificationRoutes = (server: FastifyInstance): void => {
     schema: {
       body: NotificationRequestSchema,
       response: {
-        200: NotificationResponseSchema,
-        500: NotificationResponseSchema,
+        200: ResponseSchema,
+        500: ResponseSchema,
       },
     },
     handler: (request: FastifyRequest, reply: FastifyReply) => {
