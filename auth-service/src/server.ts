@@ -12,6 +12,7 @@ import AutoLoad from '@fastify/autoload';
 import path from 'path';
 
 import { config } from './config/index';
+//import { da } from 'zod/v4/locales';
 
 // Initialize Prometheus registry
 //const register = new client.Registry();
@@ -59,6 +60,22 @@ import { config } from './config/index';
 //};
 
 export const server = Fastify({ logger: true });
+
+server.setErrorHandler((error: unknown, _, reply) => {
+  const { status, message, data } = error as { status?: number; message?: string; data?: string };
+  if (error && typeof error === 'object') {
+    reply.status(status || 500).send({
+      success: false,
+      message: message || 'Internal Server Error',
+      data: data || null,
+    });
+  } else {
+    reply.status(500).send({
+      success: false,
+      message: message || 'Internal Server Error',
+    });
+  }
+});
 
 //// Health check endpoint with metrics update
 //server.get('/api/auth/health', async (request, reply) => {

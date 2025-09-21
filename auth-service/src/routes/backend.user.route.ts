@@ -34,7 +34,7 @@ const backendUserRoutes = async (fastify: FastifyInstance) => {
     const parsedReq = userIdSchema.safeParse(req.params);
 
     if (!parsedReq.success) {
-      return reply.code(400).send({ error: 'Invalid user ID' });
+      return reply.code(400).send({ message: 'Invalid user ID' });
     }
 
     const requestId: UserIdType = parsedReq.data;
@@ -53,7 +53,7 @@ const backendUserRoutes = async (fastify: FastifyInstance) => {
     const ret = schema.safeParse(user);
 
     if (!ret.success) {
-      return reply.code(500).send({ error: 'Failed to parse user data' });
+      return reply.code(500).send({ message: 'Failed to parse user data' });
     }
     const userRet = ret.data;
 
@@ -64,7 +64,7 @@ const backendUserRoutes = async (fastify: FastifyInstance) => {
     const parsedReq = userQuerySchema.safeParse(req.query);
 
     if (!parsedReq.success) {
-      return reply.code(400).send({ error: 'Invalid query parameters' });
+      return reply.code(400).send({ message: 'Invalid query parameters' });
     }
 
     const userQuery: UserQueryType = parsedReq.data;
@@ -84,7 +84,7 @@ const backendUserRoutes = async (fastify: FastifyInstance) => {
     const ret = userInfoResponseArraySchema.safeParse(users);
 
     if (!ret.success) {
-      return reply.code(500).send({ error: 'Failed to parse user data' });
+      return reply.code(500).send({ message: 'Failed to parse user data' });
     }
 
     const usersRet = ret.data;
@@ -96,18 +96,18 @@ const backendUserRoutes = async (fastify: FastifyInstance) => {
     const parsedBody = userPatchSchema.safeParse(req.body);
 
     if (!parsedParams.success) {
-      return reply.code(400).send({ error: 'Invalid user ID' });
+      return reply.code(400).send({ message: 'Invalid user ID' });
     }
 
     if (!parsedBody.success) {
-      return reply.code(400).send({ error: 'Invalid update Data' });
+      return reply.code(400).send({ message: 'Invalid update Data' });
     }
 
     const requestId: UserIdType = parsedParams.data;
     const updateData: UserPatchType = parsedBody.data;
 
     if (requestId.userId !== req.user.id) {
-      return reply.code(403).send({ error: 'Forbidden: You can only update your own profile' });
+      return reply.code(403).send({ message: 'Forbidden: You can only update your own profile' });
     }
 
     let password_hash: string | undefined;
@@ -130,7 +130,7 @@ const backendUserRoutes = async (fastify: FastifyInstance) => {
     const ret = userResponseSchema.safeParse(updatedUser);
 
     if (!ret.success) {
-      return reply.code(500).send({ error: 'Failed to parse user data' });
+      return reply.code(500).send({ message: 'Failed to parse user data' });
     }
 
     const userRet = ret.data;
@@ -141,13 +141,13 @@ const backendUserRoutes = async (fastify: FastifyInstance) => {
     const parsedReq = userIdSchema.safeParse(req.params);
 
     if (!parsedReq.success) {
-      return reply.code(400).send({ error: 'Invalid user Id' });
+      return reply.code(400).send({ message: 'Invalid user Id' });
     }
 
     const requestId: UserIdType = parsedReq.data;
 
     if (requestId.userId !== req.user.id) {
-      return reply.code(403).send({ error: 'Forbidden: You can only delete your own profile' });
+      return reply.code(403).send({ message: 'Forbidden: You can only delete your own profile' });
     }
 
     const config: AxiosRequestConfig = {

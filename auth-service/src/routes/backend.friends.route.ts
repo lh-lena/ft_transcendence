@@ -17,11 +17,11 @@ const backendFriendsRoute = async (fastify: FastifyInstance) => {
     const parsedReq = friendQuerySchema.safeParse(req.query);
 
     if (!parsedReq || !parsedReq.success) {
-      return reply.status(400).send({ error: 'Invalid input parameters' });
+      return reply.status(400).send({ message: 'Invalid input parameters' });
     }
 
     if (parsedReq.data.userId !== req.user.id) {
-      return reply.code(403).send({ error: 'Forbidden' });
+      return reply.code(403).send({ message: 'Forbidden' });
     }
 
     const config: AxiosRequestConfig = {
@@ -35,7 +35,7 @@ const backendFriendsRoute = async (fastify: FastifyInstance) => {
     const ret = friendResponseSchema.safeParse(resp);
 
     if (!ret.success) {
-      return reply.code(500).send({ error: 'Failed to parse Friend Data' });
+      return reply.code(500).send({ message: 'Failed to parse Friend Data' });
     }
 
     const friendRet = ret.data;
@@ -48,11 +48,11 @@ const backendFriendsRoute = async (fastify: FastifyInstance) => {
     const parsedReq = friendPostSchema.safeParse(req.body);
     console.log(parsedReq);
     if (!parsedReq || !parsedReq.success) {
-      return reply.status(400).send({ error: 'Invalid input parameters' });
+      return reply.status(400).send({ message: 'Invalid input parameters' });
     }
 
     if (parsedReq.data.userId !== req.user.id) {
-      return reply.code(403).send({ error: 'Forbidden' });
+      return reply.code(403).send({ message: 'Forbidden' });
     }
 
     const config: AxiosRequestConfig = {
@@ -66,7 +66,7 @@ const backendFriendsRoute = async (fastify: FastifyInstance) => {
     const ret = friendResponseSchema.safeParse(resp);
 
     if (!ret.success) {
-      return reply.code(500).send({ error: 'Failed to parse Friend Data' });
+      return reply.code(500).send({ message: 'Failed to parse Friend Data' });
     }
 
     const friendRet = ret.data;
@@ -78,7 +78,7 @@ const backendFriendsRoute = async (fastify: FastifyInstance) => {
     const parsedReq = friendIdSchema.safeParse(req.params);
 
     if (!parsedReq || !parsedReq.success) {
-      return reply.status(400).send({ error: 'Invalid input parameters' });
+      return reply.status(400).send({ message: 'Invalid input parameters' });
     }
 
     let config: AxiosRequestConfig = {
@@ -92,7 +92,7 @@ const backendFriendsRoute = async (fastify: FastifyInstance) => {
     console.log(friendCheck);
 
     if (friendCheck.length !== 1 || friendCheck[0].userId !== req.user.id) {
-      return reply.code(403).send({ error: 'Forbidden' });
+      return reply.code(403).send({ message: 'Forbidden' });
     }
 
     config = {

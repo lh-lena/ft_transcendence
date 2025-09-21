@@ -30,7 +30,7 @@ const authRoutes = async (server: FastifyInstance) => {
 
     if (!parseResult.success) {
       console.log('Registration error', parseResult.error.message);
-      return reply.status(400).send({ error: parseResult.error.issues });
+      return reply.status(400).send({ message: parseResult.error.cause });
     }
 
     const password_hash = await hashPassword(parseResult.data.password);
@@ -51,7 +51,7 @@ const authRoutes = async (server: FastifyInstance) => {
 
     if (!createdUser.success) {
       console.log('Created user parsing error', createdUser.error);
-      return reply.status(500).send({ error: 'User creation failed' });
+      return reply.status(500).send({ message: 'User creation failed' });
     }
 
     return await tfa.sendJwt(createdUser.data, reply);
@@ -62,7 +62,7 @@ const authRoutes = async (server: FastifyInstance) => {
     console.log('Login attempt', parseResult);
 
     if (!parseResult.success) {
-      return reply.status(400).send({ error: parseResult.error.issues });
+      return reply.status(400).send({ message: parseResult.error.issues });
     }
 
     const config: AxiosRequestConfig = {
@@ -75,7 +75,7 @@ const authRoutes = async (server: FastifyInstance) => {
     const userArr: UserType[] = await apiClientBackend(config);
 
     if (userArr.length !== 1) {
-      return reply.status(401).send({ error: 'Invalid credentials' });
+      return reply.status(401).send({ message: 'Invalid credentials' });
     }
 
     const user = userArr[0];
@@ -84,7 +84,7 @@ const authRoutes = async (server: FastifyInstance) => {
     console.log('Password valid', valid);
 
     if (!valid) {
-      return reply.status(401).send({ error: 'Invalid credentials' });
+      return reply.status(401).send({ message: 'Invalid credentials' });
     }
 
     if (user.tfaEnabled) {
@@ -99,7 +99,7 @@ const authRoutes = async (server: FastifyInstance) => {
     const parsedReq = refreshTokenSchema.safeParse(req.body);
 
     if (!parsedReq.success) {
-      return reply.status(400).send({ error: 'Wrong Refresh Token.\nLogin Again!' });
+      return reply.status(400).send({ message: 'Wrong Refresh Token.\nLogin Again!' });
     }
 
     const refreshToken = parsedReq.data.refreshToken;
@@ -124,11 +124,11 @@ const authRoutes = async (server: FastifyInstance) => {
     const parseResult = tfaVerifySchema.safeParse(req.body);
 
     if (!parseResult.success) {
-      return reply.status(400).send({ error: parseResult.error.issues });
+      return reply.status(400).send({ message: parseResult.error.issues });
     }
 
     if (!tfa.validSession(parseResult.data.sessionId)) {
-      return reply.code(400).send({ error: 'Invalid or expired 2FA-Session' });
+      return reply.code(400).send({ message: 'Invalid or expired 2FA-Session' });
     }
 
     const config: AxiosRequestConfig = {
@@ -139,7 +139,7 @@ const authRoutes = async (server: FastifyInstance) => {
     const user: UserType = await apiClientBackend(config);
 
     if (!user) {
-      return reply.status(404).send({ error: 'User not found' });
+      return reply.status(404).send({ message: 'User not found' });
     }
 
     if (parseResult.data.type === 'totp') {
@@ -157,7 +157,7 @@ const authRoutes = async (server: FastifyInstance) => {
     const parseResult = tfaSetupSchema.safeParse(req.body);
 
     if (!parseResult.success) {
-      return reply.status(400).send({ error: parseResult.error.issues });
+      return reply.status(400).send({ message: parseResult.error.issues });
     }
     const method = 'get';
     const url = `/user/${parseResult.data.userId}`;
@@ -172,7 +172,7 @@ const authRoutes = async (server: FastifyInstance) => {
     const user: UserType = await apiClientBackend(config);
 
     if (!user) {
-      return reply.status(404).send({ error: 'User not found' });
+      return reply.status(404).send({ message: 'User not found' });
     }
 
     if (parseResult.data.type === 'totp') {
@@ -184,7 +184,7 @@ const authRoutes = async (server: FastifyInstance) => {
     const parsedReq = refreshTokenSchema.safeParse(req.body);
 
     if (!parsedReq.success) {
-      return reply.status(400).send({ error: parsedReq.error.issues });
+      return reply.status(400).send({ message: parsedReq.error.issues });
     }
 
     const refreshToken = parsedReq.data.refreshToken;
@@ -206,7 +206,7 @@ const authRoutes = async (server: FastifyInstance) => {
     const parsedReq = guestSchema.safeParse(req.body);
 
     if (!parsedReq.success) {
-      return reply.status(400).send({ error: parsedReq.error.issues });
+      return reply.status(400).send({ message: parsedReq.error.issues });
     }
 
     const newGuest: GuestType = parsedReq.data;
@@ -227,8 +227,7 @@ const authRoutes = async (server: FastifyInstance) => {
   });
 
   server.get('/api/auth/me', async (req: FastifyRequest, _) => {
-    const user = userSchema.parse(req.user);
-    return user;
+    return { userId: req.user.id };
   });
 };
 
