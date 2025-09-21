@@ -67,7 +67,7 @@ const backendChatRoutes = async (fastify: FastifyInstance) => {
 
     const chatQuery: ChatQueryType = parsedReq.data;
 
-    if (chatQuery.senderId !== req.user.id && chatQuery.reciverId !== req.user.id) {
+    if (chatQuery.senderId !== req.user.id && chatQuery.recieverId !== req.user.id) {
       return reply.code(403).send({ message: 'Forbidden: You can only access your own chats' });
     }
 
@@ -99,7 +99,7 @@ const backendChatRoutes = async (fastify: FastifyInstance) => {
 
     const chatMessage: ChatPostType = parsedReq.data;
 
-    if (chatMessage.senderId !== req.user.id && chatMessage.reciverId !== req.user.id) {
+    if (chatMessage.senderId !== req.user.id && chatMessage.recieverId !== req.user.id) {
       return reply.code(403).send({ message: 'Forbidden' });
     }
 

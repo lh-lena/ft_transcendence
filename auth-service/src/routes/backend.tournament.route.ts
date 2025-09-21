@@ -64,7 +64,7 @@ const backendTournamentRoutes = async (fastify: FastifyInstance) => {
     async (req: FastifyRequest, reply: FastifyReply) => {
       const parsedReq = userIdSchema.safeParse(req.params);
 
-      if (!parsedReq) {
+      if (!parsedReq.success) {
         return reply.code(400).send({ message: 'Invalid userId' });
       }
 

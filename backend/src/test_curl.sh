@@ -4,7 +4,7 @@ curl -X POST http://[::1]:8080/api/chat \
   -H "Content-Type: application/json" \
   -d '{
     "senderId": "12",
-    "reciverId": "31",
+    "recieverId": "31",
     "message": "true"
   }'
 
@@ -147,7 +147,7 @@ curl -X POST \
   -H 'Content-Type: application/json' \
   -d '{
     "senderId": "aa8bf1d8-64f9-45cd-80df-4b39000d0ce9",
-    "reciverId": "ea3680c0-1d78-4ada-9e42-da25e0b75575",
+    "recieverId": "ea3680c0-1d78-4ada-9e42-da25e0b75575",
     "message": "Hello, how are you?"
   }'
 
