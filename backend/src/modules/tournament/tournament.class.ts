@@ -48,6 +48,15 @@ export class tournamentClass {
     return tournament;
   }
 
+  async leave(userId: string): Promise<boolean> {
+    const tournament = await this.getByUser(userId);
+    if (tournament) {
+      tournament.players = tournament.players.filter((p) => p.userId !== userId);
+      return true;
+    }
+    return false;
+  }
+
   async findAvailableTournament(join: tournamentCreateType): Promise<tournamentType> {
     let freeTournament = this.activeTournaments.find(
       (t) =>
