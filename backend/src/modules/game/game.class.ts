@@ -18,6 +18,10 @@ export class gameClass {
   }
 
   async create(game: gameCreateType): Promise<gameType> {
+    const existingGame = await this.getByUser(game.userId);
+    if (existingGame) {
+      return existingGame;
+    }
     const newGame: gameType = {
       gameId: uuid(),
       players: [],
@@ -32,6 +36,7 @@ export class gameClass {
     }
 
     this.activeGames.push(newGame);
+    this.startGame(newGame);
     return newGame;
   }
 
@@ -46,6 +51,12 @@ export class gameClass {
   }
 
   async findAvailableGame(userId: string): Promise<gameType> {
+    const existingGame = await this.getByUser(userId);
+
+    if (existingGame) {
+      return existingGame;
+    }
+
     let freeGame = this.activeGames.find(
       (g) => g.players.length < 2 && g.visibility === 'public' && g.status === 'waiting',
     );
@@ -73,9 +84,9 @@ export class gameClass {
       game.status = 'ready';
       game.createdAt = new Date().toISOString();
       //TODO enable notification about new game
-      //for (const player of game.players) {
-      //  notifyPlayer(player.userId, '0000-0000-0000-0000', 'INFO: Your next Game starts soon');
-      //}
+      // for (const player of game.players) {
+      //   notifyPlayer(player.userId, 'INFO: Your next Game starts soon');
+      // }
     }
   }
 }

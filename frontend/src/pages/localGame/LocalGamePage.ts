@@ -84,11 +84,11 @@ export class LocalGamePage {
     this.game?.hideGamePieces();
     if (this.gameContainer && !this.menu) {
       // Create and mount menu to game container instead of main element
-      const menuItems = [{ name: "quit", link: "/profile" }];
+      const menuItems = [{ name: "quit", link: "/chat" }];
       this.menu = new Menu(this.router, menuItems);
       this.menu.mount(this.gameContainer);
       // Add overlay styling to menu element
-      const menuElement = this.menu.menuElement;
+      const menuElement = this.menu.getMenuElement();
       menuElement.style.position = "absolute";
       menuElement.style.top = "50%";
       menuElement.style.left = "50%";

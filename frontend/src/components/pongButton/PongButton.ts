@@ -19,6 +19,10 @@ export class PongButton {
     parent.appendChild(this.element);
   }
 
+  unmount(): void {
+    this.element.remove();
+  }
+
   setBounce(): void {
     this.element.className = "animate-bounce-slow";
   }

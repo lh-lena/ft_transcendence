@@ -3,9 +3,11 @@ import { ProfileAvatar } from "../../components/profileAvatar";
 import { MenuBar } from "../../components/menuBar";
 import { CANVAS_DEFAULTS } from "../../types";
 import { Window } from "../../components/window";
+import { ScoreBox } from "../../components/scoreBoxes";
 
 // TODO-BACKEND
 import { userStore } from "../../constants/backend";
+import { sampleScores } from "../../constants/backend";
 
 export class ProfilePage {
   private container: HTMLElement;
@@ -28,7 +30,7 @@ export class ProfilePage {
     // Window content
 
     // skips profile menuBar
-    this.menuBar = new MenuBar(this.router, "profile");
+    this.menuBar = new MenuBar(serviceContainer, "profile");
     const menuBarElement = this.menuBar.render();
 
     const profilePic = new ProfileAvatar(
@@ -49,13 +51,28 @@ export class ProfilePage {
     profileCard.appendChild(profilePic);
     profileCard.appendChild(header);
 
+    const scoreBoxes = document.createElement("div");
+    scoreBoxes.className = "flex flex-col gap-5";
+    sampleScores.forEach((scoreObj) => {
+      let box = new ScoreBox(scoreObj.playerName, scoreObj.score.toString());
+      scoreBoxes.appendChild(box.getElement());
+      if (sampleScores.indexOf(scoreObj) == 0) {
+        box = new ScoreBox("mo", "20");
+        box.getElement().classList.add("mb-4");
+        const leaderboardText = document.createElement("h1");
+        leaderboardText.textContent = "leaderboard:";
+        leaderboardText.className = "text-center";
+        scoreBoxes.appendChild(leaderboardText);
+      }
+    });
+
     // use Window component
     const windowComponent = new Window({
       title: "Profile",
       width: CANVAS_DEFAULTS.width,
       height: CANVAS_DEFAULTS.height,
       className: "",
-      children: [menuBarElement, profileCard],
+      children: [menuBarElement, profileCard, scoreBoxes],
     });
     this.container.appendChild(windowComponent.getElement());
 

@@ -7,15 +7,15 @@ export const userBase = z.object({
   createdAt: dtString,
   updatedAt: dtString,
 
-  email: z.email(),
+  email: z.email().optional().nullable(),
   username: z.string(),
   alias: z.string().nullable().optional(),
 
   online: z.boolean().optional(),
 
-  password_hash: z.string(),
+  password_hash: z.string().optional().nullable(),
 
-  tfaEnabled: z.boolean(),
+  tfaEnabled: z.boolean().optional(),
   tfaSecret: z.string().nullable().optional(),
   tfaMethod: tfaType.nullable().optional(),
   tfaTempCode: z.string().nullable().optional(),
@@ -26,7 +26,7 @@ export const userBase = z.object({
 
   color: z.string(),
   colormap: z.string(),
-  avatar: z.url().optional().nullable(),
+  avatar: z.string().optional().nullable(),
 });
 export const userBaseArray = z.array(userBase);
 

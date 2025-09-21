@@ -1,4 +1,5 @@
-import { Router } from "../../services";
+import { Router, ServiceContainer, Backend } from "../../services";
+import { HomeIcon } from "../homeIcon/HomeIcon";
 
 export interface MenuBarItem {
   label: string;
@@ -7,42 +8,61 @@ export interface MenuBarItem {
     href?: string;
     divider?: boolean;
     style?: string;
+    onclick?: () => void;
   }>;
   href?: string;
   style?: string;
+  onclick?: () => void;
 }
 
 export class MenuBar {
   router: Router;
+  backend: Backend;
   menuBarItems: MenuBarItem[];
   skipThis: string | undefined;
 
-  static defaultMenuBarItems: MenuBarItem[] = [
-    {
-      label: "start Game",
-      items: [
-        { label: "Local Game", href: "/local" },
-        { label: "Vs AI", href: "/vs-ai" },
-        { label: "Vs Player", href: "/vs-player" },
-        { label: "Tournament", href: "/tournament" },
-      ],
-    },
-    { label: "profile", href: "/profile" },
-    { label: "settings", href: "/settings" },
-    { label: "friends", href: "/chat" },
-    { label: "leaderboard", href: "/leaderboard" },
-    { label: "logout", href: "/logout" },
-  ];
-
-  constructor(router: Router, skipThis?: string) {
-    this.router = router;
+  constructor(serviceContainer: ServiceContainer, skipThis?: string) {
+    const defaultMenuBarItems: MenuBarItem[] = [
+      {
+        label: "start Game",
+        items: [
+          { label: "Local Game", href: "/local" },
+          { label: "Vs AI", href: "/vs-player" },
+          { label: "Vs Player", href: "/vs-player" },
+          { label: "Tournament", href: "/tournament-start" },
+        ],
+      },
+      // { label: "profile", href: "/profile" },
+      // { label: "friends", href: "/chat" },
+      { label: "settings", href: "/settings" },
+      // { label: "leaderboard", href: "/leaderboard" },
+      { label: "logout", onclick: () => this.logoutFlow() },
+    ];
+    this.router = serviceContainer.get<Router>("router");
+    this.backend = serviceContainer.get<Backend>("backend");
     this.skipThis = skipThis;
-    this.menuBarItems = MenuBar.defaultMenuBarItems.slice();
+    this.menuBarItems = defaultMenuBarItems.slice();
+  }
+
+  private logoutFlow() {
+    this.backend.logout();
+    this.router.navigate("/");
   }
 
   render(): HTMLElement {
     const ul = document.createElement("ul");
     ul.setAttribute("role", "menu-bar");
+
+    // add HomeIcon as the first menu item
+    const homeLi = document.createElement("li");
+    homeLi.setAttribute("role", "menu-item");
+    homeLi.setAttribute("tabindex", "0");
+    // use HomeIcon and make it clickable to navigate to home
+    const homeIcon = new HomeIcon(() => {
+      this.router.navigate("/chat");
+    });
+    homeLi.appendChild(homeIcon["main"] || homeIcon["main"]);
+    ul.appendChild(homeLi);
 
     this.menuBarItems.forEach((menu: MenuBarItem) => {
       if (this.skipThis && menu.label == this.skipThis) return;
@@ -53,7 +73,17 @@ export class MenuBar {
       // Single item (no dropdown)
       if (!menu.items || menu.items.length === 0) {
         li.setAttribute("aria-haspopup", "false");
-        if (menu.href) {
+
+        if (menu.onclick) {
+          // Handle onclick for single menu items
+          li.style.cursor = "pointer";
+          li.textContent = menu.label;
+          li.onclick = (e) => {
+            e.preventDefault();
+            menu.onclick!();
+          };
+          if (menu.style) li.className = menu.style;
+        } else if (menu.href) {
           const a = document.createElement("a");
           a.textContent = menu.label;
           a.href = menu.href;
@@ -82,9 +112,9 @@ export class MenuBar {
         if (item.style) subLi.className = item.style;
         const a = document.createElement("a");
         a.textContent = item.label;
-        if (item.href) {
-          a.href = item.href;
-        } else {
+        if (item.href) a.href = item.href;
+        else if (item.onclick) a.onclick = item.onclick;
+        else {
           a.href = "#menu";
         }
         subLi.appendChild(a);

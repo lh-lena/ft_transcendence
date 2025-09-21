@@ -1,19 +1,18 @@
 import axios from 'axios';
 
 const wsApiClient = axios.create({
-  baseURL: 'https://localhost:8081/api',
+  baseURL: 'http://[::1]:8081',
   timeout: 5000,
 });
 
-export async function notifyPlayer(
-  reciver: string,
-  sender: string,
-  message: string,
-): Promise<void> {
-  wsApiClient.post('/notify', {
-    event: 'INFO',
-    reciver: reciver,
-    sender: sender,
-    payload: { message: message },
-  });
+export async function notifyPlayer(reciver: string, message: string): Promise<void> {
+  try {
+    wsApiClient.post('/notify', {
+      event: 'INFO',
+      reciver: reciver,
+      payload: { message: message },
+    });
+  } catch (error) {
+    console.error('Failed to notify player:', error);
+  }
 }

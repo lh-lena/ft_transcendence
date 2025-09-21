@@ -1,12 +1,12 @@
 -- CreateTable
 CREATE TABLE "User" (
     "userId" TEXT NOT NULL PRIMARY KEY,
-    "email" TEXT NOT NULL,
+    "email" TEXT,
     "username" TEXT NOT NULL,
     "alias" TEXT,
     "guest" BOOLEAN NOT NULL DEFAULT false,
     "online" BOOLEAN NOT NULL DEFAULT false,
-    "password_hash" TEXT NOT NULL,
+    "password_hash" TEXT,
     "tfaEnabled" BOOLEAN NOT NULL DEFAULT false,
     "tfaSecret" TEXT,
     "tfaMethod" TEXT,

@@ -1,9 +1,8 @@
 import { v4 as uuidv4 } from 'uuid';
 import type { tournamentType, tournamentCreateType } from '../../schemas/tournament';
 
-import { userService } from '../user/user.service';
 import { gameService } from '../game/game.service';
-import { notifyPlayer } from '../../utils/notify';
+//import { notifyPlayer } from '../../utils/notify';
 
 import type { tournamentIdType } from '../../schemas/tournament';
 
@@ -44,7 +43,7 @@ export class tournamentClass {
   }
 
   async join(tournament: tournamentType, playerId: string): Promise<tournamentType> {
-    tournament.players.push(await userService.getInfoById(playerId));
+    tournament.players.push({ userId: playerId });
     this.startTournament(tournament);
     return tournament;
   }
@@ -61,7 +60,7 @@ export class tournamentClass {
       freeTournament = await this.create(join.playerAmount);
     }
 
-    this.join(freeTournament, join.playerId);
+    this.join(freeTournament, join.userId);
     this.startTournament(freeTournament);
     return freeTournament;
   }
@@ -79,9 +78,10 @@ export class tournamentClass {
   private async startTournament(tournament: tournamentType): Promise<void> {
     if (tournament.players.length === tournament.playerAmount && tournament.status === 'waiting') {
       tournament.status = 'ready';
-      for (const player of tournament.players) {
-        notifyPlayer(player.userId, '0000-0000-0000-0000', 'INFO: Tournament starts soon');
-      }
+      ////TODO notify players
+      //   for (const player of tournament.players) {
+      //     notifyPlayer(player.userId, 'INFO: Tournament starts soon');
+      //   }
       await this.createGames(tournament);
     }
   }
@@ -95,11 +95,7 @@ export class tournamentClass {
     tournament.players = tournament.players.filter((p) => p.userId !== loserId);
 
     if (tournament.players.length === 1) {
-      notifyPlayer(
-        tournament.players[0].userId,
-        '0000-0000-0000-0000',
-        'INFO: You won the tournament!',
-      );
+      //    notifyPlayer(tournament.players[0].userId, 'INFO: You won the tournament!');
       this.remove(tournament);
     } else if (tournament.games.length === 0) {
       tournament.round += 1;
