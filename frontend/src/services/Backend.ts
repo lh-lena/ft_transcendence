@@ -84,12 +84,32 @@ export class Backend {
     return response;
   }
 
+  //TODO connect to websocket
+  async registerGuest(alias: string) {
+    const { color, colorMap } = generateProfilePrint();
+    const response = await this.api.post("/api/guest/login", {
+      alias: alias,
+      color: color,
+      colormap: profilePrintToString(colorMap),
+    });
+    console.log(response);
+    localStorage.setItem("jwt", response.data.jwt);
+    localStorage.setItem("refreshToken", response.data.refreshToken);
+    const userResponse = await this.fetchUserById(response.data.userId);
+    this.setUser(userResponse.data);
+
+    return response;
+  }
+
+  // -----------Login API calls-----------
+
   async loginUser(data: UserLogin) {
     const response = await this.api.post("/api/login", data);
     console.log(response);
     // return early if 2fa case
     if (response.data.status === "2FA_REQUIRED") return response;
     localStorage.setItem("jwt", response.data.jwt);
+    localStorage.setItem("refreshToken", response.data.refreshToken);
     const userResponse = await this.fetchUserById(response.data.userId);
     this.setUser(userResponse.data);
   }
@@ -215,6 +235,36 @@ export class Backend {
     return response;
   }
 
+  // --------Tournament API calls--------
+
+  //join a tournament --> if user is loged in alias gets updated and if guest, guest account gets created. returns -> tournamentId: uuid, round: number, playerAmount: number, players: [userId: uuid], status: string(waiting, ready, finished), games: [gameSchema]
+
+  async joinTournament(alias: string) {
+    if (!this.user) {
+      await this.registerGuest(alias);
+    } else {
+      await this.api.patch(`/user/${this.user.userId}`, {
+        alias: alias,
+      });
+    }
+
+    const userId = this.user.userId;
+
+    const response = await this.api.post("/tournament", {
+      playerAmount: 4,
+      userId: userId,
+    });
+
+    return response;
+  }
+
+  //leave tournament -> user gets deleted from the tournament
+  async leaveTournament() {
+    if (this.user) {
+      await this.api.post(`/tournament/leave/${this.user.userId}`);
+    }
+  }
+
   async getGameHistory(userId: string) {
     const response = await this.api.get(`/users/${userId}/games`);
     return response.data;
@@ -275,25 +325,6 @@ export class Backend {
     this.setUser(userResponse.data);
     return response;
   }
-
-  async tournamentAliasFlow(alias: string) {
-    if (this.user) {
-      await this.api.patch("/api/user", {
-        userId: this.getUser().userId,
-        alias: alias,
-      });
-    } else {
-      const { color, colorMap } = generateProfilePrint();
-      const response = await this.api.post("/api/guest/login", {
-        alias: alias,
-        color: color,
-        colormap: profilePrintToString(colorMap),
-      });
-      localStorage.setItem("jwt", response.data.jwt);
-      localStorage.setItem("refreshToken", response.data.refreshToken);
-    }
-  }
-
   // async fetchBlockedUsersById(userId: string) {
 
   // }

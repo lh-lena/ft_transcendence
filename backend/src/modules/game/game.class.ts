@@ -40,6 +40,7 @@ export class gameClass {
     return newGame;
   }
 
+  //TODO:: ontify players about ended game
   async remove(gameId: string): Promise<void> {
     this.activeGames = this.activeGames.filter((g) => g.gameId !== gameId);
   }
