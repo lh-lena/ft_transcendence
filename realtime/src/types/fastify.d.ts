@@ -10,11 +10,14 @@ import type {
   createGameDataService,
 } from '../game/services/game-session.service.js';
 import type { createGameStateService } from '../game/services/game-state.service.js';
+import type { createGameLoopService } from '../game/services/game-loop.service.js';
 import type { createChatService } from '../chat/services/chat.service.js';
 import type { authService } from '../auth/services/auth.service.js';
 import type { createAIService } from '../ai/ai.js';
 import type { EnvironmentConfig } from '../config/config.js';
 import type { NETWORK_QUALITY } from '../websocket/types/network.types.js';
+import type { UserIdType } from '../schemas/user.schema.js';
+import type { GameIdType } from '../schemas/game.schema.js';
 
 declare module 'fastify' {
   interface FastifyInstance {
@@ -24,6 +27,7 @@ declare module 'fastify' {
     respond: ReturnType<typeof createRespondService>;
     wsService: ReturnType<typeof createWSService>;
     gameService: ReturnType<typeof createGameService>;
+    gameLoopService: ReturnType<typeof createGameLoopService>;
     gameSessionService: ReturnType<typeof createGameSessionService>;
     gameDataService: ReturnType<typeof createGameDataService>;
     gameStateService: ReturnType<typeof createGameStateService>;
@@ -35,11 +39,11 @@ declare module 'fastify' {
 
   type WSConnection = WebSocket & {
     user: {
-      userId: number;
+      userId: UserIdType;
       username: string;
-      userAlias: string;
+      userAlias?: string;
     };
-    gameId?: string | null;
+    gameId?: GameIdType | null;
     lastPing: number;
     lastPong: number;
     authenticated: boolean;

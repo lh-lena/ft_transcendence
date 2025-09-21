@@ -43,8 +43,6 @@ export function parseConfig(): EnvironmentConfig {
       maxConnections: env.data.WS_MAX_CONNECTIONS,
       backendUrl: env.data.BACKEND_URL,
       authUrl: env.data.AUTH_URL,
-      allowedOrigins: env.data.ALLOWED_ORIGINS,
-      allowedServiceIPs: env.data.ALLOWED_SERVICE_IPS,
     } as WebsocketConfig,
     ai: {
       interval: env.data.AI_INTERVAL,

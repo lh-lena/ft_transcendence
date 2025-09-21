@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z } from 'zod/v4';
 
 export const configSchema = z.object({
   NODE_ENV: z.enum(['development', 'production']).default('production'),
@@ -11,32 +11,10 @@ export const configSchema = z.object({
   WS_PAUSE_TIMEOUT: z.coerce.number().int().positive().default(60_000),
   WS_MAX_CONNECTIONS: z.coerce.number().int().positive().default(100),
 
-  BACKEND_URL: z.string().url().default('http://backend:8080'),
-  AUTH_URL: z.string().url().default('http://auth-service:8082'),
+  BACKEND_URL: z.string().default('http://backend:8080'),
+  AUTH_URL: z.string().default('http://auth-service:8082'),
 
-  ALLOWED_ORIGINS: z
-    .string()
-    .transform((str) =>
-      str
-        .split(',')
-        .map((s) => s.trim())
-        .filter(Boolean),
-    )
-    .default(
-      'http://localhost:3000,http://localhost:3001,http://127.0.0.1:5500,http://127.0.0.1:5000',
-    ),
-
-  ALLOWED_SERVICE_IPS: z
-    .string()
-    .transform((str) =>
-      str
-        .split(',')
-        .map((s) => s.trim())
-        .filter(Boolean),
-    )
-    .default('http://backend:8080'),
-
-  AI_INTERVAL: z.coerce.number().int().positive().default(1000),
+  AI_INTERVAL: z.coerce.number().int().positive().default(1),
 });
 
 export type EnvironmentConfig = z.infer<typeof configSchema>;

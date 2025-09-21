@@ -2,7 +2,7 @@ import type { WebSocketServer } from 'ws';
 import type { FastifyInstance } from 'fastify';
 import { processErrorLog } from './error.handler.js';
 import type { ConnectionService } from '../websocket/types/ws.types.js';
-import type { GameSessionService } from '../game/types/game.js';
+import type { GameSessionService } from '../game/types/game.types.js';
 
 export function setupGracefulShutdown(wss: WebSocketServer, app: FastifyInstance): void {
   let shutdownInProgress = false;

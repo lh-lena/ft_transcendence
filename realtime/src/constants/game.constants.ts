@@ -1,29 +1,56 @@
 export const PONG_CONFIG = {
-  BOARD_WIDTH: 900,
-  BOARD_HEIGHT: 550,
-  PADDLE_WIDTH: 10,
-  PADDLE_HALF_WIDTH: 5,
-  PADDLE_HEIGHT: 80,
-  PADDLE_HALF_HEIGHT: 40,
-  PADDLE_OFFSET: 5,
-  PADDLE_SPEED: 400,
-  BALL_SIZE: 10,
   BALL_RESET_DELAY: 1,
-  INITIAL_BALL_VELOCITY: 70,
-  INCREMENT_BALL_VELOCITY: 0.1,
-  MAX_BALL_VELOCITY: 2.5,
-  INITIAL_BALL_SPEED_X: 4,
-  INITIAL_BALL_SPEED_Y: 4,
+  INCREMENT_BALL_VELOCITY: 2,
+  MAX_BALL_DY: 2.5,
   FPS: 60,
   FRAME_TIME_CAP_SECONDS: 2 / 60,
   MAX_SCORE: 11,
   COUNTDOWN: 3,
+  COUNTDOWN_INTERVAL: 1300,
+};
+
+export const BOARD_DEFAULTS = {
+  width: 900,
+  height: 550,
+};
+
+export const BALL_DEFAULTS = {
+  x: BOARD_DEFAULTS.width / 2,
+  y: BOARD_DEFAULTS.height / 2,
+  dx: Math.random() < 0.5 ? 6 : -6,
+  dy: Math.random() < 0.5 ? 1 : -1,
+  v: 70,
+  size: 15,
+};
+
+export const PADDLE_DEFAULTS = {
+  height: 80,
+  width: 15,
+  speed: 500,
+  score: 0,
+  x: 5,
+};
+
+export const PADDLE_A_DEFAULTS = {
+  ...PADDLE_DEFAULTS,
+  y: BOARD_DEFAULTS.height / 2 - PADDLE_DEFAULTS.height / 2,
+};
+
+export const PADDLE_B_DEFAULTS = {
+  ...PADDLE_DEFAULTS,
+  x: BOARD_DEFAULTS.width - (PADDLE_A_DEFAULTS.x + PADDLE_DEFAULTS.width),
+  y: BOARD_DEFAULTS.height / 2 - PADDLE_DEFAULTS.height / 2,
 };
 
 export enum GameMode {
   PVP_REMOTE = 'pvp_remote',
   PVP_LOCAL = 'pvp_local',
   PVB_AI = 'pvb_ai',
+}
+
+export enum PaddleName {
+  PADDLE_A = 'paddleA',
+  PADDLE_B = 'paddleB',
 }
 
 export enum GameSessionStatus {
@@ -51,3 +78,19 @@ export enum Direction {
   DOWN = 1,
   STOP = 0,
 }
+
+export const GAME_EVENTS = {
+  START: 'game_start',
+  UPDATE: 'game_update',
+  LEAVE: 'game_leave',
+  PAUSE: 'game_pause',
+  RESUME: 'game_resume',
+  FINISHED: 'game_ended',
+  COUNTDOWN_UPDATE: 'countdown_update',
+  WIN_CONDITION_MET: 'game_win_condition_met',
+  SERVER_ERROR: 'game_server_error',
+  NOTIFICATION: 'notification',
+  ERROR: 'error',
+} as const;
+
+export type GameEventType = (typeof GAME_EVENTS)[keyof typeof GAME_EVENTS];
