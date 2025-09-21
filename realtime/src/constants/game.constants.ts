@@ -1,5 +1,4 @@
 export const PONG_CONFIG = {
-  BALL_RESET_DELAY: 1,
   INCREMENT_BALL_VELOCITY: 2,
   MAX_BALL_DY: 2.5,
   FPS: 60,

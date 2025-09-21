@@ -62,8 +62,7 @@ export default function createGameDataService(app: FastifyInstance): GameDataSer
         throw new GameError(`failed to delete AI game. ID ${gameId}`, errorDetails);
       }
       return true;
-    }
-    catch (error: unknown) {
+    } catch (error: unknown) {
       processErrorLog(app, 'game-data', `Failed to delete AI game. ID ${gameId}`, error);
       return false;
     }

@@ -1,30 +1,31 @@
+import type { aiConfigType } from '../schemas/ai.schema.js';
+
 export enum AIDifficulty {
   EASY = 'easy',
   MEDIUM = 'medium',
   HARD = 'hard',
 }
-export interface aiConfigType {
-  errorRate: number;
-  predictionTime: number;
-  responseDelay: number;
-}
 
 export const AIConfig: Record<AIDifficulty, aiConfigType> = {
   [AIDifficulty.EASY]: {
-    errorRate: 0.2,
-    predictionTime: 0.4,
-    responseDelay: 0.15,
+    threshold: 0.25,
+    predictionTime: 0.8,
+    precision: 0.1,
+    predictionError: 80,
+    predictionAccuracy: 0.6,
   },
   [AIDifficulty.MEDIUM]: {
-    errorRate: 0.1,
-    predictionTime: 0.8,
-    responseDelay: 0.1,
+    threshold: 0.1,
+    predictionTime: 1.0,
+    precision: 0.05,
+    predictionError: 25,
+    predictionAccuracy: 0.8,
   },
   [AIDifficulty.HARD]: {
-    errorRate: 0.03,
-    predictionTime: 1.0,
-    responseDelay: 0.03,
+    threshold: 0.05,
+    predictionTime: 2.0,
+    precision: 0.01,
+    predictionError: 5,
+    predictionAccuracy: 0.98,
   },
 };
-
-export const AI_THRESHOLD = 10;

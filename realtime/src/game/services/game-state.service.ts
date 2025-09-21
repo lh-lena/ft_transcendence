@@ -1,7 +1,12 @@
 import type { FastifyInstance } from 'fastify';
 import type { GameSession, GameIdType, UserIdType, GameResult } from '../../schemas/index.js';
 import type { PausedGameState } from '../../websocket/types/network.types.js';
-import { PONG_CONFIG, NotificationType, GameSessionStatus, GameMode } from '../../constants/index.js';
+import {
+  PONG_CONFIG,
+  NotificationType,
+  GameSessionStatus,
+  GameMode,
+} from '../../constants/index.js';
 import { processErrorLog, processDebugLog } from '../../utils/error.handler.js';
 import { resetGameState } from '../../game/engines/pong/pong.engine.js';
 import createGameValidator from '../utils/game.validation.js';

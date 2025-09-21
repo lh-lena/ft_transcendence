@@ -8,6 +8,7 @@ export interface AIService {
   startAI(gameId: GameIdType, difficulty: AIDifficulty): void;
   stopAI(gameId: GameIdType): void;
   processAILogic(gameState: GameState, deltaTime: number): void;
+  getAIState(gameId: GameIdType): aiState | undefined;
 }
 
 export interface AIStateManager {
@@ -21,10 +22,16 @@ export interface AIStateManager {
 
 export interface AIPredictionEngine {
   calculateTargetPosition(ball: BallType, aiPaddle: Paddle, config: aiConfigType): number;
+  ballTrajectoryPrediction(
+    ball: BallType,
+    aiPaddle: Paddle,
+    timeAhead: number,
+    config: aiConfigType,
+  ): { x: number; y: number };
 }
 
 export interface AIMovementController {
-  updateMovement(aiState: aiState, aiPaddle: Paddle): Direction;
+  updateDirection(aiState: aiState, aiPaddle: Paddle): Direction;
 }
 
 export interface AITimingService {

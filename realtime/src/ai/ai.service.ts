@@ -7,23 +7,30 @@ import createAIStateManager from './ai-state.manager.js';
 import type { EnvironmentConfig } from '../config/config.js';
 import createAIPredictionEngine from './ai-prediction.engine.js';
 import createAIMovementController from './ai-movement.controller.js';
+import type { aiState } from '../schemas/ai.schema.js';
 
 export default function createAIService(app: FastifyInstance): AIService {
   const { log } = app;
   const config = app.config as EnvironmentConfig;
   const aiStateManager = createAIStateManager(app);
   const aiPredictionEngine = createAIPredictionEngine(app);
-  const aiMovementController = createAIMovementController(app);
+  const aiMovementController = createAIMovementController();
 
   function updateAIDecision(gameState: GameState, deltaTime: number, aiInterval: number): void {
     const { gameId } = gameState;
     const aiState = aiStateManager.getAIState(gameId);
-    if (aiState === undefined) return;
+    if (aiState === undefined) {
+      log.warn(`[ai-service] No AI state found for game ${gameId}`);
+      return;
+    }
 
+    const deltaTimeMs = deltaTime * 1000;
+    const newTimeAccumulator = aiState.timeAccumulator + deltaTimeMs;
     aiStateManager.updateAIState(gameId, {
-      timeAccumulator: aiState.timeAccumulator + deltaTime,
+      timeAccumulator: newTimeAccumulator,
     });
-    if (aiState.timeAccumulator < aiInterval) {
+
+    if (newTimeAccumulator < aiInterval) {
       return;
     }
     const aiPaddle = getAIPaddle(gameState);
@@ -54,10 +61,7 @@ export default function createAIService(app: FastifyInstance): AIService {
     const aiState = aiStateManager.getAIState(gameId);
     if (aiState === undefined) return;
 
-    const direction = aiMovementController.updateMovement(aiState, aiPaddle);
-    aiStateManager.updateAIState(gameId, {
-      currentDirection: direction,
-    });
+    const direction = aiMovementController.updateDirection(aiState, aiPaddle);
     aiPaddle.direction = direction;
   }
 
@@ -71,16 +75,20 @@ export default function createAIService(app: FastifyInstance): AIService {
       return;
     }
 
-    const finalDifficulty = difficulty ?? AIDifficulty.MEDIUM;
-    aiStateManager.createAIState(gameId, finalDifficulty);
-    log.debug(`[ai-service] AI initialized for game ${gameId} with difficulty ${finalDifficulty}`);
+    if (difficulty === undefined || difficulty === null) {
+      difficulty = AIDifficulty.MEDIUM;
+    }
+    aiStateManager.createAIState(gameId, difficulty);
+    log.debug(`[ai-service] AI initialized for game ${gameId} with difficulty ${difficulty}`);
   }
 
   function stopAI(gameId: GameIdType): void {
-    if (aiStateManager.hasAIState(gameId)) {
-      aiStateManager.removeAIState(gameId);
-      log.debug(`[ai-service] AI stopped for game ${gameId}`);
+    const aiState = aiStateManager.getAIState(gameId);
+    if (aiState === undefined) {
+      log.warn(`[ai-service] AI is not running for game ${gameId}`);
+      return;
     }
+    aiStateManager.removeAIState(gameId);
   }
 
   function processAILogic(gameState: GameState, deltaTime: number): void {
@@ -88,9 +96,14 @@ export default function createAIService(app: FastifyInstance): AIService {
     updateAIMovement(gameState);
   }
 
+  function getAIState(gameId: GameIdType): aiState | undefined {
+    return aiStateManager.getAIState(gameId);
+  }
+
   return {
     startAI,
     stopAI,
     processAILogic,
+    getAIState,
   };
 }

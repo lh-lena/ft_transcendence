@@ -158,8 +158,10 @@ export default function createGameLoopService(app: FastifyInstance): GameLoopSer
   function stopAIGame(game: GameSession): void {
     if (game.mode !== GameMode.PVB_AI) return;
     const aiService = app.aiService as AIService;
-    aiService.stopAI(game.gameId);
-    log.info(`[game-loop] AI system stopped for game ${game.gameId}`);
+    if (game.status === GameSessionStatus.ACTIVE) {
+      aiService.stopAI(game.gameId);
+      log.info(`[game-loop] AI system stopped for game ${game.gameId}`);
+    }
   }
 
   return {

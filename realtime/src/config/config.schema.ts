@@ -14,7 +14,7 @@ export const configSchema = z.object({
   BACKEND_URL: z.string().default('http://backend:8080'),
   AUTH_URL: z.string().default('http://auth-service:8082'),
 
-  AI_INTERVAL: z.coerce.number().int().positive().default(1),
+  AI_INTERVAL: z.coerce.number().int().positive().default(1000),
 });
 
 export type EnvironmentConfig = z.infer<typeof configSchema>;

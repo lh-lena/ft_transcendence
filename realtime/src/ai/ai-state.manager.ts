@@ -22,11 +22,6 @@ export default function createAIStateManager(app: FastifyInstance): AIStateManag
       timeAccumulator: aiInterval,
       difficulty,
       config: AIConfig[difficulty],
-      metrics: {
-        hits: 0,
-        misses: 0,
-        recentMistakes: [],
-      },
     };
 
     aiStates.set(gameId, aiState);
@@ -35,18 +30,21 @@ export default function createAIStateManager(app: FastifyInstance): AIStateManag
 
   function getAIState(gameId: GameIdType): aiState | undefined {
     if (!aiStates.has(gameId)) {
-      log.warn(`[ai-service] No AI state found for game ${gameId}`);
+      log.warn(`[ai-state-manager] No AI state found for game ${gameId}`);
       return undefined;
     }
-    return aiStates.get(gameId);
+    const state = aiStates.get(gameId);
+    return state;
   }
 
   function updateAIState(gameId: GameIdType, updates: Partial<aiState>): void {
     const currentState = aiStates.get(gameId);
-    if (currentState) {
-      const updatedState = { ...currentState, ...updates };
-      aiStates.set(gameId, updatedState);
+    if (currentState === undefined) {
+      log.warn(`[ai-state-manager] Attempted to update non-existent AI state for game ${gameId}`);
+      return;
     }
+    const updatedState = { ...currentState, ...updates };
+    aiStates.set(gameId, updatedState);
   }
 
   function removeAIState(gameId: GameIdType): void {
