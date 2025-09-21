@@ -10,23 +10,21 @@
     "outDir": "./dist",
     "rootDir": "./src",
     "strict": true,
-    // "allowJs": true,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
     "declaration": true,
     "declarationMap": true,
     "skipLibCheck": true,
     "esModuleInterop": true,
-    // "noImplicitOverride": true,
     "noImplicitAny": true,
     "sourceMap": true,
-    "baseUrl": "./"
-    // "paths": {
-    //   "*": ["node_modules/*", "src/*"]
-    // },
-    // "typeRoots": ["./node_modules/@types", "./src/types", "./src/schemas"]
+    "baseUrl": "./",
+    "paths": {
+      "*": ["node_modules/*", "src/*"]
+    },
+    "typeRoots": ["./node_modules/@types", "./src/types", "./src/schemas"]
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "src/types/**/*"],
   "exclude": ["node_modules", "dist", "tmp"],
   "ts-node": {
     "esm": true
