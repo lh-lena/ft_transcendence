@@ -24,7 +24,7 @@ const backendGameRoutes = async (fastify: FastifyInstance) => {
     const parsedReq = gameIdSchema.safeParse(req.params);
 
     if (!parsedReq.success) {
-      return reply.code(400).send({ error: 'Invalid gameId' });
+      return reply.code(400).send({ message: 'Invalid gameId' });
     }
 
     const gameId: GameIdType = parsedReq.data;
@@ -43,7 +43,7 @@ const backendGameRoutes = async (fastify: FastifyInstance) => {
     const ret = gameResponseSchema.safeParse(game);
 
     if (!ret.success) {
-      return reply.code(500).send({ error: 'Failed to parse game data' });
+      return reply.code(500).send({ message: 'Failed to parse game data' });
     }
 
     const gameRet: GameResponseType = ret.data;
@@ -54,13 +54,13 @@ const backendGameRoutes = async (fastify: FastifyInstance) => {
     const parsedReq = gameCreateSchema.safeParse(req.body);
 
     if (!parsedReq.success) {
-      return reply.code(400).send({ error: 'Invalid game creation data' });
+      return reply.code(400).send({ message: 'Invalid game creation data' });
     }
 
     const newGame: GameCreateType = parsedReq.data;
 
     if (newGame.userId !== req.user.id) {
-      return reply.code(403).send({ error: 'Forbidden' });
+      return reply.code(403).send({ message: 'Forbidden' });
     }
 
     const method = req.method.toLowerCase();
@@ -77,7 +77,7 @@ const backendGameRoutes = async (fastify: FastifyInstance) => {
     const ret = gameResponseSchema.safeParse(createdGame);
 
     if (!ret.success) {
-      return reply.code(500).send({ error: 'Failed to parse game data' });
+      return reply.code(500).send({ message: 'Failed to parse game data' });
     }
 
     const gameRet = ret.data;
@@ -89,13 +89,13 @@ const backendGameRoutes = async (fastify: FastifyInstance) => {
     const parsedReq = gameJoinSchema.safeParse(req.body);
     console.log('Parsed Request:', parsedReq);
     if (!parsedReq.success) {
-      return reply.code(400).send({ error: 'Invalid Game Parameters' });
+      return reply.code(400).send({ message: 'Invalid Game Parameters' });
     }
 
     const gameToJoin: GameJoinType = parsedReq.data;
 
     if (gameToJoin.userId !== req.user.id) {
-      return reply.code(403).send({ error: 'Forbidden' });
+      return reply.code(403).send({ message: 'Forbidden' });
     }
 
     const config: AxiosRequestConfig = {
@@ -108,7 +108,7 @@ const backendGameRoutes = async (fastify: FastifyInstance) => {
     const ret = gameResponseSchema.safeParse(joinedGame);
     console.log('Parsed Response:', ret);
     if (!ret.success) {
-      return reply.code(500).send({ error: 'Failed to parse game data' });
+      return reply.code(500).send({ message: 'Failed to parse game data' });
     }
 
     const gameRet: GameResponseType = ret.data;

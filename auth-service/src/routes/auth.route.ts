@@ -29,7 +29,7 @@ const authRoutes = async (server: FastifyInstance) => {
     console.log('Registering User', parseResult);
 
     if (!parseResult.success) {
-      console.log('Registration error', parseResult.error.message);
+      console.log('Registration error', parseResult.error.issues);
       return reply.status(400).send({ message: parseResult.error.cause });
     }
 
