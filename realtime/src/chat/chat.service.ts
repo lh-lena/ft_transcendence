@@ -12,12 +12,12 @@ export function createChatService(app: FastifyInstance): ChatService {
   const BACKEND_URL = config.websocket.backendUrl;
   async function handleChatMessage(user: User, payload: ChatMessagePayload): Promise<void> {
     const respond = app.respond as RespondService;
-    const { reciverId, message } = payload;
+    const { recieverId, message } = payload;
     const senderId = user.userId;
-    log.debug(`[chat-service] Handling chat message from ${senderId} to ${reciverId}`);
+    log.debug(`[chat-service] Handling chat message from ${senderId} to ${recieverId}`);
     const toSave = {
       senderId,
-      reciverId,
+      recieverId,
       message,
     };
     const saved = await saveChatMessage(toSave);
@@ -27,7 +27,7 @@ export function createChatService(app: FastifyInstance): ChatService {
         message,
         timestamp: new Date().toISOString(),
       };
-      respond.chatMessage(reciverId, broadcastMessage);
+      respond.chatMessage(recieverId, broadcastMessage);
     }
   }
 

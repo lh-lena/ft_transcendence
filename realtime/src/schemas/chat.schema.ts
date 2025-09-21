@@ -2,7 +2,7 @@ import { z } from 'zod/v4';
 import { UserIdSchema } from './user.schema.js';
 
 export const ChatMessagePayloadSchema = z.object({
-  reciverId: UserIdSchema,
+  recieverId: UserIdSchema,
   message: z.string(),
   timestamp: z.string(),
 });
@@ -15,7 +15,7 @@ export const ChatMessageBroadcastSchema = z.object({
 
 export const ChatMessageSchema = z.object({
   senderId: UserIdSchema,
-  reciverId: UserIdSchema,
+  recieverId: UserIdSchema,
   message: z.string(),
 });
 
