@@ -1,4 +1,4 @@
-import { ServiceContainer, Router, Backend } from "../../services";
+import { ServiceContainer, Router, Backend, Websocket } from "../../services";
 import { Menu } from "../../components/menu";
 import { PongButton } from "../../components/pongButton";
 import { UserLogin } from "../../types";
@@ -13,12 +13,14 @@ export class LoginPage {
   private router: Router;
   private loginForm!: HTMLElement;
   private backend: Backend;
+  private websocket: Websocket;
 
   constructor(serviceContainer: ServiceContainer) {
     // router / services container
     this.serviceContainer = serviceContainer;
     this.router = this.serviceContainer.get<Router>("router");
     this.backend = this.serviceContainer.get<Backend>("backend");
+    this.websocket = this.serviceContainer.get<Websocket>("websocket");
 
     this.main = document.createElement("div");
     this.main.className =
@@ -111,6 +113,8 @@ export class LoginPage {
       return;
     }
     // this should only happen if we get the user (but i think try catch interceptor handles this)
+    // TODO CONNECT TO WEB SOCKET HERE
+    this.websocket.initializeWebSocket();
     this.router.navigate("/chat");
   }
 
@@ -152,8 +156,11 @@ export class LoginPage {
       sessionId,
       code,
     );
-    if (response.status === 200) this.router.navigate("/chat");
-    else alert("incorrect 2fa token");
+    if (response.status === 200) {
+      // TODO connect to web socket here
+      this.websocket.initializeWebSocket();
+      this.router.navigate("/chat");
+    } else alert("incorrect 2fa token");
   }
 
   public mount(parent: HTMLElement): void {
