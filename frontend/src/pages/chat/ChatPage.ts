@@ -189,17 +189,12 @@ export class ChatPage {
     clickableAddFriendButton.onclick = () => this.toggleAddFriendPanel();
     this.contacts.appendChild(clickableAddFriendButton);
 
-    // online offline headers
-    if (this.friendsList.length > 0) {
-      this.onlineheader = document.createElement("h1");
-      this.onlineheader.textContent = "online:";
-      this.onlineheader.className = "text-center text-emerald-800";
-      this.offlineheader = document.createElement("h1");
-      this.offlineheader.textContent = "offline:";
-      this.offlineheader.className = "text-center text-red-800";
-      this.contacts.appendChild(this.onlineheader);
-      this.contacts.appendChild(this.offlineheader);
-    }
+    this.onlineheader = document.createElement("h1");
+    this.onlineheader.className = "text-center text-emerald-800";
+    this.offlineheader = document.createElement("h1");
+    this.offlineheader.className = "text-center text-red-800";
+    this.contacts.appendChild(this.onlineheader);
+    this.contacts.appendChild(this.offlineheader);
 
     // CONTACTS
     this.friends = document.createElement("div");
@@ -405,21 +400,25 @@ export class ChatPage {
     );
 
     // Update online header
-    if (hasOnlineFriends) {
-      this.onlineheader.textContent = "online:";
-      this.onlineheader.className = "text-center text-emerald-800";
-    } else {
-      this.onlineheader.innerHTML = "";
-      this.onlineheader.className = "";
+    if (this.onlineheader) {
+      if (hasOnlineFriends) {
+        this.onlineheader.textContent = "online:";
+        this.onlineheader.className = "text-center text-emerald-800";
+      } else {
+        this.onlineheader.innerHTML = "";
+        this.onlineheader.className = "";
+      }
     }
 
     // Update offline header
-    if (hasOfflineFriends) {
-      this.offlineheader.textContent = "offline:";
-      this.offlineheader.className = "text-center text-red-800";
-    } else {
-      this.offlineheader.innerHTML = "";
-      this.offlineheader.className = "";
+    if (this.offlineheader) {
+      if (hasOfflineFriends) {
+        this.offlineheader.textContent = "offline:";
+        this.offlineheader.className = "text-center text-red-800";
+      } else {
+        this.offlineheader.innerHTML = "";
+        this.offlineheader.className = "";
+      }
     }
   }
 
