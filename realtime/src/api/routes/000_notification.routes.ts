@@ -20,8 +20,8 @@ export const setupNotificationRoutes = (server: FastifyInstance): void => {
     },
     handler: (request: FastifyRequest, reply: FastifyReply) => {
       try {
-        const { reciver, payload, event } = request.body as NotificationRequest;
-        const res = respond.notification(reciver, event, payload.message);
+        const { reciever, payload, event } = request.body as NotificationRequest;
+        const res = respond.notification(reciever, event, payload.message);
         return reply.code(200).send({ success: res });
       } catch (error: unknown) {
         processErrorLog(
