@@ -294,6 +294,10 @@ export class Backend {
     }
   }
 
+  // async fetchBlockedUsersById(userId: string) {
+
+  // }
+
   private loadUserFromStorage() {
     const savedUser = localStorage.getItem("user");
     if (savedUser) {

@@ -1,4 +1,4 @@
-import { ServiceContainer, Router, Backend } from "../../services";
+import { ServiceContainer, Router, Backend, Websocket } from "../../services";
 import { Menu } from "../../components/menu";
 import { PongButton } from "../../components/pongButton";
 import { UserRegistration } from "../../types";
@@ -16,6 +16,7 @@ export class RegisterPage {
   private serviceContainer: ServiceContainer;
   private router: Router;
   private backend: Backend;
+  private websocket: Websocket;
 
   constructor(serviceContainer: ServiceContainer) {
     // router / services container
@@ -23,6 +24,7 @@ export class RegisterPage {
     this.router = this.serviceContainer.get<Router>("router");
     // this.auth = this.serviceContainer.get<Auth>("auth");
     this.backend = this.serviceContainer.get<Backend>("backend");
+    this.websocket = this.serviceContainer.get<Websocket>("websocket");
 
     this.main = document.createElement("div");
     this.main.className =
@@ -91,6 +93,8 @@ export class RegisterPage {
     };
 
     await this.backend.registerUser(userRegistrationData);
+    // TODO WEB SOCKET CONNECT
+    this.websocket.initializeWebSocket();
     // if user object was received
     this.router.navigate("/chat");
   }

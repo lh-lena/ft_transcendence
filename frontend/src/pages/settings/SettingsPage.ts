@@ -224,17 +224,6 @@ export class SettingsPage {
     this.twoFAMenu.appendChild(twoFAButtonTOTP);
   }
 
-  private toggleEmail2FASettings(): void {
-    // async request to backend
-    // go back to normal settings pan
-  }
-
-  // private verifyEmail2FA(): void {
-  //   this.twoFAMenu.remove();
-  //   this.window.getPane().appendChild(this.buttonRow);
-  //   this.window.getPane().appendChild(this.settingsPanel);
-  // }
-
   private async toggleTOTP2FASettings() {
     // let auth server know
     const response = await this.backend.twoFaTOTP(
@@ -278,6 +267,9 @@ export class SettingsPage {
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
     // TODO go back to settings
+    this.twoFAMenu.remove();
+    this.window.getPane().appendChild(this.buttonRow);
+    this.window.getPane().appendChild(this.settingsPanel);
   }
 
   private toggleTOTPVerifyCode(): void {
