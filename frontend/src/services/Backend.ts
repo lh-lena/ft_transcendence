@@ -170,8 +170,49 @@ export class Backend {
 
   // Game-related API calls
   async createGame(gameConfig: any) {
+    console.log("Creating game with config:", gameConfig);
     const response = await this.api.post("/games", gameConfig);
     return response.data;
+  }
+
+  //create a game vs ai return game data with gameId for olena
+  async createAiGame(userId: string, aiDifficulty: string) {
+    const response = await this.api.post("/games", {
+      userId: userId,
+      mode: "pvb_ai",
+      aiDifficulty: aiDifficulty,
+      visibility: "private",
+    });
+    return response.data;
+  }
+
+  //joins random game -> if another game is matched status = ready and gameId for olena
+  //if status not ready user is in waiting line -> loadingscreen?
+  async joinGame(userId: string, gameId: string) {
+    let payload = { userId: userId } as { userId: string; gameId?: string };
+    if (gameId) payload.gameId = gameId;
+    const response = await this.api.post(`/game/join`, {
+      userId: userId,
+      gameId: gameId,
+    });
+    return response;
+  }
+
+  //create a private game to invite over chat -> if status ready send gameId to olena
+  async createPrivateGame(userId: string) {
+    const response = await this.api.post("/games", {
+      userId,
+      mode: "pvp_remote",
+      visibility: "private",
+    });
+
+    return response;
+  }
+
+  //delete game eg on ingame quit or on waiting screen
+  async deleteGame(gameId: string) {
+    const response = await this.api.delete(`/games/${gameId}`);
+    return response;
   }
 
   async getGameHistory(userId: string) {
@@ -219,6 +260,7 @@ export class Backend {
     return response;
   }
 
+  //TODO:: make type depending on the code length -> backupcode > 6
   async verify2FARegCode(userId: string, sessionId: string, code: string) {
     const response = await this.api.post("/api/verify", {
       userId: userId,

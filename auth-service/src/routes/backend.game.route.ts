@@ -17,6 +17,8 @@ import type {
   GameResponseType,
 } from '../schemas/game';
 
+//TODO add delete game route
+
 const backendGameRoutes = async (fastify: FastifyInstance) => {
   fastify.get('/api/game/:gameId', async (req: FastifyRequest, reply: FastifyReply) => {
     const parsedReq = gameIdSchema.safeParse(req.params);
