@@ -84,9 +84,9 @@ export class gameClass {
       game.status = 'ready';
       game.createdAt = new Date().toISOString();
       //TODO enable notification about new game
-      for (const player of game.players) {
-        //notifyPlayer(player.userId, 'INFO: Your next Game starts soon');
-      }
+      // for (const player of game.players) {
+      //   notifyPlayer(player.userId, 'INFO: Your next Game starts soon');
+      // }
     }
   }
 }
