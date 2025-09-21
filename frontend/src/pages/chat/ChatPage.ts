@@ -97,6 +97,10 @@ export class ChatPage {
     }
     instance.friendsList = initFriendsList;
     // blocked list fetch
+    instance.blockedList = await instance.backend.getBlockedListById(
+      instance.backend.getUser().userId,
+    );
+    console.log(instance.blockedList);
 
     // Complete the UI setup
     instance.setupUI();
@@ -298,7 +302,6 @@ export class ChatPage {
   }
 
   private populateChatPanel(user: User) {
-    console.log(user);
     // clear old chatpanel
     this.chatPanel.innerHTML = "";
     // information bar "chat with" information button
@@ -307,7 +310,6 @@ export class ChatPage {
     const informationText = document.createElement("h1");
     informationText.textContent = `chat with ${user.username}`;
     informationBar.appendChild(informationText);
-    console.log(`populateChatPanel: user: ${user.username}`);
     const informationIcon = new InformationIcon(() =>
       this.toggleProfilePopUp(user),
     );
@@ -357,6 +359,10 @@ export class ChatPage {
 
   private async populateFriends() {
     for (const friend of this.friendsList) {
+      const isBlocked = this.blockedList.some((blockedUser) => {
+        return blockedUser.blockedUserId === friend.friendUserId;
+      });
+      if (isBlocked) continue;
       const contact = document.createElement("div");
       contact.className =
         "flex flex-row gap-2 box standard-dialog w-full items-center";
@@ -390,14 +396,20 @@ export class ChatPage {
         }
       }
     }
-    // Check if we have any online friends
-    const hasOnlineFriends = this.friendsList.some(
-      (friend) => friend.online === "online",
-    );
-    // Check if we have any offline friends
-    const hasOfflineFriends = this.friendsList.some(
-      (friend) => friend.online !== "online",
-    );
+    // Check if we have any online friends that aren't blocked
+    const hasOnlineFriends = this.friendsList.some((friend) => {
+      const isBlocked = this.blockedList.some((blockedUser) => {
+        return blockedUser.blockedUserId === friend.friendUserId;
+      });
+      return friend.online === "online" && !isBlocked;
+    });
+    // Check if we have any offline friends that aren't blocked
+    const hasOfflineFriends = this.friendsList.some((friend) => {
+      const isBlocked = this.blockedList.some((blockedUser) => {
+        return blockedUser.blockedUserId === friend.friendUserId;
+      });
+      return friend.online !== "online" && !isBlocked;
+    });
 
     // Update online header
     if (this.onlineheader) {
@@ -443,7 +455,7 @@ export class ChatPage {
     this.inputBox.removeChild(this.inputMessage);
     this.sendInvite = document.createElement("div");
     this.sendInvite.className =
-      "standard-dialog rounded flex items-center w-4/5 h-10";
+      "standard-dialog roded flex items-center w-4/5 h-10";
     const sendInviteText = document.createElement("h1");
     sendInviteText.textContent = "send game invite to user XXX?";
     sendInviteText.className = "text-center w-full";
@@ -513,13 +525,25 @@ export class ChatPage {
     }
 
     let isFriend = false;
+    let isBlocked = false;
+    let friendID = -1;
+    let blockedFriendId = -1;
     // Check if user is a friend and get the friendId
     const friendRecord = this.friendsList.find(
       (friend) => friend.friendUserId === user.userId,
     );
     if (friendRecord) {
       isFriend = true;
-      user.friendId = friendRecord.friendId;
+      friendID = friendRecord.friendId;
+      isBlocked = this.blockedList.some((blockedUser) => {
+        return blockedUser.blockedUserId === friendRecord.friendUserId;
+      });
+      if (isBlocked) {
+        const blockedFriend = this.blockedList.find(
+          (friend) => friend.blockedUserId === friendRecord.friendUserId,
+        );
+        if (blockedFriend) blockedFriendId = blockedFriend?.blockedId;
+      }
     }
 
     if (user.userId === this.backend.getUser().userId && !user.friendId) {
@@ -535,23 +559,41 @@ export class ChatPage {
         user,
         "friend",
         () => this.addFriendHook(user.userId),
-        () =>
-          this.backend.blockUserByIds(
-            this.backend.getUser().userId,
-            user.userId,
-          ),
+        () => this.blockFriendsHook(user.userId),
         isFriend,
-        () => this.removeFriendHook(user.friendId),
+        () => this.removeFriendHook(friendID),
+        isBlocked,
+        () => this.unblockFriendCallback(blockedFriendId),
       ).getNode();
     }
     this.rightPanel = this.profilePopUp;
     this.chatRow.appendChild(this.rightPanel);
   }
 
+  private async unblockFriendCallback(blockedId: number) {
+    await this.backend.unblockUserByBlockedId(blockedId);
+    await this.refreshBlockedList();
+    await this.refreshFriendsList();
+    this.toggleProfilePopUp(this.backend.getUser());
+  }
+
   private async removeFriendHook(friendId: number) {
     await this.backend.removeFriendByFriendId(friendId);
     await this.refreshFriendsList();
     this.toggleProfilePopUp(this.backend.getUser());
+  }
+
+  private async blockFriendsHook(userId: string) {
+    await this.backend.blockUserByIds(this.backend.getUser().userId, userId);
+    await this.refreshBlockedList();
+    await this.refreshFriendsList();
+    this.toggleProfilePopUp(this.backend.getUser());
+  }
+
+  private async refreshBlockedList() {
+    this.blockedList = await this.backend.getBlockedListById(
+      this.backend.getUser().userId,
+    );
   }
 
   private async addFriendHook(userId: string) {
@@ -565,7 +607,6 @@ export class ChatPage {
     const initFriendsList = await this.backend.fetchFriendsById(
       this.backend.getUser().userId,
     );
-    console.log(this.friendsList);
     // clear friends
     this.friends.innerHTML = "";
     // fetch user stuff for the friends

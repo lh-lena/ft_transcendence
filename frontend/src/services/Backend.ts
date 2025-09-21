@@ -150,6 +150,20 @@ export class Backend {
     return response;
   }
 
+  async unblockUserByBlockedId(blockedId: number) {
+    const response = await this.api.delete(`/api/blocked/${blockedId}`);
+    return response;
+  }
+
+  async getBlockedListById(userId: string) {
+    const response = await this.api.get("/api/blocked", {
+      params: {
+        userId: userId,
+      },
+    });
+    return response.data;
+  }
+
   async fetchAllUsers() {
     const response = await this.api.get("/api/user");
     return response;
@@ -173,6 +187,13 @@ export class Backend {
     console.log("Creating game with config:", gameConfig);
     const response = await this.api.post("/games", gameConfig);
     return response.data;
+  }
+
+  async changePasswordById(userId: string, newPassword: string) {
+    const response = await this.api.patch(`/api/user/${userId}`, {
+      password: newPassword,
+    });
+    return response;
   }
 
   //create a game vs ai return game data with gameId for olena
