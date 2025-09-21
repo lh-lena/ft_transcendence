@@ -18,4 +18,12 @@ export const tournamentController = {
     const ret = await tournamentService.getById(id);
     return ret;
   },
+
+  async leave(id: string): Promise<string> {
+    if (await tournamentService.leave(id)) {
+      return 'left tournament';
+    } else {
+      return 'no tournament to leave';
+    }
+  },
 };

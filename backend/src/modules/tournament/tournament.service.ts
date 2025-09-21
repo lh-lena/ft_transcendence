@@ -32,4 +32,8 @@ export const tournamentService = {
   async update(id: string, loserId: string): Promise<void> {
     await tournamentmaker.update(id, loserId);
   },
+
+  async leave(userId: string): Promise<boolean> {
+    return tournamentmaker.leave(userId);
+  },
 };

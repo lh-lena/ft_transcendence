@@ -6,9 +6,9 @@ import type { User, UserIdType } from '../schemas/user.schema.js';
 import { z } from 'zod';
 import { GAME_EVENTS, GameEventType } from '../constants/game.constants.js';
 
-function formatLogDetails(details?: string): string {
-  return details !== undefined && details !== null && details.trim() !== '' ? `: ${details}` : '';
-}
+// function formatLogDetails(details?: string): string {
+//   return details !== undefined && details !== null && details.trim() !== '' ? `: ${details}` : '';
+// }
 
 function logMessage(
   app: FastifyInstance,
@@ -17,11 +17,7 @@ function logMessage(
   message: string,
   details?: string,
 ): void {
-  let detailsText = formatLogDetails(details);
-  if (detailsText === undefined) {
-    detailsText = '';
-  }
-  app.log[level](`[${service}] ${message} ${detailsText}`);
+  app.log[level](`[${service}] ${message} ${details}`);
 }
 
 export function processErrorLog(
@@ -46,7 +42,10 @@ export function processInfoLog(app: FastifyInstance, service: string, message: s
   logMessage(app, 'info', service, message);
 }
 
-export function safeErrorToString(error: unknown): string {
+export function safeErrorToString(error?: unknown): string {
+  if (error === undefined || error === null) {
+    return '';
+  }
   if (error instanceof z.ZodError) {
     return error.errors.map((err) => err.message).join(', ');
   }

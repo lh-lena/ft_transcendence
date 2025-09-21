@@ -3,14 +3,14 @@ import { dtString } from './basics';
 
 export const chatBase = z.object({
   senderId: z.uuid(),
-  reciverId: z.uuid(),
+  recieverId: z.uuid(),
   message: z.string(),
   createdAt: dtString,
 });
 
 const chatCreateBase = chatBase.pick({
   senderId: true,
-  reciverId: true,
+  recieverId: true,
   message: true,
 });
 const chatCreate = chatCreateBase
@@ -22,7 +22,7 @@ const chatCreate = chatCreateBase
 const chatQueryBase = chatBase
   .pick({
     senderId: true,
-    reciverId: true,
+    recieverId: true,
   })
   .partial();
 const chatQuery = chatQueryBase
