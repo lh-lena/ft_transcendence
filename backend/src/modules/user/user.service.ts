@@ -1,4 +1,5 @@
 import { userModel } from './user.crud';
+import { tournamentService } from '../tournament/tournament.service';
 import { NotFoundError, ConflictError } from '../../utils/error';
 import { Prisma, User } from '@prisma/client';
 import { userInfoType } from '../../schemas/user';
@@ -19,6 +20,7 @@ export const userService = {
   async update(id: string, data: Prisma.UserUpdateInput): Promise<User> {
     try {
       const updated = await userModel.patch(id, data);
+      tournamentService.leave(updated.userId);
       if (updated.guest === true && updated.online === false) {
         await userModel.deleteOne(id);
         return updated;

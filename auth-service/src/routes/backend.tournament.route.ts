@@ -12,7 +12,7 @@ const backendTournamentRoutes = async (fastify: FastifyInstance) => {
     const parsedReq = tournamentIdSchema.safeParse(req.params);
 
     if (!parsedReq.success) {
-      return reply.code(400).send({ error: 'Invalid tournamentId' });
+      return reply.code(400).send({ message: 'Invalid tournamentId' });
     }
 
     const tournamentId: TournamentIdType = parsedReq.data;
@@ -36,13 +36,13 @@ const backendTournamentRoutes = async (fastify: FastifyInstance) => {
     const parsedReq = tournamentCreateSchema.safeParse(req.body);
     console.log('Parsed Request:', parsedReq);
     if (!parsedReq.success) {
-      return reply.code(400).send({ error: 'Invalid tournament creation data' });
+      return reply.code(400).send({ message: 'Invalid tournament creation data' });
     }
 
     const newTournament: TournamentCreateType = parsedReq.data;
 
     if (newTournament.userId !== req.user.id) {
-      return reply.code(403).send({ error: 'Forbidden' });
+      return reply.code(403).send({ message: 'Forbidden' });
     }
 
     const config: AxiosRequestConfig = {

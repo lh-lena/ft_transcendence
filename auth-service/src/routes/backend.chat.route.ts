@@ -29,13 +29,13 @@ const backendChatRoutes = async (fastify: FastifyInstance) => {
     console.log(req.params, ' in chat route');
 
     if (!parsedReq.success) {
-      return reply.code(400).send({ error: 'Invalid user Id' });
+      return reply.code(400).send({ message: 'Invalid user Id' });
     }
 
     const userId: UserIdType = parsedReq.data;
 
     if (userId.userId !== req.user.id) {
-      return reply.code(403).send({ error: 'Forbidden: You can only access your own chats' });
+      return reply.code(403).send({ message: 'Forbidden: You can only access your own chats' });
     }
 
     const config: AxiosRequestConfig = {
@@ -50,7 +50,7 @@ const backendChatRoutes = async (fastify: FastifyInstance) => {
     const ret = chatResponseArraySchema.safeParse(chats);
 
     if (!ret.success) {
-      return reply.code(500).send({ error: 'Failed to parse chat data' });
+      return reply.code(500).send({ message: 'Failed to parse chat data' });
     }
 
     const chatRet: ChatResponseArrayType = ret.data;
@@ -62,13 +62,13 @@ const backendChatRoutes = async (fastify: FastifyInstance) => {
     const parsedReq = chatQuerySchema.safeParse(req.query);
 
     if (!parsedReq.success) {
-      return reply.code(400).send({ error: 'Invalid query parameters' });
+      return reply.code(400).send({ message: 'Invalid query parameters' });
     }
 
     const chatQuery: ChatQueryType = parsedReq.data;
 
     if (chatQuery.senderId !== req.user.id && chatQuery.reciverId !== req.user.id) {
-      return reply.code(403).send({ error: 'Forbidden: You can only access your own chats' });
+      return reply.code(403).send({ message: 'Forbidden: You can only access your own chats' });
     }
 
     const config: AxiosRequestConfig = {
@@ -82,7 +82,7 @@ const backendChatRoutes = async (fastify: FastifyInstance) => {
     const ret = chatResponseArraySchema.safeParse(chats);
 
     if (!ret.success) {
-      return reply.code(500).send({ error: 'Failed to parse chat data' });
+      return reply.code(500).send({ message: 'Failed to parse chat data' });
     }
 
     const chatRet: ChatResponseArrayType = ret.data;
@@ -94,13 +94,13 @@ const backendChatRoutes = async (fastify: FastifyInstance) => {
     const parsedReq = chatPostSchema.safeParse(req.body);
 
     if (!parsedReq.success) {
-      return reply.code(400).send({ error: 'Invalid Chat Message' });
+      return reply.code(400).send({ message: 'Invalid Chat Message' });
     }
 
     const chatMessage: ChatPostType = parsedReq.data;
 
     if (chatMessage.senderId !== req.user.id && chatMessage.reciverId !== req.user.id) {
-      return reply.code(403).send({ error: 'Forbidden' });
+      return reply.code(403).send({ message: 'Forbidden' });
     }
 
     const config: AxiosRequestConfig = {
@@ -114,7 +114,7 @@ const backendChatRoutes = async (fastify: FastifyInstance) => {
     const ret = chatResponseSchema.safeParse(postedChat);
 
     if (!ret.success) {
-      return reply.code(500).send({ error: 'Failed to parse chat data' });
+      return reply.code(500).send({ message: 'Failed to parse chat data' });
     }
 
     const chatRet: ChatResponseType = ret.data;
