@@ -155,6 +155,16 @@ export class Backend {
     return response;
   }
 
+  async fetchChatHistoryByIds(userId: string, friendId: string) {
+    const response = await this.api.get("/api/chat", {
+      params: {
+        senderId: userId,
+        recieverId: friendId,
+      },
+    });
+    return response.data;
+  }
+
   async getBlockedListById(userId: string) {
     const response = await this.api.get("/api/blocked", {
       params: {

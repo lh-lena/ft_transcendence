@@ -5,10 +5,10 @@ import {
   FriendsList,
   UsersAll,
   BlockedList,
+  ChatHistory,
 } from "../../types";
 import { MenuBar } from "../../components/menuBar";
 import { ProfileAvatar } from "../../components/profileAvatar";
-import { sampleChatHistory } from "../../constants/backend";
 import { InformationIcon } from "../../components/informationIcon";
 import { ProfilePopUp } from "../../components/profilePopUp";
 import { FriendsIcon } from "../../components/friendsIcon";
@@ -301,7 +301,7 @@ export class ChatPage {
     this.container.appendChild(windowComponent.getElement());
   }
 
-  private populateChatPanel(user: User) {
+  private async populateChatPanel(user: User) {
     // clear old chatpanel
     this.chatPanel.innerHTML = "";
     // information bar "chat with" information button
@@ -319,12 +319,16 @@ export class ChatPage {
     const messages = document.createElement("div");
     messages.className = "flex flex-col flex-1 overflow-y-auto p-2 gap-2";
     this.chatPanel.appendChild(messages);
-    sampleChatHistory.forEach((message) => {
+    const chatHistory: ChatHistory = await this.backend.fetchChatHistoryByIds(
+      this.backend.getUser().userId,
+      user.userId,
+    );
+    chatHistory.forEach((message) => {
       const messageBox = document.createElement("div");
       messageBox.className = "standard-dialog flex items-center self-start";
       const messageText = document.createElement("h1");
       messageText.textContent = message.message;
-      if (message.sender != "me") {
+      if (message.senderId != this.backend.getUser().userId) {
         messageBox.classList.add("!self-end");
         messageBox.classList.add("bg-black");
         messageBox.classList.add("text-white");
