@@ -228,6 +228,7 @@ const authRoutes = async (server: FastifyInstance) => {
 
   server.get('/api/auth/me', async (req: FastifyRequest, _) => {
     const user = userSchema.parse(req.user);
+    console.log(user);
     return user;
   });
 };
