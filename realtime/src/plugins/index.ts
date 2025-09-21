@@ -3,6 +3,7 @@ import { configPlugin } from './config.plugin.js';
 import { eventBusPlugin } from './eventBus.plugin.js';
 import { authPlugin } from './auth.plugin.js';
 import { websocketPlugin } from './ws.plugin.js';
+import { aiPlugin } from './ai.plugin.js';
 import { gamePlugin } from './game.plugin.js';
 import { chatPlugin } from './chat.plugin.js';
 import { apiPlugin } from './api.plugin.js';
@@ -20,6 +21,8 @@ export const registerPlugins = async (app: FastifyInstance): Promise<void> => {
     app.register(authPlugin);
 
     app.register(websocketPlugin);
+
+    app.register(aiPlugin);
 
     app.register(chatPlugin);
 

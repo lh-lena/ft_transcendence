@@ -1,6 +1,6 @@
 import { Prisma, Friendship } from '@prisma/client';
 import { friendModel } from './friend.crud';
-import type { friendCreateType } from '../../schemas/friend';
+import type { friendCreateType, friendIdType } from '../../schemas/friend';
 
 import { NotFoundError } from '../../utils/error';
 
@@ -8,6 +8,15 @@ import { transformInput } from './friend.helper';
 
 export const friendService = {
   async create(data: friendCreateType): Promise<Friendship> {
+    const alreadyFriends = await friendModel.findBy({
+      userId: data.userId,
+      friendUserId: data.friendUserId,
+    });
+
+    if (alreadyFriends.length > 0) {
+      return alreadyFriends[0];
+    }
+
     const prismaData = await transformInput(data);
     try {
       const ret = await friendModel.insert(prismaData);
@@ -26,7 +35,7 @@ export const friendService = {
     return ret;
   },
 
-  async deleteOne(id: number): Promise<void> {
+  async deleteOne(id: friendIdType): Promise<void> {
     const ret = await friendModel.deleteOne(id);
     if (!ret) {
       throw new NotFoundError('friend not found');

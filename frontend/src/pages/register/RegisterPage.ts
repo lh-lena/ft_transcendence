@@ -1,18 +1,30 @@
-import { ServiceContainer, Router } from "../../services";
+import { ServiceContainer, Router, Backend, Websocket } from "../../services";
 import { Menu } from "../../components/menu";
 import { PongButton } from "../../components/pongButton";
+import { UserRegistration } from "../../types";
+import {
+  generateProfilePrint,
+  profilePrintToString,
+} from "../../utils/profilePrintFunctions";
+import validator from "validator";
 
 export class RegisterPage {
   private main: HTMLElement;
-  private menu: Menu;
+  private firstMenu: Menu;
+  private registerMenu!: Menu;
   private pongButton: PongButton;
   private serviceContainer: ServiceContainer;
   private router: Router;
+  private backend: Backend;
+  private websocket: Websocket;
 
   constructor(serviceContainer: ServiceContainer) {
     // router / services container
     this.serviceContainer = serviceContainer;
     this.router = this.serviceContainer.get<Router>("router");
+    // this.auth = this.serviceContainer.get<Auth>("auth");
+    this.backend = this.serviceContainer.get<Backend>("backend");
+    this.websocket = this.serviceContainer.get<Websocket>("websocket");
 
     this.main = document.createElement("div");
     this.main.className =
@@ -20,6 +32,75 @@ export class RegisterPage {
 
     this.pongButton = new PongButton();
     this.pongButton.mount(this.main);
+
+    const firstMenu = [
+      {
+        name: "email",
+        onClick: () => this.toggleRegisterMenu(),
+      },
+      {
+        name: "google auth",
+        // onClick: () => //,
+      },
+    ];
+    this.firstMenu = new Menu(this.router, firstMenu);
+    this.main.appendChild(this.firstMenu.getMenuElement());
+  }
+
+  private async registerHook() {
+    // get all input data from forms
+    const username = (
+      document.getElementById("text_username") as HTMLInputElement
+    ).value;
+    const email = (document.getElementById("text_email") as HTMLInputElement)
+      .value;
+    const password = (
+      document.getElementById("text_password") as HTMLInputElement
+    ).value;
+    const passwordConfirm = (
+      document.getElementById("text_password_confirm") as HTMLInputElement
+    ).value;
+
+    // basic validation -> add more
+    if (username.length > 6) {
+      alert("username must be smaller than 6 characters");
+      return;
+    }
+    if (!validator.isEmail(email)) {
+      alert("invalid email detected");
+      return;
+    }
+    if (password != passwordConfirm) {
+      alert("passwords don't match!");
+      return;
+    }
+    if (!password.length) {
+      alert("please enter a password");
+      return;
+    }
+
+    // generate color and color map
+    const { color, colorMap } = generateProfilePrint();
+
+    const userRegistrationData: UserRegistration = {
+      email: email,
+      username: username,
+      password: password, // You might want to hash this on the backend
+      tfaEnabled: "false", // Default values for now
+      twofa_secret: "",
+      color: color, // Default or get from form
+      colormap: profilePrintToString(colorMap), // Default or get from form
+    };
+
+    await this.backend.registerUser(userRegistrationData);
+    // TODO WEB SOCKET CONNECT
+    this.websocket.initializeWebSocket();
+    // if user object was received
+    this.router.navigate("/chat");
+  }
+
+  private toggleRegisterMenu(): void {
+    this.main.removeChild(this.firstMenu.getMenuElement());
 
     const form = document.createElement("form");
     form.className = "flex flex-col gap-3 w-48";
@@ -57,9 +138,14 @@ export class RegisterPage {
     inputPasswordConfirm.style.paddingLeft = "0.5em"; // Add left padding
     form.appendChild(inputPasswordConfirm);
 
-    const loginMenu = [{ name: "register", link: "/profile" }];
-    this.menu = new Menu(this.router, loginMenu);
-    this.menu.mount(this.main);
+    const loginMenu = [
+      {
+        name: "register",
+        onClick: () => this.registerHook(),
+      },
+    ];
+    this.registerMenu = new Menu(this.router, loginMenu);
+    this.registerMenu.mount(this.main);
   }
 
   public mount(parent: HTMLElement): void {

@@ -1,38 +1,14 @@
 import type { FastifyInstance } from 'fastify';
 import { GameSessionStatus, NotificationType } from '../../constants/game.constants.js';
-import type { StartGame, GameSession } from '../../schemas/game.schema.js';
+import type { StartGame, GameSession, GameIdType } from '../../schemas/game.schema.js';
 import { initializeGameState } from '../../game/engines/pong/pong.engine.js';
 import type { RespondService } from '../../websocket/types/ws.types.js';
-import type { GameStateService, GameSessionService } from '../types/game.js';
-import { processErrorLog } from '../../utils/error.handler.js';
+import type { GameStateService, GameSessionService } from '../types/game.types.js';
+import { processErrorLog, processDebugLog, processInfoLog } from '../../utils/error.handler.js';
+import type { UserIdType } from '../../schemas/user.schema.js';
 
 export default function createGameSessionService(app: FastifyInstance): GameSessionService {
-  const gameSessions: Map<string, GameSession> = new Map();
-  const { log } = app;
-
-  function createGameSession(gameId: string, gameData: StartGame): GameSession | null {
-    if (gameSessions.has(gameId)) {
-      log.debug(`[game-session] Game session ${gameId} already exists. Replacing it`);
-    }
-
-    const newGame: GameSession = {
-      ...gameData,
-      isConnected: new Map(),
-      gameState: initializeGameState(gameId),
-      status: GameSessionStatus.PENDING,
-      gameLoopInterval: undefined,
-      startedAt: undefined,
-      finishedAt: undefined,
-      lastSequence: 0,
-      countdownInterval: undefined,
-    };
-    return newGame;
-  }
-
-  function getGameSession(gameId: string): GameSession | undefined {
-    const session = gameSessions.get(gameId);
-    return session;
-  }
+  const gameSessions: Map<GameIdType, GameSession> = new Map();
 
   function getAllActiveGameSessions(): GameSession[] {
     const activeSessions: GameSession[] = [];
@@ -48,44 +24,75 @@ export default function createGameSessionService(app: FastifyInstance): GameSess
     return activeSessions;
   }
 
-  function storeGameSession(game: GameSession): void {
-    gameSessions.set(game.gameId, game);
-    log.debug(`[game-session] Stored game session ${game.gameId}`);
+  function createGameSession(gameId: GameIdType, gameData: StartGame): GameSession | null {
+    if (gameSessions.has(gameId)) {
+      processDebugLog(app, 'game-session', `Game session ${gameId} already exists. Replacing it`);
+    }
+
+    const newGame: GameSession = {
+      ...gameData,
+      isConnected: new Map(),
+      gameState: initializeGameState(gameId),
+      status: GameSessionStatus.PENDING,
+      gameLoopInterval: undefined,
+      startedAt: undefined,
+      finishedAt: undefined,
+      countdownInterval: undefined,
+    };
+    return newGame;
   }
 
-  function removeGameSession(gameId: string): boolean {
+  function getGameSession(gameId: GameIdType): GameSession | undefined {
+    const session = gameSessions.get(gameId);
+    return session;
+  }
+
+  function storeGameSession(game: GameSession): void {
+    gameSessions.set(game.gameId, game);
+    processDebugLog(app, 'game-session', `Stored game session ${game.gameId}`);
+  }
+
+  function removeGameSession(gameId: GameIdType): boolean {
     const removed = gameSessions.delete(gameId);
     if (removed) {
-      log.debug(`[game-session] Removed game session ${gameId}`);
+      processDebugLog(app, 'game-session', `Removed game session ${gameId}`);
     }
     return removed;
   }
 
-  function setPlayerConnectionStatus(userId: number, gameId: string, connected: boolean): void {
+  function setPlayerConnectionStatus(
+    userId: UserIdType,
+    gameId: GameIdType,
+    connected: boolean,
+  ): void {
     const gameSession = gameSessions.get(gameId);
     if (gameSession === undefined || gameSession === null) {
-      throw new Error(`[game-session] Game session ${gameId} not found`);
+      throw new Error(`Game session ${gameId} not found`);
     }
     if (connected) {
       gameSession.isConnected.set(userId, connected);
     } else {
       gameSession.isConnected.delete(userId);
     }
-    log.debug(
-      `[game-session] Player ${userId} in the game ${gameId} is ${connected ? 'connected' : 'disconnected'}`,
+    processDebugLog(
+      app,
+      'game-session',
+      `Player ${userId} in the game ${gameId} is ${connected ? 'connected' : 'disconnected'}`,
     );
   }
 
-  function updateGameSession(gameId: string, updates: Partial<GameSession>): boolean {
+  function updateGameSession(gameId: GameIdType, updates: Partial<GameSession>): boolean {
     const game = gameSessions.get(gameId);
     if (game === undefined || game === null) {
-      log.debug(`[game-session] Cannot update - game not found ${gameId}`);
+      processErrorLog(app, 'game-session', `Cannot update - game not found ${gameId}`);
       return false;
     }
 
     Object.assign(game, updates);
-    log.debug(
-      `[game-session] Updated game session ${gameId}. Updates: ${Object.keys(updates).join(', ')}`,
+    processDebugLog(
+      app,
+      'game-session',
+      `Updated game session ${gameId}. Updates: ${Object.keys(updates).join(', ')}`,
     );
     return true;
   }
@@ -96,7 +103,7 @@ export default function createGameSessionService(app: FastifyInstance): GameSess
     const gameStateService = app.gameStateService as GameStateService;
     for (const session of activeSessions) {
       try {
-        log.debug(`[game-session] Closing a game session ${session.gameId}`);
+        processDebugLog(app, 'game-session', `Closing a game session ${session.gameId}`);
         respond.notificationToGame(
           session.gameId,
           NotificationType.ERROR,
@@ -104,16 +111,11 @@ export default function createGameSessionService(app: FastifyInstance): GameSess
         );
         await gameStateService.endGame(session, GameSessionStatus.CANCELLED_SERVER_ERROR);
       } catch (error: unknown) {
-        processErrorLog(
-          app,
-          'game-session',
-          `Error closing game session ${session.gameId}: `,
-          error,
-        );
+        processErrorLog(app, 'game-session', `Error closing game session ${session.gameId}`, error);
       }
     }
     gameSessions.clear();
-    log.info('[game-session] All game sessions cleared');
+    processInfoLog(app, 'game-session', 'All game sessions cleared');
   }
 
   return {

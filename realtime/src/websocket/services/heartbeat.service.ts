@@ -2,18 +2,19 @@ import type { FastifyInstance, WSConnection } from 'fastify';
 import { NETWORK_QUALITY } from '../../constants/network.constants.js';
 import type { EnvironmentConfig } from '../../config/config.js';
 import type { HeartbeatService, ConnectionRegistry } from '../types/ws.types.js';
+import type { UserIdType } from '../../schemas/user.schema.js';
 
 export default function createHeartbeatService(
   app: FastifyInstance,
   userConnections: ConnectionRegistry,
-  onTimeout: (userId: number) => void,
-  onPong: (userId: number, latency: number, quality: NETWORK_QUALITY) => void,
+  onTimeout: (userId: UserIdType) => void,
+  onPong: (userId: UserIdType, latency: number, quality: NETWORK_QUALITY) => void,
 ): HeartbeatService {
   const { log } = app;
   const config = app.config as EnvironmentConfig;
   const CONNECTION_TIMEOUT = config.websocket.connectionTimeout;
 
-  function startHeartbeat(userId: number, heartbeatInterval: number): void {
+  function startHeartbeat(userId: UserIdType, heartbeatInterval: number): void {
     const conn = userConnections.get(userId);
     if (conn === undefined) {
       log.warn(
@@ -34,7 +35,7 @@ export default function createHeartbeatService(
     log.info(`[connection-service] Heartbeat started: every ${heartbeatInterval / 1000}s`);
   }
 
-  function sendPing(id: number): void {
+  function sendPing(id: UserIdType): void {
     const conn = userConnections.get(id);
     if (conn === undefined) {
       log.debug(`[connection-service] Cannot send ping - connection ${id} not found`);
@@ -62,7 +63,7 @@ export default function createHeartbeatService(
     }
   }
 
-  function handlePong(userId: number): void {
+  function handlePong(userId: UserIdType): void {
     const conn = userConnections.get(userId);
     if (conn === undefined) {
       log.warn(`[connection-service] Received pong from unknown connection ${userId}`);

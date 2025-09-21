@@ -4,11 +4,16 @@ import fp from 'fastify-plugin';
 import crudRoutes from '../utils/crudRoutes';
 import { resultController } from '../modules/result/result.controller';
 
-import { resultResponseType, resultQueryType, resultCreateType } from '../schemas/result';
+import {
+  resultResponseType,
+  resultQueryType,
+  resultCreateType,
+  resultIdType,
+} from '../schemas/result';
 
 const resultRoutes = async (server: FastifyInstance) => {
   server.register(
-    crudRoutes<resultResponseType, resultQueryType, resultCreateType, null, number>(),
+    crudRoutes<resultResponseType, resultQueryType, resultCreateType, null, resultIdType>(),
     {
       basePath: '/api/result',
       entityName: 'result',

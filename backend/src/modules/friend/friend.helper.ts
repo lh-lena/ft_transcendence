@@ -6,6 +6,6 @@ export async function transformInput(
 ): Promise<Prisma.FriendshipCreateInput> {
   return {
     user: { connect: { userId: data.userId } },
-    friend: { connect: { userId: data.friendId } },
+    friend: { connect: { userId: data.friendUserId } },
   };
 }

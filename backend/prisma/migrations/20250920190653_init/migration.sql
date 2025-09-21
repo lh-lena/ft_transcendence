@@ -1,11 +1,12 @@
 -- CreateTable
 CREATE TABLE "User" (
     "userId" TEXT NOT NULL PRIMARY KEY,
-    "email" TEXT NOT NULL,
+    "email" TEXT,
     "username" TEXT NOT NULL,
-    "alias" TEXT NOT NULL,
+    "alias" TEXT,
     "guest" BOOLEAN NOT NULL DEFAULT false,
-    "password_hash" TEXT NOT NULL,
+    "online" BOOLEAN NOT NULL DEFAULT false,
+    "password_hash" TEXT,
     "tfaEnabled" BOOLEAN NOT NULL DEFAULT false,
     "tfaSecret" TEXT,
     "tfaMethod" TEXT,
@@ -21,27 +22,27 @@ CREATE TABLE "User" (
 
 -- CreateTable
 CREATE TABLE "Friendship" (
-    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "friendId" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     "userId" TEXT NOT NULL,
-    "friendId" TEXT NOT NULL,
+    "friendUserId" TEXT NOT NULL,
     "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT "Friendship_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("userId") ON DELETE CASCADE ON UPDATE CASCADE,
-    CONSTRAINT "Friendship_friendId_fkey" FOREIGN KEY ("friendId") REFERENCES "User" ("userId") ON DELETE CASCADE ON UPDATE CASCADE
+    CONSTRAINT "Friendship_friendUserId_fkey" FOREIGN KEY ("friendUserId") REFERENCES "User" ("userId") ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 -- CreateTable
 CREATE TABLE "Blocked" (
-    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "blockedId" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     "userId" TEXT NOT NULL,
-    "blockedId" TEXT NOT NULL,
+    "blockedUserId" TEXT NOT NULL,
     "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT "Blocked_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("userId") ON DELETE CASCADE ON UPDATE CASCADE,
-    CONSTRAINT "Blocked_blockedId_fkey" FOREIGN KEY ("blockedId") REFERENCES "User" ("userId") ON DELETE CASCADE ON UPDATE CASCADE
+    CONSTRAINT "Blocked_blockedUserId_fkey" FOREIGN KEY ("blockedUserId") REFERENCES "User" ("userId") ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 -- CreateTable
 CREATE TABLE "Result" (
-    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "resultId" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     "gameId" TEXT NOT NULL,
     "status" TEXT NOT NULL,
     "startedAt" DATETIME NOT NULL,
@@ -62,12 +63,12 @@ CREATE TABLE "ChatMessage" (
 -- CreateTable
 CREATE TABLE "GamePlayed" (
     "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-    "userId" TEXT,
-    "resultId" INTEGER,
-    "score" INTEGER,
-    "isWinner" BOOLEAN,
+    "userId" TEXT NOT NULL,
+    "resultId" INTEGER NOT NULL,
+    "score" INTEGER NOT NULL,
+    "isWinner" BOOLEAN NOT NULL,
     CONSTRAINT "GamePlayed_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("userId") ON DELETE CASCADE ON UPDATE CASCADE,
-    CONSTRAINT "GamePlayed_resultId_fkey" FOREIGN KEY ("resultId") REFERENCES "Result" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+    CONSTRAINT "GamePlayed_resultId_fkey" FOREIGN KEY ("resultId") REFERENCES "Result" ("resultId") ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 -- CreateTable

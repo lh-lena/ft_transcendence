@@ -7,24 +7,26 @@ export const userBase = z.object({
   createdAt: dtString,
   updatedAt: dtString,
 
-  email: z.email(),
+  email: z.email().optional().nullable(),
   username: z.string(),
-  alias: z.string(),
+  alias: z.string().nullable().optional(),
 
-  password_hash: z.string(),
+  online: z.boolean().optional(),
 
-  tfaEnabled: z.boolean(),
-  tfaSecret: z.string().nullable(),
-  tfaMethod: tfaType.nullable(),
-  tfaTempCode: z.string().nullable(),
-  tfaCodeExpires: dtString.nullable(),
-  backupCodes: z.string().nullable(),
+  password_hash: z.string().optional().nullable(),
+
+  tfaEnabled: z.boolean().optional(),
+  tfaSecret: z.string().nullable().optional(),
+  tfaMethod: tfaType.nullable().optional(),
+  tfaTempCode: z.string().nullable().optional(),
+  tfaCodeExpires: dtString.nullable().optional(),
+  backupCodes: z.string().nullable().optional(),
 
   guest: z.boolean(),
 
   color: z.string(),
   colormap: z.string(),
-  avatar: z.url().optional().nullable(),
+  avatar: z.string().optional().nullable(),
 });
 export const userBaseArray = z.array(userBase);
 

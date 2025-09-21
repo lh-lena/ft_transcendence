@@ -18,7 +18,6 @@ export interface WebsocketConfig {
   authUrl: string;
   allowedOrigins: string[];
   maxConnections: number;
-  allowedServiceIPs: string[];
 }
 
 export interface AIServiceConfig {

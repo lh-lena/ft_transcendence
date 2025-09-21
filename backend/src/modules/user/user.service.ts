@@ -18,7 +18,12 @@ export const userService = {
 
   async update(id: string, data: Prisma.UserUpdateInput): Promise<User> {
     try {
-      return await userModel.patch(id, data);
+      const updated = await userModel.patch(id, data);
+      if (updated.guest === true && updated.online === false) {
+        await userModel.deleteOne(id);
+        return updated;
+      }
+      return updated;
     } catch (err: unknown) {
       if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
         throw new ConflictError(`user already exists`);

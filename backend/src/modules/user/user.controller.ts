@@ -10,7 +10,7 @@ export const userController = {
     const ret = await userService.create(data);
     const user = userBase.safeParse(ret);
 
-    if (!user.success) throw new Error('User creation failed');
+    if (!user.success) throw new Error(user.error.message);
 
     return user.data;
   },

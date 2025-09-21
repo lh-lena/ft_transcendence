@@ -1,43 +1,47 @@
-import { z } from 'zod';
-import { Direction, NotificationType } from '../constants/game.constants.js';
+import { z } from 'zod/v4';
+import { Direction, NotificationType, GAME_EVENTS } from '../constants/game.constants.js';
 import type { GameStateSchema, GameResultSchema } from './game.schema.js';
-import { ChatMessagePayloadSchema } from './chat.schema.js';
+import { GameIdSchema } from './game.schema.js';
+import { ChatMessagePayloadSchema, ChatMessageBroadcastSchema } from './chat.schema.js';
+import { UserIdSchema } from './user.schema.js';
+import { CHAT_EVENTS } from '../constants/chat.constants.js';
 
-export const GameIdSchema = z.object({
-  gameId: z.string(),
+export const GameIdPayloadSchema = z.object({
+  gameId: GameIdSchema,
 });
 
 export const GameLeavePayloadSchema = z.object({
-  ...GameIdSchema.shape,
+  gameId: GameIdSchema,
 });
 
 export const PlayerInputSchema = z.object({
-  direction: z.nativeEnum(Direction),
+  gameId: GameIdSchema,
+  direction: z.enum(Direction),
   sequence: z.number().default(0),
 });
 
 export const GamePausePayloadSchema = z.object({
-  ...GameIdSchema.shape,
+  gameId: GameIdSchema,
   reason: z.string(),
 });
 
 export const NotificationPayloadSchema = z.object({
-  type: z.nativeEnum(NotificationType),
+  type: z.enum(NotificationType),
   message: z.string(),
   timestamp: z.number().int(),
 });
 
 export const ConnectedPayloadSchema = z.object({
-  userId: z.number().positive(),
+  userId: UserIdSchema,
 });
 
 export const GamePauseBroadcastSchema = z.object({
-  ...GameIdSchema.shape,
+  gameId: GameIdSchema,
   reason: z.string(),
 });
 
 export const CountdownUpdateSchema = z.object({
-  ...GameIdSchema.shape,
+  gameId: GameIdSchema,
   countdown: z.number().min(0),
   message: z.string(),
 });
@@ -48,31 +52,31 @@ export const ErrorPayloadSchema = z.object({
 
 export const WsClientMessageSchema = z.discriminatedUnion('event', [
   z.object({
-    event: z.literal('game_start'),
-    payload: GameIdSchema,
+    event: z.literal(GAME_EVENTS.START),
+    payload: GameIdPayloadSchema,
   }),
   z.object({
-    event: z.literal('game_leave'),
-    payload: GameIdSchema,
+    event: z.literal(GAME_EVENTS.LEAVE),
+    payload: GameIdPayloadSchema,
   }),
   z.object({
-    event: z.literal('game_update'),
+    event: z.literal(GAME_EVENTS.UPDATE),
     payload: PlayerInputSchema,
   }),
   z.object({
-    event: z.literal('game_pause'),
-    payload: GameIdSchema,
+    event: z.literal(GAME_EVENTS.PAUSE),
+    payload: GameIdPayloadSchema,
   }),
   z.object({
-    event: z.literal('game_resume'),
-    payload: GameIdSchema,
+    event: z.literal(GAME_EVENTS.RESUME),
+    payload: GameIdPayloadSchema,
   }),
   z.object({
-    event: z.literal('notification'),
+    event: z.literal(GAME_EVENTS.NOTIFICATION),
     payload: NotificationPayloadSchema,
   }),
   z.object({
-    event: z.literal('chat_message'),
+    event: z.literal(CHAT_EVENTS.MESSAGE),
     payload: ChatMessagePayloadSchema,
   }),
 ]);
@@ -85,7 +89,7 @@ export interface WsServerBroadcast {
   countdown_update: z.infer<typeof CountdownUpdateSchema>;
   notification: z.infer<typeof NotificationPayloadSchema>;
   error: z.infer<typeof ErrorPayloadSchema>;
-  chat_message: z.infer<typeof ChatMessagePayloadSchema>;
+  chat_message: z.infer<typeof ChatMessageBroadcastSchema>;
 }
 
 export type ClientEventPayload<T extends WsClientMessage['event']> = Extract<
@@ -94,7 +98,6 @@ export type ClientEventPayload<T extends WsClientMessage['event']> = Extract<
 >['payload'];
 
 export type WsClientMessage = z.infer<typeof WsClientMessageSchema>;
-
 export type PlayerInput = z.infer<typeof PlayerInputSchema>;
 export type ConnectedPayload = z.infer<typeof ConnectedPayloadSchema>;
 export type NotificationPayload = z.infer<typeof NotificationPayloadSchema>;

@@ -1,37 +1,35 @@
-import { PONG_CONFIG, GameSessionStatus, Direction } from '../../../constants/game.constants.js';
-import type { GameState } from '../../../schemas/game.schema.js';
+import {
+  PONG_CONFIG,
+  GameSessionStatus,
+  Direction,
+  PaddleName,
+  BOARD_DEFAULTS,
+  BALL_DEFAULTS,
+  PADDLE_DEFAULTS,
+  PADDLE_A_DEFAULTS,
+  PADDLE_B_DEFAULTS,
+} from '../../../constants/game.constants.js';
+import type { GameState, BallType } from '../../../schemas/game.schema.js';
 
 export function initializeGameState(gameId: string): GameState {
   const gameState: GameState = {
     gameId,
     ball: {
-      x: PONG_CONFIG.BOARD_WIDTH / 2 - PONG_CONFIG.BALL_SIZE / 2,
-      y: PONG_CONFIG.BOARD_HEIGHT / 2 - PONG_CONFIG.BALL_SIZE / 2,
-      dx: PONG_CONFIG.INITIAL_BALL_SPEED_X * (Math.random() > 0.5 ? 1 : -1),
-      dy: PONG_CONFIG.INITIAL_BALL_SPEED_Y * (Math.random() > 0.5 ? 1 : -1),
-      v: PONG_CONFIG.INITIAL_BALL_VELOCITY,
+      ...BALL_DEFAULTS,
     },
     paddleA: {
-      width: PONG_CONFIG.PADDLE_WIDTH,
-      height: PONG_CONFIG.PADDLE_HEIGHT,
-      x: PONG_CONFIG.PADDLE_OFFSET,
-      y: PONG_CONFIG.BOARD_HEIGHT / 2 - PONG_CONFIG.PADDLE_HALF_HEIGHT,
-      score: 0,
-      speed: PONG_CONFIG.PADDLE_SPEED,
+      ...PADDLE_A_DEFAULTS,
       direction: Direction.STOP,
+      isAI: false,
     },
     paddleB: {
-      width: PONG_CONFIG.PADDLE_WIDTH,
-      height: PONG_CONFIG.PADDLE_HEIGHT,
-      x: PONG_CONFIG.BOARD_WIDTH - (PONG_CONFIG.PADDLE_OFFSET + PONG_CONFIG.PADDLE_WIDTH),
-      y: PONG_CONFIG.BOARD_HEIGHT / 2 - PONG_CONFIG.PADDLE_HALF_HEIGHT,
-      score: 0,
-      speed: PONG_CONFIG.PADDLE_SPEED,
+      ...PADDLE_B_DEFAULTS,
       direction: Direction.STOP,
+      isAI: false,
     },
     status: GameSessionStatus.PENDING,
     countdown: PONG_CONFIG.COUNTDOWN,
-    activePaddle: 'paddleA',
+    activePaddle: PaddleName.PADDLE_A,
     sequence: 0,
   };
   return gameState;
@@ -54,17 +52,17 @@ export function updateGame(state: GameState, deltaTime: number): void {
 
   paddleA.y = Math.max(
     0,
-    Math.min(paddleA.y, PONG_CONFIG.BOARD_HEIGHT - paddleA.height - PONG_CONFIG.PADDLE_OFFSET),
+    Math.min(paddleA.y, BOARD_DEFAULTS.height - PADDLE_DEFAULTS.height - PADDLE_DEFAULTS.x),
   );
   paddleB.y = Math.max(
     0,
-    Math.min(paddleB.y, PONG_CONFIG.BOARD_HEIGHT - paddleB.height - PONG_CONFIG.PADDLE_OFFSET),
+    Math.min(paddleB.y, BOARD_DEFAULTS.height - PADDLE_DEFAULTS.height - PADDLE_DEFAULTS.x),
   );
 
   ball.x += ball.v * ball.dx * deltaTime;
   ball.y += ball.v * ball.dy * deltaTime;
 
-  if (ball.y <= 0 || ball.y >= PONG_CONFIG.BOARD_HEIGHT - PONG_CONFIG.BALL_SIZE) {
+  if (ball.y <= 0 || ball.y >= BOARD_DEFAULTS.height - BALL_DEFAULTS.size) {
     ball.dy *= -1;
   }
 
@@ -73,7 +71,7 @@ export function updateGame(state: GameState, deltaTime: number): void {
     resetBall(state);
     return;
   }
-  if (ball.x >= PONG_CONFIG.BOARD_WIDTH - PONG_CONFIG.BALL_SIZE) {
+  if (ball.x >= BOARD_DEFAULTS.width - BALL_DEFAULTS.size) {
     paddleA.score += 1;
     resetBall(state);
     return;
@@ -84,37 +82,42 @@ export function updateGame(state: GameState, deltaTime: number): void {
     ball.y >= paddleA.y &&
     ball.y <= paddleA.y + paddleA.height
   ) {
-    ball.dx *= -1;
-    ball.dy *= Math.random() < 0.5 ? 1 : -1;
-    ball.dy += Math.random() < 0.5 ? 0.1 : -0.1;
     ball.x = paddleA.x + paddleA.width;
-    if (ball.v < PONG_CONFIG.MAX_BALL_VELOCITY) ball.v += PONG_CONFIG.INCREMENT_BALL_VELOCITY;
+    ball.dx = Math.abs(ball.dx);
+    ball.v += PONG_CONFIG.INCREMENT_BALL_VELOCITY;
+    randomizeBallDirection(ball);
   }
   if (
-    ball.x >= paddleB.x - PONG_CONFIG.BALL_SIZE &&
+    ball.x >= paddleB.x - BALL_DEFAULTS.size &&
     ball.y >= paddleB.y &&
     ball.y <= paddleB.y + paddleB.height
   ) {
-    ball.dx *= -1;
-    ball.dy *= Math.random() < 0.5 ? 1 : -1;
-    ball.dy += Math.random() < 0.5 ? 0.1 : -0.1;
-    ball.x = paddleB.x - PONG_CONFIG.BALL_SIZE;
-    if (ball.v < PONG_CONFIG.MAX_BALL_VELOCITY) ball.v += PONG_CONFIG.INCREMENT_BALL_VELOCITY;
+    ball.x = paddleB.x - BALL_DEFAULTS.size;
+    ball.dx = -Math.abs(ball.dx);
+    ball.v += PONG_CONFIG.INCREMENT_BALL_VELOCITY;
+    randomizeBallDirection(ball);
   }
+
+  if (ball.dy > PONG_CONFIG.MAX_BALL_DY) ball.dy = PONG_CONFIG.MAX_BALL_DY;
+  if (ball.dy < -PONG_CONFIG.MAX_BALL_DY) ball.dy = -PONG_CONFIG.MAX_BALL_DY;
 }
 
 function resetBall(state: GameState): void {
-  const { ball } = state;
-  ball.x = PONG_CONFIG.BOARD_WIDTH / 2;
-  ball.y = PONG_CONFIG.BOARD_HEIGHT / 2;
-  ball.dx = PONG_CONFIG.INITIAL_BALL_SPEED_X * (Math.random() > 0.5 ? 1 : -1);
-  ball.dy = PONG_CONFIG.INITIAL_BALL_SPEED_Y * (Math.random() > 0.5 ? 1 : -1);
-  ball.v = PONG_CONFIG.INITIAL_BALL_VELOCITY;
+  state.ball = {
+    ...BALL_DEFAULTS,
+    dx: Math.random() < 0.5 ? 6 : -6,
+    dy: Math.random() < 0.5 ? 1 : -1,
+  };
+}
+
+function randomizeBallDirection(ball: BallType): void {
+  ball.dy += (Math.random() - 0.5) * 0.5;
+  ball.dy *= Math.random() < 0.5 ? -1 : 1;
 }
 
 function resetPadlesPosition(state: GameState): void {
-  state.paddleA.y = PONG_CONFIG.BOARD_HEIGHT / 2 - PONG_CONFIG.PADDLE_HALF_HEIGHT;
-  state.paddleB.y = PONG_CONFIG.BOARD_HEIGHT / 2 - PONG_CONFIG.PADDLE_HALF_HEIGHT;
+  state.paddleA.y = PADDLE_A_DEFAULTS.y;
+  state.paddleB.y = PADDLE_B_DEFAULTS.y;
 }
 
 export function checkWinCondition(gameState: GameState): boolean {

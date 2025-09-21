@@ -46,12 +46,12 @@ interface WsClientMessage {
 }
 
 interface WsServerBroadcast {
-'connected': { userId: number };
+'connected': { userId: uuid };
 'game_update': GameState;
 'game_ended': GameResult;
 'game_pause': { gameId: string, reason: string };
 'countdown_update': { gameId: string, countdown: number, message: string };
-'chat_message': ChatMessage;
+'chat_message': ChatMessageBroadcast;
 'notification': NotificationPayload;
 'error': { message: string };
 }
@@ -67,14 +67,14 @@ STOP = 0
 }
 
 export interface GameState {
-  gameId: string;
-  ball: { x: number; y: number; dx: number; dy: number; v: number; };
-  paddleA: { width: number; height: number; x: number; y: number; score: number; speed: number; direction: Direction; };
-  paddleB: { width: number; height: number; x: number; y: number; score: number; speed: number; direction: Direction; };
-  activePaddle?: string;
-  status: GameSessionStatus;
-  countdown: number;
-  sequence: number; // default 0
+gameId: string;
+ball: { x: number; y: number; dx: number; dy: number; v: number; };
+paddleA: { width: number; height: number; x: number; y: number; score: number; speed: number; direction: Direction; };
+paddleB: { width: number; height: number; x: number; y: number; score: number; speed: number; direction: Direction; };
+activePaddle?: string;
+status: GameSessionStatus;
+countdown: number;
+sequence: number; // default 0
 }
 
 export enum GameSessionStatus {
@@ -88,13 +88,17 @@ CANCELLED_SERVER_ERROR = 'cancelled_server_error',// game aborted by server due 
 
 export interface PlayerInput {
 direction: Direction;
-sequence: number; // default 0
+sequence: number;
 }
 
+export interface ChatMessageBroadcast = z.object({
+senderId: uuid,
+message: string;
+timestamp: string;
+});
+
 export interface ChatMessage {
-userId: number; // Sender ID
-username: string; // Sender username //?
-recipientId?: number; // for DMs
+reciverId: uuid;
 message: string;
 timestamp: string;
 }
@@ -171,8 +175,8 @@ interface GameResult {
 gameId: string;
 scorePlayer1: number;
 scorePlayer2: number;
-winnerId: number | null; // -1 for AI
-loserId: number | null;
+winnerId: uuid | null; // -1 for AI
+loserId: uuid | null;
 player1Username: string | null; // for ai -> AI
 player2Username: string | null;
 status: GameSessionStatus.FINISHED | GameSessionStatus.CANCELLED | GameSessionStatus.CANCELLED_SERVER_ERROR;
@@ -186,12 +190,18 @@ finishedAt: string;
 ##### Will be sent to backend for history
 
 ```
-await fetch(`${BACKEND_URL}/api/chat/history`, {
+await fetch(`${BACKEND_URL}/api/chat`, {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ message: chatMessage }),
+  body: JSON.stringify({ message: saveChatMessage }),
 });
 ```
+
+interface saveChatMessage {
+senderId: uuid;
+reciverId: uuid,
+message: string,
+}
 
 - frontend will fetch the chat history from the backend server
 
@@ -205,7 +215,7 @@ If authentication fails, terminate the WebSocket connection
 
 ```markdown
 export interface User {
-userId: number;
+userId: uuid;
 username: string;
 userAlias: string;
 }

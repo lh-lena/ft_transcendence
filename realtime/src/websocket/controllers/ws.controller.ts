@@ -32,6 +32,10 @@ export const handleWSConnection = (
 };
 
 function initializeConnection(ws: WSConnection, user: User): void {
+  if (user === undefined || user.userId === undefined) return;
+  if (user.userAlias === undefined) {
+    user.userAlias = user.username;
+  }
   ws.user = user;
   ws.gameId = null;
   ws.lastPing = Date.now();

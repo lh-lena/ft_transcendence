@@ -1,59 +1,60 @@
 import type { WSConnection } from 'fastify';
 import type { DisconnectInfo } from './network.types.js';
-import type { GameState, GameResult } from '../../schemas/game.schema.js';
+import type { GameState, GameResult, GameIdType } from '../../schemas/game.schema.js';
 import type { NotificationType } from '../../constants/game.constants.js';
-import type { User } from '../../schemas/user.schema.js';
+import type { User, UserIdType } from '../../schemas/user.schema.js';
+import type { ChatMessageBroadcast } from '../../schemas/chat.schema.js';
 
 export interface RespondService {
-  connected: (userId: number) => boolean;
-  gameUpdate: (userId: number, gameState: GameState) => boolean;
-  gameEnded: (gameId: string, result: GameResult) => boolean;
-  gamePaused: (gameId: string, reason: string) => boolean;
-  chatMessage: (userId: number) => boolean;
-  countdownUpdate: (gameId: string, countdown: number, message: string) => boolean;
-  error: (userId: number, message: string) => boolean;
-  notification: (userId: number, type: NotificationType, message: string) => boolean;
+  connected: (userId: UserIdType) => boolean;
+  gameUpdate: (userId: UserIdType, gameState: GameState) => boolean;
+  gameEnded: (gameId: GameIdType, result: GameResult) => boolean;
+  gamePaused: (gameId: GameIdType, reason: string) => boolean;
+  chatMessage: (userId: UserIdType, payload: ChatMessageBroadcast) => boolean;
+  countdownUpdate: (gameId: GameIdType, countdown: number, message: string) => boolean;
+  error: (userId: UserIdType, message: string) => boolean;
+  notification: (userId: UserIdType, type: NotificationType, message: string) => boolean;
   notificationToGame: (
-    gameId: string,
+    gameId: GameIdType,
     type: NotificationType,
     message: string,
-    excludeUsers?: number[],
+    excludeUsers?: UserIdType[],
   ) => boolean;
 }
 
 export interface ConnectionService {
   handleNewConnection: (ws: WSConnection) => void;
-  getConnection: (userId: number) => WSConnection | undefined;
+  getConnection: (userId: UserIdType) => WSConnection | undefined;
   addConnection: (conn: WSConnection) => void;
   removeConnection: (ws: WSConnection) => void;
-  handleConnectionLoss: (userId: number) => void;
-  handlePong: (userId: number) => void;
-  reconnectPlayer: (userId: number) => void;
-  updateUserGame: (userId: number, gameId: string | null) => void;
+  handleConnectionLoss: (userId: UserIdType) => void;
+  handlePong: (userId: UserIdType) => void;
+  reconnectPlayer: (userId: UserIdType) => void;
+  updateUserGame: (userId: UserIdType, gameId: GameIdType | null) => void;
   notifyShutdown: () => Promise<void>;
   shutdown: () => Promise<void>;
 }
 
 export interface ReconnectionService {
-  handlePlayerReconnection: (userId: number) => DisconnectInfo | undefined;
-  handlePlayerDisconnect: (user: User, gameId: string) => void;
-  hasDisconnectData: (userId: number) => boolean;
-  attemptReconnection: (userId: number) => string | null;
-  cleanup: (userId?: number) => void;
+  handlePlayerReconnection: (userId: UserIdType) => DisconnectInfo | undefined;
+  handlePlayerDisconnect: (user: User, gameId: GameIdType) => void;
+  hasDisconnectData: (userId: UserIdType) => boolean;
+  attemptReconnection: (userId: UserIdType) => GameIdType | null;
+  cleanup: (userId?: UserIdType) => void;
 }
 
 export interface ConnectionRegistry {
-  set(userId: number, conn: WSConnection): void;
-  remove(userId: number): void;
-  get(userId: number): WSConnection | undefined;
-  has(userId: number): boolean;
+  set(userId: UserIdType, conn: WSConnection): void;
+  remove(userId: UserIdType): void;
+  get(userId: UserIdType): WSConnection | undefined;
+  has(userId: UserIdType): boolean;
   clear(): void;
   size(): number;
-  getAll(): Map<number, WSConnection>;
+  getAll(): Map<UserIdType, WSConnection>;
 }
 
 export interface HeartbeatService {
-  startHeartbeat: (userId: number, heartbeatInterval: number) => void;
-  handlePong: (userId: number) => void;
+  startHeartbeat: (userId: UserIdType, heartbeatInterval: number) => void;
+  handlePong: (userId: UserIdType) => void;
   stopHeartbeat: (ws: WSConnection) => void;
 }

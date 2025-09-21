@@ -56,8 +56,8 @@ curl -X POST \
   -H 'accept: application/json' \
   -H 'Content-Type: application/json' \
   -d '{
-  "userId": "8ac759cb-e788-428a-a563-8a56b90e9b9f",
-  "mode": "pvp_remote",
+  "userId": "aa8bf1d8-64f9-45cd-80df-4b39000d0ce9",
+  "mode": "pvb_ai",
   "visibility": "public"
 }'
 
@@ -123,18 +123,34 @@ curl -X POST \
 }'
 
 curl -X POST \
-  'http://[::1]:8080/api/result' \
+  'http://127.0.0.1:8080/api/result' \
   -H 'accept: application/json' \
   -H 'Content-Type: application/json' \
   -d '{
-  "gameId": "a2225abd-bb5c-586b-9f5b-184d16bf2c3d",
-  "scorePlayer1": "2",
-  "scorePlayer2": "8",
-  "winnerId": 1,
-  "loserId": 2,
-  "player1Username": "alec",
-  "player2Username": "moschi",
-  "status":   "finished",
-  "startedAt": "2025-07-24T15:45:09.142Z",
-  "finishedAt": "2025-07-24T15:45:09.142Z"
+    "gameId":"1debda50-04ec-4594-8c7d-6b6fa0ed2dc6",
+"scorePlayer1":2,
+"scorePlayer2":11,
+"player1Username":"Player A",
+"player2Username":"Player B",
+"mode":"pvp_remote",
+"startedAt":"1758120238255",
+"finishedAt":"1758120262082",
+"status":"finished",
+"winnerName":"WilmaMacej",
+"winnerId":"aa8bf1d8-64f9-45cd-80df-4b39000d0ce9",
+"loserId":"ea3680c0-1d78-4ada-9e42-da25e0b75575"
 }'
+
+curl -X POST \
+  'http://127.0.0.1:8080/api/chat' \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "senderId": "aa8bf1d8-64f9-45cd-80df-4b39000d0ce9",
+    "reciverId": "ea3680c0-1d78-4ada-9e42-da25e0b75575",
+    "message": "Hello, how are you?"
+  }'
+
+curl -X DELETE \
+  'http://127.0.0.1:8080/api/game/ccb21619-fa64-4db7-b1b2-0514f5928093'
+

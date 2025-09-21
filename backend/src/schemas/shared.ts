@@ -15,3 +15,5 @@ export const sharedGamePlayedQueryBase = z.object({
   score: z.coerce.number().optional(),
   gameId: z.coerce.number().optional(),
 });
+
+export type gamePlayedType = z.infer<typeof sharedGamePlayedBase>;

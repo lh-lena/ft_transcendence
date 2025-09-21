@@ -17,12 +17,14 @@ datasource db {
 model User {
   userId         String       @id @default(uuid())
 
-  email          String       @unique
+  email          String?       @unique
   username       String       @unique
-  alias          String
+  alias          String?     
   guest          Boolean      @default(false)
 
-  password_hash  String
+  online        Boolean      @default(false)
+
+  password_hash  String?
 
   tfaEnabled     Boolean @default(false)
   tfaSecret      String?
@@ -51,11 +53,11 @@ model User {
 }
 
 model Friendship {
-  id       Int  @id @default(autoincrement())
+  friendId       Int  @id @default(autoincrement())
   user     User @relation("user", fields: [userId], references:[userId], onDelete: Cascade)
   userId   String
-  friend   User @relation("friend", fields: [friendId], references: [userId], onDelete: Cascade)
-  friendId String
+  friend   User @relation("friend", fields: [friendUserId], references: [userId], onDelete: Cascade)
+  friendUserId String
 
   createdAt DateTime @default(now())
 
@@ -63,18 +65,18 @@ model Friendship {
 }
 
 model Blocked {
-  id         Int      @id @default(autoincrement())
+  blockedId         Int      @id @default(autoincrement())
   user       User     @relation("blocker", fields: [userId], references: [userId], onDelete: Cascade)
   userId     String
-  blocked    User     @relation("blocked", fields: [blockedId], references: [userId], onDelete: Cascade)
-  blockedId  String
+  blocked    User     @relation("blocked", fields: [blockedUserId], references: [userId], onDelete: Cascade)
+  blockedUserId  String
   createdAt  DateTime @default(now())
 
   @@unique([userId, blockedId])
   }
 
 model Result {
-  id         Int          @id @default(autoincrement())
+  resultId         Int          @id @default(autoincrement())
   gameId     String       @unique
   status     GameStatus
   startedAt  DateTime
@@ -94,12 +96,12 @@ model ChatMessage {
 
 model GamePlayed {
   id       Int      @id @default(autoincrement())
-  user     User?    @relation(fields: [userId], references: [userId], onDelete: Cascade)
-  userId   String?
-  result   Result?  @relation(fields: [resultId], references: [id], onDelete: Cascade)
-  resultId Int?
-  score    Int?
-  isWinner Boolean?
+  user     User    @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  userId   String
+  result   Result  @relation(fields: [resultId], references: [resultId], onDelete: Cascade)
+  resultId Int
+  score    Int
+  isWinner Boolean
 }
 
 model BlackList {

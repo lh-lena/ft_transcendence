@@ -1,28 +1,28 @@
 // services
-import { ServiceContainer, Router, Websocket, Backend } from "./services";
+import { ServiceContainer, Router, Websocket, Backend, Auth } from "./services";
+
+import { Loading } from "./components/loading";
 
 // pages
 import { HomePage } from "./pages/home";
-import { ProfilePage } from "./pages/profile";
 import { LocalGamePage } from "./pages/localGame";
 import { LoginPage } from "./pages/login";
 import { RegisterPage } from "./pages/register";
 import { SettingsPage } from "./pages/settings";
-import { LeaderboardPage } from "./pages/leaderboard";
 import { ChatPage } from "./pages/chat";
-import { VsPlayerGamePage } from "./pages/RemoteGame";
+import { VsPlayerGamePage } from "./pages/remoteGame";
 import { TournamentAliasPage } from "./pages/tournament";
 
 // single source of truth for pages and routes
 const PAGE_ROUTES = {
   "/": HomePage,
   "/local": LocalGamePage,
-  "/profile": ProfilePage,
+  // "/profile": ProfilePage,
   "/login": LoginPage,
   "/register": RegisterPage,
   "/settings": SettingsPage,
-  "/leaderboard": LeaderboardPage,
-  "/chat": ChatPage,
+  // "/leaderboard": LeaderboardPage,
+  "/chat": ChatPage, // -> main page now (home when logged in)
   "/vs-player": VsPlayerGamePage,
   "/tournament-start": TournamentAliasPage,
 } as const;
@@ -34,7 +34,6 @@ type PageInstance = InstanceType<PageConstructor> | null;
 export class App {
   private serviceContainer: ServiceContainer;
   private router: Router;
-  private ws: Websocket;
   private container: HTMLElement;
   private currentPage: PageInstance;
 
@@ -51,16 +50,16 @@ export class App {
     this.serviceContainer.register("router", new Router());
     this.serviceContainer.register("websocket", new Websocket());
     this.serviceContainer.register("backend", new Backend());
+    this.serviceContainer.register("auth", new Auth());
 
     // grab route from service container
     this.router = this.serviceContainer.get<Router>("router");
 
-    // grab ws
-    this.ws = this.serviceContainer.get<Websocket>("websocket");
-
     // Define routes from single source
     Object.entries(PAGE_ROUTES).forEach(([route, PageClass]) => {
-      this.router.add(route, () => this.showPage(PageClass));
+      this.router.add(route, async () => {
+        await this.showPage(PageClass);
+      });
     });
     this.router.init();
   }
@@ -69,11 +68,24 @@ export class App {
     parent.appendChild(this.container);
   }
 
-  private showPage(PageClass: PageConstructor) {
+  private async showPage(PageClass: PageConstructor) {
     if (this.currentPage) {
       this.currentPage.unmount();
     }
-    this.currentPage = new PageClass(this.serviceContainer);
+    // show loading for a second
+    const loading = new Loading("pong");
+    loading.mount(this.container);
+    // show loading screen
+    // random range between 400 and 800
+    loading.hide();
+
+    // Handle ChatPage's async initialization
+    if (PageClass === ChatPage) {
+      this.currentPage = await ChatPage.create(this.serviceContainer);
+    } else {
+      this.currentPage = new PageClass(this.serviceContainer);
+    }
+
     this.currentPage.mount(this.container);
   }
 }
