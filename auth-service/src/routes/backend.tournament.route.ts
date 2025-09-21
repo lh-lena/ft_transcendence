@@ -7,6 +7,9 @@ import { apiClientBackend } from '../utils/apiClient';
 import { tournamentCreateSchema, tournamentIdSchema } from '../schemas/tournament';
 import type { TournamentCreateType, TournamentIdType, TournamentType } from '../schemas/tournament';
 
+import { userIdSchema } from '../schemas/user';
+import type { UserIdType } from '../schemas/user';
+
 const backendTournamentRoutes = async (fastify: FastifyInstance) => {
   fastify.get('/api/tournament/:tournamentId', async (req: FastifyRequest, reply: FastifyReply) => {
     const parsedReq = tournamentIdSchema.safeParse(req.params);
@@ -55,6 +58,32 @@ const backendTournamentRoutes = async (fastify: FastifyInstance) => {
 
     return reply.code(201).send({ createdTournament });
   });
+
+  fastify.post(
+    '/api/tournament/leave/:userId',
+    async (req: FastifyRequest, reply: FastifyReply) => {
+      const parsedReq = userIdSchema.safeParse(req.params);
+
+      if (!parsedReq) {
+        return reply.code(400).send({ message: 'Invalid userId' });
+      }
+
+      const userId: UserIdType = parsedReq.data;
+
+      if (userId.userId !== req.user.id) {
+        return reply.code(403).send({ message: 'Forbidden' });
+      }
+
+      const config: AxiosRequestConfig = {
+        method: 'post',
+        url: `/tournament/leave/${userId.userId}`,
+      };
+
+      const ret: string = await apiClientBackend(config);
+
+      return reply.code(200).send({ message: ret });
+    },
+  );
 };
 
 export default fp(backendTournamentRoutes);
