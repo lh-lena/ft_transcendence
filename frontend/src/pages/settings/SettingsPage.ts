@@ -142,6 +142,14 @@ export class SettingsPage {
         fileLabel.className = "btn ml-auto cursor-pointer";
         box.appendChild(boxInputFile);
         box.appendChild(fileLabel);
+
+        //added by mo for test -> @alec TODO refactor properly
+        boxInputFile.onchange = () => {
+          const file = boxInputFile.files?.[0];
+          if (!file) return;
+
+          this.backend.uploadAvatar(file);
+        };
       } else if (setting.type == "button") {
         const boxButton = document.createElement("button");
         boxButton.innerText = setting.value;

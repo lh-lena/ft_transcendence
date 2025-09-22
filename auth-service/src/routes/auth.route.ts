@@ -211,15 +211,13 @@ const authRoutes = async (server: FastifyInstance) => {
 
     const newGuest: GuestType = parsedReq.data;
 
-    newGuest.username = newGuest.alias;
-
     const config: AxiosRequestConfig = {
       method: 'post',
       url: '/user',
       data: newGuest,
     };
 
-    console.log('Creating guest user', config);
+    console.log('Creating guest user', config, newGuest);
 
     const ret: UserType = await apiClientBackend(config);
 

@@ -29,6 +29,7 @@ export class Backend {
     this.api.interceptors.response.use(
       (response) => {
         // If response is successful (2xx status codes), return it
+        console.log("API Response:", response.data);
         return response;
       },
       (error) => {
@@ -92,11 +93,11 @@ export class Backend {
       color: color,
       colormap: profilePrintToString(colorMap),
     });
-    console.log(response);
     localStorage.setItem("jwt", response.data.jwt);
     localStorage.setItem("refreshToken", response.data.refreshToken);
     const userResponse = await this.fetchUserById(response.data.userId);
     this.setUser(userResponse.data);
+    console.log(this.getUser());
 
     return response;
   }
@@ -120,7 +121,7 @@ export class Backend {
   }
 
   // example API calls
-  getUser() {
+  getUser(): User {
     return this.user;
   }
 
@@ -200,22 +201,19 @@ export class Backend {
   }
 
   async refreshUser() {
-    if (!this.user?.userId) {
-      throw new Error("User ID is undefined");
-    }
-    const response = await this.getUserById(this.user.userId);
+    const response = await this.getUserById(this.getUser().userId);
     this.user = response;
   }
 
   async getUserById(userId: string) {
-    const response = await this.api.get(`/users/${userId}`);
+    const response = await this.api.get(`/api/user/${userId}`);
     return response.data;
   }
 
   // Game-related API calls
   async createGame(gameConfig: any) {
     console.log("Creating game with config:", gameConfig);
-    const response = await this.api.post("/games", gameConfig);
+    const response = await this.api.post("/api/game", gameConfig);
     return response.data;
   }
 
@@ -226,14 +224,28 @@ export class Backend {
     return response;
   }
 
+  async uploadAvatar(avatar: File) {
+    const formData = new FormData();
+    formData.append("avatar", avatar);
+
+    const response = await this.api.post("/api/upload", formData);
+
+    const avatarUrl = response.data.uniqueName;
+
+    const response2 = await this.api.patch(
+      `/api/user/${this.getUser().userId}`,
+      {
+        avatar: avatarUrl,
+      },
+    );
+
+    return response2.data;
+  }
+
   //create a game vs ai return game data with gameId for olena
   async createAiGame(aiDifficulty: string) {
-    if (!this.user?.userId) {
-      throw new Error("User ID is undefined");
-    }
-
-    const response = await this.api.post("/games", {
-      userId: this.user.userId,
+    const response = await this.api.post("/api/game", {
+      userId: this.getUser().userId,
       mode: "pvb_ai",
       aiDifficulty: aiDifficulty,
       visibility: "private",
@@ -244,11 +256,7 @@ export class Backend {
   //joins random game -> if another game is matched status = ready and gameId for olena
   //if status not ready user is in waiting line -> loadingscreen?
   async joinGame(gameId?: string) {
-    if (!this.user?.userId) {
-      throw new Error("User ID is undefined");
-    }
-
-    let payload = { userId: this.user.userId } as {
+    let payload = { userId: this.getUser().userId } as {
       userId: string;
       gameId?: string;
     };
@@ -257,14 +265,14 @@ export class Backend {
       payload.gameId = gameId;
     }
 
-    const response = await this.api.post(`/game/join`, payload);
+    const response = await this.api.post(`/api/game/join`, payload);
 
     return response.data;
   }
 
   //create a private game to invite over chat -> if status ready send gameId to olena
   async createPrivateGame(userId: string) {
-    const response = await this.api.post("/games", {
+    const response = await this.api.post("/api/game", {
       userId,
       mode: "pvp_remote",
       visibility: "private",
@@ -275,7 +283,7 @@ export class Backend {
 
   //delete game eg on ingame quit or on waiting screen
   async deleteGame(gameId: string) {
-    const response = await this.api.delete(`/games/${gameId}`);
+    const response = await this.api.delete(`/api/game/${gameId}`);
     return response;
   }
 
@@ -284,21 +292,17 @@ export class Backend {
   //join a tournament --> if user is loged in alias gets updated and if guest, guest account gets created. returns -> tournamentId: uuid, round: number, playerAmount: number, players: [userId: uuid], status: string(waiting, ready, finished), games: [gameSchema]
 
   async joinTournament(alias: string) {
-    if (!this.user) {
+    if (!this.getUser().userId) {
       await this.registerGuest(alias);
     } else {
-      await this.api.patch(`/user/${this.user.userId}`, {
+      await this.api.patch(`/api/user/${this.getUser().userId}`, {
         alias: alias,
       });
     }
 
-    if (!this.user?.userId) {
-      throw new Error("User ID is undefined");
-    }
-
-    const userId = this.user.userId;
-
-    const response = await this.api.post("/tournament", {
+    const userId = this.getUser().userId;
+    console.log(userId);
+    const response = await this.api.post("/api/tournament", {
       playerAmount: 4,
       userId: userId,
     });
@@ -308,21 +312,17 @@ export class Backend {
 
   //leave tournament -> user gets deleted from the tournament
   async leaveTournament() {
-    if (!this.user?.userId) {
-      throw new Error("User ID is undefined");
-    }
-
-    await this.api.post(`/tournament/leave/${this.user.userId}`);
+    await this.api.post(`/api/tournament/leave/${this.getUser().userId}`);
   }
 
   async getGameHistory(userId: string) {
-    const response = await this.api.get(`/users/${userId}/games`);
+    const response = await this.api.get(`/api/users/${userId}/games`);
     return response.data;
   }
 
   // Match-related API calls
   async getMatchHistory(userId: string) {
-    const response = await this.api.get(`/users/${userId}/matches`);
+    const response = await this.api.get(`/api/users/${userId}/matches`);
     return response.data;
   }
 

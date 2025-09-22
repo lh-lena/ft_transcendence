@@ -27,8 +27,8 @@ export class MenuBar {
         label: "start Game",
         items: [
           { label: "Local Game", href: "/local" },
-          { label: "Vs AI", href: "/vs-player" },
-          { label: "Vs Player", href: "/vs-player" },
+          { label: "Vs AI", onclick: () => this.aiGameFlow() },
+          { label: "Vs Player", onclick: () => this.joinGameFlow() },
           { label: "Tournament", href: "/tournament-start" },
         ],
       },
@@ -42,6 +42,17 @@ export class MenuBar {
     this.backend = serviceContainer.get<Backend>("backend");
     this.skipThis = skipThis;
     this.menuBarItems = defaultMenuBarItems.slice();
+  }
+
+  private aiGameFlow() {
+    //create ai difficulty inpute
+    this.backend.createAiGame("easy");
+    this.router.navigate("/vs-player");
+  }
+
+  private joinGameFlow() {
+    this.backend.joinGame();
+    this.router.navigate("/vs-player");
   }
 
   private logoutFlow() {

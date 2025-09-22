@@ -18,7 +18,7 @@ model User {
   userId         String       @id @default(uuid())
 
   email          String?       @unique
-  username       String       @unique
+  username       String?       @unique
   alias          String?     
   guest          Boolean      @default(false)
 
