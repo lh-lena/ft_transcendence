@@ -67,7 +67,6 @@ export default function createGameService(app: FastifyInstance): GameService {
   }
 
   async function createGame(user: User, gameId: GameIdType): Promise<GameSession> {
-    const respond = app.respond as RespondService;
     const gameSessionService = app.gameSessionService as GameSessionService;
     const gameDataService = app.gameDataService as GameDataService;
     const backendGameData = await gameDataService.fetchGameData(gameId);
@@ -90,16 +89,6 @@ export default function createGameService(app: FastifyInstance): GameService {
     gameSessionService.storeGameSession(gameSession);
     assignPlayerToGame(user.userId, gameId);
     gameSessionService.setPlayerConnectionStatus(user.userId, gameId, true);
-    respond.notification(
-      user.userId,
-      NotificationType.INFO,
-      `game created successfully. waiting for players to join...`,
-    );
-    processDebugLog(
-      app,
-      'game-service',
-      `Game ${gameId} created successfully for user ${user.userId}`,
-    );
     return gameSession;
   }
 
@@ -212,7 +201,7 @@ export default function createGameService(app: FastifyInstance): GameService {
         app,
         user,
         'game-service',
-        `failed to pause game ID ${gameId} for user ID ${userId}`,
+        `failed to pause game for user ${user.userAlias}`,
         error,
       );
     }

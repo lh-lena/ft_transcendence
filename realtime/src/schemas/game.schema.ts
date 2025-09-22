@@ -92,6 +92,29 @@ export const GameSessionSchema = z.object({
   aiDifficulty: z.enum(AIDifficulty).optional(),
 });
 
+export const GameStartRequestSchema = {
+  type: 'object',
+  properties: {
+    gameId: { type: 'string', format: 'uuid' },
+    players: { 
+      type: 'array', 
+      items: { 
+        type: 'object',
+        properties: {
+          userId: { type: 'string', format: 'uuid' }
+        },
+        required: ['userId']
+      }
+    },
+    aiDifficulty: { type: 'string', enum: [AIDifficulty.EASY, AIDifficulty.MEDIUM, AIDifficulty.HARD] },
+    mode: {
+      type: 'string',
+      enum: [GameMode.PVP_REMOTE, GameMode.PVB_AI, GameMode.PVP_LOCAL],
+    },
+  },
+  required: ['gameId', 'players', 'mode'],
+};
+
 export type StartGame = z.infer<typeof StartGameSchema>;
 export type BackendStartGame = z.infer<typeof BackendStartGameSchema>;
 export type GameResult = z.infer<typeof GameResultSchema>;

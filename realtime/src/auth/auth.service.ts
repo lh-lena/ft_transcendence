@@ -1,8 +1,7 @@
 import type { FastifyInstance, VerifyClientInfo } from 'fastify';
 import { parse as parseCookie } from 'cookie';
 import type { EnvironmentConfig } from '../config/config.js';
-import type { User } from '../schemas/user.schema.js';
-import { UserSchema, UserIdType } from '../schemas/user.schema.js';
+import { User, UserSchema, UserIdType, UserIdObjectSchema } from '../schemas/user.schema.js';
 import { processDebugLog, processErrorLog } from '../utils/error.handler.js';
 import type { AuthService } from './auth.js';
 
@@ -64,7 +63,7 @@ export default function createAuthService(app: FastifyInstance): AuthService {
         return null;
       }
       const rawUserData = await res.json();
-      const validationResult = UserSchema.safeParse(rawUserData);
+      const validationResult = UserIdObjectSchema.safeParse(rawUserData);
       if (!validationResult.success) {
         const errorMessages = validationResult.error.issues.map((err) => err.message).join(', ');
         processErrorLog(app, 'auth-service', `Invalid user data received from auth service`);
@@ -75,7 +74,8 @@ export default function createAuthService(app: FastifyInstance): AuthService {
         );
         return null;
       }
-      const user = validationResult.data;
+      const userId = validationResult.data.userId as UserIdType;
+      const user = await getUserInfo(userId);
       return user;
     } catch (error: unknown) {
       processDebugLog(app, 'auth-service', 'Error validating user: ', error);

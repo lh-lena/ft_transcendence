@@ -84,7 +84,7 @@ export default function createConnectionService(app: FastifyInstance): Connectio
     userConnections.set(userId, conn);
     heartbeatService.startHeartbeat(userId, HEARTBEAT_INTERVAL);
     log.info(
-      `[connection-service] New connection ${userId} added to service. Total connections: ${userConnections.size()}`,
+      `[connection-service] New connection added to service. Total connections: ${userConnections.size()}`,
     );
   }
 
