@@ -55,7 +55,7 @@ export class TournamentAliasPage {
       alert("please enter an alias");
       return;
     }
-    this.backend.tournamentAliasFlow(alias);
+    this.backend.joinTournament(alias);
     this.showBracket();
   }
 

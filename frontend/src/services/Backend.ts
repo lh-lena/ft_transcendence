@@ -196,9 +196,13 @@ export class Backend {
   }
 
   //create a game vs ai return game data with gameId for olena
-  async createAiGame(userId: string, aiDifficulty: string) {
+  async createAiGame(aiDifficulty: string) {
+    if (!this.user?.userId) {
+      throw new Error("User ID is undefined");
+    }
+
     const response = await this.api.post("/games", {
-      userId: userId,
+      userId: this.user.userId,
       mode: "pvb_ai",
       aiDifficulty: aiDifficulty,
       visibility: "private",
@@ -208,14 +212,23 @@ export class Backend {
 
   //joins random game -> if another game is matched status = ready and gameId for olena
   //if status not ready user is in waiting line -> loadingscreen?
-  async joinGame(userId: string, gameId: string) {
-    let payload = { userId: userId } as { userId: string; gameId?: string };
-    if (gameId) payload.gameId = gameId;
-    const response = await this.api.post(`/game/join`, {
-      userId: userId,
-      gameId: gameId,
-    });
-    return response;
+  async joinGame(gameId?: string) {
+    if (!this.user?.userId) {
+      throw new Error("User ID is undefined");
+    }
+
+    let payload = { userId: this.user.userId } as {
+      userId: string;
+      gameId?: string;
+    };
+
+    if (gameId) {
+      payload.gameId = gameId;
+    }
+
+    const response = await this.api.post(`/game/join`, payload);
+
+    return response.data;
   }
 
   //create a private game to invite over chat -> if status ready send gameId to olena
@@ -248,6 +261,10 @@ export class Backend {
       });
     }
 
+    if (!this.user?.userId) {
+      throw new Error("User ID is undefined");
+    }
+
     const userId = this.user.userId;
 
     const response = await this.api.post("/tournament", {
@@ -260,9 +277,11 @@ export class Backend {
 
   //leave tournament -> user gets deleted from the tournament
   async leaveTournament() {
-    if (this.user) {
-      await this.api.post(`/tournament/leave/${this.user.userId}`);
+    if (!this.user?.userId) {
+      throw new Error("User ID is undefined");
     }
+
+    await this.api.post(`/tournament/leave/${this.user.userId}`);
   }
 
   async getGameHistory(userId: string) {
