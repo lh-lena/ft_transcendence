@@ -25,4 +25,12 @@ export class FileValidator {
 
     return result;
   }
+
+  cleanFilename(filename: string): string {
+    filename = filename.replace(/[/\\]+/g, '');
+    filename = filename.replace(/\.+/g, '.');
+    filename = filename.replace(/[^a-zA-Z0-9._-]/g, '');
+    filename = filename.replace(/^\.*/, '');
+    return filename;
+  }
 }

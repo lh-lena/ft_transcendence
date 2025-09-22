@@ -7,8 +7,8 @@ export const userSchema = z.object({
   createdAt: dtString.optional(),
   updatedAt: dtString.optional(),
 
-  email: z.email().optional().nullable(),
-  username: z.string().min(1).max(6).optional().nullable(),
+  email: z.email(),
+  username: z.string().min(1).max(6),
   alias: z.string().nullable().optional(),
 
   password_hash: z.string(),
@@ -25,6 +25,14 @@ export const userSchema = z.object({
   color: z.string(),
   colormap: z.string(),
   avatar: z.string().nullable().optional(),
+});
+
+export const guestSchema = userSchema.pick({
+  userId: true,
+  alias: true,
+  guest: true,
+  color: true,
+  colormap: true,
 });
 
 export const userIdSchema = userSchema.pick({
@@ -100,9 +108,8 @@ export const userInfoResponseSchema = userResponseSchema.omit({
 });
 export const userInfoResponseArraySchema = z.array(userInfoResponseSchema);
 
-export const guestSchema = z.object({
+export const guestPostSchema = z.object({
   alias: z.string(),
-  username: z.string().optional(),
   color: z.string(),
   colormap: z.string(),
   guest: z.boolean().default(true),
@@ -114,4 +121,4 @@ export type UserIdType = z.infer<typeof userIdSchema>;
 export type UserQueryType = z.infer<typeof userQuerySchema>;
 export type UserPatchType = z.infer<typeof userPatchSchema>;
 export type UserUpdateType = z.infer<typeof userUpdateSchema>;
-export type GuestType = z.infer<typeof guestSchema>;
+export type GuestPostType = z.infer<typeof guestPostSchema>;

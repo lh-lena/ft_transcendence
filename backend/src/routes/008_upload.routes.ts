@@ -1,8 +1,15 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
+
 import fp from 'fastify-plugin';
+import path from 'path';
+import fs from 'fs';
+
 import { v4 as uuid } from 'uuid';
 import { createWriteStream } from 'fs';
 import { pipeline } from 'stream/promises';
+
+import { userService } from '../modules/user/user.service';
+import { userIdType } from '../schemas/user';
 
 import { FileValidator } from '../utils/fileValidator';
 
@@ -69,6 +76,49 @@ const uploadRoutes = async (server: FastifyInstance) => {
         encoding: data.encoding,
         path: filePath,
       };
+    },
+  );
+
+  server.get(
+    '/api/avatar/:userId',
+    {
+      schema: {
+        summary: 'Get teh uploaded Avatar',
+        description: 'Endpoint to get the avatar img.',
+        tags: ['user'],
+        params: { $ref: `userId` },
+        response: {
+          200: {
+            description: 'Image file',
+            type: 'string',
+            format: 'binary',
+          },
+          404: {
+            description: 'No Avatar found',
+            type: 'object',
+            properties: {
+              error: { type: 'string' },
+            },
+          },
+        },
+      },
+    },
+    async (request: FastifyRequest, reply: FastifyReply) => {
+      const userId = request.params as userIdType;
+      const user = await userService.getById(userId.userId);
+
+      if (!user || !user.avatar) {
+        return reply.status(404).send({ error: 'No avatar found' });
+      }
+      const cleanFileName = validator.cleanFilename(user.avatar);
+      const url = path.join(__dirname, '../public', cleanFileName);
+
+      if (!fs.existsSync(url)) {
+        reply.code(404).send({ error: 'No avatar found' });
+      }
+
+      reply.header('Content-Type', 'image/png');
+      return reply.send(fs.createReadStream(url));
     },
   );
 };

@@ -16,10 +16,10 @@ import {
   userRegisterSchema,
   userLoginSchema,
   userPostSchema,
-  guestSchema,
+  guestPostSchema,
 } from '../schemas/user';
 
-import type { UserType, GuestType } from '../schemas/user';
+import type { UserType, GuestPostType } from '../schemas/user';
 
 const authRoutes = async (server: FastifyInstance) => {
   const tfa = new tfaHandler(server);
@@ -201,15 +201,14 @@ const authRoutes = async (server: FastifyInstance) => {
     return reply.send({ message: 'Logged out successfully' });
   });
 
-  //TODO add guest login
   server.post('/api/guest/login', async (req: FastifyRequest, reply: FastifyReply) => {
-    const parsedReq = guestSchema.safeParse(req.body);
+    const parsedReq = guestPostSchema.safeParse(req.body);
 
     if (!parsedReq.success) {
       return reply.status(400).send({ message: parsedReq.error.issues });
     }
 
-    const newGuest: GuestType = parsedReq.data;
+    const newGuest: GuestPostType = parsedReq.data;
 
     const config: AxiosRequestConfig = {
       method: 'post',

@@ -13,6 +13,7 @@ import type {
 } from '../schemas/user';
 import {
   userIdSchema,
+  guestSchema,
   userQuerySchema,
   userPatchSchema,
   userResponseSchema,
@@ -25,12 +26,6 @@ const backendUserRoutes = async (fastify: FastifyInstance) => {
   //-------User Routes-------//
 
   fastify.get('/api/user/:userId', async (req: FastifyRequest, reply: FastifyReply) => {
-    console.log(
-      '\n[DEBUG] GET /api/user/:id called with params:',
-      req.params,
-      'and user:',
-      req.user,
-    );
     const parsedReq = userIdSchema.safeParse(req.params);
 
     if (!parsedReq.success) {
@@ -42,13 +37,17 @@ const backendUserRoutes = async (fastify: FastifyInstance) => {
     const config: AxiosRequestConfig = {
       method: 'get',
       url: `/user/${requestId.userId}`,
-      //headers: req.headers,
     };
 
     const user: UserType = await apiClientBackend(config);
 
-    const isSelf = requestId.userId === req.user.id;
-    const schema = isSelf ? userResponseSchema : userInfoResponseSchema;
+    let schema;
+
+    if (user.guest) schema = guestSchema;
+    else {
+      const isSelf = requestId.userId === req.user.id;
+      schema = isSelf ? userResponseSchema : userInfoResponseSchema;
+    }
 
     const ret = schema.safeParse(user);
 

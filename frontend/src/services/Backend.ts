@@ -242,6 +242,13 @@ export class Backend {
     return response2.data;
   }
 
+  //@Alec TODO
+  //get avatar by jwt -> resarch said to use simply as <img src=getAvatar() *styling*/>
+  async getAvatar() {
+    const response = await this.api.get("/api/avatar");
+    return response.data;
+  }
+
   //create a game vs ai return game data with gameId for olena
   async createAiGame(aiDifficulty: string) {
     const response = await this.api.post("/api/game", {
