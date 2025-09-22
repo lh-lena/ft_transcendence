@@ -5,10 +5,10 @@ import {
   FriendsList,
   UsersAll,
   BlockedList,
+  ChatHistory,
 } from "../../types";
 import { MenuBar } from "../../components/menuBar";
 import { ProfileAvatar } from "../../components/profileAvatar";
-import { sampleChatHistory } from "../../constants/backend";
 import { InformationIcon } from "../../components/informationIcon";
 import { ProfilePopUp } from "../../components/profilePopUp";
 import { FriendsIcon } from "../../components/friendsIcon";
@@ -97,6 +97,10 @@ export class ChatPage {
     }
     instance.friendsList = initFriendsList;
     // blocked list fetch
+    instance.blockedList = await instance.backend.getBlockedListById(
+      instance.backend.getUser().userId,
+    );
+    console.log(instance.blockedList);
 
     // Complete the UI setup
     instance.setupUI();
@@ -189,17 +193,12 @@ export class ChatPage {
     clickableAddFriendButton.onclick = () => this.toggleAddFriendPanel();
     this.contacts.appendChild(clickableAddFriendButton);
 
-    // online offline headers
-    if (this.friendsList.length > 0) {
-      this.onlineheader = document.createElement("h1");
-      this.onlineheader.textContent = "online:";
-      this.onlineheader.className = "text-center text-emerald-800";
-      this.offlineheader = document.createElement("h1");
-      this.offlineheader.textContent = "offline:";
-      this.offlineheader.className = "text-center text-red-800";
-      this.contacts.appendChild(this.onlineheader);
-      this.contacts.appendChild(this.offlineheader);
-    }
+    this.onlineheader = document.createElement("h1");
+    this.onlineheader.className = "text-center text-emerald-800";
+    this.offlineheader = document.createElement("h1");
+    this.offlineheader.className = "text-center text-red-800";
+    this.contacts.appendChild(this.onlineheader);
+    this.contacts.appendChild(this.offlineheader);
 
     // CONTACTS
     this.friends = document.createElement("div");
@@ -302,8 +301,7 @@ export class ChatPage {
     this.container.appendChild(windowComponent.getElement());
   }
 
-  private populateChatPanel(user: User) {
-    console.log(user);
+  private async populateChatPanel(user: User) {
     // clear old chatpanel
     this.chatPanel.innerHTML = "";
     // information bar "chat with" information button
@@ -312,7 +310,6 @@ export class ChatPage {
     const informationText = document.createElement("h1");
     informationText.textContent = `chat with ${user.username}`;
     informationBar.appendChild(informationText);
-    console.log(`populateChatPanel: user: ${user.username}`);
     const informationIcon = new InformationIcon(() =>
       this.toggleProfilePopUp(user),
     );
@@ -322,12 +319,16 @@ export class ChatPage {
     const messages = document.createElement("div");
     messages.className = "flex flex-col flex-1 overflow-y-auto p-2 gap-2";
     this.chatPanel.appendChild(messages);
-    sampleChatHistory.forEach((message) => {
+    const chatHistory: ChatHistory = await this.backend.fetchChatHistoryByIds(
+      this.backend.getUser().userId,
+      user.userId,
+    );
+    chatHistory.forEach((message) => {
       const messageBox = document.createElement("div");
       messageBox.className = "standard-dialog flex items-center self-start";
       const messageText = document.createElement("h1");
       messageText.textContent = message.message;
-      if (message.sender != "me") {
+      if (message.senderId != this.backend.getUser().userId) {
         messageBox.classList.add("!self-end");
         messageBox.classList.add("bg-black");
         messageBox.classList.add("text-white");
@@ -362,6 +363,10 @@ export class ChatPage {
 
   private async populateFriends() {
     for (const friend of this.friendsList) {
+      const isBlocked = this.blockedList.some((blockedUser) => {
+        return blockedUser.blockedUserId === friend.friendUserId;
+      });
+      if (isBlocked) continue;
       const contact = document.createElement("div");
       contact.className =
         "flex flex-row gap-2 box standard-dialog w-full items-center";
@@ -395,31 +400,41 @@ export class ChatPage {
         }
       }
     }
-    // Check if we have any online friends
-    const hasOnlineFriends = this.friendsList.some(
-      (friend) => friend.online === "online",
-    );
-    // Check if we have any offline friends
-    const hasOfflineFriends = this.friendsList.some(
-      (friend) => friend.online !== "online",
-    );
+    // Check if we have any online friends that aren't blocked
+    const hasOnlineFriends = this.friendsList.some((friend) => {
+      const isBlocked = this.blockedList.some((blockedUser) => {
+        return blockedUser.blockedUserId === friend.friendUserId;
+      });
+      return friend.online === "online" && !isBlocked;
+    });
+    // Check if we have any offline friends that aren't blocked
+    const hasOfflineFriends = this.friendsList.some((friend) => {
+      const isBlocked = this.blockedList.some((blockedUser) => {
+        return blockedUser.blockedUserId === friend.friendUserId;
+      });
+      return friend.online !== "online" && !isBlocked;
+    });
 
     // Update online header
-    if (hasOnlineFriends) {
-      this.onlineheader.textContent = "online:";
-      this.onlineheader.className = "text-center text-emerald-800";
-    } else {
-      this.onlineheader.innerHTML = "";
-      this.onlineheader.className = "";
+    if (this.onlineheader) {
+      if (hasOnlineFriends) {
+        this.onlineheader.textContent = "online:";
+        this.onlineheader.className = "text-center text-emerald-800";
+      } else {
+        this.onlineheader.innerHTML = "";
+        this.onlineheader.className = "";
+      }
     }
 
     // Update offline header
-    if (hasOfflineFriends) {
-      this.offlineheader.textContent = "offline:";
-      this.offlineheader.className = "text-center text-red-800";
-    } else {
-      this.offlineheader.innerHTML = "";
-      this.offlineheader.className = "";
+    if (this.offlineheader) {
+      if (hasOfflineFriends) {
+        this.offlineheader.textContent = "offline:";
+        this.offlineheader.className = "text-center text-red-800";
+      } else {
+        this.offlineheader.innerHTML = "";
+        this.offlineheader.className = "";
+      }
     }
   }
 
@@ -444,7 +459,7 @@ export class ChatPage {
     this.inputBox.removeChild(this.inputMessage);
     this.sendInvite = document.createElement("div");
     this.sendInvite.className =
-      "standard-dialog rounded flex items-center w-4/5 h-10";
+      "standard-dialog roded flex items-center w-4/5 h-10";
     const sendInviteText = document.createElement("h1");
     sendInviteText.textContent = "send game invite to user XXX?";
     sendInviteText.className = "text-center w-full";
@@ -514,13 +529,25 @@ export class ChatPage {
     }
 
     let isFriend = false;
+    let isBlocked = false;
+    let friendID = -1;
+    let blockedFriendId = -1;
     // Check if user is a friend and get the friendId
     const friendRecord = this.friendsList.find(
       (friend) => friend.friendUserId === user.userId,
     );
     if (friendRecord) {
       isFriend = true;
-      user.friendId = friendRecord.friendId;
+      friendID = friendRecord.friendId;
+      isBlocked = this.blockedList.some((blockedUser) => {
+        return blockedUser.blockedUserId === friendRecord.friendUserId;
+      });
+      if (isBlocked) {
+        const blockedFriend = this.blockedList.find(
+          (friend) => friend.blockedUserId === friendRecord.friendUserId,
+        );
+        if (blockedFriend) blockedFriendId = blockedFriend?.blockedId;
+      }
     }
 
     if (user.userId === this.backend.getUser().userId && !user.friendId) {
@@ -536,23 +563,41 @@ export class ChatPage {
         user,
         "friend",
         () => this.addFriendHook(user.userId),
-        () =>
-          this.backend.blockUserByIds(
-            this.backend.getUser().userId,
-            user.userId,
-          ),
+        () => this.blockFriendsHook(user.userId),
         isFriend,
-        () => this.removeFriendHook(user.friendId),
+        () => this.removeFriendHook(friendID),
+        isBlocked,
+        () => this.unblockFriendCallback(blockedFriendId),
       ).getNode();
     }
     this.rightPanel = this.profilePopUp;
     this.chatRow.appendChild(this.rightPanel);
   }
 
+  private async unblockFriendCallback(blockedId: number) {
+    await this.backend.unblockUserByBlockedId(blockedId);
+    await this.refreshBlockedList();
+    await this.refreshFriendsList();
+    this.toggleProfilePopUp(this.backend.getUser());
+  }
+
   private async removeFriendHook(friendId: number) {
     await this.backend.removeFriendByFriendId(friendId);
     await this.refreshFriendsList();
     this.toggleProfilePopUp(this.backend.getUser());
+  }
+
+  private async blockFriendsHook(userId: string) {
+    await this.backend.blockUserByIds(this.backend.getUser().userId, userId);
+    await this.refreshBlockedList();
+    await this.refreshFriendsList();
+    this.toggleProfilePopUp(this.backend.getUser());
+  }
+
+  private async refreshBlockedList() {
+    this.blockedList = await this.backend.getBlockedListById(
+      this.backend.getUser().userId,
+    );
   }
 
   private async addFriendHook(userId: string) {
@@ -566,7 +611,6 @@ export class ChatPage {
     const initFriendsList = await this.backend.fetchFriendsById(
       this.backend.getUser().userId,
     );
-    console.log(this.friendsList);
     // clear friends
     this.friends.innerHTML = "";
     // fetch user stuff for the friends

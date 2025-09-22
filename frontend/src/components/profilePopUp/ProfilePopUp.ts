@@ -1,7 +1,6 @@
 import { CloseIcon } from "../closeIcon/CloseIcon";
 import { ProfileAvatar } from "../profileAvatar";
 import { User } from "../../types";
-import { AxiosResponse } from "axios";
 
 export class ProfilePopUp {
   private main: HTMLElement;
@@ -11,9 +10,11 @@ export class ProfilePopUp {
     user: User,
     style?: string,
     addFriendCallback?: () => void,
-    blockFriendCallback?: () => Promise<AxiosResponse<any, any>>,
+    blockFriendCallback?: () => void,
     isFriend?: boolean,
     removeFriendCallback?: () => void,
+    isBlocked?: boolean,
+    unBlockFriendCallback?: () => void,
   ) {
     this.main = document.createElement("div");
     this.main.className =
@@ -47,10 +48,13 @@ export class ProfilePopUp {
         addFriendButton.onclick = () => removeFriendCallback();
       addFriendButton.className = "btn mt-auto";
       const blockFriendButton = document.createElement("button");
-      blockFriendButton.innerText = "block";
+      if (!isBlocked) blockFriendButton.innerText = "block";
+      else blockFriendButton.innerText = "unblock";
       blockFriendButton.className = "btn";
       if (blockFriendCallback)
         blockFriendButton.onclick = () => blockFriendCallback();
+      if (unBlockFriendCallback && isBlocked)
+        blockFriendButton.onclick = () => unBlockFriendCallback();
       this.main.appendChild(addFriendButton);
       this.main.appendChild(blockFriendButton);
     }

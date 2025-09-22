@@ -187,7 +187,19 @@ export class SettingsPage {
       this.inputPasswordDiv.appendChild(inputPasswordSecond);
       const inputPasswordButton = document.createElement("button");
       inputPasswordButton.className = "btn";
-      inputPasswordButton.onclick = () => this.changePassword();
+      inputPasswordButton.onclick = () => {
+        const password1 = (inputPasswordFirst as HTMLInputElement).value;
+        const password2 = (inputPasswordSecond as HTMLInputElement).value;
+        if (password1 !== password2) {
+          alert("Passwords do not match!");
+          return;
+        }
+        if (password1.length < 6) {
+          alert("Password must be at least 6 characters!");
+          return;
+        }
+        this.sendChangePasswordHook(password1);
+      };
       inputPasswordButton.innerText = "change";
       this.inputPasswordDiv.appendChild(inputPasswordButton);
     } // show
@@ -196,6 +208,14 @@ export class SettingsPage {
       this.window.getPane().appendChild(this.buttonRow);
       this.window.getPane().appendChild(this.settingsPanel);
     }
+  }
+
+  private async sendChangePasswordHook(newPassword: string) {
+    this.backend.changePasswordById(this.backend.getUser().userId, newPassword);
+    // back to normal settings
+    this.inputPasswordDiv.remove();
+    this.window.getPane().appendChild(this.buttonRow);
+    this.window.getPane().appendChild(this.settingsPanel);
   }
 
   private toggle2FASettings(): void {
