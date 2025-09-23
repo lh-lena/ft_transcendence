@@ -24,7 +24,7 @@ export class LeaderboardPage {
       "w-full min-h-screen flex items-center justify-center bg-brandBlue";
 
     // Window content
-    const menuBar = new MenuBar(this.router, "leaderboard");
+    const menuBar = new MenuBar(serviceContainer, "leaderboard");
 
     const mainCollumn = document.createElement("div");
     mainCollumn.className = "flex flex-col gap-3";

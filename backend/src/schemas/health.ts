@@ -7,6 +7,7 @@ const healthSchema = z
     timestamp: z.string(),
     dbStatus: z.enum(['up', 'down']),
   })
-  .meta({ $id: 'healthCheck' });
+  .meta({ $id: 'healthCheck' })
+  .describe('Health check schema');
 
 export const healthSchemas = [healthSchema];

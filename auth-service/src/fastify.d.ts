@@ -1,15 +1,28 @@
 import 'fastify';
+//import { JwTPayloadType } from './schemas/jwt';
+
+interface FastifyJwtNamespace {
+  sign: (payload: object) => string;
+  verify: (token: string) => object;
+}
 
 declare module 'fastify' {
+  interface FastifyInstance {
+    jwt: {
+      access: FastifyJwtNamespace;
+      refresh: FastifyJwtNamespace;
+    };
+    cleanupExpiredSession(): Promise<void>;
+    generateAccessToken(payload: object): string;
+    generateRefreshToken(payload: object): string;
+    verifyAccessToken(token: string): JwTReturnType;
+    verifyRefreshToken(token: string): JwTReturnType;
+  }
   interface FastifyRequest {
-    user?: {
-      sub: number;
-      username: string;
-      email: string;
-      alias?: string;
-      is_2fa_enabled: number;
-      iat?: number;
-      exp?: number;
+    user: {
+      id: string;
+      iat: number;
+      exp: number;
     };
   }
 }

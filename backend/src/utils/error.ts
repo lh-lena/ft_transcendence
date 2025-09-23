@@ -22,7 +22,7 @@ export class ValidationError extends AppError {
 }
 
 export class ConflictError extends AppError {
-  constructor(message = 'Conflict', code = 'CONFLICT', detail = 'resource already used') {
+  constructor(message = 'Conflict') {
     super(message, 409, 'CONFLICT');
   }
 }
@@ -30,5 +30,11 @@ export class ConflictError extends AppError {
 export class DatabaseError extends AppError {
   constructor(message = 'Database error') {
     super(message, 500, 'Database');
+  }
+}
+
+export class BlockedError extends AppError {
+  constructor(message = 'Blocked') {
+    super(message, 403, 'BLOCKED');
   }
 }

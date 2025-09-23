@@ -1,4 +1,4 @@
-import { generateProfilePrint } from "../utils/generateProfilePrint";
+import { generateProfilePrint } from "../utils/profilePrintFunctions";
 import { UserProfile } from "../types";
 
 // all these things below were sample pieces of data i used to help me understand how to scaffold the front end

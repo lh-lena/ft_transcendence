@@ -53,10 +53,14 @@ services:
     container_name: ft_transcendence_backend
     ports:
       - "8080:8080"
+    environment:
+      - PORT=8080
+      - IP='0.0.0.0'
+      - DATABASE_URL=file:/app/data/db.sqlite
     volumes:
+      - ./data:/app/data
       - ./backend:/app
       - /app/node_modules
-      - ./backend/data:/app/data
     networks:
       - pong-network
     healthcheck:
@@ -92,6 +96,13 @@ services:
     volumes:
       - ./auth-service:/app
       - /app/node_modules
+      - ../backend/prisma:/app/prisma
+    environment:
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - JWT_SECRET=${JWT_SECRET}
+    env_file:
+      - ./auth-service/.env
     networks:
       - pong-network
     healthcheck:

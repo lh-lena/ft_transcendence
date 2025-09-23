@@ -1,40 +1,60 @@
-import { FastifyRequest, FastifyReply } from 'fastify';
-import Database from 'better-sqlite3';
+import { Prisma } from '@prisma/client';
+import type { userType, userIdType } from '../../schemas/user';
 
-import type {
-  userCreateInput,
-  userUpdateInput,
-  userQueryInput,
-  userIdInput,
-  userResponseType,
-  userResponseArrayType,
-} from '../../schemas/user';
-
-import * as userService from './user.service';
+import { userService } from './user.service';
+import { userBase, userBaseArray } from '../../schemas/user';
 
 export const userController = {
   //controller to create an user
-  async create(input: userCreateInput): Promise<userResponseType> {
-    const newUser = await userService.createuser(input);
-    return newUser;
+  async create(data: Prisma.UserCreateInput): Promise<userType> {
+    const ret = await userService.create(data);
+    const user = userBase.safeParse(ret);
+
+    if (!user.success) throw new Error(user.error.message);
+
+    return user.data;
   },
 
   //update user
-  async update(id: userIdInput, input: userUpdateInput): Promise<userResponseType> {
-    return await userService.updateuser(id, input);
+  async update(id: userIdType, data: Prisma.UserUpdateInput): Promise<userType> {
+    const ret = await userService.update(id.userId, data);
+    const user = userBase.safeParse(ret);
+
+    if (!user.success) throw new Error('User update failed');
+
+    return user.data;
   },
 
   //controller for user get All or by Id
-  async getAllorFiltered(query: userQueryInput): Promise<userResponseArrayType> {
-    return await userService.getAllorFiltereduser(query);
+  async getQuery(query?: Prisma.UserWhereInput): Promise<userType[]> {
+    const ret = await userService.getQuery(query);
+
+    const user = userBaseArray.safeParse(ret);
+
+    if (!user.success) throw new Error(user.error.message);
+
+    return user.data;
   },
 
-  async getById(id: userIdInput): Promise<userResponseType | null> {
-    return await userService.getuserById(id);
+  async getById(id: userIdType): Promise<userType> {
+    const ret = await userService.getById(id.userId);
+    const user = userBase.safeParse(ret);
+
+    if (!user.success) throw new Error('User creation failed');
+
+    return user.data;
   },
 
   //delete user
-  async remove(id: userIdInput): Promise<{ message: string }> {
-    return await userService.removeuser(id);
+  async deleteOne(id: userIdType): Promise<{ success: boolean }> {
+    await userService.deleteOne(id.userId);
+    return { success: true };
+  },
+
+  //uniqe
+  async getCount(): Promise<{ count: number }> {
+    const ret = await userService.getCount();
+
+    return { count: ret };
   },
 };

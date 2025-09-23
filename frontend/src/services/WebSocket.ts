@@ -1,10 +1,7 @@
-import { websocketUrl } from "../constants/websocket";
-
 //web socket
 import {
   WsServerBroadcast,
   ClientMessageInterface,
-  // ServerMessageInterface,
   WsClientMessage,
   Direction,
 } from "../types/websocket";
@@ -20,9 +17,16 @@ export class Websocket {
 
   // web socket (init on profile load?)
   public initializeWebSocket(): void {
-    const wsUrl = websocketUrl;
+    const wsUrl = import.meta.env.VITE_WEBSOCKET_URL;
+    const token = localStorage.getItem("jwt");
 
-    this.ws = new WebSocket(wsUrl);
+    // Append token as query parameter if provided
+    const urlWithToken = token
+      ? `${wsUrl}?token=${encodeURIComponent(token)}`
+      : wsUrl;
+
+    // connect to ws with token
+    this.ws = new WebSocket(urlWithToken);
 
     this.ws.onclose = (event) => {
       console.log("WebSocket connection closed:", event.code, event.reason);
@@ -35,7 +39,7 @@ export class Websocket {
 
     // web socket stuff
     this.ws.onopen = () => {
-      //
+      console.log("opened web socket");
     };
 
     this.ws.onmessage = (event) => {
@@ -106,7 +110,6 @@ export class Websocket {
   }
 
   // send message functions (pre defined)
-
   public messageGameStart(): void {
     const gameStartMessage: ClientMessageInterface<"game_start"> = {
       event: "game_start",

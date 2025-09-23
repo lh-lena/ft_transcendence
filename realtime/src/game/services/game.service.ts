@@ -1,25 +1,167 @@
 import type { FastifyInstance } from 'fastify';
-import type { PlayerInput, User, GameSession } from '../../schemas/index.js';
-import { GameSessionStatus, NotificationType, GameMode } from '../../constants/game.constants.js';
-import { processGameError } from '../../utils/error.handler.js';
+import type {
+  PlayerInput,
+  User,
+  GameSession,
+  Player,
+  UserIdType,
+  GameIdType,
+  StartGame,
+} from '../../schemas/index.js';
+import { GameSessionStatus, NotificationType, AIDifficulty } from '../../constants/index.js';
+import { processDebugLog, processGameError } from '../../utils/index.js';
 import { GameError } from '../../utils/game.error.js';
-import type { RespondService } from '../../websocket/types/ws.types.js';
+import type { RespondService, ConnectionService } from '../../websocket/types/ws.types.js';
 import type {
   GameSessionService,
   GameDataService,
   GameStateService,
   GameService,
-} from '../types/game.js';
+} from '../types/game.types.js';
 import createGameValidator from '../utils/game.validation.js';
-import type { ConnectionService } from '../../websocket/types/ws.types.js';
 import type { EnvironmentConfig } from '../../config/config.js';
+import { addAIPlayerToGame } from '../utils/player.utils.js';
+import { AuthService } from '../../auth/auth.js';
 
 export default function createGameService(app: FastifyInstance): GameService {
-  const { log } = app;
   const config = app.config as EnvironmentConfig;
   const validator = createGameValidator(app);
+  const authService = app.auth as AuthService;
 
-  async function handleStartGame(user: User, gameId: string): Promise<void> {
+  function applyPlayerInputToPaddle(
+    game: GameSession,
+    userId: UserIdType,
+    action: PlayerInput,
+  ): void {
+    const playerIndex = game.players.findIndex((p) => p.userId === userId);
+    const isPlayerA = playerIndex === 0;
+    const targetPaddle = isPlayerA ? game.gameState.paddleA : game.gameState.paddleB;
+    targetPaddle.direction = action.direction;
+  }
+
+  function extractGameIdForUser(user: User): GameIdType {
+    const connectionService = app.connectionService as ConnectionService;
+    const userConnection = connectionService.getConnection(user.userId);
+    if (
+      userConnection === undefined ||
+      userConnection.gameId === undefined ||
+      userConnection.gameId === null
+    ) {
+      throw new GameError(`you are not connected to any game`);
+    }
+    return userConnection.gameId;
+  }
+
+  function assignPlayerToGame(userId: UserIdType, gameId: GameIdType): void {
+    const connectionService = app.connectionService as ConnectionService;
+    connectionService.updateUserGame(userId, gameId);
+  }
+
+  function createPlayerFromUser(user: User, aiDifficulty?: AIDifficulty): Player {
+    return {
+      ...user,
+      sequence: 0,
+      isAI: false,
+      aiDifficulty: aiDifficulty,
+    };
+  }
+
+  async function createGame(user: User, gameId: GameIdType): Promise<GameSession> {
+    const respond = app.respond as RespondService;
+    const gameSessionService = app.gameSessionService as GameSessionService;
+    const gameDataService = app.gameDataService as GameDataService;
+    const backendGameData = await gameDataService.fetchGameData(gameId);
+    const userInfo = await authService.getUserInfo(user.userId);
+    if (userInfo === null) {
+      throw new GameError(`server failed to create game ${gameId}. invalid user`);
+    }
+    if (!validator.isExpectedUserId(backendGameData.players, user.userId)) {
+      throw new GameError(`server failed to create game ${gameId}. you are not an expected player`);
+    }
+    const player = createPlayerFromUser(userInfo, backendGameData.aiDifficulty);
+    const gameStartData: StartGame = {
+      gameId,
+      mode: backendGameData.mode,
+      players: [player],
+      aiDifficulty: backendGameData.aiDifficulty,
+    };
+    const gameSession = gameSessionService.createGameSession(gameId, gameStartData) as GameSession;
+    addAIPlayerToGame(gameSession, backendGameData.mode, backendGameData.aiDifficulty);
+    gameSessionService.storeGameSession(gameSession);
+    assignPlayerToGame(user.userId, gameId);
+    gameSessionService.setPlayerConnectionStatus(user.userId, gameId, true);
+    respond.notification(
+      user.userId,
+      NotificationType.INFO,
+      `game created successfully. waiting for players to join...`,
+    );
+    processDebugLog(
+      app,
+      'game-service',
+      `Game ${gameId} created successfully for user ${user.userId}`,
+    );
+    return gameSession;
+  }
+
+  async function joinGame(
+    user: User,
+    gameId: GameIdType,
+    existingGameSession: GameSession,
+  ): Promise<GameSession> {
+    const respond = app.respond as RespondService;
+    const gameSessionService = app.gameSessionService as GameSessionService;
+    const gameDataService = app.gameDataService as GameDataService;
+    const backendGameData = await gameDataService.fetchGameData(gameId);
+    const userInfo = await authService.getUserInfo(user.userId);
+    if (userInfo === null) {
+      throw new GameError(`server failed to join game. user info not found`, `${gameId}`);
+    }
+    const isValidPlayer2 = validator.isExpectedUserId(backendGameData.players, user.userId);
+    if (!isValidPlayer2) {
+      throw new GameError(`you are not an expected player for game`, `${gameId}`);
+    }
+    if (validator.isPlayerInGame(existingGameSession.players, user.userId)) {
+      respond.notification(user.userId, NotificationType.INFO, `you are already in the game`);
+      assignPlayerToGame(user.userId, gameId);
+      gameSessionService.setPlayerConnectionStatus(user.userId, gameId, true);
+      respond.notificationToGame(
+        gameId,
+        NotificationType.INFO,
+        `${user.userAlias} successfully joined game`,
+        [user.userId],
+      );
+      return existingGameSession;
+    }
+    validator.isGameFull(existingGameSession);
+    const player1InSession = existingGameSession.players[0];
+
+    if (!validator.isExpectedUserId(backendGameData.players, player1InSession.userId)) {
+      throw new GameError(`game session is invalid. please try creating a new game`);
+    }
+
+    const player2FromBackend = backendGameData.players.find((p) => p.userId === user.userId);
+    if (player2FromBackend === undefined) {
+      throw new GameError(`player data not found in backend for game ${gameId}`);
+    }
+    const player2 = createPlayerFromUser(userInfo, backendGameData.aiDifficulty);
+    existingGameSession.players.push(player2);
+    assignPlayerToGame(user.userId, gameId);
+    gameSessionService.setPlayerConnectionStatus(user.userId, gameId, true);
+    respond.notificationToGame(
+      gameId,
+      NotificationType.INFO,
+      `${user.userAlias} successfully joined game`,
+      [user.userId],
+    );
+    processDebugLog(
+      app,
+      'game-service',
+      `Player ${user.userId} ${user.userAlias} successfully joined game ${gameId}`,
+    );
+    return existingGameSession;
+  }
+
+  async function handleStartGame(user: User, gameId: GameIdType): Promise<void> {
     const gameSessionService = app.gameSessionService as GameSessionService;
     const gameStateService = app.gameStateService as GameStateService;
     try {
@@ -39,106 +181,22 @@ export default function createGameService(app: FastifyInstance): GameService {
         app,
         user,
         'game-service',
-        `Failed to initialize game ID ${gameId} for user ID ${userId}: `,
+        `Failed to initialize game ID ${gameId} for user ID ${userId}`,
         error,
       );
     }
   }
 
-  async function createGame(user: User, gameId: string): Promise<GameSession> {
-    const respond = app.respond as RespondService;
-    const gameSessionService = app.gameSessionService as GameSessionService;
-    const gameDataService = app.gameDataService as GameDataService;
-    log.debug(`[game-service] Creating game ${gameId} for user ${user.userId}`);
-    const backendGameData = await gameDataService.fetchGameData(gameId);
-    if (!validator.isExpectedPlayer(backendGameData.players, user.userId)) {
-      throw new GameError(`server failed to create game ${gameId}. you are not an expected player`);
-    }
-    const gameSession = gameSessionService.createGameSession(
-      gameId,
-      backendGameData,
-    ) as GameSession;
-    gameSessionService.storeGameSession(gameSession);
-    assignPlayerToGame(user.userId, gameId);
-    gameSessionService.setPlayerConnectionStatus(user.userId, gameId, true);
-    respond.notification(
-      user.userId,
-      NotificationType.INFO,
-      `game ${gameId} created successfully. waiting for players to join...`,
-    );
-    log.debug(`[game-service] Game ${gameId} created successfully for user ${user.userId}`);
-    return gameSession;
-  }
-
-  async function joinGame(
-    user: User,
-    gameId: string,
-    existingGameSession: GameSession,
-  ): Promise<GameSession> {
-    const respond = app.respond as RespondService;
-    const gameSessionService = app.gameSessionService as GameSessionService;
-    const gameDataService = app.gameDataService as GameDataService;
-    log.debug(`[game-service] Handling join user ${user.userId} to game ${gameId}`);
-    const backendGameData = await gameDataService.fetchGameData(gameId);
-    const isValidPlayer2 = validator.isExpectedPlayer(backendGameData.players, user.userId);
-    if (!isValidPlayer2) {
-      throw new GameError(`you are not an expected player for game ${gameId}`);
-    }
-    const isAlreadyInGame = existingGameSession.players.some((p) => p.userId === user.userId);
-    if (isAlreadyInGame) {
-      log.debug(`[game-service] User ${user.userId} already in game ${gameId}`);
-      respond.notification(user.userId, NotificationType.INFO, `you are already in game ${gameId}`);
-      assignPlayerToGame(user.userId, gameId);
-      gameSessionService.setPlayerConnectionStatus(user.userId, gameId, true);
-      respond.notificationToGame(
-        gameId,
-        NotificationType.INFO,
-        `${user.userAlias} successfully joined game`,
-        [user.userId],
-      );
-      return existingGameSession;
-    }
-    if (
-      existingGameSession.gameMode === GameMode.PVP_REMOTE &&
-      existingGameSession.players.length >= 2
-    ) {
-      throw new GameError(`game ${gameId} is already full`);
-    }
-    const player1InSession = existingGameSession.players[0];
-    const player1InBackend = backendGameData.players.find(
-      (p) => p.userId === player1InSession.userId,
-    );
-
-    if (!player1InBackend) {
-      throw new GameError(`game session is invalid. please try creating a new game`);
-    }
-
-    const player2FromBackend = backendGameData.players.find((p) => p.userId === user.userId);
-    if (!player2FromBackend) {
-      throw new GameError(`player data not found in backend for game ${gameId}`);
-    }
-
-    existingGameSession.players.push(player2FromBackend);
-    assignPlayerToGame(user.userId, gameId);
-    gameSessionService.setPlayerConnectionStatus(user.userId, gameId, true);
-    respond.notificationToGame(
-      gameId,
-      NotificationType.INFO,
-      `${user.userAlias} successfully joined game`,
-      [user.userId],
-    );
-    log.debug(
-      `[game-service] Player ${user.userId} ${user.userAlias} successfully joined game ${gameId}`,
-    );
-    return existingGameSession;
-  }
-
-  function handleGamePause(user: User, gameId: string): void {
+  function handleGamePause(user: User, gameId: GameIdType): void {
     if (user === undefined || user === null) return;
     const respond = app.respond as RespondService;
     const gameStateService = app.gameStateService as GameStateService;
     const { userId } = user;
-    log.debug(`[game-service] Handling game pause for user ${userId} in game ${gameId}`);
+    processDebugLog(
+      app,
+      'game-service',
+      `Handling game pause for user ${userId} in game ${gameId}`,
+    );
     try {
       const game = validator.getValidGameCheckPlayer(gameId, userId);
       validator.validateGameStatus(game.status, [GameSessionStatus.ACTIVE]);
@@ -154,18 +212,22 @@ export default function createGameService(app: FastifyInstance): GameService {
         app,
         user,
         'game-service',
-        `failed to pause game ID ${gameId} for user ID ${userId}: `,
+        `failed to pause game ID ${gameId} for user ID ${userId}`,
         error,
       );
     }
   }
 
-  function handleGameResume(user: User, gameId: string): void {
+  function handleGameResume(user: User, gameId: GameIdType): void {
     if (user === undefined || user === null) return;
     const respond = app.respond as RespondService;
     const gameStateService = app.gameStateService as GameStateService;
     const { userId } = user;
-    log.debug(`[game-service] Handling game resume for user ${userId} in game ${gameId}`);
+    processDebugLog(
+      app,
+      'game-service',
+      `Handling game resume for user ${userId} in game ${gameId}`,
+    );
     try {
       const game = validator.getValidGameCheckPlayer(gameId, userId);
       gameStateService.resumeGame(game, userId);
@@ -175,16 +237,13 @@ export default function createGameService(app: FastifyInstance): GameService {
         `game resumed successfully by user ${user.userAlias}`,
       );
     } catch (error: unknown) {
-      if (error instanceof GameError) {
-        log.debug(
-          `[game-service] User ID ${user.userId}. Game ID ${gameId}. Error: ${error.message}`,
-        );
-        respond.notification(user.userId, NotificationType.WARN, error.message);
-      } else {
-        const errorMsg = `Failed to resume game for user ${user.userId}. Error: ${error instanceof Error ? error.message : 'Unknown error'}`;
-        log.error(`[game-service] ${errorMsg}`);
-        respond.error(user.userId, errorMsg);
-      }
+      processGameError(
+        app,
+        user,
+        'game-service',
+        `Failed to resume game for user ${user.userId}:`,
+        error,
+      );
     }
   }
 
@@ -192,14 +251,20 @@ export default function createGameService(app: FastifyInstance): GameService {
     if (user === undefined || user === null) return;
     const { userId } = user;
     try {
-      const gameId = extractGameIdForUser(user);
+      const { gameId } = action;
       const game = validator.getValidGameCheckPlayer(gameId, userId);
+      const player = game.players.find((p) => p.userId === userId);
       validator.validateGameStatus(game.status, [GameSessionStatus.ACTIVE]);
-      if (action.sequence <= game.lastSequence) {
+      if (player!.sequence !== undefined && action.sequence <= player!.sequence) {
+        processDebugLog(
+          app,
+          'game-service',
+          `Ignoring old sequence from player ${userId}: ${action.sequence} <= ${player!.sequence}`,
+        );
         return;
       }
       applyPlayerInputToPaddle(game, userId, action);
-      game.lastSequence = action.sequence;
+      player!.sequence = action.sequence;
     } catch (error: unknown) {
       processGameError(
         app,
@@ -211,15 +276,19 @@ export default function createGameService(app: FastifyInstance): GameService {
     }
   }
 
-  async function handleGameLeave(user: User, gameId: string): Promise<void> {
+  async function handleGameLeave(user: User, gameId: GameIdType): Promise<void> {
     const respond = app.respond as RespondService;
     const gameStateService = app.gameStateService as GameStateService;
     const { userId } = user;
-    log.debug(`[game-service] Handling game leave for user ${userId} in game ${gameId}`);
+    processDebugLog(
+      app,
+      'game-service',
+      `Handling game leave for user ${userId} in game ${gameId}`,
+    );
     try {
       const currentGameId = extractGameIdForUser(user);
       if (currentGameId !== gameId) {
-        throw new GameError(`you are not in game ${gameId}`);
+        throw new GameError(`you are not in the game`);
       }
       const game = validator.getValidGameCheckPlayer(gameId, userId);
       validator.validateGameStatus(game.status, [
@@ -247,35 +316,10 @@ export default function createGameService(app: FastifyInstance): GameService {
         app,
         user,
         'game-service',
-        `Failed to handle game leave for user ID ${userId}: `,
+        `Failed to handle game leave for user ID ${userId}`,
         error,
       );
     }
-  }
-
-  function applyPlayerInputToPaddle(game: GameSession, userId: number, action: PlayerInput): void {
-    const playerIndex = game.players.findIndex((p) => p.userId === userId);
-    const isPlayerA = playerIndex === 0;
-    const targetPaddle = isPlayerA ? game.gameState.paddleA : game.gameState.paddleB;
-    targetPaddle.direction = action.direction;
-  }
-
-  function extractGameIdForUser(user: User): string {
-    const connectionService = app.connectionService as ConnectionService;
-    const userConnection = connectionService.getConnection(user.userId);
-    if (
-      userConnection === undefined ||
-      userConnection.gameId === undefined ||
-      userConnection.gameId === null
-    ) {
-      throw new GameError(`you are not connected to any game`);
-    }
-    return userConnection.gameId;
-  }
-
-  function assignPlayerToGame(userId: number, gameId: string): void {
-    const connectionService = app.connectionService as ConnectionService;
-    connectionService.updateUserGame(userId, gameId);
   }
 
   return {

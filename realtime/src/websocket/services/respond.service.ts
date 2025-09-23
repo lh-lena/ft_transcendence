@@ -1,17 +1,20 @@
 import { WebSocket } from 'ws';
 import type { FastifyInstance, WSConnection } from 'fastify';
 import type { WsServerBroadcast } from '../../schemas/ws.schema.js';
-import type { GameResult, GameState, GameSession } from '../../schemas/game.schema.js';
+import type { GameResult, GameState, GameSession, GameIdType } from '../../schemas/game.schema.js';
+import type { UserIdType } from '../../schemas/user.schema.js';
 import type { NotificationType } from '../../constants/game.constants.js';
+import { GAME_EVENTS } from '../../constants/game.constants.js';
 import { processErrorLog } from '../../utils/error.handler.js';
 import type { RespondService, ConnectionService } from '../types/ws.types.js';
-import type { GameSessionService } from '../../game/types/game.js';
+import type { GameSessionService } from '../../game/types/game.types.js';
+import type { ChatMessageBroadcast } from '../../schemas/chat.schema.js';
 
 export default function createRespondService(app: FastifyInstance): RespondService {
   const { log } = app;
 
   function send<T extends keyof WsServerBroadcast>(
-    userId: number,
+    userId: UserIdType,
     event: T,
     payload: WsServerBroadcast[T],
   ): boolean {
@@ -36,10 +39,10 @@ export default function createRespondService(app: FastifyInstance): RespondServi
   }
 
   function broadcast<T extends keyof WsServerBroadcast>(
-    gameId: string,
+    gameId: GameIdType,
     event: T,
     payload: WsServerBroadcast[T],
-    excludeUsers: number[] = [],
+    excludeUsers: UserIdType[] = [],
   ): boolean {
     const gameSessionService = app.gameSessionService as GameSessionService;
     const game = gameSessionService.getGameSession(gameId) as GameSession;
@@ -49,59 +52,65 @@ export default function createRespondService(app: FastifyInstance): RespondServi
     }
 
     const { players } = game;
-    const userIds = players
-      .map((p) => p.userId)
-      .filter((id) => id !== -1 && game.isConnected.get(id) === true && !excludeUsers.includes(id));
+    const userIds: UserIdType[] = [];
+    players.forEach((p) => {
+      if (
+        p.isAI !== true &&
+        game.isConnected.get(p.userId) === true &&
+        !excludeUsers.includes(p.userId)
+      ) {
+        userIds.push(p.userId);
+      }
+    }); // changed from map to forEach to avoid creating a new array
 
     const results: boolean[] = [];
     userIds.forEach((id) => {
-      log.debug(`[ws-service] Sending to user ID ${id} event ${event}`);
+      log.debug(`[ws-service] Sending to user ID ${id} event ${event}`); // rm
       const res = send(id, event, payload);
       results.push(res);
     });
     return results.every((r) => r === true);
   }
 
-  function connected(userId: number): boolean {
+  function connected(userId: UserIdType): boolean {
     return send(userId, 'connected', { userId });
   }
 
-  function gameUpdate(userId: number, gameState: GameState): boolean {
-    return send(userId, 'game_update', { ...gameState });
+  function gameUpdate(userId: UserIdType, gameState: GameState): boolean {
+    return send(userId, GAME_EVENTS.UPDATE, { ...gameState });
   }
 
-  function gameEnded(gameId: string, result: GameResult): boolean {
-    return broadcast(gameId, 'game_ended', result);
+  function gameEnded(gameId: GameIdType, result: GameResult): boolean {
+    return broadcast(gameId, GAME_EVENTS.FINISHED, result);
   }
 
-  function gamePaused(gameId: string, reason: string): boolean {
-    return broadcast(gameId, 'game_pause', { gameId, reason });
+  function gamePaused(gameId: GameIdType, reason: string): boolean {
+    return broadcast(gameId, GAME_EVENTS.PAUSE, { gameId, reason });
   }
 
-  function chatMessage(userId: number): boolean {
+  function chatMessage(userId: UserIdType, payload: ChatMessageBroadcast): boolean {
     return send(userId, 'chat_message', {
-      userId,
-      timestamp: Date.now(),
+      ...payload,
     });
   }
 
-  function countdownUpdate(gameId: string, countdown: number, message: string): boolean {
-    return broadcast(gameId, 'countdown_update', { gameId, countdown, message });
+  function countdownUpdate(gameId: GameIdType, countdown: number, message: string): boolean {
+    return broadcast(gameId, GAME_EVENTS.COUNTDOWN_UPDATE, { gameId, countdown, message });
   }
 
-  function error(userId: number, message: string): boolean {
+  function error(userId: UserIdType, message: string): boolean {
     return send(userId, 'error', { message });
   }
 
-  function notification(userId: number, type: NotificationType, message: string): boolean {
+  function notification(userId: UserIdType, type: NotificationType, message: string): boolean {
     return send(userId, 'notification', { type, message, timestamp: Date.now() });
   }
 
   function notificationToGame(
-    gameId: string,
+    gameId: GameIdType,
     type: NotificationType,
     message: string,
-    excludeUsers: number[] = [],
+    excludeUsers: UserIdType[] = [],
   ): boolean {
     return broadcast(
       gameId,

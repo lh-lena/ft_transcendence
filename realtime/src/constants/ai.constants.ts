@@ -1,19 +1,31 @@
+import type { aiConfigType } from '../schemas/ai.schema.js';
+
 export enum AIDifficulty {
-  EASY = 'easy', // 60% accuracy, slow reaction 200ms delay
-  MEDIUM = 'medium', // 75% accuracy, moderate reaction 100ms delay
-  HARD = 'hard', // 90% accuracy, fast reaction 50ms delay
+  EASY = 'easy',
+  MEDIUM = 'medium',
+  HARD = 'hard',
 }
 
-export const aiConfig = {
-  easy: { errorRate: 0.3, reactionTime: 1200 },
-  medium: { errorRate: 0.15, reactionTime: 800 },
-  hard: { errorRate: 0.05, reactionTime: 400 },
+export const AIConfig: Record<AIDifficulty, aiConfigType> = {
+  [AIDifficulty.EASY]: {
+    threshold: 0.25,
+    predictionTime: 0.8,
+    precision: 0.1,
+    predictionError: 80,
+    predictionAccuracy: 0.6,
+  },
+  [AIDifficulty.MEDIUM]: {
+    threshold: 0.1,
+    predictionTime: 1.0,
+    precision: 0.05,
+    predictionError: 25,
+    predictionAccuracy: 0.8,
+  },
+  [AIDifficulty.HARD]: {
+    threshold: 0.05,
+    predictionTime: 2.0,
+    precision: 0.01,
+    predictionError: 5,
+    predictionAccuracy: 0.98,
+  },
 };
-
-/**
-  - Easy: slow reaction, high error
-  - Medium: moderate reaction, some error
-  - Hard: fast reaction, low error
- */
-
-// form index : export * from './ai.constants.js';

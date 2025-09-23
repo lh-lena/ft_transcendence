@@ -1,76 +1,95 @@
 import { z } from 'zod/v4';
-import * as basics from './basics.js';
+import { dtString, tfaType } from './basics';
 
-//userchema
+export const userBase = z.object({
+  userId: z.uuid(),
 
-const userIn = {
-  email: z.string().email(),
+  createdAt: dtString,
+  updatedAt: dtString,
+
+  email: z.email().optional().nullable(),
   username: z.string(),
-  password_hash: z.string(),
-  is_2fa_enabled: z.boolean().optional().default(false),
-  twofa_secret: z.string().nullable().optional(),
-};
+  alias: z.string().nullable().optional(),
 
-const userGen = {
-  id: z.number(),
-  created_at: z.string(),
-  updated_at: z.string(),
-};
+  online: z.boolean().optional(),
 
-const userResponseBase = z.object({
-  ...userGen,
-  ...userIn,
+  password_hash: z.string().optional().nullable(),
+
+  tfaEnabled: z.boolean().optional(),
+  tfaSecret: z.string().nullable().optional(),
+  tfaMethod: tfaType.nullable().optional(),
+  tfaTempCode: z.string().nullable().optional(),
+  tfaCodeExpires: dtString.nullable().optional(),
+  backupCodes: z.string().nullable().optional(),
+
+  guest: z.boolean(),
+
+  color: z.string(),
+  colormap: z.string(),
+  avatar: z.string().optional().nullable(),
 });
+export const userBaseArray = z.array(userBase);
 
-const userResponseSchema = userResponseBase.meta({ $id: 'userResponse' });
+//define schema for POST
+const userPostBase = userBase.omit({
+  userId: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export const userCreate = userPostBase.meta({ $id: 'userCreate' }).describe('User creation schema');
 
-const userResponseSchemaArray = z.array(userResponseBase).meta({ $id: 'userResponseArray' });
-
-const userCreateSchema = z
-  .object({
-    ...userIn,
-  })
-  .meta({ $id: 'userCreate' });
-
-const userUpdateSchema = z
-  .object({
-    ...userIn,
-  })
+//define schema for PATCH
+const userUpdate = userPostBase
   .partial()
-  .meta({ $id: 'userUpdate' });
+  .meta({ $id: 'userUpdate' })
+  .describe('User update schema');
 
-const userDeleteSchema = z
+const userAvatarUpload = z
   .object({
-    message: z.string(),
+    userId: z.uuid(),
+    avatar: z.string(),
   })
-  .meta({ $id: 'userDelete' });
+  .meta({ $id: 'userAvatarUpload' });
 
-export const userIdBase = z.object({
-  id: z.number(),
+//define schemas for GET
+export const userIdBase = userBase.pick({
+  userId: true,
 });
 
-const userIdSchema = userIdBase.meta({ $id: 'userId' });
+const userId = userIdBase.meta({ $id: 'userId' });
 
-const userQuerySchema = z
+export const userQueryBase = userBase.partial();
+const userQuery = userQueryBase
+  .meta({ $id: 'userQuery' })
+  .describe('Query for users with optional filters');
+
+const userCount = z
   .object({
-    email: z.string().email().optional(),
-    username: z.string().optional(),
+    count: z.number(),
   })
-  .meta({ $id: 'userQuery' });
+  .meta({ $id: 'userCount' })
+  .describe('Count of users');
 
-export type userCreateInput = z.infer<typeof userCreateSchema>;
-export type userUpdateInput = z.infer<typeof userUpdateSchema>;
-export type userIdInput = z.infer<typeof userIdSchema>;
-export type userQueryInput = z.infer<typeof userQuerySchema>;
-export type userResponseType = z.infer<typeof userResponseSchema>;
-export type userResponseArrayType = z.infer<typeof userResponseSchemaArray>;
+//define schemas for responses
+export const userResponse = userBase.meta({ $id: 'userResponse' });
+export const userResponseArray = z.array(userBase).meta({ $id: 'userResponseArray' });
 
 export const userSchemas = [
-  userCreateSchema,
-  userUpdateSchema,
-  userDeleteSchema,
-  userResponseSchema,
-  userResponseSchemaArray,
-  userIdSchema,
-  userQuerySchema,
+  userCreate,
+  userAvatarUpload,
+  userUpdate,
+  userId,
+  userCount,
+  userQuery,
+  userResponse,
+  userResponseArray,
 ];
+//
+////export types
+export type userType = z.infer<typeof userBase>;
+export type userIdType = z.infer<typeof userId>;
+export type userInfoType = z.infer<typeof userIdBase>;
+export type userCreateType = z.infer<typeof userCreate>;
+export type userAvatarUploadType = z.infer<typeof userAvatarUpload>;
+export type userUpdateType = z.infer<typeof userUpdate>;
+export type userQueryType = z.infer<typeof userQuery>;

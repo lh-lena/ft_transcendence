@@ -1,3 +1,6 @@
+// routes we need to check user in local storage for
+const protectedRoutes = ["/chat", "/settings", "/local", "/vs-player"];
+
 export class Router {
   private routes: Map<string, () => void>;
 
@@ -24,11 +27,18 @@ export class Router {
   }
 
   private handleRoute(path: string): void {
+    // check to make sure only users access authorized content
+    if (protectedRoutes.includes(path) && !localStorage.getItem("user")) {
+      this.navigate("/");
+      alert("unauthorized access detected. please login");
+      return;
+    }
+    // else we can do a regular navigate
     const callback = this.routes.get(path);
     if (callback) {
       callback();
     } else {
-      // handle 404 or redirect to home
+      // handle 404 or redirect to home (chat)
       this.navigate("/");
     }
   }
