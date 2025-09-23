@@ -1,6 +1,10 @@
 import { FastifyInstance } from "fastify";
 import { StartGame } from "../schemas/game.schema.js";
+<<<<<<< HEAD
 import { GameMode } from "../constants/game.constants.js";
+=======
+import { GameMode } from "../types/game.types.js";
+>>>>>>> develop
 import { GameResult, GameResultSchema } from "../schemas/game.schema.js";
 import { z } from "zod";
 
@@ -65,7 +69,14 @@ export function fetchStartGame(app: FastifyInstance) {
           });
         }
     
+<<<<<<< HEAD
     app.log.info(`[Mock Backend] Received game result for game ${gameResult.gameId}: winnerId=${gameResult.winnerId}`);
+=======
+    app.log.info(`[Mock Backend] Received game result for game ${gameResult.gameId}`, {
+      gameId: gameResult.gameId,
+      winnerId: gameResult.winnerId,
+    });
+>>>>>>> develop
     return reply.status(200).send({
       success: true,
       message: `Game result for ${gameResult.gameId} saved successfully`,
@@ -73,7 +84,11 @@ export function fetchStartGame(app: FastifyInstance) {
       processedAt: new Date().toISOString()
     });
   } catch (error) {
+<<<<<<< HEAD
     app.log.error(`[Mock Backend] Error processing game result: ${error}`);
+=======
+    app.log.error(`[Mock Backend] Error processing game result:`, error);
+>>>>>>> develop
     return reply.status(500).send({
       success: false,
       error: 'Internal server error',

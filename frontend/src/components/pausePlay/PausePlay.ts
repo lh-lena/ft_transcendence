@@ -1,38 +1,53 @@
-import { GameState, GameStatus } from '../../types';
+import { GameState, GameStatus } from "../../types";
 
 export class PausePlay {
   private button: HTMLButtonElement;
-  private isPlaying: boolean = true;
   private gameState: GameState;
+  private gameStateCallbackParent: () => void;
 
-  private onPauseStatusChange?: () => void;
-
-  constructor(gameState: GameState, onPauseStatusChange?: () => void) {
+  constructor(gameState: GameState, gameStateCallbackParent: () => void) {
+    this.gameStateCallbackParent = gameStateCallbackParent;
     this.gameState = gameState;
-    this.onPauseStatusChange = onPauseStatusChange;
-    this.button = document.createElement('button');
-    this.button.className = 'btn flex items-center justify-center w-8 h-8 bg-white duration-150';
+    this.button = document.createElement("button");
+    this.button.className =
+      "btn flex items-center justify-center w-8 h-8 bg-white duration-150";
     this.renderIcon();
-    this.button.addEventListener('click', () => {
-      this.isPlaying = !this.isPlaying;
-      this.gameState.status = this.isPlaying ? GameStatus.PLAYING : GameStatus.PAUSED;
+    this.button.addEventListener("click", () => {
+      if (
+        this.gameState.blockedPlayButton == true ||
+        this.gameState.status == GameStatus.GAME_OVER
+      )
+        return;
+      this.gameState.status =
+        this.gameState.status === GameStatus.PLAYING
+          ? GameStatus.PAUSED
+          : GameStatus.PLAYING;
+      // set this so that we can keep track of the client who paused
+      this.gameState.pauseInitiatedByMe = true;
+      this.gameStateCallbackParent();
       this.renderIcon();
-      if (this.onPauseStatusChange) {
-        this.onPauseStatusChange();
-      }
     });
   }
 
   private renderIcon() {
-    this.button.innerHTML = '';
-    const icon = document.createElement('span');
-    icon.className = 'icon';
-    icon.style.fontSize = '2rem';
-    icon.style.display = 'flex';
-    icon.style.alignItems = 'center';
-    icon.style.justifyContent = 'center';
-    icon.innerHTML = this.isPlaying ? this.pauseSVG() : this.playSVG();
+    this.button.innerHTML = "";
+    const icon = document.createElement("span");
+    icon.className = "icon";
+    icon.style.fontSize = "2rem";
+    icon.style.display = "flex";
+    icon.style.alignItems = "center";
+    icon.style.justifyContent = "center";
+    icon.innerHTML =
+      this.gameState.status === GameStatus.PAUSED
+        ? this.playSVG()
+        : this.pauseSVG();
     this.button.appendChild(icon);
+  }
+
+  public toggleIsPlaying(bool: boolean): void {
+    if (this.gameState.status == GameStatus.GAME_OVER) return;
+    this.gameState.status = bool ? GameStatus.PLAYING : GameStatus.PAUSED;
+    this.renderIcon();
   }
 
   private playSVG(): string {

@@ -1,5 +1,4 @@
-# Logs
-logs
+# Logs logs
 *.log
 npm-debug.log*
 yarn-debug.log*
@@ -122,6 +121,9 @@ dist
 # DynamoDB Local files
 .dynamodb/
 
+data/*
+public/*
+
 # TernJS port file
 .tern-port
 
@@ -138,3 +140,6 @@ dist
 # for MacOS
 .DS_Store
 **/.DS_Store
+
+# database
+./data/*

@@ -1,1 +1,1 @@
-export * from './SpectatorBar';
+export * from "./SpectatorBar";

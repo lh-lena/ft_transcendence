@@ -10,14 +10,12 @@
     "outDir": "./dist",
     "rootDir": "./src",
     "strict": true,
-    "allowJs": true,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
     "declaration": true,
     "declarationMap": true,
     "skipLibCheck": true,
     "esModuleInterop": true,
-    "noImplicitOverride": true,
     "noImplicitAny": true,
     "sourceMap": true,
     "baseUrl": "./",
@@ -26,7 +24,7 @@
     },
     "typeRoots": ["./node_modules/@types", "./src/types", "./src/schemas"]
   },
-  "include": ["src/**/*.ts", "src/**/*.d.ts"],
+  "include": ["src/**/*", "src/types/**/*"],
   "exclude": ["node_modules", "dist", "tmp"],
   "ts-node": {
     "esm": true

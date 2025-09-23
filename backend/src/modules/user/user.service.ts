@@ -1,69 +1,69 @@
-import { createCrud } from '../../utils/prismaCrudGenerator';
-import { AppError, NotFoundError, ConflictError } from '../../utils/error';
-import { Prisma } from '@prisma/client';
+import { userModel } from './user.crud';
+import { NotFoundError, ConflictError } from '../../utils/error';
+import { Prisma, User } from '@prisma/client';
+import { userInfoType } from '../../schemas/user';
 
-import { createuserInput, patchuserInput } from '../../schemas/user';
+export const userService = {
+  async create(data: Prisma.UserCreateInput): Promise<User> {
+    try {
+      const ret = await userModel.insert(data);
+      return ret;
+    } catch (err: unknown) {
+      if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
+        throw new ConflictError(`user already exists`);
+      }
+      throw err;
+    }
+  },
 
-export const userModel = createCrud('user');
+  async update(id: string, data: Prisma.UserUpdateInput): Promise<User> {
+    try {
+      const updated = await userModel.patch(id, data);
+      if (updated.guest === true && updated.online === false) {
+        await userModel.deleteOne(id);
+        return updated;
+      }
+      return updated;
+    } catch (err: unknown) {
+      if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
+        throw new ConflictError(`user already exists`);
+      }
+      if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2025') {
+        throw new NotFoundError(`user with ${id} not found`);
+      }
+      throw err;
+    }
+  },
 
-export async function getAllorFiltereduser(filters: Record<string, any>) {
-  let user;
+  async getQuery(query?: Prisma.UserWhereInput): Promise<User[]> {
+    const ret = query ? await userModel.findBy(query) : await userModel.findAll();
 
-  if (Object.keys(filters).length === 0) {
-    user = await userModel.findAll();
-  } else {
-    user = await userModel.findBy(filters);
-  }
-  if (!user || user.length === 0) {
-    throw new NotFoundError('No users found');
-  }
-  return user;
-}
+    if (ret.length === 0) {
+      throw new NotFoundError('No user found');
+    }
+    return ret;
+  },
 
-export async function getuserById(id: number) {
-  const user = await userModel.findById(id);
-  if (!user || user.length === 0) throw new NotFoundError(`user with ${id} not found`);
+  async getById(id: string): Promise<User> {
+    const ret = await userModel.findById(id);
 
-  return user;
-}
+    if (!ret) throw new NotFoundError(`user with ${id} not found`);
 
-export async function createuser(data: createuserInput) {
-  try {
-    const user = await userModel.insert(data);
+    return ret;
+  },
+
+  async getInfoById(id: string): Promise<userInfoType> {
+    const user: userInfoType = await this.getById(id);
     return user;
-  } catch (err: any) {
-    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
-      throw new ConflictError(`user already exists`);
-    }
-    throw err;
-  }
-}
+  },
 
-export async function updateuser(id: number, data: patchuserInput) {
-  try {
-    const user = await userModel.patch(id, data);
-    if (!user) throw new NotFoundError(`user with ${id} not found`);
-    return user;
-  } catch (err: any) {
-    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
-      throw new ConflictError(`user already exists`);
-    }
-    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2025') {
-      throw new NotFoundError(`user with ${id} not found`);
-    }
-    throw err;
-  }
-}
+  async deleteOne(id: string): Promise<void> {
+    const ret = await userModel.deleteOne(id);
+    if (!ret) throw new NotFoundError(`user with ${id} not found`);
+  },
 
-export async function removeuser(id: number) {
-  try {
-    const user = await userModel.remove(id);
-    if (!user) throw new NotFoundError(`user with ${id} not found`);
-    return { message: `user ${id} deleted successfully` };
-  } catch (err: any) {
-    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2025') {
-      throw new NotFoundError(`user with ${id} not found`);
-    }
-    throw err;
-  }
-}
+  async getCount(): Promise<number> {
+    const ret = await userModel.findAll();
+    return ret.length;
+  },
+};

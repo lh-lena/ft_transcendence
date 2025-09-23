@@ -1,1 +1,1 @@
-export * from './ScoreBox';
+export * from "./ScoreBox";

@@ -13,13 +13,110 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model user {
-  id              Int    @id @default( autoincrement() )
-  email           String @unique
-  username        String @unique
-  password_hash   String
-  is_2fa_enabled  Boolean @default(false)
-  twofa_secret    String?
-  created_at      DateTime @default( now() )
-  updated_at      DateTime @updatedAt
+// add string string map and avatar
+model User {
+  userId         String       @id @default(uuid())
+
+  email          String?       @unique
+  username       String       @unique
+  alias          String?     
+  guest          Boolean      @default(false)
+
+  online        Boolean      @default(false)
+
+  password_hash  String?
+
+  tfaEnabled     Boolean @default(false)
+  tfaSecret      String?
+  tfaMethod      String?
+  tfaTempCode    String?
+  tfaCodeExpires DateTime?
+  backupCodes    String? 
+
+  color          String
+  colormap       String
+  avatar      String?
+
+  gamePlayed     GamePlayed[]
+
+  friends        Friendship[]     @relation("user")
+  friended       Friendship[]     @relation("friend")
+
+  blockedUsers   Blocked[]     @relation("blocker")
+  blockedBy      Blocked[]     @relation("blocked")
+
+  chatSent       ChatMessage[] @relation("sender")
+  chatRecived    ChatMessage[] @relation("reciver")
+
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+}
+
+model Friendship {
+  friendId       Int  @id @default(autoincrement())
+  user     User @relation("user", fields: [userId], references:[userId], onDelete: Cascade)
+  userId   String
+  friend   User @relation("friend", fields: [friendUserId], references: [userId], onDelete: Cascade)
+  friendUserId String
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, friendId])
+}
+
+model Blocked {
+  blockedId         Int      @id @default(autoincrement())
+  user       User     @relation("blocker", fields: [userId], references: [userId], onDelete: Cascade)
+  userId     String
+  blocked    User     @relation("blocked", fields: [blockedUserId], references: [userId], onDelete: Cascade)
+  blockedUserId  String
+  createdAt  DateTime @default(now())
+
+  @@unique([userId, blockedId])
   }
+
+model Result {
+  resultId         Int          @id @default(autoincrement())
+  gameId     String       @unique
+  status     GameStatus
+  startedAt  DateTime
+  finishedAt DateTime
+  gamePlayed GamePlayed[]
+}
+
+model ChatMessage {
+  id         Int     @id @default(autoincrement())
+  sender     User     @relation("sender", fields: [senderId], references: [userId], onDelete: Cascade)
+  senderId   String
+  reciver    User     @relation("reciver", fields: [reciverId], references: [userId], onDelete: Cascade)
+  reciverId  String
+  message    String
+  createdAt  DateTime @default(now())
+  }
+
+model GamePlayed {
+  id       Int      @id @default(autoincrement())
+  user     User    @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  userId   String
+  result   Result  @relation(fields: [resultId], references: [resultId], onDelete: Cascade)
+  resultId Int
+  score    Int
+  isWinner Boolean
+}
+
+model BlackList {
+  id        Int      @id @default(autoincrement())
+  token     String   @unique
+}
+
+enum GameStatus {
+  finished
+  cancled
+  cancled_server_error
+}
+
+enum GameMode {
+  pvp_remote
+  pvp_ai
+  tournamnet
+}

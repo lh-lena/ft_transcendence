@@ -5,7 +5,7 @@ import { PrismaClient } from '@prisma/client';
 
 export const prisma = new PrismaClient();
 
-const prismaPlugin: FastifyPluginAsync = async (server, options) => {
+const prismaPlugin: FastifyPluginAsync = async (server) => {
   await prisma.$connect();
 
   server.decorate('prisma', prisma);

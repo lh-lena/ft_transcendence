@@ -1,8 +1,8 @@
 export enum GameStatus {
-  MENU = 'menu',
-  PLAYING = 'playing',
-  PAUSED = 'paused',
-  GAME_OVER = 'game_over',
+  MENU = "menu",
+  PLAYING = "playing",
+  PAUSED = "paused",
+  GAME_OVER = "game_over",
 }
 
 export interface Ball {
@@ -35,8 +35,15 @@ export interface Player {
 
 export interface GameState {
   status: GameStatus;
+  previousStatus: GameStatus;
   playerA: Player;
   playerB: Player;
+  pauseInitiatedByMe: boolean;
+  blockedPlayButton: boolean;
+  activeKey: string;
+  previousKey: string;
+  activePaddle: string | undefined;
+  wsPaddleSequence: number;
 }
 
 export const CANVAS_DEFAULTS = {
@@ -50,7 +57,7 @@ export const BALL_DEFAULTS = {
   dx: Math.random() < 0.5 ? 6 : -6,
   dy: Math.random() < 0.5 ? 1 : -1,
   v: 70,
-  color: 'white',
+  color: "white",
   size: 15,
   acceleration: 2,
 };
@@ -59,7 +66,7 @@ export const PADDLE_DEFAULTS = {
   height: 80,
   width: 15,
   speed: 500,
-  color: 'white',
+  color: "white",
   score: 0,
 };
 

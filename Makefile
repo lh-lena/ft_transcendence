@@ -5,15 +5,29 @@ all:
 	docker-compose -f docker-compose.prod.yml up --build
 # start everything for dev environment
 dev:
-	docker-compose up -d --build 
+	@echo "Starting development environment..."
+	@./scripts/generate-ssl.sh
+	docker-compose up -d --build
+	@echo "✅ Development environment started at https://localhost:443"
 
 # stop everything
 down:
+	@echo "🛑 Stopping all services..."
 	docker-compose down
+	docker-compose -f docker-compose.prod.yml down 2>/dev/null || true
+	@echo "✅ All services stopped"
+
+# restart development environment
+restart: down dev
 
 # view logs
 logs:
 	docker-compose logs -f
+
+# view logs for specific service
+logs-service:
+	@echo "Usage: make logs-service SERVICE=backend"
+	docker-compose logs -f $(SERVICE)
 
 # access a container's shell
 shell:

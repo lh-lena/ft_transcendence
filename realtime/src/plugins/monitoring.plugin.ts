@@ -1,8 +1,8 @@
 import fp from 'fastify-plugin';
 import { FastifyInstance } from 'fastify';
-import { healthController } from '../controllers/health.controller.js';
+import { healthController } from '../metrics/health.controller.js';
 
-async function monitoringPlugin(server: FastifyInstance) {
+async function monitoringPlugin(server: FastifyInstance): Promise<void> {
   // register health and metrics endpoints
   await healthController(server);
 
