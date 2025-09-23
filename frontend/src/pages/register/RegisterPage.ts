@@ -39,8 +39,8 @@ export class RegisterPage {
         onClick: () => this.toggleRegisterMenu(),
       },
       {
-        name: "google auth",
-        // onClick: () => //,
+        name: "github auth",
+        onClick: () => this.backend.oauth2Login(),
       },
     ];
     this.firstMenu = new Menu(this.router, firstMenu);

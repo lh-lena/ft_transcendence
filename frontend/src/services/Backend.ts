@@ -115,6 +115,14 @@ export class Backend {
     this.setUser(userResponse.data);
   }
 
+  // ------------OAuth2--------------
+  async oauth2Login() {
+    window.location.href = `${import.meta.env.VITE_AUTH_URL}/api/oauth`;
+    //const response = await this.api.get("/api/oauth");
+    //console.log(response);
+    //return response;
+  }
+
   async fetchUserById(userId: string) {
     const response = await this.api.get(`/api/user/${userId}`);
     return response;

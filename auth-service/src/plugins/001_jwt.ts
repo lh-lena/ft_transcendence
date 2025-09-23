@@ -1,9 +1,22 @@
 import fp from 'fastify-plugin';
+import jwt from '@fastify/jwt';
 import { FastifyInstance } from 'fastify';
 import { JwTReturnSchema } from '../schemas/jwt';
 import type { JwTReturnType } from '../schemas/jwt';
 
 export default fp(async (fastify: FastifyInstance) => {
+  await fastify.register(jwt, {
+    secret: fastify.config.accessSecret,
+    namespace: 'access',
+    sign: { expiresIn: '15m' },
+  });
+
+  await fastify.register(jwt, {
+    secret: fastify.config.refreshSecret,
+    namespace: 'refresh',
+    sign: { expiresIn: '7d' },
+  });
+
   if (!fastify.jwt.access || !fastify.jwt.refresh) {
     throw new Error(
       'JWT namespaces not loaded! Register @fastify/jwt in your app before this plugin.',

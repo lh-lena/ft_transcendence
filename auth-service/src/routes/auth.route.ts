@@ -7,12 +7,10 @@ import { isBlacklistedToken } from '../utils/blacklistToken';
 import { apiClientBackend } from '../utils/apiClient';
 import type { AxiosRequestConfig } from 'axios';
 
-import { tfaHandler } from '../utils/tfa';
 import { tfaVerifySchema, tfaSetupSchema } from '../schemas/tfa';
 import { refreshTokenSchema } from '../schemas/jwt';
 
 import {
-  userSchema,
   userRegisterSchema,
   userLoginSchema,
   userPostSchema,
@@ -22,11 +20,8 @@ import {
 import type { UserType, GuestPostType } from '../schemas/user';
 
 const authRoutes = async (server: FastifyInstance) => {
-  const tfa = new tfaHandler(server);
-
   server.post('/api/register', async (req: FastifyRequest, reply: FastifyReply) => {
     const parseResult = userRegisterSchema.safeParse(req.body);
-    console.log('Registering User', parseResult);
 
     if (!parseResult.success) {
       console.log('Registration error', parseResult.error.cause);
@@ -36,25 +31,9 @@ const authRoutes = async (server: FastifyInstance) => {
     const password_hash = await hashPassword(parseResult.data.password);
     const newUser = userPostSchema.parse({ ...parseResult.data, password_hash });
 
-    console.log('New User to register', newUser);
+    const user = await server.user.post(newUser);
 
-    const config: AxiosRequestConfig = {
-      method: 'post',
-      url: '/user',
-      //headers: req.headers,
-      data: newUser,
-    };
-    const ret = await apiClientBackend(config);
-    console.log('Registered User', ret);
-
-    const createdUser = userSchema.safeParse(ret);
-
-    if (!createdUser.success) {
-      console.log('Created user parsing error', createdUser.error);
-      return reply.status(500).send({ message: 'User creation failed' });
-    }
-
-    return await tfa.sendJwt(createdUser.data, reply);
+    return await server.tfa.sendJwt(user, reply);
   });
 
   server.post('/api/login', async (req: FastifyRequest, reply: FastifyReply) => {
@@ -65,33 +44,24 @@ const authRoutes = async (server: FastifyInstance) => {
       return reply.status(400).send({ message: parseResult.error.issues });
     }
 
-    const config: AxiosRequestConfig = {
-      method: 'get',
-      url: '/user',
-      headers: req.headers,
-      params: { email: parseResult.data.email },
-    };
+    const user: UserType = await server.user.getByEmail(parseResult.data.email);
+    console.log(user);
 
-    const userArr: UserType[] = await apiClientBackend(config);
-
-    if (userArr.length !== 1) {
+    if (!user) {
       return reply.status(401).send({ message: 'Invalid credentials' });
     }
 
-    const user = userArr[0];
-
     const valid = await verifyPassword(user.password_hash, parseResult.data.password);
-    console.log('Password valid', valid);
 
     if (!valid) {
       return reply.status(401).send({ message: 'Invalid credentials' });
     }
 
     if (user.tfaEnabled) {
-      return await tfa.handletfa(user, reply);
+      return await server.tfa.handletfa(user, reply);
     }
 
-    return await tfa.sendJwt(user, reply);
+    return await server.tfa.sendJwt(user, reply);
   });
 
   server.post('/api/refresh', async (req: FastifyRequest, reply: FastifyReply) => {
@@ -127,7 +97,7 @@ const authRoutes = async (server: FastifyInstance) => {
       return reply.status(400).send({ message: parseResult.error.issues });
     }
 
-    if (!tfa.validSession(parseResult.data.sessionId)) {
+    if (!(await server.tfa.validSession(parseResult.data.sessionId))) {
       return reply.code(400).send({ message: 'Invalid or expired 2FA-Session' });
     }
 
@@ -143,11 +113,11 @@ const authRoutes = async (server: FastifyInstance) => {
     }
 
     if (parseResult.data.type === 'totp') {
-      return await tfa.checkTotp(parseResult.data, user, reply);
+      return await server.tfa.checkTotp(parseResult.data, user, reply);
     }
 
     if (parseResult.data.type === 'backup') {
-      return await tfa.checkBackup(parseResult.data, user, reply);
+      return await server.tfa.checkBackup(parseResult.data, user, reply);
     }
 
     return reply.send({ message: '2FA verified successfully' });
@@ -159,24 +129,15 @@ const authRoutes = async (server: FastifyInstance) => {
     if (!parseResult.success) {
       return reply.status(400).send({ message: parseResult.error.issues });
     }
-    const method = 'get';
-    const url = `/user/${parseResult.data.userId}`;
 
-    const config: AxiosRequestConfig = {
-      method,
-      url,
-      headers: req.headers,
-      params: { id: parseResult.data.userId },
-    };
-
-    const user: UserType = await apiClientBackend(config);
+    const user = await server.user.get(parseResult.data.userId);
 
     if (!user) {
       return reply.status(404).send({ message: 'User not found' });
     }
 
     if (parseResult.data.type === 'totp') {
-      return await tfa.setupTotp(user, reply);
+      return await server.tfa.setupTotp(user, reply);
     }
   });
 
@@ -210,17 +171,9 @@ const authRoutes = async (server: FastifyInstance) => {
 
     const newGuest: GuestPostType = parsedReq.data;
 
-    const config: AxiosRequestConfig = {
-      method: 'post',
-      url: '/user',
-      data: newGuest,
-    };
+    const user = await server.user.post(newGuest);
 
-    console.log('Creating guest user', config, newGuest);
-
-    const ret: UserType = await apiClientBackend(config);
-
-    return await tfa.sendJwt(ret, reply);
+    return await server.tfa.sendJwt(user, reply);
   });
 
   server.get('/api/auth/me', async (req: FastifyRequest, _) => {
@@ -229,9 +182,3 @@ const authRoutes = async (server: FastifyInstance) => {
 };
 
 export default fp(authRoutes);
-
-// TODO: whats this for
-// server.get('/api/auth/me', { preHandler: authMiddleware }, async (req, reply) => {
-//   const user = (req as any).user;
-//   return { user };
-// });

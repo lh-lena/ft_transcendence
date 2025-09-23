@@ -35,8 +35,8 @@ export class LoginPage {
         onClick: () => this.toggleLoginMenu(),
       },
       {
-        name: "google auth",
-        // onClick: () => this.//;
+        name: "github auth",
+        onClick: () => this.backend.oauth2Login(),
       },
     ];
     this.firstMenu = new Menu(this.router, firstMenu);

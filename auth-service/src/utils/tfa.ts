@@ -3,7 +3,7 @@ import { FastifyInstance, FastifyReply } from 'fastify';
 import { v4 as uuidv4 } from 'uuid';
 import { apiClientBackend } from '../utils/apiClient';
 import { AxiosRequestConfig } from 'axios';
-import { sha256 } from '../services/twofa';
+import { sha256 } from './twofa';
 import { authenticator } from 'otplib';
 import QRCode from 'qrcode';
 import crypto from 'crypto';
