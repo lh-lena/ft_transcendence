@@ -12,7 +12,8 @@ import type { PausedGameState } from '../../websocket/types/network.types.js';
 import type { User, UserIdObject, UserIdType } from '../../schemas/user.schema.js';
 
 export interface GameService {
-  handleStartGame: (user: User, gameId: GameIdType) => Promise<void>;
+  handleStartGame(user: User, gameId: GameIdType): Promise<boolean>;
+  handleStartGame(data: BackendStartGame): Promise<boolean>;
   handlePlayerInput: (user: User, payload: ClientEventPayload<'game_update'>) => void;
   handleGameLeave: (user: User, gameId: GameIdType) => Promise<void>;
   handleGamePause: (user: User, gameId: GameIdType) => void;
