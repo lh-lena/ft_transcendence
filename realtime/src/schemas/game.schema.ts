@@ -96,17 +96,20 @@ export const GameStartRequestSchema = {
   type: 'object',
   properties: {
     gameId: { type: 'string', format: 'uuid' },
-    players: { 
-      type: 'array', 
-      items: { 
+    players: {
+      type: 'array',
+      items: {
         type: 'object',
         properties: {
-          userId: { type: 'string', format: 'uuid' }
+          userId: { type: 'string', format: 'uuid' },
         },
-        required: ['userId']
-      }
+        required: ['userId'],
+      },
     },
-    aiDifficulty: { type: 'string', enum: [AIDifficulty.EASY, AIDifficulty.MEDIUM, AIDifficulty.HARD] },
+    aiDifficulty: {
+      type: 'string',
+      enum: [AIDifficulty.EASY, AIDifficulty.MEDIUM, AIDifficulty.HARD],
+    },
     mode: {
       type: 'string',
       enum: [GameMode.PVP_REMOTE, GameMode.PVB_AI, GameMode.PVP_LOCAL],

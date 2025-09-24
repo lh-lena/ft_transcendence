@@ -24,7 +24,7 @@ export default function createGameValidator(app: FastifyInstance): GameValidator
       throw new GameError(`not all players are connected to the game ${gameId}`);
     }
     if (resumeByPlayerId != undefined && pausedState.pausedByPlayerId !== resumeByPlayerId) {
-      throw new GameError(`game ${gameId} can be resumed only by player who paused it`);
+      throw new GameError(`game can be resumed only by player who paused it`);
     }
   }
 

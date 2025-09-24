@@ -145,6 +145,7 @@ export default function createGameStateService(app: FastifyInstance): GameStateS
   }
 
   function startGame(game: GameSession): void {
+    if (game === undefined || game === null || !validator.gameReadyToStart(game)) return;
     processDebugLog(app, 'game-state', `Starting the game ${game.gameId}`);
     const gameLoopService = app.gameLoopService as GameLoopService;
     const respond = app.respond as RespondService;
