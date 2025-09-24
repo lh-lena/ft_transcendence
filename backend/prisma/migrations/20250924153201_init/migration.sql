@@ -1,7 +1,7 @@
 -- CreateTable
 CREATE TABLE "User" (
     "userId" TEXT NOT NULL PRIMARY KEY,
-    "githubId" BIGINT,
+    "githubId" TEXT,
     "email" TEXT,
     "username" TEXT,
     "alias" TEXT,

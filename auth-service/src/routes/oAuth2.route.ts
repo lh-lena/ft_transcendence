@@ -11,12 +11,21 @@ type GithubUser = {
 
 const oAuth2Routes = async (server: FastifyInstance) => {
   async function regOrlogUser(githubUser: GithubUser) {
-    const user = await server.user.getUser({ githubdId: githubUser.githubId });
+    const githubId = githubUser.githubId.toString();
+    try {
+      const user = await server.user.getUser({ githubId: githubId });
 
-    if (user) return user;
+      return user;
+    } catch {
+      const newUser = await server.user.post({
+        ...githubUser,
+        githubId: githubId,
+        color: '#dff41a',
+        colormap: 'neutral',
+      });
 
-    const newUser = await server.user.post(githubUser);
-    return newUser;
+      return newUser;
+    }
   }
 
   async function fetchGithubUser(accessToken: string) {
@@ -44,6 +53,8 @@ const oAuth2Routes = async (server: FastifyInstance) => {
       const githubUser = await fetchGithubUser(token.token.access_token);
 
       const user = await regOrlogUser(githubUser);
+
+      console.log('\nUser registered with OAuth', user, ' userId: ', user.userId);
 
       const accessToken = server.generateAccessToken({ id: user.userId });
       const refreshToken = server.generateRefreshToken({ id: user.userId });

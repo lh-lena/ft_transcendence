@@ -16,7 +16,7 @@ datasource db {
 // add string string map and avatar
 model User {
   userId         String       @id @default(uuid())
-  githubId       BigInt?
+  githubId       String?
 
   email          String?       @unique
   username       String?       @unique

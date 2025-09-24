@@ -48,13 +48,12 @@ const authRoutes = async (server: FastifyInstance) => {
 
     const user: UserType = await server.user.getUser({ email: parseResult.data.email });
 
-    if (!user) {
+    if (!user || !user.password_hash) {
       return reply.status(401).send({ message: 'Invalid credentials' });
     }
-    console.log(user.password_hash);
-    console.log(parseResult.data.password);
 
     const valid = await verifyPassword(user.password_hash, parseResult.data.password);
+    console.log(valid);
 
     if (!valid) {
       return reply.status(401).send({ message: 'Invalid credentials' });

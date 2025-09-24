@@ -122,7 +122,7 @@ export class tfaHandler {
       return reply.code(400).send({ message: 'TOTP 2FA is already enabled.' });
     }
     const secret = authenticator.generateSecret();
-    const otpauth = authenticator.keyuri(user.email, 'ft_transcendence', secret);
+    const otpauth = authenticator.keyuri(user.username, 'ft_transcendence', secret);
     const codes = Array.from({ length: 8 }, () => crypto.randomBytes(8).toString('hex'));
     const codesToHash = codes.map(sha256);
     const codesString = codesToHash.join(',');

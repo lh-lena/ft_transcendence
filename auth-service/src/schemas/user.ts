@@ -3,15 +3,16 @@ import { dtString, tfaType } from './basics';
 
 export const userSchema = z.object({
   userId: z.uuid(),
+  githubId: z.string().nullable().optional(),
 
   createdAt: dtString.optional(),
   updatedAt: dtString.optional(),
 
-  email: z.email(),
-  username: z.string().min(1).max(6),
+  email: z.email().nullable(),
+  username: z.string(),
   alias: z.string().nullable().optional(),
 
-  password_hash: z.string(),
+  password_hash: z.string().nullable(),
 
   tfaEnabled: z.boolean().default(false),
   tfaSecret: z.string().nullable().default(null),
@@ -92,6 +93,7 @@ export const userUpdateSchema = userSchema.partial();
 
 export const userResponseSchema = userSchema.omit({
   password_hash: true,
+  githubId: true,
   tfaEnabled: true,
   tfaSecret: true,
   tfaMethod: true,

@@ -36,6 +36,7 @@ export const userActions = (server: FastifyInstance) => ({
       params: params,
     };
 
+    console.log('Fetching user with params:', params);
     const user: User.UserType[] = await server.api(config);
 
     return user[0];

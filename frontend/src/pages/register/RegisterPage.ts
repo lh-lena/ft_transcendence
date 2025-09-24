@@ -40,11 +40,17 @@ export class RegisterPage {
       },
       {
         name: "github auth",
-        onClick: () => this.backend.oAuth2Login(),
+        onClick: () => this.toggleoAuth2Menu(),
       },
     ];
     this.firstMenu = new Menu(this.router, firstMenu);
     this.main.appendChild(this.firstMenu.getMenuElement());
+  }
+
+  private async toggleoAuth2Menu() {
+    await this.backend.oAuth2Login();
+    this.websocket.initializeWebSocket();
+    this.router.navigate("/chat");
   }
 
   private async registerHook() {

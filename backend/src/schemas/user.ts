@@ -3,7 +3,7 @@ import { dtString, tfaType } from './basics';
 
 export const userBase = z.object({
   userId: z.uuid(),
-  githubId: z.number().optional().nullable(),
+  githubId: z.string().optional().nullable(),
 
   createdAt: dtString,
   updatedAt: dtString,

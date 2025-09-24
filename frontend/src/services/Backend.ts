@@ -39,12 +39,14 @@ export class Backend {
       async (error) => {
         const originalRequest = error.config;
 
+        //if 401 try retry
         if (
           error.response?.status === 401 &&
           !originalRequest._retry &&
           error.response?.data?.message !== "refresh token expired"
         ) {
-          if (this.isRefreshingToken)
+          //if already retrying store request
+          if (this.isRefreshingToken) {
             return new Promise((resolve, reject) => {
               this.failedQueue.push({ resolve, reject });
             })
@@ -54,33 +56,31 @@ export class Backend {
               .catch((err) => {
                 return Promise.reject(err);
               });
+          }
+
+          // mark as retry
+          originalRequest._retry = true;
+          this.isRefreshingToken = true;
+
+          try {
+            await this.refreshToken();
+            this.processQueue(null);
+
+            // retry request
+            return this.api(originalRequest);
+          } catch (refreshErr: unknown) {
+            this.processQueue(refreshErr);
+            await this.logout();
+            return Promise.reject(refreshErr);
+          } finally {
+            this.isRefreshingToken = false;
+          }
         }
 
-        originalRequest._retry = true;
-        this.isRefreshingToken = true;
-
-        try {
-          await this.refreshToken();
-          this.processQueue(null);
-
-          return this.api(originalRequest);
-        } catch (refreshErr: unknown) {
-          this.processQueue(refreshErr);
-          this.logout();
-          return Promise.reject(refreshErr);
-        } finally {
-          this.isRefreshingToken = false;
-        }
-
-        //handle other errors
-        // console.log("API Error:", error.response?.data || error.message);
-        // if (error.response?.status !== 401) {
-        //   alert(
-        //     `Backend error: ${error.response?.data?.message || error.message}`,
-        //   );
-        // }
-
-        // return Promise.reject(error);
+        // handle the rest of the errors
+        console.error("API Error:", error.response?.data || error.message);
+        alert("Error: " + (error.response?.data?.message || error.message));
+        return Promise.reject(error);
       },
     );
   }
@@ -136,7 +136,7 @@ export class Backend {
   async checkAuth(): Promise<string | null> {
     try {
       const userId = await this.api.get("/api/auth/me");
-      return userId.data;
+      return userId.data.userId;
     } catch {
       return null;
     }
@@ -189,7 +189,70 @@ export class Backend {
 
   // ------------OAuth2--------------
   async oAuth2Login() {
-    window.location.href = `${import.meta.env.VITE_AUTH_URL}/api/oauth`;
+    return new Promise((resolve, reject) => {
+      const authUrl = `${import.meta.env.VITE_AUTH_URL}/api/oauth`;
+
+      const popup = window.open(
+        authUrl,
+        "oauth",
+        "width=600,height=600,scrollbars=yes,resizable=yes,centerscreen=yes",
+      );
+
+      if (!popup) {
+        reject(new Error("Failed to open OAuth popup, Check popUpblocker"));
+        return;
+      }
+
+      const messageListener = async (event: MessageEvent) => {
+        const authOrigin = new URL(import.meta.env.VITE_AUTH_URL).origin;
+
+        if (event.origin !== authOrigin) {
+          console.warn("Recieved message from unknown origin:", event.origin);
+          return;
+        }
+
+        if (event.data.type === "OAUTH_SUCCESS") {
+          cleanup();
+
+          try {
+            const success = await this.oAuth2Callback();
+            resolve(success);
+          } catch (error) {
+            reject(error);
+          }
+        } else if (event.data.type === "OAUTH_ERROR") {
+          cleanup();
+          reject(new Error(event.data.error || "oAuth2 authentication failed"));
+        }
+      };
+
+      const cleanup = () => {
+        window.removeEventListener("message", messageListener);
+        if (checkClosedInterval) {
+          clearInterval(checkClosedInterval);
+        }
+        popup?.close();
+      };
+
+      window.addEventListener("message", messageListener);
+
+      const checkClosedInterval = setInterval(() => {
+        if (popup.closed) {
+          cleanup();
+          reject(new Error("OAuth popup was closed"));
+        }
+      }, 1000);
+
+      setTimeout(
+        () => {
+          if (!popup.closed) {
+            cleanup();
+            reject(new Error("OAuth timed out"));
+          }
+        },
+        5 * 60 * 1000,
+      ); // 5min
+    });
   }
 
   async oAuth2Callback() {
