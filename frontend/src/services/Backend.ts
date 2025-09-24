@@ -92,11 +92,8 @@ export class Backend {
       color: color,
       colormap: profilePrintToString(colorMap),
     });
-    localStorage.setItem("jwt", response.data.jwt);
-    localStorage.setItem("refreshToken", response.data.refreshToken);
     const userResponse = await this.fetchUserById(response.data.userId);
     this.setUser(userResponse.data);
-    console.log(this.getUser());
 
     return response;
   }
@@ -105,11 +102,8 @@ export class Backend {
 
   async loginUser(data: UserLogin) {
     const response = await this.api.post("/api/login", data);
-    console.log(response);
     // return early if 2fa case
     if (response.data.status === "2FA_REQUIRED") return response;
-    localStorage.setItem("jwt", response.data.jwt);
-    localStorage.setItem("refreshToken", response.data.refreshToken);
     const userResponse = await this.fetchUserById(response.data.userId);
     this.setUser(userResponse.data);
   }

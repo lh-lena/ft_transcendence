@@ -37,6 +37,7 @@ const authRoutes = async (server: FastifyInstance) => {
     const refreshToken = server.generateRefreshToken({ id: user.userId });
 
     reply
+      .code(201)
       .setAuthCookie('jwt', accessToken)
       .setAuthCookie('refreshToken', refreshToken, { path: '/api/refresh' })
       .send({ message: 'successfull Registration', userId: user.userId });
@@ -68,7 +69,14 @@ const authRoutes = async (server: FastifyInstance) => {
       return await server.tfa.handletfa(user, reply);
     }
 
-    return await server.tfa.sendJwt(user, reply);
+    const accessToken = server.generateAccessToken({ id: user.userId });
+    const refreshToken = server.generateRefreshToken({ id: user.userId });
+
+    reply
+      .code(201)
+      .setAuthCookie('jwt', accessToken)
+      .setAuthCookie('refreshToken', refreshToken, { path: '/api/refresh' })
+      .send({ message: 'successfull login', userId: user.userId });
   });
 
   server.post('/api/refresh', async (req: FastifyRequest, reply: FastifyReply) => {
@@ -149,13 +157,7 @@ const authRoutes = async (server: FastifyInstance) => {
   });
 
   server.post('/api/logout', async (req: FastifyRequest, reply: FastifyReply) => {
-    const parsedReq = refreshTokenSchema.safeParse(req.body);
-
-    if (!parsedReq.success) {
-      return reply.status(400).send({ message: parsedReq.error.issues });
-    }
-
-    const refreshToken = parsedReq.data.refreshToken;
+    const refreshToken = req.cookies.refreshToken;
 
     if (refreshToken) {
       const config: AxiosRequestConfig = {
@@ -163,10 +165,14 @@ const authRoutes = async (server: FastifyInstance) => {
         url: '/blacklist',
         data: { token: refreshToken },
       };
-      await apiClientBackend(config);
+      await server.api(config);
     }
 
-    return reply.send({ message: 'Logged out successfully' });
+    return reply
+      .code(200)
+      .clearCookie('jwt', { path: '/' })
+      .clearCookie('refreshToken', { path: '/api/refresh' })
+      .send({ message: 'successfull logout' });
   });
 
   server.post('/api/guest/login', async (req: FastifyRequest, reply: FastifyReply) => {
@@ -180,7 +186,14 @@ const authRoutes = async (server: FastifyInstance) => {
 
     const user = await server.user.post(newGuest);
 
-    return await server.tfa.sendJwt(user, reply);
+    const accessToken = server.generateAccessToken({ id: user.userId });
+    const refreshToken = server.generateRefreshToken({ id: user.userId });
+
+    reply
+      .code(201)
+      .setAuthCookie('jwt', accessToken)
+      .setAuthCookie('refreshToken', refreshToken, { path: '/api/refresh' })
+      .send({ message: 'successfull Guest login', userId: user.userId });
   });
 
   server.get('/api/auth/me', async (req: FastifyRequest, _) => {
