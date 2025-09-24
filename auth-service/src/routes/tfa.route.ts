@@ -53,11 +53,12 @@ const tfaRoutes = async (server: FastifyInstance) => {
       url: `/user/${parseResult.data.userId}`,
     };
 
-    const user: UserType = server.api(config);
+    const user: UserType = await server.api(config);
 
     if (!user) {
       return reply.status(404).send({ message: 'User not found' });
     }
+    console.log('TOTP CHECK', parseResult.data, user);
 
     if (parseResult.data.type === 'totp') {
       return await server.tfa.checkTotp(parseResult.data, user, reply);

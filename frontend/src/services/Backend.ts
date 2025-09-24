@@ -149,8 +149,6 @@ export class Backend {
     const userResponse = await this.fetchUserById(response.data.userId);
     this.setUser(userResponse.data);
 
-    this.startPeriodicRefreshToken();
-
     return response;
   }
 
@@ -166,8 +164,6 @@ export class Backend {
     const userResponse = await this.fetchUserById(response.data.userId);
     this.setUser(userResponse.data);
 
-    this.startPeriodicRefreshToken();
-
     return response;
   }
 
@@ -182,13 +178,11 @@ export class Backend {
     const userResponse = await this.fetchUserById(response.data.userId);
     this.setUser(userResponse.data);
 
-    this.startPeriodicRefreshToken();
-
     return response;
   }
 
   // ------------OAuth2--------------
-  async oAuth2Login() {
+  oAuth2Login(): Promise<any> {
     return new Promise((resolve, reject) => {
       const authUrl = `${import.meta.env.VITE_AUTH_URL}/api/oauth`;
 
@@ -197,80 +191,118 @@ export class Backend {
         "oauth",
         "width=600,height=600,scrollbars=yes,resizable=yes,centerscreen=yes",
       );
-
       if (!popup) {
-        reject(new Error("Failed to open OAuth popup, Check popUpblocker"));
+        reject(new Error("Failed to open popup"));
         return;
       }
 
-      const messageListener = async (event: MessageEvent) => {
-        const authOrigin = new URL(import.meta.env.VITE_AUTH_URL).origin;
-
-        if (event.origin !== authOrigin) {
-          console.warn("Recieved message from unknown origin:", event.origin);
+      const messageHandler = (event: MessageEvent) => {
+        console.log("Message received:", event);
+        console.log("Expected origin:", window.location.origin);
+        console.log("Event origin:", event.origin);
+        if (event.origin !== `${import.meta.env.VITE_AUTH_URL}`) {
           return;
         }
 
-        if (event.data.type === "OAUTH_SUCCESS") {
-          cleanup();
+        const { type, data } = event.data;
 
-          try {
-            const success = await this.oAuth2Callback();
-            resolve(success);
-          } catch (error) {
-            reject(error);
+        if (type === "OAUTH_RESULT") {
+          console.log(type, data);
+          window.removeEventListener("message", messageHandler);
+
+          if (!popup.closed) {
+            popup.close();
           }
-        } else if (event.data.type === "OAUTH_ERROR") {
-          cleanup();
-          reject(new Error(event.data.error || "oAuth2 authentication failed"));
+
+          resolve(data);
         }
       };
 
-      const cleanup = () => {
-        window.removeEventListener("message", messageListener);
-        if (checkClosedInterval) {
-          clearInterval(checkClosedInterval);
-        }
-        popup?.close();
-      };
-
-      window.addEventListener("message", messageListener);
-
-      const checkClosedInterval = setInterval(() => {
+      const checkClosed = setInterval(() => {
         if (popup.closed) {
-          cleanup();
+          clearInterval(checkClosed);
+          window.removeEventListener("message", messageHandler);
           reject(new Error("OAuth popup was closed"));
         }
       }, 1000);
 
-      setTimeout(
-        () => {
-          if (!popup.closed) {
-            cleanup();
-            reject(new Error("OAuth timed out"));
-          }
-        },
-        5 * 60 * 1000,
-      ); // 5min
+      window.addEventListener("message", messageHandler);
     });
   }
+  //async oAuth2Login() {
+  //  return new Promise((resolve, reject) => {
+  //    const authUrl = `${import.meta.env.VITE_AUTH_URL}/api/oauth`;
 
-  async oAuth2Callback() {
-    try {
-      const isAuth = await this.checkAuth();
-      if (isAuth) {
-        const userResponse = await this.fetchUserById(isAuth);
-        this.setUser(userResponse.data);
+  //    const popup = window.open(
+  //      authUrl,
+  //      "oauth",
+  //      "width=600,height=600,scrollbars=yes,resizable=yes,centerscreen=yes",
+  //    );
 
-        this.startPeriodicRefreshToken();
-        return true;
-      }
-      return false;
-    } catch (error: unknown) {
-      console.error("OAuth2 callback failed:", error);
-      return false;
-    }
-  }
+  //    if (!popup) {
+  //      reject(new Error("Failed to open OAuth popup, Check popUpblocker"));
+  //      return;
+  //    }
+
+  //    const messageHandler = (event: MessageEvent) => {
+  //      if (event.origin !== window.location.origin) {
+  //        return;
+  //      }
+
+  //      const { type, data } = event.data;
+
+  //      if (type === "OAUTH_RESULT") {
+  //        window.removeEventListener("message", messageHandler);
+  //        popup.close();
+
+  //        // Resolve with the OAuth data
+  //        resolve(data);
+  //      }
+  //    };
+
+  //    // Handle popup being closed manually
+  //    const checkClosed = setInterval(() => {
+  //      if (popup.closed) {
+  //        clearInterval(checkClosed);
+  //        window.removeEventListener("message", messageHandler);
+  //        reject(new Error("OAuth popup was closed by user"));
+  //      }
+  //    }, 1000);
+
+  //    // Add the message listener
+  //    window.addEventListener("message", messageHandler);
+
+  //    // Optional: Add timeout
+  //    setTimeout(
+  //      () => {
+  //        if (!popup.closed) {
+  //          clearInterval(checkClosed);
+  //          window.removeEventListener("message", messageHandler);
+  //          popup.close();
+  //          reject(new Error("OAuth timeout - please try again"));
+  //        }
+  //      },
+  //      5 * 60 * 1000,
+  //    ); // 5 minute timeout
+  //  });
+  //}
+
+  //async oAuth2Callback() {
+  //  try {
+  //    const isAuth = await this.checkAuth();
+  //    if (isAuth) {
+  //      const userResponse = await this.fetchUserById(isAuth);
+  //      this.setUser(userResponse.data);
+
+  //      this.startPeriodicRefreshToken();
+  //      return true;
+  //    }
+  //    return false;
+  //  } catch (error: unknown) {
+  //    console.error("OAuth2 callback failed:", error);
+  //    return false;
+  //  }
+  //}
 
   async fetchUserById(userId: string) {
     const response = await this.api.get(`/api/user/${userId}`);
@@ -537,11 +569,11 @@ export class Backend {
       code: code,
     });
 
+    console.log("2FA Verification Response:", response.data);
+
     if (response.status === 200) {
       const userResponse = await this.fetchUserById(response.data.userId);
       this.setUser(userResponse.data);
-
-      this.startPeriodicRefreshToken();
     }
 
     return response;
@@ -553,7 +585,7 @@ export class Backend {
   }
 
   //TODO add to websocket handler -> checks if still authentictaed and if start refresh
-  async handleWsReconnect() {
+  async handleWsConnect() {
     const isAuth = await this.checkAuth();
 
     if (isAuth && this.user) {

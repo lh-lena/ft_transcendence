@@ -49,7 +49,9 @@ export class RegisterPage {
 
   private async toggleoAuth2Menu() {
     await this.backend.oAuth2Login();
+
     this.websocket.initializeWebSocket();
+    this.backend.handleWsConnect();
     this.router.navigate("/chat");
   }
 
@@ -101,6 +103,7 @@ export class RegisterPage {
     await this.backend.registerUser(userRegistrationData);
     // TODO WEB SOCKET CONNECT
     this.websocket.initializeWebSocket();
+    this.backend.handleWsConnect();
     // if user object was received
     this.router.navigate("/chat");
   }

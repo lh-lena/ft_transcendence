@@ -18,6 +18,7 @@ export class Websocket {
   // web socket (init on profile load?)
   public initializeWebSocket(): void {
     const wsUrl = import.meta.env.VITE_WEBSOCKET_URL;
+    //TODO is not stored there no more? is this esential??
     const token = localStorage.getItem("jwt");
 
     // Append token as query parameter if provided

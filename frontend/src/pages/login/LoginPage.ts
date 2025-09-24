@@ -45,10 +45,47 @@ export class LoginPage {
 
   //TODO check implementation and whats still needed
   private async toggleoAuth2Menu() {
-    await this.backend.oAuth2Login();
-    this.websocket.initializeWebSocket();
-    this.router.navigate("/chat");
+    try {
+      const response = await this.backend.oAuth2Login();
+
+      console.log(response);
+
+      if (response.type === "2FA_REQUIRED") {
+        //TODO added this here to remove login items on 2FA
+        this.main.removeChild(this.firstMenu.getMenuElement());
+
+        this.check2FA(response.userId, response.sessionId);
+        return;
+      }
+
+      if (response.type === "OAUTH_SUCCESS") {
+        console.log("OAuth successful, fetching user data...", response);
+        const ret = await this.backend.fetchUserById(response.userId);
+        console.log("Fetched user data:", ret);
+        this.backend.setUser(ret.data);
+
+        this.websocket.initializeWebSocket();
+        this.backend.handleWsConnect();
+
+        this.router.navigate("/chat");
+        return;
+      }
+
+      if (response.type === "OAUTH_ERROR") {
+        console.error("OAuth failed:", response.error);
+        // TODO handle error
+        return;
+      }
+    } catch (error) {
+      console.error("OAuth process failed:", error);
+    }
   }
+  //private async toggleoAuth2Menu() {
+  //  await this.backend.oAuth2Login();
+
+  //  this.websocket.initializeWebSocket();
+  //  this.router.navigate("/chat");
+  //}
 
   private toggleLoginMenu(): void {
     this.main.removeChild(this.firstMenu.getMenuElement());
@@ -115,22 +152,25 @@ export class LoginPage {
     };
 
     const response = await this.backend.loginUser(userLoginData);
+
     if (response?.data.status === "2FA_REQUIRED") {
+      //TODO check i moved this here so i dont conflict with github 2FA_Check :)
+      // get rid of
+      this.loginMenu.unmount();
+      this.loginForm.remove();
+
       this.check2FA(response.data.userId, response.data.sessionId);
       return;
     }
     // this should only happen if we get the user (but i think try catch interceptor handles this)
     // TODO CONNECT TO WEB SOCKET HERE
     this.websocket.initializeWebSocket();
+    this.backend.handleWsConnect();
     this.router.navigate("/chat");
   }
 
   private check2FA(userId: string, sessionId: string): void {
     // check to see if user has 2FA enabled
-
-    // get rid of
-    this.loginMenu.unmount();
-    this.loginForm.remove();
 
     // form
     const form = document.createElement("form");
@@ -166,6 +206,7 @@ export class LoginPage {
     if (response.status === 200) {
       // TODO connect to web socket here
       this.websocket.initializeWebSocket();
+      this.backend.handleWsConnect();
       this.router.navigate("/chat");
     } else alert("incorrect 2fa token");
   }

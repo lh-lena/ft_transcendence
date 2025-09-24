@@ -60,7 +60,8 @@ const authRoutes = async (server: FastifyInstance) => {
     }
 
     if (user.tfaEnabled) {
-      return await server.tfa.handletfa(user, reply);
+      const tfaData = await server.tfa.handletfa(user);
+      return reply.code(200).send({ tfaData });
     }
 
     const accessToken = server.generateAccessToken({ id: user.userId });
