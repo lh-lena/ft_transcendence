@@ -33,10 +33,22 @@ export const userActions = (server: FastifyInstance) => ({
     const config: AxiosRequestConfig = {
       method: 'get',
       url: `/user`,
-      params,
+      params: params,
     };
 
-    const user: User.UserType = await server.api(config);
+    const user: User.UserType[] = await server.api(config);
+
+    return user[0];
+  },
+
+  async getUsersArr(params: object) {
+    const config: AxiosRequestConfig = {
+      method: 'get',
+      url: `/user`,
+      params: params,
+    };
+
+    const user: User.UserType[] = await server.api(config);
 
     return user;
   },

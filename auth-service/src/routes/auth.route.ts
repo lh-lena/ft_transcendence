@@ -33,7 +33,13 @@ const authRoutes = async (server: FastifyInstance) => {
 
     const user = await server.user.post(newUser);
 
-    return await server.tfa.sendJwt(user, reply);
+    const accessToken = server.generateAccessToken({ id: user.id });
+    const refreshToken = server.generateRefreshToken({ id: user.id });
+
+    reply
+      .setAuthCookie('jwt', accessToken)
+      .setAuthCookie('refreshToken', refreshToken, { path: '/api/refresh' })
+      .send({ message: 'successfull Registration', userId: user.userId });
   });
 
   server.post('/api/login', async (req: FastifyRequest, reply: FastifyReply) => {
@@ -44,12 +50,13 @@ const authRoutes = async (server: FastifyInstance) => {
       return reply.status(400).send({ message: parseResult.error.issues });
     }
 
-    const user: UserType = await server.user.getByEmail(parseResult.data.email);
-    console.log(user);
+    const user: UserType = await server.user.getUser({ email: parseResult.data.email });
 
     if (!user) {
       return reply.status(401).send({ message: 'Invalid credentials' });
     }
+    console.log(user.password_hash);
+    console.log(parseResult.data.password);
 
     const valid = await verifyPassword(user.password_hash, parseResult.data.password);
 

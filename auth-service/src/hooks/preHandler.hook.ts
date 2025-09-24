@@ -28,6 +28,7 @@ export default fp(async function onRequestHook(server) {
     if (!authHeaders) {
       return reply.code(401).send({ error: 'Missing Authorisation Headers' });
     }
+    console.log('\n\nAUTH HEADERS\n', authHeaders, '\n');
 
     const token = authHeaders.split(' ')[1];
     if (!token) {

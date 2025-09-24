@@ -1,5 +1,10 @@
 import { z } from 'zod/v4';
 
+export interface FastifyJwTNamespace {
+  sign: (payload: object) => string;
+  verify: (token: string) => object;
+}
+
 export const refreshTokenSchema = z.object({
   refreshToken: z.string(),
 });

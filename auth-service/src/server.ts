@@ -1,6 +1,5 @@
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
-import fastifyCookie from '@fastify/cookie';
 import fastifyCsrf from '@fastify/csrf-protection';
 import fastifyHttpProxy from '@fastify/http-proxy';
 //import * as client from 'prom-client';
@@ -211,7 +210,6 @@ server.setErrorHandler((error: unknown, _, reply) => {
 const start = async () => {
   // ------------ Plugins ------------
 
-  await server.register(fastifyCookie);
   await server.register(fastifyCsrf);
 
   //----------Loader--------------------
@@ -229,7 +227,7 @@ const start = async () => {
 
   await server.register(cors, {
     //TODO set to frontend
-    origin: true,
+    origin: 'http://localhost:3000, http://localhost:8081',
     credentials: true,
     methods: ['GET', 'POST', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],

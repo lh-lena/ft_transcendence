@@ -13,17 +13,18 @@ export class Backend {
   private api = axios.create({
     baseURL: import.meta.env.VITE_AUTH_URL,
     timeout: 10000,
+    withCredentials: true,
   });
 
   constructor() {
     // Add request interceptor for auth tokens
-    this.api.interceptors.request.use((config) => {
-      const token = localStorage.getItem("jwt");
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-      }
-      return config;
-    });
+    // this.api.interceptors.request.use((config) => {
+    //   const token = localStorage.getItem("jwt");
+    //   if (token) {
+    //     config.headers.Authorization = `Bearer ${token}`;
+    //   }
+    //   return config;
+    // });
 
     // add response interceptor to handle errors globally
     this.api.interceptors.response.use(
@@ -74,10 +75,8 @@ export class Backend {
     let response = await this.api.post("/api/register", data);
     console.log(response);
 
-    // save JWT token if it's returned in the response
-    if (response.data.jwt && response.data.userId) {
-      localStorage.setItem("jwt", response.data.jwt);
-      localStorage.setItem("refreshToken", response.data.refreshToken);
+    //set user after send userId
+    if (response.data.userId) {
       const userResponse = await this.fetchUserById(response.data.userId);
       this.setUser(userResponse.data);
     }
