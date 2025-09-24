@@ -15,6 +15,14 @@ const configPlugin = async (fastify: FastifyInstance) => {
     throw new Error('OAuth secrets are not defined in enviormanet variables');
   }
 
+  const frontendUrl = process.env.FRONTEND_URL;
+  const backendUrl = process.env.BACKEND_URL;
+  const realtimeUrl = process.env.REALTIME_URL;
+
+  if (!frontendUrl || !backendUrl || !realtimeUrl) {
+    throw new Error('Service URLs are not defined in environment variables');
+  }
+
   //TODO add proper logging
   let port = Number(process.env.PORT);
   if (!port) {
@@ -35,6 +43,9 @@ const configPlugin = async (fastify: FastifyInstance) => {
     oauthSecretSt,
     port,
     host,
+    frontendUrl,
+    backendUrl,
+    realtimeUrl,
   };
 
   fastify.decorate('config', config);

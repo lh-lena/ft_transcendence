@@ -24,13 +24,16 @@ export default fp(async (fastify: FastifyInstance) => {
   }
 
   fastify.decorate('generateAccessToken', (payload: { id: string }) => {
+    console.log(`\nPAYLOAD\n`, payload, `\n`);
     return fastify.jwt.access.sign(payload);
   });
 
   fastify.decorate('verifyAccessToken', async (token: string): Promise<JwTReturnType> => {
     const decoded = fastify.jwt.access.verify(token);
+    console.log(decoded);
 
     const result = JwTReturnSchema.safeParse(decoded);
+    console.log(result);
 
     if (!result.success) {
       throw new Error('Invalid token payload');

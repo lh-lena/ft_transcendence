@@ -24,15 +24,10 @@ export default fp(async function onRequestHook(server) {
       return;
     }
 
-    const authHeaders = req.headers.authorization;
-    if (!authHeaders) {
-      return reply.code(401).send({ error: 'Missing Authorisation Headers' });
-    }
-    console.log('\n\nAUTH HEADERS\n', authHeaders, '\n');
-
-    const token = authHeaders.split(' ')[1];
+    const token = req.cookies.jwt;
+    console.log(token);
     if (!token) {
-      return reply.code(401).send({ error: 'Missing Authentication Token' });
+      return reply.code(401).send({ error: 'Missing Authorisation Headers' });
     }
 
     try {

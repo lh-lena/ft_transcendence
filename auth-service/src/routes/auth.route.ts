@@ -33,8 +33,8 @@ const authRoutes = async (server: FastifyInstance) => {
 
     const user = await server.user.post(newUser);
 
-    const accessToken = server.generateAccessToken({ id: user.id });
-    const refreshToken = server.generateRefreshToken({ id: user.id });
+    const accessToken = server.generateAccessToken({ id: user.userId });
+    const refreshToken = server.generateRefreshToken({ id: user.userId });
 
     reply
       .setAuthCookie('jwt', accessToken)

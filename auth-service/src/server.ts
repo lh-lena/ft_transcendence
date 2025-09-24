@@ -1,5 +1,4 @@
 import Fastify from 'fastify';
-import cors from '@fastify/cors';
 import fastifyCsrf from '@fastify/csrf-protection';
 import fastifyHttpProxy from '@fastify/http-proxy';
 //import * as client from 'prom-client';
@@ -223,14 +222,6 @@ const start = async () => {
 
   await server.register(AutoLoad, {
     dir: path.join(__dirname, '/hooks'),
-  });
-
-  await server.register(cors, {
-    //TODO set to frontend
-    origin: 'http://localhost:3000, http://localhost:8081',
-    credentials: true,
-    methods: ['GET', 'POST', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
   });
 
   server.register(fastifyHttpProxy, {
