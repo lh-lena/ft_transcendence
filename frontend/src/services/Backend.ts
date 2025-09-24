@@ -431,8 +431,7 @@ export class Backend {
     return response2.data;
   }
 
-  //@Alec TODO
-  //get avatar by jwt -> resarch said to use simply as <img src=getAvatar() *styling*/>
+  //@Alec TODO get avatar by jwt -> resarch said to use simply as <img src=getAvatar() *styling*/>
   async getAvatar() {
     const response = await this.api.get("/api/avatar");
     return response.data;
