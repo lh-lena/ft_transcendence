@@ -36,7 +36,7 @@ export class LoginPage {
       },
       {
         name: "github auth",
-        onClick: () => this.backend.oauth2Login(),
+        onClick: () => this.backend.oAuth2Login(),
       },
     ];
     this.firstMenu = new Menu(this.router, firstMenu);

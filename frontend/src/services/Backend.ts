@@ -10,6 +10,14 @@ import {
 
 export class Backend {
   private user!: User;
+  private refreshInterval?: number;
+  private isRefreshingToken: boolean = false;
+  //TODO change to not use any
+  private failedQueue: Array<{
+    resolve: (value?: any) => void;
+    reject: (error: any) => void;
+  }> = [];
+
   private api = axios.create({
     baseURL: import.meta.env.VITE_AUTH_URL,
     timeout: 10000,
@@ -17,69 +25,131 @@ export class Backend {
   });
 
   constructor() {
-    // Add request interceptor for auth tokens
-    // this.api.interceptors.request.use((config) => {
-    //   const token = localStorage.getItem("jwt");
-    //   if (token) {
-    //     config.headers.Authorization = `Bearer ${token}`;
-    //   }
-    //   return config;
-    // });
-
-    // add response interceptor to handle errors globally
-    this.api.interceptors.response.use(
-      (response) => {
-        // If response is successful (2xx status codes), return it
-        console.log("API Response:", response.data);
-        return response;
-      },
-      (error) => {
-        // Handle any response that isn't 2xx
-        // only go in here if we are able to refresh token
-        if (
-          error.response?.status === 401 &&
-          !(error.response?.data?.message === "refresh token expired") &&
-          localStorage.getItem("refreshToken")
-        ) {
-          this.refreshToken();
-        } else {
-          console.error("API Error:", error.response?.data || error.message);
-          alert(`
-            backend error: ${error.response?.data?.message || error.message}`);
-          // You can add specific error handling logic here
-          // if (error.response?.status === 401) {
-          //   // Handle unauthorized - maybe redirect to login
-          //   localStorage.removeItem("jwt");
-          //   localStorage.removeItem("user");
-          // }
-        }
-        return Promise.reject(error);
-      },
-    );
-
-    // if user exists grab old user form storage
+    this.setupInterceptors();
     this.loadUserFromStorage();
   }
 
-  async refreshToken() {
-    localStorage.removeItem("jwt");
-    const response = await this.api.post("/api/refresh", {
-      refreshToken: localStorage.getItem("refreshToken"),
-    });
-    localStorage.setItem("jwt", response.data.jwt);
-    localStorage.setItem("refreshToken", response.data.refreshToken);
-    return response;
+  //-------------Interceptors for handling responses and errors--------------
+  private setupInterceptors() {
+    this.api.interceptors.response.use(
+      (response) => {
+        console.log("API Response:", response.data);
+        return response;
+      },
+      async (error) => {
+        const originalRequest = error.config;
+
+        if (
+          error.response?.status === 401 &&
+          !originalRequest._retry &&
+          error.response?.data?.message !== "refresh token expired"
+        ) {
+          if (this.isRefreshingToken)
+            return new Promise((resolve, reject) => {
+              this.failedQueue.push({ resolve, reject });
+            })
+              .then(() => {
+                return this.api(originalRequest);
+              })
+              .catch((err) => {
+                return Promise.reject(err);
+              });
+        }
+
+        originalRequest._retry = true;
+        this.isRefreshingToken = true;
+
+        try {
+          await this.refreshToken();
+          this.processQueue(null);
+
+          return this.api(originalRequest);
+        } catch (refreshErr: unknown) {
+          this.processQueue(refreshErr);
+          this.logout();
+          return Promise.reject(refreshErr);
+        } finally {
+          this.isRefreshingToken = false;
+        }
+
+        //handle other errors
+        // console.log("API Error:", error.response?.data || error.message);
+        // if (error.response?.status !== 401) {
+        //   alert(
+        //     `Backend error: ${error.response?.data?.message || error.message}`,
+        //   );
+        // }
+
+        // return Promise.reject(error);
+      },
+    );
   }
 
+  //--------Handle reconnections and request gracefully--------------
+  private processQueue(error: unknown) {
+    this.failedQueue.forEach(({ resolve, reject }) => {
+      if (error) {
+        reject(error);
+      } else {
+        resolve();
+      }
+    });
+
+    this.failedQueue = [];
+  }
+
+  private startPeriodicRefreshToken() {
+    this.stopPeriodicRefreshToken();
+
+    this.refreshInterval = setInterval(
+      async () => {
+        try {
+          await this.refreshToken();
+        } catch {
+          console.log("Periodic refresh failed, logging out!");
+          this.logout();
+        }
+      },
+      14 * 60 * 1000,
+    );
+  }
+
+  ////TODO call this on logout -> done and call this on websocket connection loss
+  private stopPeriodicRefreshToken() {
+    if (this.refreshInterval) {
+      clearInterval(this.refreshInterval);
+      this.refreshInterval = undefined;
+    }
+  }
+
+  async refreshToken() {
+    try {
+      const response = await this.api.post("/api/refresh");
+      return response;
+    } catch (error: unknown) {
+      console.log("Refresh token failed");
+      throw error;
+    }
+  }
+
+  //-------------Check Auth----------------
+  async checkAuth(): Promise<string | null> {
+    try {
+      const userId = await this.api.get("/api/auth/me");
+      return userId.data;
+    } catch {
+      return null;
+    }
+  }
+
+  //--------------Registration----------------
   async registerUser(data: UserRegistration) {
     let response = await this.api.post("/api/register", data);
-    console.log(response);
 
-    //set user after send userId
-    if (response.data.userId) {
-      const userResponse = await this.fetchUserById(response.data.userId);
-      this.setUser(userResponse.data);
-    }
+    const userResponse = await this.fetchUserById(response.data.userId);
+    this.setUser(userResponse.data);
+
+    this.startPeriodicRefreshToken();
 
     return response;
   }
@@ -92,8 +162,11 @@ export class Backend {
       color: color,
       colormap: profilePrintToString(colorMap),
     });
+
     const userResponse = await this.fetchUserById(response.data.userId);
     this.setUser(userResponse.data);
+
+    this.startPeriodicRefreshToken();
 
     return response;
   }
@@ -102,18 +175,38 @@ export class Backend {
 
   async loginUser(data: UserLogin) {
     const response = await this.api.post("/api/login", data);
+
     // return early if 2fa case
     if (response.data.status === "2FA_REQUIRED") return response;
+
     const userResponse = await this.fetchUserById(response.data.userId);
     this.setUser(userResponse.data);
+
+    this.startPeriodicRefreshToken();
+
+    return response;
   }
 
   // ------------OAuth2--------------
-  async oauth2Login() {
+  async oAuth2Login() {
     window.location.href = `${import.meta.env.VITE_AUTH_URL}/api/oauth`;
-    //const response = await this.api.get("/api/oauth");
-    //console.log(response);
-    //return response;
+  }
+
+  async oAuth2Callback() {
+    try {
+      const isAuth = await this.checkAuth();
+      if (isAuth) {
+        const userResponse = await this.fetchUserById(isAuth);
+        this.setUser(userResponse.data);
+
+        this.startPeriodicRefreshToken();
+        return true;
+      }
+      return false;
+    } catch (error: unknown) {
+      console.error("OAuth2 callback failed:", error);
+      return false;
+    }
   }
 
   async fetchUserById(userId: string) {
@@ -349,14 +442,18 @@ export class Backend {
   }
 
   async logout() {
-    const response = await this.api.post("/api/logout", {
-      refreshToken: localStorage.getItem("refreshToken"),
-    });
-    console.log(response);
-    localStorage.removeItem("jwt");
-    localStorage.removeItem("refreshToken");
+    this.stopPeriodicRefreshToken();
+
+    try {
+      const response = await this.api.post("/api/logout");
+      console.log("Logged out:", response.data);
+    } catch {
+      console.error("Logout failed, but local data is cleared anyway");
+    }
+
     localStorage.removeItem("user");
-    return response;
+
+    return;
   }
 
   async twoFaTOTP(userId: string) {
@@ -376,16 +473,30 @@ export class Backend {
       type: "totp",
       code: code,
     });
-    if (response.status != 200) return response;
-    localStorage.setItem("jwt", response.data.jwt);
-    localStorage.setItem("refreshToken", response.data.refreshToken);
-    const userResponse = await this.fetchUserById(response.data.userId);
-    this.setUser(userResponse.data);
+
+    if (response.status === 200) {
+      const userResponse = await this.fetchUserById(response.data.userId);
+      this.setUser(userResponse.data);
+
+      this.startPeriodicRefreshToken();
+    }
+
     return response;
   }
-  // async fetchBlockedUsersById(userId: string) {
 
-  // }
+  //TODO add to websokcet handler -> when connection brakes to stop refresh loop
+  handleWsConnectionLoss() {
+    this.stopPeriodicRefreshToken();
+  }
+
+  //TODO add to websocket handler -> checks if still authentictaed and if start refresh
+  async handleWsReconnect() {
+    const isAuth = await this.checkAuth();
+
+    if (isAuth && this.user) {
+      this.startPeriodicRefreshToken();
+    }
+  }
 
   private loadUserFromStorage() {
     const savedUser = localStorage.getItem("user");
