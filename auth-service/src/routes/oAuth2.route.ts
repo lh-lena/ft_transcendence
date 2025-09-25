@@ -1,6 +1,7 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import fetch from 'node-fetch';
 import fp from 'fastify-plugin';
+import { AxiosRequestConfig } from 'axios';
 
 type GithubUser = {
   username: string;
@@ -21,11 +22,26 @@ const oAuth2Routes = async (server: FastifyInstance) => {
 
       return user;
     } catch {
+      let path;
+      if (githubUser.avatar) {
+        const config: AxiosRequestConfig = {
+          method: 'post',
+          url: `/upload/github`,
+          data: {
+            githubAvatarUrl: githubUser.avatar,
+          },
+        };
+        const response = await server.api(config);
+        if (response.success) path = response.storedName;
+      }
+      if (!path) path = null;
+
       const newUser = await server.user.post({
         ...githubUser,
         githubId: githubId,
         color: '#dff41a',
         colormap: 'neutral',
+        avatar: path,
       });
 
       return newUser;
