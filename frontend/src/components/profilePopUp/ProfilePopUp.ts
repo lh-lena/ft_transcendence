@@ -30,7 +30,15 @@ export class ProfilePopUp {
     const userDiv = document.createElement("div");
     userDiv.className = "mx-auto flex flex-col gap-8 my-auto";
     this.main.appendChild(userDiv);
-    const userPic = new ProfileAvatar(user.color, user.colormap).getElement();
+    const userPic = new ProfileAvatar(
+      user.color,
+      user.colormap,
+      undefined,
+      undefined,
+      undefined,
+      user.avatar ? "image" : undefined,
+      user.userId,
+    ).getElement();
     userPic.className = "mx-auto animate-bounce-slow";
     userDiv.appendChild(userPic);
 

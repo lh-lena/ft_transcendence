@@ -418,13 +418,15 @@ export class Backend {
     this.logout();
   }
 
+  //TODO add upload limit
   async uploadAvatar(avatar: File) {
     const formData = new FormData();
     formData.append("avatar", avatar);
 
     const response = await this.api.post("/api/upload", formData);
 
-    const avatarUrl = response.data.uniqueName;
+    const avatarUrl = response.data.storedName;
+    console.log(avatarUrl);
 
     const response2 = await this.api.patch(
       `/api/user/${this.getUser().userId}`,
@@ -437,8 +439,8 @@ export class Backend {
   }
 
   //@Alec TODO get avatar by jwt -> resarch said to use simply as <img src=getAvatar() *styling*/>
-  async getAvatar() {
-    const response = await this.api.get("/api/avatar");
+  async getAvatar(userId: string) {
+    const response = await this.api.get(`/api/avatar/${userId}`);
     return response.data;
   }
 
@@ -614,4 +616,13 @@ export class Backend {
   }
 
   // delete user from local storage is handled in router directly on /logout call
+}
+
+export async function getAvatar(userId: string) {
+  const response = await fetch(
+    `${import.meta.env.VITE_AUTH_URL}/api/avatar/${userId}`,
+    { method: "get" },
+  );
+  if (response.status === 200) return response.blob();
+  else null;
 }

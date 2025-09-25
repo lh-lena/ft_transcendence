@@ -205,21 +205,24 @@ const uploadRoutes = async (server: FastifyInstance) => {
       },
     },
     async (request: FastifyRequest, reply: FastifyReply) => {
-      const userId = request.params as userIdType;
-      const user = await userService.getById(userId.userId);
+      try {
+        const userId = request.params as userIdType;
+        const user = await userService.getById(userId.userId);
 
-      if (!user || !user.avatar) {
-        return reply.status(404).send({ error: 'No avatar found' });
+        if (!user || !user.avatar) {
+          return reply.status(404).send({ error: 'No avatar found' });
+        }
+        const cleanFileName = validator.cleanFilename(user.avatar);
+        const url = path.join(__dirname, '../../public/avatars', cleanFileName);
+
+        if (!fs.existsSync(url)) {
+          return reply.code(404).send({ error: 'No avatar found' });
+        }
+
+        return reply.header('Content-Type', 'image/png').send(fs.createReadStream(url));
+      } catch {
+        return reply.code(404).send({ error: 'No avatar found' });
       }
-      const cleanFileName = validator.cleanFilename(user.avatar);
-      const url = path.join(__dirname, '../public', cleanFileName);
-
-      if (!fs.existsSync(url)) {
-        reply.code(404).send({ error: 'No avatar found' });
-      }
-
-      reply.header('Content-Type', 'image/png');
-      return reply.send(fs.createReadStream(url));
     },
   );
 };

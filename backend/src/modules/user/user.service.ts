@@ -85,7 +85,7 @@ export const userService = {
   async deleteAvatar(id: string): Promise<void> {
     const user = await this.getById(id);
     if (user.avatar) {
-      const url = path.join(__dirname, '../../../public', user.avatar);
+      const url = path.join(__dirname, '../../../public/avatars', user.avatar);
       fs.unlink(url, (err) => {
         if (err) console.error('Failed to delete avatar:', err);
         else console.log('Avatar deleted:', url);

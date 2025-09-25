@@ -145,6 +145,8 @@ export class ChatPage {
       30,
       30,
       2,
+      user.avatar ? "image" : undefined,
+      user.userId,
     ).getElement();
     addYouButton.appendChild(youButtonAvatar);
     const addYouButtonText = document.createElement("h1");
@@ -232,6 +234,8 @@ export class ChatPage {
             30,
             30,
             2,
+            user.avatar ? "image" : undefined,
+            user.userId,
           ).getElement();
           resultBox.appendChild(avatar);
         }
@@ -388,6 +392,8 @@ export class ChatPage {
           30,
           30,
           2,
+          friend.avatar ? "image" : undefined,
+          user.userId,
         ).getElement();
         clickableContact.appendChild(contact);
         contact.appendChild(contactAvatar);
@@ -662,6 +668,8 @@ export class ChatPage {
           30,
           30,
           2,
+          friend.avatar ? "image" : undefined,
+          friend.userId,
         ).getElement();
         clickableContact.appendChild(contact);
         contact.appendChild(contactAvatar);

@@ -112,6 +112,9 @@ export class TournamentAliasPage {
       30,
       30,
       2,
+      //TODO need these in userStore
+      //userStore.avatar ? "image" : undefined,
+      //userStore.userId,
     ).getElement();
     contact.appendChild(contactAvatar);
     contact.appendChild(contactName);

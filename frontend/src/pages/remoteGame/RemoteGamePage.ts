@@ -281,6 +281,12 @@ export class VsPlayerGamePage {
       let avatar = new ProfileAvatar(
         this.gameState.playerA.color,
         this.gameState.playerA.colorMap,
+        40,
+        40,
+        2,
+        //TODO need these in gameState
+        //this.gameState.playerA.avatar ? "image" : undefined,
+        //this.gameState.playerA.userId,
       );
       this.menuEndDiv.appendChild(avatar.getElement());
       this.endResultText = document.createElement("h1");

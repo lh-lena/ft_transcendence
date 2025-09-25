@@ -25,6 +25,12 @@ export class ScoreBar {
     const profileA = new ProfileAvatar(
       this.gameState.playerA.color,
       this.gameState.playerA.colorMap,
+      undefined,
+      undefined,
+      undefined,
+      //TODO need this in gameState
+      //this.gameState.playerA.avatar ? "image" : undefined,
+      //this.gameState.playerA.userId,
     ).getElement();
     this.playerLeftContainer.appendChild(profileA);
     this.scoreA = document.createElement("h1");
@@ -51,6 +57,12 @@ export class ScoreBar {
     const profileB = new ProfileAvatar(
       this.gameState.playerB.color,
       this.gameState.playerB.colorMap,
+      undefined,
+      undefined,
+      undefined,
+      //TODO need this in gameState
+      //this.gameState.playerB.avatar ? "image" : undefined,
+      //this.gameState.playerB.userId,
     ).getElement();
     this.playerRightContainer.appendChild(profileB);
     this.element.appendChild(this.playerRightContainer);

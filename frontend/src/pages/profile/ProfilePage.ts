@@ -39,6 +39,9 @@ export class ProfilePage {
       40,
       40,
       2,
+      //TODO need these in userStore
+      //userStore.avatar ? "image" : undefined,
+      //user.userId,
     ).getElement();
     profilePic.className = "animate-bounce-slow";
 

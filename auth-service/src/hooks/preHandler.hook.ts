@@ -14,9 +14,11 @@ export default fp(async function onRequestHook(server) {
       '/api/refresh',
       '/api/verify',
       '/api/guest/login',
+      '/api/avatar/:userId',
     ];
 
     const routePath = req.routeOptions.url || req.url;
+    console.log('\n\nROUTE PATH\n', routePath, '\n');
 
     if (!routePath) {
       return reply.code(404).send({ error: 'Route not found' });
@@ -25,7 +27,7 @@ export default fp(async function onRequestHook(server) {
     }
 
     const token = req.cookies.jwt;
-    console.log(token);
+    console.log('TOKEN\n\n', token);
     if (!token) {
       return reply.code(401).send({ error: 'Missing Authorisation Headers' });
     }
