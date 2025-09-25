@@ -487,7 +487,8 @@ export class Backend {
   //join a tournament --> if user is loged in alias gets updated and if guest, guest account gets created. returns -> tournamentId: uuid, round: number, playerAmount: number, players: [userId: uuid], status: string(waiting, ready, finished), games: [gameSchema]
 
   async joinTournament(alias: string) {
-    if (!this.getUser().userId) {
+    console.log("Joining tournament", this.getUser());
+    if (!this.getUser()) {
       await this.registerGuest(alias);
     } else {
       await this.api.patch(`/api/user/${this.getUser().userId}`, {
