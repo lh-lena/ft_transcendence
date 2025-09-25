@@ -413,6 +413,11 @@ export class Backend {
     return response;
   }
 
+  async deleteAcc() {
+    await this.api.delete(`/api/user/${this.getUser().userId}`);
+    this.logout();
+  }
+
   async uploadAvatar(avatar: File) {
     const formData = new FormData();
     formData.append("avatar", avatar);
@@ -539,6 +544,7 @@ export class Backend {
   async logout() {
     this.stopPeriodicRefreshToken();
 
+    //TODO cut ws connection
     try {
       const response = await this.api.post("/api/logout");
       console.log("Logged out:", response.data);
@@ -547,6 +553,8 @@ export class Backend {
     }
 
     localStorage.removeItem("user");
+    //TODO how to navigate in here
+    //this.router.navigate("/");
 
     return;
   }

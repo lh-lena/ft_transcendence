@@ -15,6 +15,10 @@ const oAuth2Routes = async (server: FastifyInstance) => {
     try {
       const user = await server.user.getUser({ githubId: githubId });
 
+      if (user.online) {
+        return null;
+      }
+
       return user;
     } catch {
       const newUser = await server.user.post({
@@ -50,9 +54,13 @@ const oAuth2Routes = async (server: FastifyInstance) => {
     try {
       const token = await server.githubOAuth2.getAccessTokenFromAuthorizationCodeFlow(req);
       const githubUser = await fetchGithubUser(token.token.access_token);
-      const user = await regOrlogUser(githubUser);
 
       const frontendUrl = server.config.frontendUrl;
+
+      const user = await regOrlogUser(githubUser);
+      if (user === null) {
+        throw new Error('User is already online.');
+      }
 
       if (user.tfaEnabled) {
         const tfaData = await server.tfa.handletfa(user);
@@ -96,7 +104,7 @@ const oAuth2Routes = async (server: FastifyInstance) => {
       const refreshToken = server.generateRefreshToken({ id: user.userId });
 
       reply.setAuthCookie('jwt', accessToken);
-      reply.setAuthCookie('refreshToken', refreshToken, { path: '/api/refresh' });
+      reply.setAuthCookie('refreshToken', refreshToken, { path: '/api' });
 
       return reply.type('text/html').send(`
     <!DOCTYPE html>

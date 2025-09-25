@@ -30,7 +30,7 @@ const tfaRoutes = async (server: FastifyInstance) => {
 
       return reply
         .setAuthCookie('jwt', newAccessToken)
-        .setAuthCookie('refreshToken', newRefreshToken, { path: '/api/refresh' })
+        .setAuthCookie('refreshToken', newRefreshToken, { path: '/api' })
         .send({ message: 'Tokens refreshed' });
     } catch {
       return reply.status(401).send({ message: 'refresh token expired' });

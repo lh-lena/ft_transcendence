@@ -13,7 +13,7 @@ const cookiePlugin = async (fastify: FastifyInstance) => {
       const deafultOptions: CookieOptions = {
         httpOnly: true,
         secure: false, //TODO set to true in production
-        sameSite: 'lax',
+        sameSite: 'strict',
         path: '/',
       };
       const opts = { ...deafultOptions, ...options };

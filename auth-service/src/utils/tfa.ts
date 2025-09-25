@@ -80,7 +80,7 @@ export class tfaHandler {
     return reply
       .code(200)
       .setAuthCookie('jwt', accessToken)
-      .setAuthCookie('refreshToken', refreshToken, { path: '/api/refresh' })
+      .setAuthCookie('refreshToken', refreshToken, { path: '/api' })
       .send({ message: 'TOTP 2FA verification successful.', userId: user.userId });
   }
 
@@ -118,7 +118,7 @@ export class tfaHandler {
     return reply
       .code(200)
       .setAuthCookie('jwt', accessToken)
-      .setAuthCookie('refreshToken', refreshToken, { path: '/api/refresh' })
+      .setAuthCookie('refreshToken', refreshToken, { path: '/api' })
       .send({ message: 'TOTP 2FA verification successful.', userId: user.userId });
   }
 

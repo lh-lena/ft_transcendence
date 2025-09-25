@@ -12,6 +12,8 @@ export const userSchema = z.object({
   username: z.string(),
   alias: z.string().nullable().optional(),
 
+  online: z.boolean().optional(),
+
   password_hash: z.string().nullable(),
 
   tfaEnabled: z.boolean().default(false),

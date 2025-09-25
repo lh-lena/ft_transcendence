@@ -34,7 +34,7 @@ const authRoutes = async (server: FastifyInstance) => {
     reply
       .code(201)
       .setAuthCookie('jwt', accessToken)
-      .setAuthCookie('refreshToken', refreshToken, { path: '/api/refresh' })
+      .setAuthCookie('refreshToken', refreshToken, { path: '/api' })
       .send({ message: 'successfull Registration', userId: user.userId });
   });
 
@@ -50,6 +50,10 @@ const authRoutes = async (server: FastifyInstance) => {
 
     if (!user || !user.password_hash) {
       return reply.status(401).send({ message: 'Invalid credentials' });
+    }
+
+    if (user.online) {
+      return reply.status(403).send({ message: 'User already logged in' });
     }
 
     const valid = await verifyPassword(user.password_hash, parseResult.data.password);
@@ -70,11 +74,12 @@ const authRoutes = async (server: FastifyInstance) => {
     reply
       .code(201)
       .setAuthCookie('jwt', accessToken)
-      .setAuthCookie('refreshToken', refreshToken, { path: '/api/refresh' })
+      .setAuthCookie('refreshToken', refreshToken, { path: '/api' })
       .send({ message: 'successfull login', userId: user.userId });
   });
 
   server.post('/api/logout', async (req: FastifyRequest, reply: FastifyReply) => {
+    console.log('COOKIES: \n', req.cookies);
     const refreshToken = req.cookies.refreshToken;
 
     if (refreshToken) {
@@ -89,7 +94,7 @@ const authRoutes = async (server: FastifyInstance) => {
     return reply
       .code(200)
       .clearCookie('jwt', { path: '/' })
-      .clearCookie('refreshToken', { path: '/api/refresh' })
+      .clearCookie('refreshToken', { path: '/api' })
       .send({ message: 'successfull logout' });
   });
 
@@ -110,7 +115,7 @@ const authRoutes = async (server: FastifyInstance) => {
     reply
       .code(201)
       .setAuthCookie('jwt', accessToken)
-      .setAuthCookie('refreshToken', refreshToken, { path: '/api/refresh' })
+      .setAuthCookie('refreshToken', refreshToken, { path: '/api' })
       .send({ message: 'successfull Guest login', userId: user.userId });
   });
 

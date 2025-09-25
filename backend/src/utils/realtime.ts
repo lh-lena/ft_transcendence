@@ -14,11 +14,16 @@ export async function sendGameStartRealtime(game: gameType): Promise<void> {
   }
 }
 
-export async function notifyPlayer(reciever: string, message: string): Promise<void> {
+export async function notifyPlayer(
+  reciever: string,
+  message: string,
+  sender?: string,
+): Promise<void> {
   try {
     wsApiClient.post('/notify', {
       event: 'INFO',
       reciever: reciever,
+      sender: sender,
       payload: { message: message },
     });
   } catch (error) {
