@@ -3,7 +3,7 @@ import { Menu } from "../../components/menu";
 import { PongButton } from "../../components/pongButton";
 import { UserLogin } from "../../types";
 import validator from "validator";
-import { showError, showInfo, showToast } from "../../components/toast";
+import { showError, showInfo } from "../../components/toast";
 
 export class LoginPage {
   private main: HTMLElement;

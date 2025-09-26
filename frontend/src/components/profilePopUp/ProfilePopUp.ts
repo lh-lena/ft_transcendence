@@ -43,11 +43,12 @@ export class ProfilePopUp {
     userPic.className = "mx-auto animate-bounce-slow";
     userDiv.appendChild(userPic);
 
+    const username = document.createElement("h1");
+    username.innerText = user.username;
+    username.className = "text-center";
+    userDiv.appendChild(username);
+
     if (winsAndLosses) {
-      const username = document.createElement("h1");
-      username.innerText = user.username;
-      username.className = "text-center";
-      userDiv.appendChild(username);
       const winLossRow = document.createElement("div");
       winLossRow.className = "flex flex-row gap-3";
       const wins = document.createElement("h1");

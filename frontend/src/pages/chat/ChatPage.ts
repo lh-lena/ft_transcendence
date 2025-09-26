@@ -296,7 +296,7 @@ export class ChatPage {
       user,
     ).getNode();
     this.rightPanel = this.profilePopUp;
-    this.chatRow.appendChild(this.rightPanel);
+    // this.chatRow.appendChild(this.rightPanel);
 
     // window
     const windowComponent = new Window({
