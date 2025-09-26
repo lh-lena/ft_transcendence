@@ -19,9 +19,7 @@ axiosRetry(backendApi, {
 export async function apiClientBackend<T = any>(config: AxiosRequestConfig): Promise<T> {
   try {
     console.log('Axios Request: ', config);
-    console.log('Backend URL: ', backendApi.defaults.baseURL);
     const response = await backendApi.request<T>(config);
-    console.log('Axios Response: ', response.data);
     return response.data;
   } catch (err: any) {
     if (axios.isAxiosError(err)) {

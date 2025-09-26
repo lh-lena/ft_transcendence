@@ -44,9 +44,7 @@ const backendFriendsRoute = async (fastify: FastifyInstance) => {
   });
 
   fastify.post('/api/blocked', async (req: FastifyRequest, reply: FastifyReply) => {
-    console.log('Blocked Post Request', req.body);
     const parsedReq = blockedPostSchema.safeParse(req.body);
-    console.log('Parsed Request', parsedReq);
 
     if (!parsedReq || !parsedReq.success) {
       return reply.status(400).send({ message: 'Invalid input parameters' });

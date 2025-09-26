@@ -7,7 +7,6 @@ const avatarRoute = async (fastify: FastifyInstance) => {
   fastify.get('/api/avatar/:userId', async (req: FastifyRequest, reply: FastifyReply) => {
     try {
       const userId = req.params as { userId: string };
-      console.log(`Fetching avatar for userId: ${userId.userId}`);
       const config: AxiosRequestConfig = {
         method: 'get',
         url: `/avatar/${userId.userId}`,
@@ -15,8 +14,6 @@ const avatarRoute = async (fastify: FastifyInstance) => {
       };
 
       const backendRes = await apiClientBackend(config);
-      console.log('Backend response status:', backendRes.status);
-      console.log('Backend response headers:', backendRes.headers);
 
       // Check if we're getting an error page instead of an image
       if (backendRes.headers['content-type']?.includes('text/html')) {
@@ -27,7 +24,6 @@ const avatarRoute = async (fastify: FastifyInstance) => {
       reply.type(backendRes.headers['content-type'] || 'image/png');
       return reply.send(backendRes.buffer);
     } catch (error) {
-      console.log('Error fetching avatar:', error);
       reply.code(404).send({ message: 'Avatar not found' });
     }
   });

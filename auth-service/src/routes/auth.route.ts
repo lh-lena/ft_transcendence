@@ -18,7 +18,6 @@ const authRoutes = async (server: FastifyInstance) => {
     const parseResult = userRegisterSchema.safeParse(req.body);
 
     if (!parseResult.success) {
-      console.log('Registration error', parseResult.error.cause);
       return reply.status(400).send({ message: parseResult.error.cause });
     }
 
@@ -39,7 +38,6 @@ const authRoutes = async (server: FastifyInstance) => {
 
   server.post('/api/login', async (req: FastifyRequest, reply: FastifyReply) => {
     const parseResult = userLoginSchema.safeParse(req.body);
-    console.log('Login attempt', parseResult);
 
     if (!parseResult.success) {
       return reply.status(400).send({ message: parseResult.error.issues });
@@ -56,7 +54,6 @@ const authRoutes = async (server: FastifyInstance) => {
     }
 
     const valid = await verifyPassword(user.password_hash, parseResult.data.password);
-    console.log(valid);
 
     if (!valid) {
       return reply.status(401).send({ message: 'Invalid credentials' });
@@ -64,7 +61,6 @@ const authRoutes = async (server: FastifyInstance) => {
 
     if (user.tfaEnabled) {
       const tfaData = await server.tfa.handletfa(user);
-      console.log({ ...tfaData });
       return reply.code(200).send({ ...tfaData });
     }
 
@@ -79,7 +75,6 @@ const authRoutes = async (server: FastifyInstance) => {
   });
 
   server.post('/api/logout', async (req: FastifyRequest, reply: FastifyReply) => {
-    console.log('COOKIES: \n', req.cookies);
     const refreshToken = req.cookies.refreshToken;
 
     if (refreshToken) {
@@ -121,6 +116,7 @@ const authRoutes = async (server: FastifyInstance) => {
 
   server.get('/api/auth/me', async (req: FastifyRequest, reply: FastifyReply) => {
     const authHeader = req.headers.authorization;
+    console.log(authHeader);
 
     if (!authHeader) {
       return reply.code(401).send({ error: 'Authorization header missing' });
@@ -133,7 +129,8 @@ const authRoutes = async (server: FastifyInstance) => {
     }
 
     const jwtReturn = await server.verifyAccessToken(token);
-    return { userId: jwtReturn.id };
+
+    return reply.code(200).send({ userId: jwtReturn.id });
   });
 };
 

@@ -18,7 +18,7 @@ const configPlugin = async (fastify: FastifyInstance) => {
   const frontendUrl = process.env.FRONTEND_URL;
   const backendUrl = process.env.BACKEND_URL;
   const realtimeUrl = process.env.REALTIME_URL;
-
+  console.log('realtimeUrl', realtimeUrl, process.env.REALTIME_URL);
   if (!frontendUrl || !backendUrl || !realtimeUrl) {
     throw new Error('Service URLs are not defined in environment variables');
   }

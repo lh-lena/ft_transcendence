@@ -135,7 +135,13 @@ export class Backend {
   //-------------Check Auth----------------
   async checkAuth(): Promise<string | null> {
     try {
-      const userId = await this.api.get("/api/auth/me");
+      const token = localStorage.getItem("jwt");
+
+      const userId = await this.api.get("/api/auth/me", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       return userId.data.userId;
     } catch {
       return null;
