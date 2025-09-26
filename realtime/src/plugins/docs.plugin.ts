@@ -36,7 +36,7 @@ const docsPlugin: FastifyPluginCallback = async (app: FastifyInstance) => {
         },
       },
       paths: {
-        '/ws': {
+        '/ws?token={token}': {
           get: {
             summary: 'WebSocket Entry Point',
             description:
@@ -44,7 +44,7 @@ const docsPlugin: FastifyPluginCallback = async (app: FastifyInstance) => {
             tags: ['WebSocket'],
             parameters: [
               {
-                name: 'jwt',
+                name: 'token',
                 in: 'query',
                 required: true,
                 description: 'JWT token for WebSocket authentication',
@@ -79,7 +79,7 @@ const docsPlugin: FastifyPluginCallback = async (app: FastifyInstance) => {
                 description: 'Invalid Payload',
               },
               '1011': {
-                description: 'Connection lost | Internal Server Error | Max connections reached',
+                description: 'Connection lost | Internal Server Error | Max connections reached',  
               },
             },
           },
