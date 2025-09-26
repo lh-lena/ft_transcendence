@@ -131,6 +131,7 @@ const oAuth2Routes = async (server: FastifyInstance) => {
           const data = ${JSON.stringify({
             type: 'OAUTH_SUCCESS',
             userId: user.userId,
+            jwt: accessToken,
             message: 'Authentication successful',
           })};
           
@@ -186,40 +187,6 @@ const oAuth2Routes = async (server: FastifyInstance) => {
     `);
     }
   });
-
-  //  server.get('/api/oauth/callback', async (req: FastifyRequest, reply: FastifyReply) => {
-  //    try {
-  //      const token = await server.githubOAuth2.getAccessTokenFromAuthorizationCodeFlow(req);
-  //
-  //      const githubUser = await fetchGithubUser(token.token.access_token);
-  //
-  //      const user = await regOrlogUser(githubUser);
-  //
-  //      if (user.tfaEnabled) {
-  //        const tfaData = await server.tfa.handletfa(user);
-  //        console.log(tfaData);
-  //        return reply.code(200).send(tfaData);
-  //      }
-  //
-  //      const accessToken = server.generateAccessToken({ id: user.userId });
-  //      const refreshToken = server.generateRefreshToken({ id: user.userId });
-  //
-  //      reply.setAuthCookie('jwt', accessToken);
-  //      reply.setAuthCookie('refreshToken', refreshToken, { path: '/api/refresh' });
-  //
-  //      return reply.code(200).send({
-  //        type: 'OAUTH_SUCCESS',
-  //        userId: user.userId,
-  //        message: 'Authentication successful! You can close this window.',
-  //      });
-  //    } catch (error: any) {
-  //      console.error('OAuth callback error:', error);
-  //
-  //      return reply.code(400).send({
-  //        type: 'OAUTH_ERROR',
-  //        message: error.messge || 'Authentication failed.',
-  //      });
-  //    }
-  //  });
 };
+
 export default fp(oAuth2Routes);

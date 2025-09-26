@@ -9,6 +9,7 @@ import { FastifyJwTNamespace } from './schemas/jwt';
 declare module 'fastify' {
   interface FastifyInstance {
     config;
+    metrics;
     jwt: {
       access: FastifyJwTNamespace;
       refresh: FastifyJwTNamespace;
@@ -17,6 +18,7 @@ declare module 'fastify' {
     api: apiClientBackend;
     tfa: tfaHandler;
     user: userActions;
+    updateServiceHealth;
     cleanupExpiredSession(): Promise<void>;
     generateAccessToken(payload: object): string;
     generateRefreshToken(payload: object): string;
@@ -29,6 +31,7 @@ declare module 'fastify' {
       iat: number;
       exp: number;
     };
+    startTime: number;
   }
   interface FastifyReply {
     setAuthCookie(name: string, value: string, options?: CookieOptions): FastifyReply;
