@@ -81,7 +81,11 @@ export class tfaHandler {
       .code(200)
       .setAuthCookie('jwt', accessToken)
       .setAuthCookie('refreshToken', refreshToken, { path: '/api' })
-      .send({ message: 'TOTP 2FA verification successful.', userId: user.userId });
+      .send({
+        message: 'TOTP 2FA verification successful.',
+        jwt: accessToken,
+        userId: user.userId,
+      });
   }
 
   async checkBackup(
@@ -119,7 +123,11 @@ export class tfaHandler {
       .code(200)
       .setAuthCookie('jwt', accessToken)
       .setAuthCookie('refreshToken', refreshToken, { path: '/api' })
-      .send({ message: 'TOTP 2FA verification successful.', userId: user.userId });
+      .send({
+        message: 'TOTP 2FA verification successful.',
+        jwt: accessToken,
+        userId: user.userId,
+      });
   }
 
   async setupTotp(user: UserType, reply: FastifyReply): Promise<FastifyReply> {
@@ -156,17 +164,3 @@ export class tfaHandler {
     });
   }
 }
-// TOTP Verify & Enable
-//const totpVerifySchema = z.object({ token: z.string() });
-//server.post('/api/auth/2fa/totp/verify', { preHandler: authMiddleware }, async (req, reply) => {
-//  const parseResult = totpVerifySchema.safeParse(req.body);
-//  if (!parseResult.success) return reply.status(400).send({ error: parseResult.error.issues });
-//
-//  const user = await loadUserById((req as any).user.sub);
-//  if (!user.twofa_secret) return reply.status(400).send({ error: 'No TOTP secret found' });
-//
-//  if (!authenticator.check(parseResult.data.token, user.twofa_secret)) return reply.status(400).send({ error: 'Invalid TOTP code' });
-//
-//  await apiClientBackend.put(`/user/${user.id}`, { is_2fa_enabled: true, twofa_method: 'totp' });
-//  return reply.send({ message: 'TOTP 2FA enabled' });
-//});

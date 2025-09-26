@@ -2,12 +2,13 @@ import axios from 'axios';
 import { gameType } from '../schemas/game';
 
 const wsApiClient = axios.create({
-  baseURL: 'http://[::1]:8081/api',
+  baseURL: 'http://localhost:8081/api',
   timeout: 5000,
 });
 
 export async function sendGameStartRealtime(game: gameType): Promise<void> {
   try {
+    console.log(game);
     await wsApiClient.post('/game/start', game);
   } catch (error) {
     console.error('Failed to send game start notification:', error);

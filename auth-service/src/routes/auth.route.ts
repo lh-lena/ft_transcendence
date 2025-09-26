@@ -35,7 +35,7 @@ const authRoutes = async (server: FastifyInstance) => {
       .code(201)
       .setAuthCookie('jwt', accessToken)
       .setAuthCookie('refreshToken', refreshToken, { path: '/api' })
-      .send({ message: 'successfull Registration', userId: user.userId });
+      .send({ message: 'successfull Registration', jwt: accessToken, userId: user.userId });
   });
 
   server.post('/api/login', async (req: FastifyRequest, reply: FastifyReply) => {
@@ -76,7 +76,7 @@ const authRoutes = async (server: FastifyInstance) => {
       .code(201)
       .setAuthCookie('jwt', accessToken)
       .setAuthCookie('refreshToken', refreshToken, { path: '/api' })
-      .send({ message: 'successfull login', userId: user.userId });
+      .send({ message: 'successfull login', jwt: accessToken, userId: user.userId });
   });
 
   server.post('/api/logout', async (req: FastifyRequest, reply: FastifyReply) => {
@@ -117,7 +117,7 @@ const authRoutes = async (server: FastifyInstance) => {
       .code(201)
       .setAuthCookie('jwt', accessToken)
       .setAuthCookie('refreshToken', refreshToken, { path: '/api' })
-      .send({ message: 'successfull Guest login', userId: user.userId });
+      .send({ message: 'successfull Guest login', jwt: accessToken, userId: user.userId });
   });
 
   server.get('/api/auth/me', async (req: FastifyRequest, _) => {
