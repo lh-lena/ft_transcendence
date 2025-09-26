@@ -61,6 +61,7 @@ export class RegisterPage {
       }
 
       if (response.type === "OAUTH_SUCCESS") {
+        localStorage.setItem("jwt", response.data.jwt);
         console.log("OAuth successful, fetching user data...", response);
         const ret = await this.backend.fetchUserById(response.userId);
         console.log("Fetched user data:", ret);
@@ -211,14 +212,32 @@ export class RegisterPage {
   }
 
   private async verify2FACode(userId: string, code: string, sessionId: string) {
-    console.log(code);
-    const response = await this.backend.verify2FARegCode(
-      userId,
-      sessionId,
-      code,
-    );
-    if (response.status === 200) {
-      // TODO connect to web socket here
+    // Validate 2FA code format
+    if (!code) {
+      alert("please provide a 2FA code");
+      return;
+    }
+    if (code.length != 6 && code.length != 16) {
+      alert("please provide a valid 2fa code");
+      return;
+    }
+
+    // default
+    let response;
+
+    // CASE CODE LENGTH > 6 -> means recovery code
+    if (code.length == 6) {
+      response = await this.backend.verify2FARegCode(userId, sessionId, code);
+    } else if (code.length == 16) {
+      response = await this.backend.verify2FARecoveryCode(
+        userId,
+        sessionId,
+        code,
+      );
+    }
+
+    if (response && response.status === 200) {
+      localStorage.setItem("jwt", response.data.jwt);
       this.websocket.initializeWebSocket();
       this.backend.handleWsConnect();
       this.router.navigate("/chat");

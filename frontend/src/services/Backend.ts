@@ -147,6 +147,7 @@ export class Backend {
     let response = await this.api.post("/api/register", data);
 
     const userResponse = await this.fetchUserById(response.data.userId);
+    localStorage.setItem("jwt", response.data.jwt);
     this.setUser(userResponse.data);
 
     return response;
@@ -162,6 +163,7 @@ export class Backend {
     });
 
     const userResponse = await this.fetchUserById(response.data.userId);
+    localStorage.setItem("jwt", response.data.jwt);
     this.setUser(userResponse.data);
 
     return response;
@@ -173,10 +175,10 @@ export class Backend {
     const response = await this.api.post("/api/login", data);
 
     // return early if 2fa case
-    console.log("response", response.data);
     if (response.data.status === "2FA_REQUIRED") {
       return response;
     }
+    localStorage.setItem("jwt", response.data.jwt);
 
     const userResponse = await this.fetchUserById(response.data.userId);
     this.setUser(userResponse.data);
@@ -232,80 +234,6 @@ export class Backend {
       window.addEventListener("message", messageHandler);
     });
   }
-  //async oAuth2Login() {
-  //  return new Promise((resolve, reject) => {
-  //    const authUrl = `${import.meta.env.VITE_AUTH_URL}/api/oauth`;
-
-  //    const popup = window.open(
-  //      authUrl,
-  //      "oauth",
-  //      "width=600,height=600,scrollbars=yes,resizable=yes,centerscreen=yes",
-  //    );
-
-  //    if (!popup) {
-  //      reject(new Error("Failed to open OAuth popup, Check popUpblocker"));
-  //      return;
-  //    }
-
-  //    const messageHandler = (event: MessageEvent) => {
-  //      if (event.origin !== window.location.origin) {
-  //        return;
-  //      }
-
-  //      const { type, data } = event.data;
-
-  //      if (type === "OAUTH_RESULT") {
-  //        window.removeEventListener("message", messageHandler);
-  //        popup.close();
-
-  //        // Resolve with the OAuth data
-  //        resolve(data);
-  //      }
-  //    };
-
-  //    // Handle popup being closed manually
-  //    const checkClosed = setInterval(() => {
-  //      if (popup.closed) {
-  //        clearInterval(checkClosed);
-  //        window.removeEventListener("message", messageHandler);
-  //        reject(new Error("OAuth popup was closed by user"));
-  //      }
-  //    }, 1000);
-
-  //    // Add the message listener
-  //    window.addEventListener("message", messageHandler);
-
-  //    // Optional: Add timeout
-  //    setTimeout(
-  //      () => {
-  //        if (!popup.closed) {
-  //          clearInterval(checkClosed);
-  //          window.removeEventListener("message", messageHandler);
-  //          popup.close();
-  //          reject(new Error("OAuth timeout - please try again"));
-  //        }
-  //      },
-  //      5 * 60 * 1000,
-  //    ); // 5 minute timeout
-  //  });
-  //}
-
-  //async oAuth2Callback() {
-  //  try {
-  //    const isAuth = await this.checkAuth();
-  //    if (isAuth) {
-  //      const userResponse = await this.fetchUserById(isAuth);
-  //      this.setUser(userResponse.data);
-
-  //      this.startPeriodicRefreshToken();
-  //      return true;
-  //    }
-  //    return false;
-  //  } catch (error: unknown) {
-  //    console.error("OAuth2 callback failed:", error);
-  //    return false;
-  //  }
-  //}
 
   async fetchUserById(userId: string) {
     const response = await this.api.get(`/api/user/${userId}`);

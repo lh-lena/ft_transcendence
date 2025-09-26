@@ -191,7 +191,6 @@ export class LoginPage {
   }
 
   private async verify2FACode(userId: string, code: string, sessionId: string) {
-    console.log(userId, code, sessionId);
     // Validate 2FA code format
     if (!code) {
       alert("please provide a 2FA code");
@@ -217,6 +216,7 @@ export class LoginPage {
     }
 
     if (response && response.status === 200) {
+      localStorage.setItem("jwt", response.data.jwt);
       this.websocket.initializeWebSocket();
       this.backend.handleWsConnect();
       this.router.navigate("/chat");
