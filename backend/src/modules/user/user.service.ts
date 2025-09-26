@@ -22,14 +22,14 @@ export const userService = {
 
   async update(id: string, data: Prisma.UserUpdateInput): Promise<User> {
     try {
+      //remove old avatar if new one is set
+      if (data.avatar) this.deleteAvatar(id);
+
       //update user
       const updated = await userModel.patch(id, data);
 
       //leave all tournaments if user is offline
       tournamentService.leave(updated.userId);
-
-      //remove old avatar if new one is set
-      if (updated.avatar) this.deleteAvatar(id);
 
       //delete guest user if it goes offline
       if (updated.guest === true && updated.online === false) {

@@ -20,6 +20,34 @@ async function build() {
     },
   });
 
+  // Add a hook to customize logging based on response status
+  server.addHook('onResponse', async (request, reply) => {
+    const { method, url } = request;
+    const { statusCode } = reply;
+
+    if (statusCode >= 200 && statusCode < 300) {
+      // Minimal logging for 2xx
+      request.log.info(`${method} ${url} - ${statusCode}`);
+    } else {
+      // Extensive logging for other status codes
+      request.log.warn(
+        {
+          method,
+          url,
+          statusCode,
+          headers: request.headers,
+          body: request.body,
+        },
+        `${method} ${url} - ${statusCode}`,
+      );
+    }
+  });
+
+  // Disable default request logging to avoid duplicates
+  server.addHook('onRequest', async (request) => {
+    request.log.level = 'silent';
+  });
+
   //  server.addHook('onRoute', (routeOptions) => {
   //    console.log('📦 Route registered:', routeOptions.method, routeOptions.url);
   //    if (routeOptions.schema) {
