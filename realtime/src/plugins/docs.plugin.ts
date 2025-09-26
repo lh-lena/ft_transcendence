@@ -14,6 +14,18 @@ const docsPlugin: FastifyPluginCallback = async (app: FastifyInstance) => {
           'API documentation for the WebSocket and REST endpoints of the ft_transcendence project.',
         version: '1.0.0',
       },
+      parameters: [
+        {
+          name: 'jwt',
+          in: 'query',
+          required: true,
+          description: 'JWT token for WebSocket authentication',
+          schema: {
+            type: 'string',
+            format: 'jwt',
+          },
+        },
+      ],
       servers: [
         { url: 'ws://localhost:8081', description: 'WebSocket Server' },
         { url: 'http://localhost:8081', description: 'REST API Server' },
@@ -30,6 +42,18 @@ const docsPlugin: FastifyPluginCallback = async (app: FastifyInstance) => {
             description:
               'Establishes a WebSocket connection for real-time game and chat communication',
             tags: ['WebSocket'],
+            parameters: [
+              {
+                name: 'jwt',
+                in: 'query',
+                required: true,
+                description: 'JWT token for WebSocket authentication',
+                schema: {
+                  type: 'string',
+                  format: 'jwt',
+                },
+              },
+            ],
             responses: {
               connected: {
                 description: 'WebSocket connection established',
@@ -64,8 +88,7 @@ const docsPlugin: FastifyPluginCallback = async (app: FastifyInstance) => {
     },
   });
 
-  await app.register(swaggerUI as any, {
-    mode: 'dynamic',
+  await app.register(swaggerUI, {
     routePrefix: '/api/docs',
     uiConfig: {
       docExpansion: 'list',
