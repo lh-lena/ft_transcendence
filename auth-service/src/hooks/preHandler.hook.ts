@@ -17,6 +17,8 @@ export default fp(async function onRequestHook(server) {
       '/api/auth/me',
     ];
 
+    console.log(req.headers);
+
     const routePath = req.routeOptions.url || req.url;
     console.log('\n\nROUTE PATH\n', routePath, '\n');
 
@@ -27,14 +29,12 @@ export default fp(async function onRequestHook(server) {
     }
 
     const token = req.cookies.jwt;
-    console.log('TOKEN\n\n', token);
     if (!token) {
       return reply.code(401).send({ error: 'Missing Authorisation Headers' });
     }
 
     try {
       const decoded: JwTReturnType = await server.verifyAccessToken(token);
-      console.log('\n\nUSER VERIFIED\n', decoded, '\n');
       req.user = decoded;
     } catch (err) {
       return reply.code(401).send({ error: 'Unauthorised' });

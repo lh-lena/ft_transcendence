@@ -2,7 +2,7 @@ import type { FastifyInstance, VerifyClientInfo } from 'fastify';
 import { parse as parseCookie } from 'cookie';
 import type { EnvironmentConfig } from '../config/config.js';
 import { User, UserSchema, UserIdType, UserIdObjectSchema } from '../schemas/user.schema.js';
-import { processDebugLog, processErrorLog } from '../utils/error.handler.js';
+import { processDebugLog, processErrorLog, processInfoLog } from '../utils/error.handler.js';
 import type { AuthService } from './auth.js';
 
 export default function createAuthService(app: FastifyInstance): AuthService {
@@ -48,6 +48,11 @@ export default function createAuthService(app: FastifyInstance): AuthService {
       }
       const authUrl = `${AUTH_URL}/api/auth/me`;
 
+      processInfoLog(
+        app,
+        'auth-service',
+        `Token found in validateUser, ${token} starting validation`,
+      );
       const res = await fetch(authUrl, {
         method: 'GET',
         headers: {
@@ -60,7 +65,6 @@ export default function createAuthService(app: FastifyInstance): AuthService {
           'auth-service',
           `Token validation failed: ${res.status} ${res.statusText}`,
         );
-        return null;
       }
       const rawUserData = await res.json();
       const validationResult = UserIdObjectSchema.safeParse(rawUserData);
@@ -99,6 +103,7 @@ export default function createAuthService(app: FastifyInstance): AuthService {
         );
         return false;
       }
+      processInfoLog(app, 'auth-service', `Token found, ${token} starting validation`);
       const user = await validateUser(token);
       if (!user) {
         processErrorLog(
@@ -118,10 +123,10 @@ export default function createAuthService(app: FastifyInstance): AuthService {
   }
 
   function extractTokenFromRequest(info: VerifyClientInfo): string | null {
-    const cookieToken = extractTokenFromCookie(info);
-    if (cookieToken !== null) {
-      return cookieToken;
-    }
+    // const cookieToken = extractTokenFromCookie(info);
+    // if (cookieToken !== null) {
+    //   return cookieToken;
+    // }
     return extractTokenFromQuery(info);
   }
 

@@ -30,27 +30,13 @@ export class ProfileAvatar {
     this.element.style.width = `${width}px`;
     this.element.style.height = `${height}px`;
     this.element.className = "flex items-center justify-center";
-    console.log("ProfileAvatar constructor called");
     this.init();
   }
 
   async init() {
-    console.log("ProfileAvatar init called", this.style, this.userId);
-    // use image instead of canvas
     if (this.style && this.style === "image" && this.userId) {
-      //      const imageBlob = await getAvatar(this.userId);
-      //      if (!imageBlob) {
-      //        console.log("No image blob, using default", imageBlob);
-      //        this.default();
-      //        return;
-      //      }
-      //      console.log("Blob size:", imageBlob.size);
-      //      console.log("Blob type:", imageBlob.type);
-      //      const bloblink = URL.createObjectURL(imageBlob);
-
       const img = document.createElement("img");
       img.src = `http://localhost:8080/api/avatar/${this.userId}`;
-      console.log(img.src);
       img.width = this.width;
       img.height = this.height;
       img.style.objectFit = "cover";
@@ -64,7 +50,6 @@ export class ProfileAvatar {
   }
 
   private default() {
-    console.log("ProfileAvatar default called");
     const canvas = document.createElement("canvas");
     canvas.width = this.width + 5;
     canvas.height = this.height + 5;
@@ -94,7 +79,6 @@ export class ProfileAvatar {
     ctx.strokeRect(2, 2, this.width - 1, this.height - 1);
 
     this.element.appendChild(canvas);
-    console.log(canvas);
   }
 
   public mount(parent: HTMLElement): void {

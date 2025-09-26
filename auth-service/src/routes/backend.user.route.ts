@@ -52,7 +52,6 @@ const backendUserRoutes = async (fastify: FastifyInstance) => {
     const ret = schema.safeParse(user);
 
     if (!ret.success) {
-      console.log('Failed to parse user data:', ret.error);
       return reply.code(500).send({ message: 'Failed to parse user data' });
     }
     const userRet = ret.data;
@@ -84,7 +83,6 @@ const backendUserRoutes = async (fastify: FastifyInstance) => {
     const ret = userInfoResponseArraySchema.safeParse(users);
 
     if (!ret.success) {
-      console.log('Failed to parse user data:', ret.error);
       return reply.code(500).send({ message: 'Failed to parse user data' });
     }
 

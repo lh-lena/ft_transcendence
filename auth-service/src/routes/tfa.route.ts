@@ -10,8 +10,6 @@ import type { UserType } from '../schemas/user';
 
 const tfaRoutes = async (server: FastifyInstance) => {
   server.post('/api/refresh', async (req: FastifyRequest, reply: FastifyReply) => {
-    console.log('Refresh token request', req.cookies);
-
     const refreshToken = req.cookies.refreshToken;
 
     if (!refreshToken) {
@@ -58,7 +56,6 @@ const tfaRoutes = async (server: FastifyInstance) => {
     if (!user) {
       return reply.status(404).send({ message: 'User not found' });
     }
-    console.log('TOTP CHECK', parseResult.data, user);
 
     if (parseResult.data.type === 'totp') {
       return await server.tfa.checkTotp(parseResult.data, user, reply);
