@@ -1,4 +1,5 @@
 //web socket
+import { User } from "../types";
 import {
   WsServerBroadcast,
   ClientMessageInterface,
@@ -118,6 +119,19 @@ export class Websocket {
       payload: { gameId: import.meta.env.DEV_GAMEID },
     };
     this.sendMessage(gameStartMessage);
+  }
+
+  public async sendChatMessage(user: User, message: string) {
+    console.log('WebSocket state:', this.ws?.readyState);
+    const chatMessage: ClientMessageInterface<"chat_message"> = {
+      event: "chat_message",
+      payload: {
+        recieverId: user.userId,
+        message: message,
+        timestamp: new Date().toString(),
+      },
+    };
+    this.sendMessage(chatMessage);
   }
 
   public messageGameUpdateDirection(

@@ -98,7 +98,7 @@ timestamp: string;
 });
 
 export interface ChatMessage {
-reciverId: uuid;
+recieverId: uuid;
 message: string;
 timestamp: string;
 }

@@ -1,4 +1,4 @@
-import { ServiceContainer, Backend } from "../../services";
+import { ServiceContainer, Backend, Websocket } from "../../services";
 import { Window } from "../../components/window";
 import {
   CANVAS_DEFAULTS,
@@ -47,11 +47,13 @@ export class ChatPage {
   private onlineheader!: HTMLElement;
   private contacts!: HTMLDivElement;
   private friends!: HTMLDivElement;
+  private websocket: Websocket;
 
   constructor(serviceContainer: ServiceContainer) {
     // router / services container
     this.serviceContainer = serviceContainer;
     this.backend = this.serviceContainer.get<Backend>("backend");
+    this.websocket = this.serviceContainer.get<Websocket>("websocket");
   }
 
   public static async create(
@@ -362,7 +364,8 @@ export class ChatPage {
     this.sendButton = document.createElement("button");
     this.sendButton.textContent = "send";
     this.sendButton.className = "btn items-center justify-center h-10 w-1/5";
-    this.sendButton.onclick = () => this.sendHook();
+    this.sendButton.onclick = () =>
+      this.sendHook(user, this.inputMessage.value);
     this.inputBox.appendChild(this.inputMessage);
     this.inputBox.appendChild(this.sendButton);
     this.bottomBar = this.inputBox;
@@ -683,8 +686,10 @@ export class ChatPage {
     });
   }
 
-  private async sendHook() {
-    console.log("send");
+  private async sendHook(user: User, message: string) {
+    if (message.trim() === "") return; // don't send empty messages
+    this.websocket.sendChatMessage(user, message);
+    this.inputMessage.value = ""; // clear the input after sending
   }
 
   // standard mount unmount:
