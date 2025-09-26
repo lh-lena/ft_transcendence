@@ -191,27 +191,32 @@ export class LoginPage {
   }
 
   private async verify2FACode(userId: string, code: string, sessionId: string) {
-    console.log(code);
-
+    console.log(userId, code, sessionId);
     // Validate 2FA code format
     if (!code) {
-      alert("Please provide a 2FA code");
+      alert("please provide a 2FA code");
       return;
     }
+    if (code.length != 6 && code.length != 16) {
+      alert("please provide a valid 2fa code");
+      return;
+    }
+
+    // default
+    let response;
 
     // CASE CODE LENGTH > 6 -> means recovery code
-
-    if (!validator.isNumeric(code) || code.length !== 6) {
-      alert("2FA code must be 6 digits");
-      return;
+    if (code.length == 6) {
+      response = await this.backend.verify2FARegCode(userId, sessionId, code);
+    } else if (code.length == 16) {
+      response = await this.backend.verify2FARecoveryCode(
+        userId,
+        sessionId,
+        code,
+      );
     }
 
-    const response = await this.backend.verify2FARegCode(
-      userId,
-      sessionId,
-      code,
-    );
-    if (response.status === 200) {
+    if (response && response.status === 200) {
       this.websocket.initializeWebSocket();
       this.backend.handleWsConnect();
       this.router.navigate("/chat");

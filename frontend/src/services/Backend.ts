@@ -173,7 +173,10 @@ export class Backend {
     const response = await this.api.post("/api/login", data);
 
     // return early if 2fa case
-    if (response.data.status === "2FA_REQUIRED") return response;
+    console.log("response", response.data);
+    if (response.data.status === "2FA_REQUIRED") {
+      return response;
+    }
 
     const userResponse = await this.fetchUserById(response.data.userId);
     this.setUser(userResponse.data);
@@ -575,6 +578,25 @@ export class Backend {
       userId: userId,
       sessionId: sessionId,
       type: "totp",
+      code: code,
+    });
+
+    console.log("2FA Verification Response:", response.data);
+
+    if (response.status === 200) {
+      const userResponse = await this.fetchUserById(response.data.userId);
+      this.setUser(userResponse.data);
+    }
+
+    return response;
+  }
+
+  //TODO:: make type depending on the code length -> backupcode > 6
+  async verify2FARecoveryCode(userId: string, sessionId: string, code: string) {
+    const response = await this.api.post("/api/verify", {
+      userId: userId,
+      sessionId: sessionId,
+      type: "backup",
       code: code,
     });
 
