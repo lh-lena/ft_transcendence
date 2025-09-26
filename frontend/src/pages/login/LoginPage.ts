@@ -151,6 +151,20 @@ export class LoginPage {
 
   private async verify2FACode(userId: string, code: string, sessionId: string) {
     console.log(code);
+
+    // Validate 2FA code format
+    if (!code) {
+      alert("Please provide a 2FA code");
+      return;
+    }
+
+    // CASE CODE LENGTH > 6 -> means recovery code
+
+    if (!validator.isNumeric(code) || code.length !== 6) {
+      alert("2FA code must be 6 digits");
+      return;
+    }
+
     const response = await this.backend.verify2FARegCode(
       userId,
       sessionId,
