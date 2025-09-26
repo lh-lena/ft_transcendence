@@ -54,7 +54,6 @@ export class RegisterPage {
       console.log(response);
 
       if (response.type === "2FA_REQUIRED") {
-        //TODO added this here to remove login items on 2FA
         this.main.removeChild(this.firstMenu.getMenuElement());
 
         this.check2FA(response.userId, response.sessionId);
@@ -76,7 +75,6 @@ export class RegisterPage {
 
       if (response.type === "OAUTH_ERROR") {
         console.error("OAuth failed:", response.error);
-        // TODO handle error
         return;
       }
     } catch (error) {
@@ -130,7 +128,6 @@ export class RegisterPage {
     };
 
     await this.backend.registerUser(userRegistrationData);
-    // TODO WEB SOCKET CONNECT
     this.websocket.initializeWebSocket();
     this.backend.handleWsConnect();
     // if user object was received
@@ -185,9 +182,6 @@ export class RegisterPage {
     this.registerMenu = new Menu(this.router, loginMenu);
     this.registerMenu.mount(this.main);
   }
-
-  //added 2FA here for register and oauth
-  // TODO either like this or we make oauth only possible via login??
 
   private check2FA(userId: string, sessionId: string): void {
     // check to see if user has 2FA enabled

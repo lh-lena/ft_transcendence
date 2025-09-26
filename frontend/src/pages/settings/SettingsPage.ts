@@ -96,7 +96,7 @@ export class SettingsPage {
     securitySettings.find((setting) => setting.label === "2FA")!.onClick = () =>
       this.toggle2FASettings();
     profileSettings.find((setting) => setting.label === "delete")!.onClick =
-      () => this.backend.deleteAcc();
+      () => this.deleteAccount();
 
     // use security settings as default for page
     this.populateSettingsPanel(securitySettings);
@@ -110,6 +110,11 @@ export class SettingsPage {
     });
 
     this.main.appendChild(this.window.getElement());
+  }
+
+  private deleteAccount() {
+    this.backend.deleteAcc();
+    this.router.navigate("/");
   }
 
   private toggleButton(button: HTMLElement, settingsList: settingList): void {
@@ -140,10 +145,12 @@ export class SettingsPage {
       this.settingsPanel.appendChild(box);
       if (setting.type == "file") {
         // create hidden file input
+        // this is the upload input form
         const boxInputFile = document.createElement("input");
         boxInputFile.type = "file";
         boxInputFile.id = `file-${setting.label}`;
         boxInputFile.className = "hidden";
+        boxInputFile.accept = "image/png";
         // create styled label that looks like your buttons
         const fileLabel = document.createElement("label");
         fileLabel.htmlFor = boxInputFile.id;
@@ -152,10 +159,17 @@ export class SettingsPage {
         box.appendChild(boxInputFile);
         box.appendChild(fileLabel);
 
-        //added by mo for test -> @alec TODO refactor properly
         boxInputFile.onchange = () => {
           const file = boxInputFile.files?.[0];
           if (!file) return;
+
+          // Check file size (e.g., 5MB max)
+          const maxSizeInBytes = 10 * 1024 * 1024; // 5MB
+          if (file.size > maxSizeInBytes) {
+            alert("File size must be less than 5MB");
+            boxInputFile.value = ""; // Clear the input
+            return;
+          }
 
           this.backend.uploadAvatar(file);
         };
@@ -306,7 +320,6 @@ export class SettingsPage {
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
-    // TODO go back to settings
     this.twoFAMenu.remove();
     this.window.getPane().appendChild(this.buttonRow);
     this.window.getPane().appendChild(this.settingsPanel);

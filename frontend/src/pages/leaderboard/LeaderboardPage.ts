@@ -5,8 +5,7 @@ import { MenuBar } from "../../components/menuBar";
 
 import { ScoreBox } from "../../components/scoreBoxes";
 
-// TODO-BACKEND
-import { sampleScores } from "../../constants/backend";
+// DEPRECRATED -> no need to use this page anymore
 
 export class LeaderboardPage {
   private container: HTMLElement;
