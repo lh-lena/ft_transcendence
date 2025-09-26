@@ -50,32 +50,39 @@ const uploadRoutes = async (server: FastifyInstance) => {
       },
     },
     async (request: FastifyRequest, reply: FastifyReply) => {
-      const data = await request.file();
+      try {
+        const data = await request.file();
 
-      if (!data) return reply.status(400).send({ error: 'No file uploaded' });
+        if (!data) return reply.status(400).send({ error: 'No file uploaded' });
 
-      const validation = validator.validateFile(data.filename);
+        const validation = validator.validateFile(data.filename);
 
-      if (!validation.valid)
+        if (!validation.valid)
+          return reply.status(400).send({
+            error: 'File validation failed',
+            deatils: validation.errors,
+          });
+
+        const ext = data.filename.substring(data.filename.lastIndexOf('.'));
+        const uniqueName = `${uuid()}${ext}`;
+        const filePath = `./public/avatars/${uniqueName}`;
+        console.log(`Saving file to: ${filePath}`, uniqueName, ext);
+        await pipeline(data.file, createWriteStream(filePath));
+
+        return {
+          success: true,
+          originalName: data.filename,
+          storedName: uniqueName,
+          mimetype: data.mimetype,
+          encoding: data.encoding,
+          path: filePath,
+        };
+      } catch (error) {
         return reply.status(400).send({
-          error: 'File validation failed',
-          deatils: validation.errors,
+          error: 'Failed to download GitHub avatar',
+          details: [error instanceof Error ? error.message : 'Unknown error'],
         });
-
-      const ext = data.filename.substring(data.filename.lastIndexOf('.'));
-      const uniqeName = `${uuid()}${ext}`;
-      const filePath = `./public/avatars/${uniqeName}`;
-
-      await pipeline(data.file, createWriteStream(filePath));
-
-      return {
-        success: true,
-        originalName: data.filename,
-        storedName: uniqeName,
-        mimetype: data.mimetype,
-        encoding: data.encoding,
-        path: filePath,
-      };
+      }
     },
   );
 

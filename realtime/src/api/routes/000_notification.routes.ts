@@ -1,8 +1,6 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import type { RespondService } from '../../websocket/types/ws.types.js';
-import {
-  NotificationRequestSchema,
-} from '../../schemas/notification.schema.js';
+import { NotificationRequestSchema } from '../../schemas/notification.schema.js';
 import { ResponseSchema } from '../../schemas/response.schema.js';
 import type { NotificationRequest } from '../../schemas/notification.schema.js';
 import { processErrorLog } from '../../utils/error.handler.js';
