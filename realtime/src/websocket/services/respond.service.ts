@@ -61,11 +61,10 @@ export default function createRespondService(app: FastifyInstance): RespondServi
       ) {
         userIds.push(p.userId);
       }
-    }); // changed from map to forEach to avoid creating a new array
+    });
 
     const results: boolean[] = [];
     userIds.forEach((id) => {
-      log.debug(`[ws-service] Sending to user ID ${id} event ${event}`); // rm
       const res = send(id, event, payload);
       results.push(res);
     });
