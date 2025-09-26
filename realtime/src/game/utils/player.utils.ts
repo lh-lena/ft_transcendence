@@ -1,6 +1,6 @@
 import type { Player, GameSession, Paddle, GameState } from '../../schemas/game.schema.js';
 import { AIDifficulty, GameMode, PaddleName } from '../../constants/index.js';
-import { UserIdType } from '../../schemas/user.schema.js';
+import type { User, UserIdType } from '../../schemas/user.schema.js';
 
 export function isAIPlayer(player: Player): boolean {
   return player.isAI === true;
@@ -61,4 +61,13 @@ export function assignPaddleToPlayers(game: GameSession): void {
       paddle.isAI = true;
     }
   });
+}
+
+export function createPlayerFromUser(user: User, aiDifficulty?: AIDifficulty): Player {
+  return {
+    ...user,
+    sequence: 0,
+    isAI: false,
+    aiDifficulty: aiDifficulty,
+  };
 }

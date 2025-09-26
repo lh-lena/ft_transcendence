@@ -16,9 +16,10 @@ datasource db {
 // add string string map and avatar
 model User {
   userId         String       @id @default(uuid())
+  githubId       String?
 
   email          String?       @unique
-  username       String       @unique
+  username       String?       @unique
   alias          String?     
   guest          Boolean      @default(false)
 

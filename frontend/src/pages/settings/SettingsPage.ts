@@ -25,9 +25,10 @@ let securitySettings: settingList = [
   },
 ];
 
-const profileSettings = [
+const profileSettings: settingList = [
   // { label: "other", value: "off" },
   { label: "avatar", value: "upload", type: "file" },
+  { label: "delete", value: "X", type: "button" },
 ];
 
 const settingCategories = [
@@ -94,6 +95,8 @@ export class SettingsPage {
       () => this.changePassword();
     securitySettings.find((setting) => setting.label === "2FA")!.onClick = () =>
       this.toggle2FASettings();
+    profileSettings.find((setting) => setting.label === "delete")!.onClick =
+      () => this.backend.deleteAcc();
 
     // use security settings as default for page
     this.populateSettingsPanel(securitySettings);
@@ -124,7 +127,13 @@ export class SettingsPage {
   private populateSettingsPanel(settingsList: settingList): void {
     settingsList.forEach((setting) => {
       const box = document.createElement("div");
-      box.className = "flex flex-row gap-2 standard-dialog items-center";
+      if (setting.label === "delete") {
+        box.className =
+          "flex flex-row gap-2 standard-dialog items-center border-black text-red-700";
+      } else {
+        box.className = "flex flex-row gap-2 standard-dialog items-center";
+      }
+      //     box.className = "flex flex-row gap-2 standard-dialog items-center";
       const boxTitle = document.createElement("h1");
       boxTitle.textContent = setting.label;
       box.appendChild(boxTitle);
@@ -142,6 +151,14 @@ export class SettingsPage {
         fileLabel.className = "btn ml-auto cursor-pointer";
         box.appendChild(boxInputFile);
         box.appendChild(fileLabel);
+
+        //added by mo for test -> @alec TODO refactor properly
+        boxInputFile.onchange = () => {
+          const file = boxInputFile.files?.[0];
+          if (!file) return;
+
+          this.backend.uploadAvatar(file);
+        };
       } else if (setting.type == "button") {
         const boxButton = document.createElement("button");
         boxButton.innerText = setting.value;
@@ -149,6 +166,9 @@ export class SettingsPage {
         if (setting.value == "on")
           boxButton.className =
             "btn active ml-auto bg-black text-white rounded";
+        else if (setting.label === "delete")
+          boxButton.className =
+            "btn ml-auto text-red-700 hover:bg-red-200 rounded";
         if (setting.onClick) {
           boxButton.onclick = setting.onClick;
         }

@@ -2,7 +2,7 @@ import axios, { AxiosRequestConfig } from 'axios';
 import axiosRetry from 'axios-retry';
 
 const backendApi = axios.create({
-  baseURL: 'http://127.0.0.1:8080/api',
+  baseURL: process.env.BACKEND_URL + '/api',
   timeout: 5000,
 });
 
@@ -19,6 +19,7 @@ axiosRetry(backendApi, {
 export async function apiClientBackend<T = any>(config: AxiosRequestConfig): Promise<T> {
   try {
     console.log('Axios Request: ', config);
+    console.log('Backend URL: ', backendApi.defaults.baseURL);
     const response = await backendApi.request<T>(config);
     console.log('Axios Response: ', response.data);
     return response.data;

@@ -1,17 +1,11 @@
 import Fastify from 'fastify';
-import cors from '@fastify/cors';
-import jwt from '@fastify/jwt';
-import fastifyCookie from '@fastify/cookie';
 import fastifyCsrf from '@fastify/csrf-protection';
-import fastifyOauth2 from '@fastify/oauth2';
 import fastifyHttpProxy from '@fastify/http-proxy';
 //import * as client from 'prom-client';
 
-import cronPlugin from './plugins/000_cron';
 import AutoLoad from '@fastify/autoload';
 import path from 'path';
 
-import { config } from './config/index';
 //import { da } from 'zod/v4/locales';
 
 // Initialize Prometheus registry
@@ -59,7 +53,7 @@ import { config } from './config/index';
 //  updated_at: string;
 //};
 
-export const server = Fastify({ logger: true });
+export const server = Fastify({ logger: { level: 'trace' } });
 
 server.setErrorHandler((error: unknown, _, reply) => {
   const { status, message, data } = error as { status?: number; message?: string; data?: string };
@@ -215,29 +209,7 @@ server.setErrorHandler((error: unknown, _, reply) => {
 const start = async () => {
   // ------------ Plugins ------------
 
-  await server.register(fastifyCookie);
   await server.register(fastifyCsrf);
-  await server.register(cronPlugin);
-
-  //set secrets in docker-compose.yml
-  const accessSecret = process.env.ACCESS_TOKEN_SECRET;
-  const refreshSecret = process.env.REFRESH_TOKEN_SECRET;
-
-  if (!accessSecret || !refreshSecret) {
-    throw new Error('JWT secrets are not defined in environment variables');
-  }
-
-  await server.register(jwt, {
-    secret: accessSecret,
-    namespace: 'access',
-    sign: { expiresIn: '15m' },
-  });
-
-  await server.register(jwt, {
-    secret: refreshSecret,
-    namespace: 'refresh',
-    sign: { expiresIn: '7d' },
-  });
 
   //----------Loader--------------------
   await server.register(AutoLoad, {
@@ -252,35 +224,17 @@ const start = async () => {
     dir: path.join(__dirname, '/hooks'),
   });
 
-  await server.register(cors, {
-    //TODO set to frontend
-    origin: true,
-    credentials: true,
-    methods: ['GET', 'POST', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-  });
-
   server.register(fastifyHttpProxy, {
     upstream: 'http://127.0.0.1:8080/api/upload',
     prefix: '/api/upload',
     http2: false,
   });
 
-  // ------------ Google OAuth2 ------------
-  await server.register(fastifyOauth2, {
-    name: 'googleOAuth2',
-    scope: ['profile', 'email'],
-    credentials: {
-      client: { id: config.googleClientId, secret: config.googleClientSecret },
-      auth: fastifyOauth2.GOOGLE_CONFIGURATION,
-    },
-    startRedirectPath: '/api/auth/google',
-    callbackUri: 'http://localhost:8082/api/auth/google/callback',
-  });
+  // ------------ OAuth2 ------------
 
   try {
-    await server.listen({ port: config.port, host: config.host });
-    server.log.info(`Server listening on ${config.host}:${config.port}`);
+    await server.listen({ port: server.config.port, host: server.config.host });
+    server.log.info(`Server listening on ${server.config.host}:${server.config.port}`);
     //await server.listen({ port: 8082, host: '0.0.0.0' });
     // set service status to up when server starts successfully
     //  authServiceStatus.set(1);

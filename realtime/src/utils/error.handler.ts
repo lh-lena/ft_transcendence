@@ -6,10 +6,6 @@ import type { User, UserIdType } from '../schemas/user.schema.js';
 import { z } from 'zod';
 import { GAME_EVENTS, GameEventType } from '../constants/game.constants.js';
 
-// function formatLogDetails(details?: string): string {
-//   return details !== undefined && details !== null && details.trim() !== '' ? `: ${details}` : '';
-// }
-
 function logMessage(
   app: FastifyInstance,
   level: 'error' | 'debug' | 'info',
@@ -137,7 +133,7 @@ export function processGameError(
 
   const respond = app.respond as RespondService;
   const { userId } = user;
-  let errorMsg = safeErrorToString(error);
+  const errorMsg = safeErrorToString(error);
 
   if (error instanceof GameError) {
     sendErrorResponse(respond, userId, GAME_EVENTS.NOTIFICATION, errorMsg, NotificationType.WARN);
@@ -145,7 +141,6 @@ export function processGameError(
       logMessage(app, 'debug', service, message, errorMsg);
       return;
     }
-    errorMsg += `: ${error.error}`;
     logMessage(app, 'error', service, message, errorMsg);
   } else if (error instanceof Error) {
     sendErrorResponse(respond, userId, GAME_EVENTS.ERROR, errorMsg);

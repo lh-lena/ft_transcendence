@@ -1,3 +1,6 @@
+import path from 'path';
+import fs from 'fs';
+
 import { userModel } from './user.crud';
 import { tournamentService } from '../tournament/tournament.service';
 import { NotFoundError, ConflictError } from '../../utils/error';
@@ -19,10 +22,19 @@ export const userService = {
 
   async update(id: string, data: Prisma.UserUpdateInput): Promise<User> {
     try {
+      //update user
       const updated = await userModel.patch(id, data);
+
+      //leave all tournaments if user is offline
       tournamentService.leave(updated.userId);
+
+      //remove old avatar if new one is set
+      if (updated.avatar) this.deleteAvatar(id);
+
+      //delete guest user if it goes offline
       if (updated.guest === true && updated.online === false) {
         await userModel.deleteOne(id);
+
         return updated;
       }
       return updated;
@@ -60,6 +72,7 @@ export const userService = {
   },
 
   async deleteOne(id: string): Promise<void> {
+    this.deleteAvatar(id);
     const ret = await userModel.deleteOne(id);
     if (!ret) throw new NotFoundError(`user with ${id} not found`);
   },
@@ -67,5 +80,16 @@ export const userService = {
   async getCount(): Promise<number> {
     const ret = await userModel.findAll();
     return ret.length;
+  },
+
+  async deleteAvatar(id: string): Promise<void> {
+    const user = await this.getById(id);
+    if (user.avatar) {
+      const url = path.join(__dirname, '../../../public/avatars', user.avatar);
+      fs.unlink(url, (err) => {
+        if (err) console.error('Failed to delete avatar:', err);
+        else console.log('Avatar deleted:', url);
+      });
+    }
   },
 };

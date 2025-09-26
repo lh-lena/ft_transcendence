@@ -20,15 +20,13 @@ export function createChatService(app: FastifyInstance): ChatService {
       recieverId,
       message,
     };
-    const saved = await saveChatMessage(toSave);
-    if (saved) {
-      const broadcastMessage = {
-        senderId,
-        message,
-        timestamp: new Date().toISOString(),
-      };
-      respond.chatMessage(recieverId, broadcastMessage);
-    }
+    const broadcastMessage = {
+      senderId,
+      message,
+      timestamp: new Date().toString(),
+    };
+    respond.chatMessage(recieverId, broadcastMessage);
+    await saveChatMessage(toSave);
   }
 
   async function saveChatMessage(message: ChatMessage): Promise<boolean> {
@@ -45,7 +43,7 @@ export function createChatService(app: FastifyInstance): ChatService {
       }
       return false;
     } catch (error: unknown) {
-      processErrorLog(app, 'chat-service', `Failed to save chat message:`, error);
+      processErrorLog(app, 'chat-service', `Failed to save chat message`, error);
       return false;
     }
   }

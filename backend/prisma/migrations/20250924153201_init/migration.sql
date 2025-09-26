@@ -1,8 +1,9 @@
 -- CreateTable
 CREATE TABLE "User" (
     "userId" TEXT NOT NULL PRIMARY KEY,
+    "githubId" TEXT,
     "email" TEXT,
-    "username" TEXT NOT NULL,
+    "username" TEXT,
     "alias" TEXT,
     "guest" BOOLEAN NOT NULL DEFAULT false,
     "online" BOOLEAN NOT NULL DEFAULT false,

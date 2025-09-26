@@ -3,7 +3,7 @@ import { FastifyInstance, FastifyReply } from 'fastify';
 import { v4 as uuidv4 } from 'uuid';
 import { apiClientBackend } from '../utils/apiClient';
 import { AxiosRequestConfig } from 'axios';
-import { sha256 } from '../services/twofa';
+import { sha256 } from './twofa';
 import { authenticator } from 'otplib';
 import QRCode from 'qrcode';
 import crypto from 'crypto';
@@ -21,7 +21,7 @@ export class tfaHandler {
     });
   }
 
-  async handletfa(user: UserType, reply: FastifyReply): Promise<FastifyReply> {
+  async handletfa(user: UserType) {
     const tfaSession: TfaSessionType = {
       sessionId: uuidv4() as string,
       userId: user.userId,
@@ -33,13 +33,13 @@ export class tfaHandler {
 
     const tfaRequiredMessage = {
       status: '2FA_REQUIRED',
-      tfwMethod: user.tfaMethod,
+      tfaMethod: user.tfaMethod,
       sessionId: tfaSession.sessionId,
       userId: user.userId,
       message: '2FA verification required',
     };
 
-    return reply.code(200).send(tfaRequiredMessage);
+    return tfaRequiredMessage;
   }
 
   async validSession(sessionId: string): Promise<boolean> {
@@ -59,16 +59,6 @@ export class tfaHandler {
     });
   }
 
-  //TODO cleanup
-  async sendJwt(user: UserType, reply: FastifyReply): Promise<FastifyReply> {
-    const accessToken = this.server.generateAccessToken({ id: user.userId });
-    const refreshToken = this.server.generateRefreshToken({ id: user.userId });
-
-    return reply
-      .code(200)
-      .send({ jwt: accessToken, refreshToken: refreshToken, userId: user.userId });
-  }
-
   async checkTotp(
     tfaData: TfaVerifyType,
     user: UserType,
@@ -83,7 +73,15 @@ export class tfaHandler {
     if (!isValid) {
       return reply.code(400).send({ message: 'Invalid TOTP code. Please try again.' });
     }
-    return await this.sendJwt(user, reply);
+
+    const accessToken = this.server.generateAccessToken({ id: user.userId });
+    const refreshToken = this.server.generateRefreshToken({ id: user.userId });
+
+    return reply
+      .code(200)
+      .setAuthCookie('jwt', accessToken)
+      .setAuthCookie('refreshToken', refreshToken, { path: '/api' })
+      .send({ message: 'TOTP 2FA verification successful.', userId: user.userId });
   }
 
   async checkBackup(
@@ -114,7 +112,14 @@ export class tfaHandler {
 
     await apiClientBackend(config);
 
-    return await this.sendJwt(user, reply);
+    const accessToken = this.server.generateAccessToken({ id: user.userId });
+    const refreshToken = this.server.generateRefreshToken({ id: user.userId });
+
+    return reply
+      .code(200)
+      .setAuthCookie('jwt', accessToken)
+      .setAuthCookie('refreshToken', refreshToken, { path: '/api' })
+      .send({ message: 'TOTP 2FA verification successful.', userId: user.userId });
   }
 
   async setupTotp(user: UserType, reply: FastifyReply): Promise<FastifyReply> {
@@ -122,7 +127,7 @@ export class tfaHandler {
       return reply.code(400).send({ message: 'TOTP 2FA is already enabled.' });
     }
     const secret = authenticator.generateSecret();
-    const otpauth = authenticator.keyuri(user.email, 'ft_transcendence', secret);
+    const otpauth = authenticator.keyuri(user.username, 'ft_transcendence', secret);
     const codes = Array.from({ length: 8 }, () => crypto.randomBytes(8).toString('hex'));
     const codesToHash = codes.map(sha256);
     const codesString = codesToHash.join(',');
