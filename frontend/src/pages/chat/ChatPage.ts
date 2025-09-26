@@ -108,7 +108,7 @@ export class ChatPage {
     return instance;
   }
 
-  private setupUI() {
+  private async setupUI() {
     const user: User = this.backend.getUser();
 
     // main container
@@ -285,6 +285,10 @@ export class ChatPage {
       "grid grid-cols-3 gap-2 p-2 w-full my-3 overflow-y-auto";
     this.addFriendsPanel.appendChild(this.searchResults);
     this.populateAddFriends(this.allUserData);
+
+    // get user stats from backend
+    // const userStats = await this.backend.fetchUserStatsById(user.userId);
+    // console.log(userStats);
 
     // default profile pop up that shows our own profile at start
     this.profilePopUp = new ProfilePopUp(

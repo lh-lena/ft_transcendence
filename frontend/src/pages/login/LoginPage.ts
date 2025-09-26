@@ -3,6 +3,7 @@ import { Menu } from "../../components/menu";
 import { PongButton } from "../../components/pongButton";
 import { UserLogin } from "../../types";
 import validator from "validator";
+import { showError, showInfo, showToast } from "../../components/toast";
 
 export class LoginPage {
   private main: HTMLElement;
@@ -71,7 +72,7 @@ export class LoginPage {
 
       if (response.type === "OAUTH_ERROR") {
         console.error("OAuth failed:", response.error);
-        alert("oauth error");
+        showError("oauth error");
         return;
       }
     } catch (error) {
@@ -132,15 +133,15 @@ export class LoginPage {
 
     // Basic validation
     if (!email) {
-      alert("please provide an email");
+      showError("please provide an email");
       return;
     }
     if (!validator.isEmail(email)) {
-      alert("please provide a valid email");
+      showInfo("please provide a valid email");
       return;
     }
     if (!password) {
-      alert("please provide a password");
+      showInfo("please provide a password");
       return;
     }
 
@@ -193,11 +194,11 @@ export class LoginPage {
   private async verify2FACode(userId: string, code: string, sessionId: string) {
     // Validate 2FA code format
     if (!code) {
-      alert("please provide a 2FA code");
+      showInfo("please provide a 2FA code");
       return;
     }
     if (code.length != 6 && code.length != 16) {
-      alert("please provide a valid 2fa code");
+      showInfo("please provide a valid 2fa code");
       return;
     }
 
@@ -220,7 +221,7 @@ export class LoginPage {
       this.websocket.initializeWebSocket();
       this.backend.handleWsConnect();
       this.router.navigate("/chat");
-    } else alert("incorrect 2fa token");
+    } else showError("incorrect 2fa token");
   }
 
   public mount(parent: HTMLElement): void {

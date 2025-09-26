@@ -1,3 +1,5 @@
+import { showError } from "../components/toast";
+
 // routes we need to check user in local storage for
 const protectedRoutes = ["/chat", "/settings", "/local", "/vs-player"];
 
@@ -30,7 +32,7 @@ export class Router {
     // check to make sure only users access authorized content
     if (protectedRoutes.includes(path) && !localStorage.getItem("user")) {
       this.navigate("/");
-      alert("unauthorized access detected. please login");
+      showError("unauthorized access detected. please login");
       return;
     }
     // else we can do a regular navigate

@@ -7,6 +7,7 @@ import {
   profilePrintToString,
 } from "../../utils/profilePrintFunctions";
 import validator from "validator";
+import { showError, showInfo } from "../../components/toast";
 
 export class RegisterPage {
   private main: HTMLElement;
@@ -99,19 +100,19 @@ export class RegisterPage {
 
     // basic validation -> add more
     if (username.length > 6) {
-      alert("username must be smaller than 6 characters");
+      showInfo("username must be smaller than 6 characters");
       return;
     }
     if (!validator.isEmail(email)) {
-      alert("invalid email detected");
+      showInfo("invalid email detected");
       return;
     }
     if (password != passwordConfirm) {
-      alert("passwords don't match!");
+      showInfo("passwords don't match!");
       return;
     }
     if (!password.length) {
-      alert("please enter a password");
+      showInfo("please enter a password");
       return;
     }
 
@@ -214,11 +215,11 @@ export class RegisterPage {
   private async verify2FACode(userId: string, code: string, sessionId: string) {
     // Validate 2FA code format
     if (!code) {
-      alert("please provide a 2FA code");
+      showInfo("please provide a 2FA code");
       return;
     }
     if (code.length != 6 && code.length != 16) {
-      alert("please provide a valid 2fa code");
+      showInfo("please provide a valid 2fa code");
       return;
     }
 
@@ -241,7 +242,7 @@ export class RegisterPage {
       this.websocket.initializeWebSocket();
       this.backend.handleWsConnect();
       this.router.navigate("/chat");
-    } else alert("incorrect 2fa token");
+    } else showError("incorrect 2fa token");
   }
 
   public mount(parent: HTMLElement): void {
