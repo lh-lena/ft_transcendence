@@ -2,6 +2,7 @@ import { ServiceContainer, Router, Backend } from "../../services";
 import { CANVAS_DEFAULTS } from "../../types";
 import { Window } from "../../components/window";
 import { MenuBar } from "../../components/menuBar";
+import { showError, showInfo } from "../../components/toast";
 
 // shape of settings
 interface settingItem {
@@ -25,9 +26,10 @@ let securitySettings: settingList = [
   },
 ];
 
-const profileSettings = [
+const profileSettings: settingList = [
   // { label: "other", value: "off" },
   { label: "avatar", value: "upload", type: "file" },
+  { label: "delete", value: "X", type: "button" },
 ];
 
 const settingCategories = [
@@ -94,6 +96,8 @@ export class SettingsPage {
       () => this.changePassword();
     securitySettings.find((setting) => setting.label === "2FA")!.onClick = () =>
       this.toggle2FASettings();
+    profileSettings.find((setting) => setting.label === "delete")!.onClick =
+      () => this.deleteAccount();
 
     // use security settings as default for page
     this.populateSettingsPanel(securitySettings);
@@ -107,6 +111,11 @@ export class SettingsPage {
     });
 
     this.main.appendChild(this.window.getElement());
+  }
+
+  private deleteAccount() {
+    this.backend.deleteAcc();
+    this.router.navigate("/");
   }
 
   private toggleButton(button: HTMLElement, settingsList: settingList): void {
@@ -124,17 +133,25 @@ export class SettingsPage {
   private populateSettingsPanel(settingsList: settingList): void {
     settingsList.forEach((setting) => {
       const box = document.createElement("div");
-      box.className = "flex flex-row gap-2 standard-dialog items-center";
+      if (setting.label === "delete") {
+        box.className =
+          "flex flex-row gap-2 standard-dialog items-center border-black text-red-700";
+      } else {
+        box.className = "flex flex-row gap-2 standard-dialog items-center";
+      }
+      //     box.className = "flex flex-row gap-2 standard-dialog items-center";
       const boxTitle = document.createElement("h1");
       boxTitle.textContent = setting.label;
       box.appendChild(boxTitle);
       this.settingsPanel.appendChild(box);
       if (setting.type == "file") {
         // create hidden file input
+        // this is the upload input form
         const boxInputFile = document.createElement("input");
         boxInputFile.type = "file";
         boxInputFile.id = `file-${setting.label}`;
         boxInputFile.className = "hidden";
+        boxInputFile.accept = "image/png";
         // create styled label that looks like your buttons
         const fileLabel = document.createElement("label");
         fileLabel.htmlFor = boxInputFile.id;
@@ -142,6 +159,21 @@ export class SettingsPage {
         fileLabel.className = "btn ml-auto cursor-pointer";
         box.appendChild(boxInputFile);
         box.appendChild(fileLabel);
+
+        boxInputFile.onchange = () => {
+          const file = boxInputFile.files?.[0];
+          if (!file) return;
+
+          // Check file size (e.g., 5MB max)
+          const maxSizeInBytes = 10 * 1024 * 1024; // 5MB
+          if (file.size > maxSizeInBytes) {
+            showError("File size must be less than 5MB");
+            boxInputFile.value = ""; // Clear the input
+            return;
+          }
+
+          this.backend.uploadAvatar(file);
+        };
       } else if (setting.type == "button") {
         const boxButton = document.createElement("button");
         boxButton.innerText = setting.value;
@@ -149,6 +181,9 @@ export class SettingsPage {
         if (setting.value == "on")
           boxButton.className =
             "btn active ml-auto bg-black text-white rounded";
+        else if (setting.label === "delete")
+          boxButton.className =
+            "btn ml-auto text-red-700 hover:bg-red-200 rounded";
         if (setting.onClick) {
           boxButton.onclick = setting.onClick;
         }
@@ -187,7 +222,19 @@ export class SettingsPage {
       this.inputPasswordDiv.appendChild(inputPasswordSecond);
       const inputPasswordButton = document.createElement("button");
       inputPasswordButton.className = "btn";
-      inputPasswordButton.onclick = () => this.changePassword();
+      inputPasswordButton.onclick = () => {
+        const password1 = (inputPasswordFirst as HTMLInputElement).value;
+        const password2 = (inputPasswordSecond as HTMLInputElement).value;
+        if (password1 !== password2) {
+          showError("Passwords do not match!");
+          return;
+        }
+        if (password1.length < 6) {
+          showInfo("Password must be at least 6 characters!");
+          return;
+        }
+        this.sendChangePasswordHook(password1);
+      };
       inputPasswordButton.innerText = "change";
       this.inputPasswordDiv.appendChild(inputPasswordButton);
     } // show
@@ -196,6 +243,14 @@ export class SettingsPage {
       this.window.getPane().appendChild(this.buttonRow);
       this.window.getPane().appendChild(this.settingsPanel);
     }
+  }
+
+  private async sendChangePasswordHook(newPassword: string) {
+    this.backend.changePasswordById(this.backend.getUser().userId, newPassword);
+    // back to normal settings
+    this.inputPasswordDiv.remove();
+    this.window.getPane().appendChild(this.buttonRow);
+    this.window.getPane().appendChild(this.settingsPanel);
   }
 
   private toggle2FASettings(): void {
@@ -266,7 +321,6 @@ export class SettingsPage {
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
-    // TODO go back to settings
     this.twoFAMenu.remove();
     this.window.getPane().appendChild(this.buttonRow);
     this.window.getPane().appendChild(this.settingsPanel);

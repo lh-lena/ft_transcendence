@@ -9,7 +9,7 @@ import { transformInput } from './chat.helper';
 
 export const chatService = {
   async create(data: chatCreateType): Promise<ChatMessage> {
-    if (await blockedService.isBlocked(data.senderId, data.reciverId)) {
+    if (await blockedService.isBlocked(data.senderId, data.recieverId)) {
       throw new BlockedError('You are blocked');
     }
     const prismaData = await transformInput(data);

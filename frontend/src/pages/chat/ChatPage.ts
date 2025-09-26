@@ -1,14 +1,14 @@
-import { ServiceContainer, Backend } from "../../services";
+import { ServiceContainer, Backend, Websocket } from "../../services";
 import { Window } from "../../components/window";
 import {
   CANVAS_DEFAULTS,
   FriendsList,
   UsersAll,
   BlockedList,
+  ChatHistory,
 } from "../../types";
 import { MenuBar } from "../../components/menuBar";
 import { ProfileAvatar } from "../../components/profileAvatar";
-import { sampleChatHistory } from "../../constants/backend";
 import { InformationIcon } from "../../components/informationIcon";
 import { ProfilePopUp } from "../../components/profilePopUp";
 import { FriendsIcon } from "../../components/friendsIcon";
@@ -47,11 +47,13 @@ export class ChatPage {
   private onlineheader!: HTMLElement;
   private contacts!: HTMLDivElement;
   private friends!: HTMLDivElement;
+  private websocket: Websocket;
 
   constructor(serviceContainer: ServiceContainer) {
     // router / services container
     this.serviceContainer = serviceContainer;
     this.backend = this.serviceContainer.get<Backend>("backend");
+    this.websocket = this.serviceContainer.get<Websocket>("websocket");
   }
 
   public static async create(
@@ -97,6 +99,10 @@ export class ChatPage {
     }
     instance.friendsList = initFriendsList;
     // blocked list fetch
+    instance.blockedList = await instance.backend.getBlockedListById(
+      instance.backend.getUser().userId,
+    );
+    console.log(instance.blockedList);
 
     // Complete the UI setup
     instance.setupUI();
@@ -104,7 +110,7 @@ export class ChatPage {
     return instance;
   }
 
-  private setupUI() {
+  private async setupUI() {
     const user: User = this.backend.getUser();
 
     // main container
@@ -141,6 +147,8 @@ export class ChatPage {
       30,
       30,
       2,
+      user.avatar ? "image" : undefined,
+      user.userId,
     ).getElement();
     addYouButton.appendChild(youButtonAvatar);
     const addYouButtonText = document.createElement("h1");
@@ -228,6 +236,8 @@ export class ChatPage {
             30,
             30,
             2,
+            user.avatar ? "image" : undefined,
+            user.userId,
           ).getElement();
           resultBox.appendChild(avatar);
         }
@@ -278,13 +288,17 @@ export class ChatPage {
     this.addFriendsPanel.appendChild(this.searchResults);
     this.populateAddFriends(this.allUserData);
 
+    // get user stats from backend
+    // const userStats = await this.backend.fetchUserStatsById(user.userId);
+    // console.log(userStats);
+
     // default profile pop up that shows our own profile at start
     this.profilePopUp = new ProfilePopUp(
       () => this.toggleProfilePopUp(user),
       user,
     ).getNode();
     this.rightPanel = this.profilePopUp;
-    this.chatRow.appendChild(this.rightPanel);
+    // this.chatRow.appendChild(this.rightPanel);
 
     // window
     const windowComponent = new Window({
@@ -297,8 +311,7 @@ export class ChatPage {
     this.container.appendChild(windowComponent.getElement());
   }
 
-  private populateChatPanel(user: User) {
-    console.log(user);
+  private async populateChatPanel(user: User) {
     // clear old chatpanel
     this.chatPanel.innerHTML = "";
     // information bar "chat with" information button
@@ -307,7 +320,6 @@ export class ChatPage {
     const informationText = document.createElement("h1");
     informationText.textContent = `chat with ${user.username}`;
     informationBar.appendChild(informationText);
-    console.log(`populateChatPanel: user: ${user.username}`);
     const informationIcon = new InformationIcon(() =>
       this.toggleProfilePopUp(user),
     );
@@ -317,12 +329,16 @@ export class ChatPage {
     const messages = document.createElement("div");
     messages.className = "flex flex-col flex-1 overflow-y-auto p-2 gap-2";
     this.chatPanel.appendChild(messages);
-    sampleChatHistory.forEach((message) => {
+    const chatHistory: ChatHistory = await this.backend.fetchChatHistoryByIds(
+      this.backend.getUser().userId,
+      user.userId,
+    );
+    chatHistory.forEach((message) => {
       const messageBox = document.createElement("div");
       messageBox.className = "standard-dialog flex items-center self-start";
       const messageText = document.createElement("h1");
       messageText.textContent = message.message;
-      if (message.sender != "me") {
+      if (message.senderId != this.backend.getUser().userId) {
         messageBox.classList.add("!self-end");
         messageBox.classList.add("bg-black");
         messageBox.classList.add("text-white");
@@ -348,7 +364,8 @@ export class ChatPage {
     this.sendButton = document.createElement("button");
     this.sendButton.textContent = "send";
     this.sendButton.className = "btn items-center justify-center h-10 w-1/5";
-    this.sendButton.onclick = () => this.sendHook();
+    this.sendButton.onclick = () =>
+      this.sendHook(user, this.inputMessage.value);
     this.inputBox.appendChild(this.inputMessage);
     this.inputBox.appendChild(this.sendButton);
     this.bottomBar = this.inputBox;
@@ -357,6 +374,10 @@ export class ChatPage {
 
   private async populateFriends() {
     for (const friend of this.friendsList) {
+      const isBlocked = this.blockedList.some((blockedUser) => {
+        return blockedUser.blockedUserId === friend.friendUserId;
+      });
+      if (isBlocked) continue;
       const contact = document.createElement("div");
       contact.className =
         "flex flex-row gap-2 box standard-dialog w-full items-center";
@@ -378,6 +399,8 @@ export class ChatPage {
           30,
           30,
           2,
+          friend.avatar ? "image" : undefined,
+          user.userId,
         ).getElement();
         clickableContact.appendChild(contact);
         contact.appendChild(contactAvatar);
@@ -390,14 +413,20 @@ export class ChatPage {
         }
       }
     }
-    // Check if we have any online friends
-    const hasOnlineFriends = this.friendsList.some(
-      (friend) => friend.online === "online",
-    );
-    // Check if we have any offline friends
-    const hasOfflineFriends = this.friendsList.some(
-      (friend) => friend.online !== "online",
-    );
+    // Check if we have any online friends that aren't blocked
+    const hasOnlineFriends = this.friendsList.some((friend) => {
+      const isBlocked = this.blockedList.some((blockedUser) => {
+        return blockedUser.blockedUserId === friend.friendUserId;
+      });
+      return friend.online === "online" && !isBlocked;
+    });
+    // Check if we have any offline friends that aren't blocked
+    const hasOfflineFriends = this.friendsList.some((friend) => {
+      const isBlocked = this.blockedList.some((blockedUser) => {
+        return blockedUser.blockedUserId === friend.friendUserId;
+      });
+      return friend.online !== "online" && !isBlocked;
+    });
 
     // Update online header
     if (this.onlineheader) {
@@ -443,7 +472,7 @@ export class ChatPage {
     this.inputBox.removeChild(this.inputMessage);
     this.sendInvite = document.createElement("div");
     this.sendInvite.className =
-      "standard-dialog rounded flex items-center w-4/5 h-10";
+      "standard-dialog roded flex items-center w-4/5 h-10";
     const sendInviteText = document.createElement("h1");
     sendInviteText.textContent = "send game invite to user XXX?";
     sendInviteText.className = "text-center w-full";
@@ -513,13 +542,25 @@ export class ChatPage {
     }
 
     let isFriend = false;
+    let isBlocked = false;
+    let friendID = -1;
+    let blockedFriendId = -1;
     // Check if user is a friend and get the friendId
     const friendRecord = this.friendsList.find(
       (friend) => friend.friendUserId === user.userId,
     );
     if (friendRecord) {
       isFriend = true;
-      user.friendId = friendRecord.friendId;
+      friendID = friendRecord.friendId;
+      isBlocked = this.blockedList.some((blockedUser) => {
+        return blockedUser.blockedUserId === friendRecord.friendUserId;
+      });
+      if (isBlocked) {
+        const blockedFriend = this.blockedList.find(
+          (friend) => friend.blockedUserId === friendRecord.friendUserId,
+        );
+        if (blockedFriend) blockedFriendId = blockedFriend?.blockedId;
+      }
     }
 
     if (user.userId === this.backend.getUser().userId && !user.friendId) {
@@ -535,23 +576,41 @@ export class ChatPage {
         user,
         "friend",
         () => this.addFriendHook(user.userId),
-        () =>
-          this.backend.blockUserByIds(
-            this.backend.getUser().userId,
-            user.userId,
-          ),
+        () => this.blockFriendsHook(user.userId),
         isFriend,
-        () => this.removeFriendHook(user.friendId),
+        () => this.removeFriendHook(friendID),
+        isBlocked,
+        () => this.unblockFriendCallback(blockedFriendId),
       ).getNode();
     }
     this.rightPanel = this.profilePopUp;
     this.chatRow.appendChild(this.rightPanel);
   }
 
+  private async unblockFriendCallback(blockedId: number) {
+    await this.backend.unblockUserByBlockedId(blockedId);
+    await this.refreshBlockedList();
+    await this.refreshFriendsList();
+    this.toggleProfilePopUp(this.backend.getUser());
+  }
+
   private async removeFriendHook(friendId: number) {
     await this.backend.removeFriendByFriendId(friendId);
     await this.refreshFriendsList();
     this.toggleProfilePopUp(this.backend.getUser());
+  }
+
+  private async blockFriendsHook(userId: string) {
+    await this.backend.blockUserByIds(this.backend.getUser().userId, userId);
+    await this.refreshBlockedList();
+    await this.refreshFriendsList();
+    this.toggleProfilePopUp(this.backend.getUser());
+  }
+
+  private async refreshBlockedList() {
+    this.blockedList = await this.backend.getBlockedListById(
+      this.backend.getUser().userId,
+    );
   }
 
   private async addFriendHook(userId: string) {
@@ -565,7 +624,6 @@ export class ChatPage {
     const initFriendsList = await this.backend.fetchFriendsById(
       this.backend.getUser().userId,
     );
-    console.log(this.friendsList);
     // clear friends
     this.friends.innerHTML = "";
     // fetch user stuff for the friends
@@ -617,6 +675,8 @@ export class ChatPage {
           30,
           30,
           2,
+          friend.avatar ? "image" : undefined,
+          friend.userId,
         ).getElement();
         clickableContact.appendChild(contact);
         contact.appendChild(contactAvatar);
@@ -626,8 +686,10 @@ export class ChatPage {
     });
   }
 
-  private async sendHook() {
-    console.log("send");
+  private async sendHook(user: User, message: string) {
+    if (message.trim() === "") return; // don't send empty messages
+    this.websocket.sendChatMessage(user, message);
+    this.inputMessage.value = ""; // clear the input after sending
   }
 
   // standard mount unmount:

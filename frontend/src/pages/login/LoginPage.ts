@@ -3,6 +3,7 @@ import { Menu } from "../../components/menu";
 import { PongButton } from "../../components/pongButton";
 import { UserLogin } from "../../types";
 import validator from "validator";
+import { showError, showInfo } from "../../components/toast";
 
 export class LoginPage {
   private main: HTMLElement;
@@ -35,13 +36,55 @@ export class LoginPage {
         onClick: () => this.toggleLoginMenu(),
       },
       {
-        name: "google auth",
-        // onClick: () => this.//;
+        name: "github auth",
+        onClick: () => this.toggleoAuth2Menu(),
       },
     ];
     this.firstMenu = new Menu(this.router, firstMenu);
     this.firstMenu.mount(this.main);
   }
+
+  private async toggleoAuth2Menu() {
+    try {
+      const response = await this.backend.oAuth2Login();
+
+      console.log(response);
+
+      if (response.type === "2FA_REQUIRED") {
+        this.main.removeChild(this.firstMenu.getMenuElement());
+
+        this.check2FA(response.userId, response.sessionId);
+        return;
+      }
+
+      if (response.type === "OAUTH_SUCCESS") {
+        console.log("OAuth successful, fetching user data...", response);
+        const ret = await this.backend.fetchUserById(response.userId);
+        console.log("Fetched user data:", ret);
+        this.backend.setUser(ret.data);
+
+        this.websocket.initializeWebSocket();
+        this.backend.handleWsConnect();
+
+        this.router.navigate("/chat");
+        return;
+      }
+
+      if (response.type === "OAUTH_ERROR") {
+        console.error("OAuth failed:", response.error);
+        showError("oauth error");
+        return;
+      }
+    } catch (error) {
+      console.error("OAuth process failed:", error);
+    }
+  }
+  //private async toggleoAuth2Menu() {
+  //  await this.backend.oAuth2Login();
+
+  //  this.websocket.initializeWebSocket();
+  //  this.router.navigate("/chat");
+  //}
 
   private toggleLoginMenu(): void {
     this.main.removeChild(this.firstMenu.getMenuElement());
@@ -90,15 +133,15 @@ export class LoginPage {
 
     // Basic validation
     if (!email) {
-      alert("please provide an email");
+      showError("please provide an email");
       return;
     }
     if (!validator.isEmail(email)) {
-      alert("please provide a valid email");
+      showInfo("please provide a valid email");
       return;
     }
     if (!password) {
-      alert("please provide a password");
+      showInfo("please provide a password");
       return;
     }
 
@@ -108,22 +151,21 @@ export class LoginPage {
     };
 
     const response = await this.backend.loginUser(userLoginData);
+
     if (response?.data.status === "2FA_REQUIRED") {
+      this.loginMenu.unmount();
+      this.loginForm.remove();
+
       this.check2FA(response.data.userId, response.data.sessionId);
       return;
     }
-    // this should only happen if we get the user (but i think try catch interceptor handles this)
-    // TODO CONNECT TO WEB SOCKET HERE
     this.websocket.initializeWebSocket();
+    this.backend.handleWsConnect();
     this.router.navigate("/chat");
   }
 
   private check2FA(userId: string, sessionId: string): void {
     // check to see if user has 2FA enabled
-
-    // get rid of
-    this.loginMenu.unmount();
-    this.loginForm.remove();
 
     // form
     const form = document.createElement("form");
@@ -150,17 +192,36 @@ export class LoginPage {
   }
 
   private async verify2FACode(userId: string, code: string, sessionId: string) {
-    console.log(code);
-    const response = await this.backend.verify2FARegCode(
-      userId,
-      sessionId,
-      code,
-    );
-    if (response.status === 200) {
-      // TODO connect to web socket here
+    // Validate 2FA code format
+    if (!code) {
+      showInfo("please provide a 2FA code");
+      return;
+    }
+    if (code.length != 6 && code.length != 16) {
+      showInfo("please provide a valid 2fa code");
+      return;
+    }
+
+    // default
+    let response;
+
+    // CASE CODE LENGTH > 6 -> means recovery code
+    if (code.length == 6) {
+      response = await this.backend.verify2FARegCode(userId, sessionId, code);
+    } else if (code.length == 16) {
+      response = await this.backend.verify2FARecoveryCode(
+        userId,
+        sessionId,
+        code,
+      );
+    }
+
+    if (response && response.status === 200) {
+      localStorage.setItem("jwt", response.data.jwt);
       this.websocket.initializeWebSocket();
+      this.backend.handleWsConnect();
       this.router.navigate("/chat");
-    } else alert("incorrect 2fa token");
+    } else showError("incorrect 2fa token");
   }
 
   public mount(parent: HTMLElement): void {

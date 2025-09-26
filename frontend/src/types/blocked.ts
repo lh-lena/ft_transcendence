@@ -1,5 +1,5 @@
 export type BlockedList = {
-  blockedId: string;
+  blockedId: number;
   userId: string;
   blockedUserId: string;
 }[];

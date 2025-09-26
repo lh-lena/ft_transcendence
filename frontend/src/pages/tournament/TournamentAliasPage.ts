@@ -3,6 +3,7 @@ import { Menu } from "../../components/menu";
 import { PongButton } from "../../components/pongButton";
 import { userStore } from "../../constants/backend";
 import { ProfileAvatar } from "../../components/profileAvatar";
+import { showInfo } from "../../components/toast";
 
 // replace with stuff from backend
 const demoMatchup1 = ["alex", "naledi"];
@@ -52,10 +53,10 @@ export class TournamentAliasPage {
   private handlePlay() {
     const alias = this.inputAlias.value.trim();
     if (!alias) {
-      alert("please enter an alias");
+      showInfo("please enter an alias");
       return;
     }
-    this.backend.tournamentAliasFlow(alias);
+    this.backend.joinTournament(alias);
     this.showBracket();
   }
 
@@ -112,6 +113,9 @@ export class TournamentAliasPage {
       30,
       30,
       2,
+      //TODO need these in userStore
+      //userStore.avatar ? "image" : undefined,
+      //userStore.userId,
     ).getElement();
     contact.appendChild(contactAvatar);
     contact.appendChild(contactName);

@@ -5,7 +5,8 @@ import { CANVAS_DEFAULTS } from "../../types";
 import { Window } from "../../components/window";
 import { ScoreBox } from "../../components/scoreBoxes";
 
-// TODO-BACKEND
+// deprecrated
+
 import { userStore } from "../../constants/backend";
 import { sampleScores } from "../../constants/backend";
 
@@ -39,6 +40,9 @@ export class ProfilePage {
       40,
       40,
       2,
+      //TODO need these in userStore
+      //userStore.avatar ? "image" : undefined,
+      //user.userId,
     ).getElement();
     profilePic.className = "animate-bounce-slow";
 

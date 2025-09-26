@@ -5,6 +5,6 @@ export async function transformInput(data: chatCreateType): Promise<Prisma.ChatM
   return {
     message: data.message,
     sender: { connect: { userId: data.senderId } },
-    reciver: { connect: { userId: data.reciverId } },
+    reciever: { connect: { userId: data.recieverId } },
   };
 }

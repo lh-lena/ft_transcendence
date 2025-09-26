@@ -1,8 +1,9 @@
 -- CreateTable
 CREATE TABLE "User" (
     "userId" TEXT NOT NULL PRIMARY KEY,
+    "githubId" TEXT,
     "email" TEXT,
-    "username" TEXT NOT NULL,
+    "username" TEXT,
     "alias" TEXT,
     "guest" BOOLEAN NOT NULL DEFAULT false,
     "online" BOOLEAN NOT NULL DEFAULT false,
@@ -53,11 +54,11 @@ CREATE TABLE "Result" (
 CREATE TABLE "ChatMessage" (
     "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     "senderId" TEXT NOT NULL,
-    "reciverId" TEXT NOT NULL,
+    "recieverId" TEXT NOT NULL,
     "message" TEXT NOT NULL,
     "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT "ChatMessage_senderId_fkey" FOREIGN KEY ("senderId") REFERENCES "User" ("userId") ON DELETE CASCADE ON UPDATE CASCADE,
-    CONSTRAINT "ChatMessage_reciverId_fkey" FOREIGN KEY ("reciverId") REFERENCES "User" ("userId") ON DELETE CASCADE ON UPDATE CASCADE
+    CONSTRAINT "ChatMessage_recieverId_fkey" FOREIGN KEY ("recieverId") REFERENCES "User" ("userId") ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 -- CreateTable

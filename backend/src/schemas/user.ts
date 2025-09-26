@@ -3,12 +3,13 @@ import { dtString, tfaType } from './basics';
 
 export const userBase = z.object({
   userId: z.uuid(),
+  githubId: z.string().optional().nullable(),
 
   createdAt: dtString,
   updatedAt: dtString,
 
   email: z.email().optional().nullable(),
-  username: z.string(),
+  username: z.string().optional().nullable(),
   alias: z.string().nullable().optional(),
 
   online: z.boolean().optional(),

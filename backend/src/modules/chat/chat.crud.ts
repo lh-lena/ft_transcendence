@@ -19,7 +19,7 @@ export const chatModel = {
       {
         id: number;
         senderId: string;
-        reciverId: string;
+        recieverId: string;
         message: string;
         createdAt: Date;
       }[]
@@ -27,23 +27,23 @@ export const chatModel = {
   SELECT
     m.id,
     m.senderId,
-    m.reciverId,
+    m.recieverId,
     m.message,
     m.createdAt
   FROM ChatMessage m
   INNER JOIN (
     SELECT
       CASE
-        WHEN senderId = ${userId} THEN reciverId
+        WHEN senderId = ${userId} THEN recieverId
         ELSE senderId
       END AS chatPartner,
       MAX(createdAt) AS maxCreatedAt
     FROM ChatMessage
-    WHERE senderId = ${userId} OR reciverId = ${userId}
+    WHERE senderId = ${userId} OR recieverId = ${userId}
     GROUP BY chatPartner
   ) lm
   ON
-    ((m.senderId = ${userId} AND m.reciverId = lm.chatPartner) OR (m.reciverId = ${userId} AND m.senderId = lm.chatPartner))
+    ((m.senderId = ${userId} AND m.recieverId = lm.chatPartner) OR (m.recieverId = ${userId} AND m.senderId = lm.chatPartner))
     AND m.createdAt = lm.maxCreatedAt
   ORDER BY m.createdAt DESC
 `;

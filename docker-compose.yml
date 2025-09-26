@@ -89,9 +89,10 @@ services:
       - /app/node_modules
       - ../backend/prisma:/app/prisma
     environment:
-      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
-      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
-      - JWT_SECRET=${JWT_SECRET}
+      - GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID}
+      - GITHUB_CLIENT_SECRET=${GITHUB_CLIENT_SECRET}
+      - ACCESS_TOKEN_SECRET=${JWT_SECRET:-$(openssl rand -base64 64)}
+      - REFRESH_TOKEN_SECRET=${JWT_SECRET:-$(openssl rand -base64 64)}
     env_file:
       - ./auth-service/.env
     networks:

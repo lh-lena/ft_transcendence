@@ -44,9 +44,7 @@ const backendFriendsRoute = async (fastify: FastifyInstance) => {
   });
 
   fastify.post('/api/friend', async (req: FastifyRequest, reply: FastifyReply) => {
-    console.log(req.body);
     const parsedReq = friendPostSchema.safeParse(req.body);
-    console.log(parsedReq);
     if (!parsedReq || !parsedReq.success) {
       return reply.status(400).send({ message: 'Invalid input parameters' });
     }
@@ -88,8 +86,6 @@ const backendFriendsRoute = async (fastify: FastifyInstance) => {
     };
 
     const friendCheck = await apiClientBackend(config);
-
-    console.log(friendCheck);
 
     if (friendCheck.length !== 1 || friendCheck[0].userId !== req.user.id) {
       return reply.code(403).send({ message: 'Forbidden' });

@@ -3,7 +3,7 @@ import { Prisma, User } from '@prisma/client'; // Adjust the import as needed
 
 export const userModel = {
   findAll: async (): Promise<User[]> => {
-    const tmp = await prisma.user.findMany();
+    const tmp = await prisma.user.findMany({ where: { guest: false } });
     return tmp;
   },
 
@@ -12,7 +12,8 @@ export const userModel = {
   },
 
   findBy: async (where: Prisma.UserWhereInput): Promise<User[]> => {
-    const ret = await prisma.user.findMany({ where });
+    const finalWhere = { ...where, guest: false };
+    const ret = await prisma.user.findMany({ where: finalWhere });
     return ret;
   },
 

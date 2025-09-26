@@ -37,6 +37,7 @@ export type User = {
   avatar: string | null;
   online?: string;
   friendId?: number;
+  winsAndLosses?: Map<string, number>;
 };
 
 export type UsersAll = User[];
