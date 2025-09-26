@@ -12,6 +12,12 @@ export const UserIdObjectSchema = z.object({
   userId: UserIdSchema,
 });
 
+export const UserIdJSON = z.toJSONSchema(UserIdObjectSchema as unknown as any, {
+  reused: 'ref',
+  target: 'draft-7',
+  unrepresentable: 'any',
+});
+
 export type User = z.infer<typeof UserSchema>;
 export type UserIdType = z.infer<typeof UserIdSchema>;
 export type UserIdObject = z.infer<typeof UserIdObjectSchema>;
