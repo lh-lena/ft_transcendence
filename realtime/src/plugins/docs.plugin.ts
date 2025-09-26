@@ -16,7 +16,7 @@ const docsPlugin: FastifyPluginCallback = async (app: FastifyInstance) => {
       },
       parameters: [
         {
-          name: 'jwt',
+          name: 'token',
           in: 'query',
           required: true,
           description: 'JWT token for WebSocket authentication',
