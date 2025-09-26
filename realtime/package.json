@@ -43,6 +43,9 @@
     "typescript-eslint": "^8.39.0"
   },
   "dependencies": {
+    "@fastify/swagger": "^9.5.1",
+    "@fastify/swagger-ui": "^5.2.3",
+    "@fastify/websocket": "^11.2.0",
     "@types/node-fetch": "^2.6.13",
     "cookie": "^1.0.2",
     "fastify-plugin": "^5.0.1",
@@ -53,6 +56,7 @@
     "uuid": "^13.0.0",
     "ws": "^8.18.2",
     "wscat": "^6.1.0",
-    "zod": "^3.25.67"
+    "zod": "^3.25.76",
+    "zod-to-json-schema": "^3.24.6"
   }
 }

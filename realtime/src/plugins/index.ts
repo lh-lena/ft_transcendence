@@ -8,6 +8,7 @@ import { gamePlugin } from './game.plugin.js';
 import { chatPlugin } from './chat.plugin.js';
 import { apiPlugin } from './api.plugin.js';
 import monitoringPlugin from './monitoring.plugin.js';
+import docsPlugin from './docs.plugin.js';
 import { processErrorLog } from '../utils/error.handler.js';
 
 export const registerPlugins = async (app: FastifyInstance): Promise<void> => {
@@ -15,6 +16,8 @@ export const registerPlugins = async (app: FastifyInstance): Promise<void> => {
     app.log.info('Registering plugins...');
 
     app.register(configPlugin);
+
+    await app.register(docsPlugin);
 
     app.register(eventBusPlugin);
 
