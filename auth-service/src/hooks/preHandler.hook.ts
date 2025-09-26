@@ -14,7 +14,7 @@ export default fp(async function onRequestHook(server) {
       '/api/refresh',
       '/api/verify',
       '/api/guest/login',
-      '/api/avatar/:userId',
+      '/api/auth/me',
     ];
 
     const routePath = req.routeOptions.url || req.url;

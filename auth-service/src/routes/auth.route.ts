@@ -2,7 +2,6 @@ import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import fp from 'fastify-plugin';
 
 import { hashPassword, verifyPassword } from '../auth/passwords';
-
 import type { AxiosRequestConfig } from 'axios';
 
 import {
@@ -120,8 +119,21 @@ const authRoutes = async (server: FastifyInstance) => {
       .send({ message: 'successfull Guest login', jwt: accessToken, userId: user.userId });
   });
 
-  server.get('/api/auth/me', async (req: FastifyRequest, _) => {
-    return { userId: req.user.id };
+  server.get('/api/auth/me', async (req: FastifyRequest, reply: FastifyReply) => {
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader) {
+      return reply.code(401).send({ error: 'Authorization header missing' });
+    }
+
+    const token = authHeader.replace('Bearer ', '');
+
+    if (!token) {
+      return reply.code(401).send({ error: 'Token missing' });
+    }
+
+    const jwtReturn = await server.verifyAccessToken(token);
+    return { userId: jwtReturn.id };
   });
 };
 
