@@ -5,7 +5,8 @@ import { CANVAS_DEFAULTS } from "../../types";
 import { Window } from "../../components/window";
 import { ScoreBox } from "../../components/scoreBoxes";
 
-// TODO-BACKEND
+// deprecrated
+
 import { userStore } from "../../constants/backend";
 import { sampleScores } from "../../constants/backend";
 

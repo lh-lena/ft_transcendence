@@ -1,6 +1,8 @@
 import { generateProfilePrint } from "../../utils/profilePrintFunctions";
 import { ProfileAvatar } from "../profileAvatar";
 
+// DEPRECRATED -> decided not to use
+
 export class SpectatorBar {
   private element: HTMLElement;
   private spectatorBoxes: HTMLElement[] = [];

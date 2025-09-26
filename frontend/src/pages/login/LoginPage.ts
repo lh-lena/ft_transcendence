@@ -43,7 +43,6 @@ export class LoginPage {
     this.firstMenu.mount(this.main);
   }
 
-  //TODO check implementation and whats still needed
   private async toggleoAuth2Menu() {
     try {
       const response = await this.backend.oAuth2Login();
@@ -51,7 +50,6 @@ export class LoginPage {
       console.log(response);
 
       if (response.type === "2FA_REQUIRED") {
-        //TODO added this here to remove login items on 2FA
         this.main.removeChild(this.firstMenu.getMenuElement());
 
         this.check2FA(response.userId, response.sessionId);
@@ -73,7 +71,7 @@ export class LoginPage {
 
       if (response.type === "OAUTH_ERROR") {
         console.error("OAuth failed:", response.error);
-        // TODO handle error
+        alert("oauth error");
         return;
       }
     } catch (error) {
@@ -154,16 +152,12 @@ export class LoginPage {
     const response = await this.backend.loginUser(userLoginData);
 
     if (response?.data.status === "2FA_REQUIRED") {
-      //TODO check i moved this here so i dont conflict with github 2FA_Check :)
-      // get rid of
       this.loginMenu.unmount();
       this.loginForm.remove();
 
       this.check2FA(response.data.userId, response.data.sessionId);
       return;
     }
-    // this should only happen if we get the user (but i think try catch interceptor handles this)
-    // TODO CONNECT TO WEB SOCKET HERE
     this.websocket.initializeWebSocket();
     this.backend.handleWsConnect();
     this.router.navigate("/chat");
@@ -198,13 +192,26 @@ export class LoginPage {
 
   private async verify2FACode(userId: string, code: string, sessionId: string) {
     console.log(code);
+
+    // Validate 2FA code format
+    if (!code) {
+      alert("Please provide a 2FA code");
+      return;
+    }
+
+    // CASE CODE LENGTH > 6 -> means recovery code
+
+    if (!validator.isNumeric(code) || code.length !== 6) {
+      alert("2FA code must be 6 digits");
+      return;
+    }
+
     const response = await this.backend.verify2FARegCode(
       userId,
       sessionId,
       code,
     );
     if (response.status === 200) {
-      // TODO connect to web socket here
       this.websocket.initializeWebSocket();
       this.backend.handleWsConnect();
       this.router.navigate("/chat");
