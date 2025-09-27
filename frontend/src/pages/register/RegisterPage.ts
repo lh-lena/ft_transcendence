@@ -67,10 +67,6 @@ export class RegisterPage {
         const ret = await this.backend.fetchUserById(response.userId);
         console.log("Fetched user data:", ret);
         this.backend.setUser(ret.data);
-
-        this.websocket.initializeWebSocket();
-        this.backend.handleWsConnect();
-
         this.router.navigate("/chat");
         return;
       }
@@ -130,8 +126,6 @@ export class RegisterPage {
     };
 
     await this.backend.registerUser(userRegistrationData);
-    this.websocket.initializeWebSocket();
-    this.backend.handleWsConnect();
     // if user object was received
     this.router.navigate("/chat");
   }
@@ -239,8 +233,6 @@ export class RegisterPage {
 
     if (response && response.status === 200) {
       localStorage.setItem("jwt", response.data.jwt);
-      this.websocket.initializeWebSocket();
-      this.backend.handleWsConnect();
       this.router.navigate("/chat");
     } else showError("incorrect 2fa token");
   }

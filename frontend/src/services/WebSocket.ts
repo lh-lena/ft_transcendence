@@ -122,7 +122,7 @@ export class Websocket {
   }
 
   public async sendChatMessage(user: User, message: string) {
-    console.log('WebSocket state:', this.ws?.readyState);
+    console.log("WebSocket state:", this.ws?.readyState);
     const chatMessage: ClientMessageInterface<"chat_message"> = {
       event: "chat_message",
       payload: {
