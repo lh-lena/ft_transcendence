@@ -1,4 +1,4 @@
-import { Router, ServiceContainer, Backend } from "../../services";
+import { Router, ServiceContainer, Backend, Websocket } from "../../services";
 import { HomeIcon } from "../homeIcon/HomeIcon";
 
 export interface MenuBarItem {
@@ -18,6 +18,7 @@ export interface MenuBarItem {
 export class MenuBar {
   router: Router;
   backend: Backend;
+  websocket: Websocket;
   menuBarItems: MenuBarItem[];
   skipThis: string | undefined;
 
@@ -40,6 +41,7 @@ export class MenuBar {
     ];
     this.router = serviceContainer.get<Router>("router");
     this.backend = serviceContainer.get<Backend>("backend");
+    this.websocket = serviceContainer.get<Websocket>("websocket");
     this.skipThis = skipThis;
     this.menuBarItems = defaultMenuBarItems.slice();
   }
@@ -57,6 +59,7 @@ export class MenuBar {
 
   private logoutFlow() {
     this.backend.logout();
+    this.websocket.close();
     this.router.navigate("/");
   }
 

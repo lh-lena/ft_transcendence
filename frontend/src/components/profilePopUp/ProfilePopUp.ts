@@ -75,16 +75,18 @@ export class ProfilePopUp {
       if (removeFriendCallback && isFriend)
         addFriendButton.onclick = () => removeFriendCallback();
       addFriendButton.className = "btn mt-auto";
-      const blockFriendButton = document.createElement("button");
-      if (!isBlocked) blockFriendButton.innerText = "block";
-      else blockFriendButton.innerText = "unblock";
-      blockFriendButton.className = "btn";
-      if (blockFriendCallback)
-        blockFriendButton.onclick = () => blockFriendCallback();
-      if (unBlockFriendCallback && isBlocked)
-        blockFriendButton.onclick = () => unBlockFriendCallback();
       this.main.appendChild(addFriendButton);
-      this.main.appendChild(blockFriendButton);
+      if (isFriend) {
+        const blockFriendButton = document.createElement("button");
+        if (!isBlocked) blockFriendButton.innerText = "block";
+        else blockFriendButton.innerText = "unblock";
+        blockFriendButton.className = "btn";
+        if (blockFriendCallback)
+          blockFriendButton.onclick = () => blockFriendCallback();
+        if (unBlockFriendCallback && isBlocked)
+          blockFriendButton.onclick = () => unBlockFriendCallback();
+        this.main.appendChild(blockFriendButton);
+      }
     }
   }
 
