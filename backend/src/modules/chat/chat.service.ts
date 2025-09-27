@@ -25,11 +25,7 @@ export const chatService = {
   },
 
   async getQuery(query?: Prisma.ChatMessageWhereInput): Promise<ChatMessage[]> {
-    let ret;
-    console.log(query, Prisma.ChatMessageWhereInput);
-
-    ret = query ? await chatModel.findBy(query) : await chatModel.findAll();
-    //}
+    const ret = query ? await chatModel.findBy(query) : await chatModel.findAll();
 
     return ret;
   },
