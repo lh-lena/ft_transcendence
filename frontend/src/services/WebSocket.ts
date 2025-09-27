@@ -172,4 +172,8 @@ export class Websocket {
     };
     this.sendMessage(game_pause);
   }
+
+  public close(): void {
+    this.ws?.close();
+  }
 }
