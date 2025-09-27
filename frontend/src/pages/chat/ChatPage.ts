@@ -15,7 +15,8 @@ import { FriendsIcon } from "../../components/friendsIcon";
 import { Leaderboard } from "../../types/leaderboard";
 import { profilePrintToArray } from "../../utils/profilePrintFunctions";
 import { User } from "../../types";
-import { ChatMessage, ReceivedChatMessage } from "../../types/websocket";
+import { ReceivedChatMessage } from "../../types/websocket";
+import { showSuccess } from "../../components/toast";
 
 export class ChatPage {
   // jesus christ this is an ugly piece of shieeet
@@ -734,7 +735,8 @@ export class ChatPage {
   private async handleChatIncomingMessage(payload: ReceivedChatMessage) {
     const userResponse = await this.backend.fetchUserById(payload.senderId);
     const user: User = userResponse.data;
-    this.populateChatPanel(user);
+    showSuccess(`message from ${user.username}`);
+    await this.populateChatPanel(user);
   }
 
   // standard mount unmount:
