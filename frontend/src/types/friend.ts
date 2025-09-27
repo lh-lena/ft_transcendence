@@ -6,5 +6,5 @@ export type FriendsList = {
   color?: string;
   colormap?: string[];
   avatar: string;
-  online?: string;
+  online?: boolean;
 }[];
