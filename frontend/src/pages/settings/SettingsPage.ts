@@ -2,6 +2,7 @@ import { ServiceContainer, Router, Backend } from "../../services";
 import { CANVAS_DEFAULTS } from "../../types";
 import { Window } from "../../components/window";
 import { MenuBar } from "../../components/menuBar";
+import { showError, showInfo } from "../../components/toast";
 
 // shape of settings
 interface settingItem {
@@ -166,7 +167,7 @@ export class SettingsPage {
           // Check file size (e.g., 5MB max)
           const maxSizeInBytes = 10 * 1024 * 1024; // 5MB
           if (file.size > maxSizeInBytes) {
-            alert("File size must be less than 5MB");
+            showError("File size must be less than 5MB");
             boxInputFile.value = ""; // Clear the input
             return;
           }
@@ -225,11 +226,11 @@ export class SettingsPage {
         const password1 = (inputPasswordFirst as HTMLInputElement).value;
         const password2 = (inputPasswordSecond as HTMLInputElement).value;
         if (password1 !== password2) {
-          alert("Passwords do not match!");
+          showError("Passwords do not match!");
           return;
         }
         if (password1.length < 6) {
-          alert("Password must be at least 6 characters!");
+          showInfo("Password must be at least 6 characters!");
           return;
         }
         this.sendChangePasswordHook(password1);

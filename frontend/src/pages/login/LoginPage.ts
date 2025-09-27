@@ -3,6 +3,7 @@ import { Menu } from "../../components/menu";
 import { PongButton } from "../../components/pongButton";
 import { UserLogin } from "../../types";
 import validator from "validator";
+import { showError, showInfo } from "../../components/toast";
 
 export class LoginPage {
   private main: HTMLElement;
@@ -61,29 +62,19 @@ export class LoginPage {
         const ret = await this.backend.fetchUserById(response.userId);
         console.log("Fetched user data:", ret);
         this.backend.setUser(ret.data);
-
-        this.websocket.initializeWebSocket();
-        this.backend.handleWsConnect();
-
         this.router.navigate("/chat");
         return;
       }
 
       if (response.type === "OAUTH_ERROR") {
         console.error("OAuth failed:", response.error);
-        alert("oauth error");
+        showError("oauth error");
         return;
       }
     } catch (error) {
       console.error("OAuth process failed:", error);
     }
   }
-  //private async toggleoAuth2Menu() {
-  //  await this.backend.oAuth2Login();
-
-  //  this.websocket.initializeWebSocket();
-  //  this.router.navigate("/chat");
-  //}
 
   private toggleLoginMenu(): void {
     this.main.removeChild(this.firstMenu.getMenuElement());
@@ -132,15 +123,15 @@ export class LoginPage {
 
     // Basic validation
     if (!email) {
-      alert("please provide an email");
+      showError("please provide an email");
       return;
     }
     if (!validator.isEmail(email)) {
-      alert("please provide a valid email");
+      showInfo("please provide a valid email");
       return;
     }
     if (!password) {
-      alert("please provide a password");
+      showInfo("please provide a password");
       return;
     }
 
@@ -158,8 +149,6 @@ export class LoginPage {
       this.check2FA(response.data.userId, response.data.sessionId);
       return;
     }
-    this.websocket.initializeWebSocket();
-    this.backend.handleWsConnect();
     this.router.navigate("/chat");
   }
 
@@ -193,11 +182,11 @@ export class LoginPage {
   private async verify2FACode(userId: string, code: string, sessionId: string) {
     // Validate 2FA code format
     if (!code) {
-      alert("please provide a 2FA code");
+      showInfo("please provide a 2FA code");
       return;
     }
     if (code.length != 6 && code.length != 16) {
-      alert("please provide a valid 2fa code");
+      showInfo("please provide a valid 2fa code");
       return;
     }
 
@@ -217,10 +206,8 @@ export class LoginPage {
 
     if (response && response.status === 200) {
       localStorage.setItem("jwt", response.data.jwt);
-      this.websocket.initializeWebSocket();
-      this.backend.handleWsConnect();
       this.router.navigate("/chat");
-    } else alert("incorrect 2fa token");
+    } else showError("incorrect 2fa token");
   }
 
   public mount(parent: HTMLElement): void {

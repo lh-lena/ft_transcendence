@@ -7,6 +7,7 @@ import {
   profilePrintToArray,
   profilePrintToString,
 } from "../utils/profilePrintFunctions";
+import { showError } from "../components/toast";
 
 export class Backend {
   private user!: User;
@@ -79,7 +80,7 @@ export class Backend {
 
         // handle the rest of the errors
         console.error("API Error:", error.response?.data || error.message);
-        alert("Error: " + (error.response?.data?.message || error.message));
+        showError("Error: " + (error.response?.data?.message || error.message));
         return Promise.reject(error);
       },
     );
@@ -244,6 +245,11 @@ export class Backend {
   async fetchUserById(userId: string) {
     const response = await this.api.get(`/api/user/${userId}`);
     return response;
+  }
+
+  async fetchUserStatsById(userId: string) {
+    const response = await this.api.get(`/api/result?userId=${userId}`);
+    return response.data;
   }
 
   // example API calls

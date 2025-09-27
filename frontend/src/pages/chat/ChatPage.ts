@@ -1,4 +1,4 @@
-import { ServiceContainer, Backend } from "../../services";
+import { ServiceContainer, Backend, Websocket } from "../../services";
 import { Window } from "../../components/window";
 import {
   CANVAS_DEFAULTS,
@@ -15,6 +15,7 @@ import { FriendsIcon } from "../../components/friendsIcon";
 import { Leaderboard } from "../../types/leaderboard";
 import { profilePrintToArray } from "../../utils/profilePrintFunctions";
 import { User } from "../../types";
+import { ChatMessage } from "../../types/websocket";
 
 export class ChatPage {
   // jesus christ this is an ugly piece of shieeet
@@ -47,11 +48,14 @@ export class ChatPage {
   private onlineheader!: HTMLElement;
   private contacts!: HTMLDivElement;
   private friends!: HTMLDivElement;
+  private websocket: Websocket;
+  private currentChatHistory!: ChatHistory;
 
   constructor(serviceContainer: ServiceContainer) {
     // router / services container
     this.serviceContainer = serviceContainer;
     this.backend = this.serviceContainer.get<Backend>("backend");
+    this.websocket = this.serviceContainer.get<Websocket>("websocket");
   }
 
   public static async create(
@@ -102,13 +106,23 @@ export class ChatPage {
     );
     console.log(instance.blockedList);
 
+    // // register WebSocket handlers after connection is established
+    instance.websocket.onMessage("chat_message", (payload) => {
+      instance.handleChatIncomingMessage(payload);
+    });
+    // instance.websocket.setConnectionReadyCallback(() => {
+    //   instance.websocket.onMessage("chat_message", (payload) => {
+    //     instance.handleChatIncomingMessage(payload);
+    //   });
+    // });
+
     // Complete the UI setup
     instance.setupUI();
 
     return instance;
   }
 
-  private setupUI() {
+  private async setupUI() {
     const user: User = this.backend.getUser();
 
     // main container
@@ -286,13 +300,17 @@ export class ChatPage {
     this.addFriendsPanel.appendChild(this.searchResults);
     this.populateAddFriends(this.allUserData);
 
+    // get user stats from backend
+    // const userStats = await this.backend.fetchUserStatsById(user.userId);
+    // console.log(userStats);
+
     // default profile pop up that shows our own profile at start
     this.profilePopUp = new ProfilePopUp(
       () => this.toggleProfilePopUp(user),
       user,
     ).getNode();
     this.rightPanel = this.profilePopUp;
-    this.chatRow.appendChild(this.rightPanel);
+    // this.chatRow.appendChild(this.rightPanel);
 
     // window
     const windowComponent = new Window({
@@ -323,16 +341,17 @@ export class ChatPage {
     const messages = document.createElement("div");
     messages.className = "flex flex-col flex-1 overflow-y-auto p-2 gap-2";
     this.chatPanel.appendChild(messages);
-    const chatHistory: ChatHistory = await this.backend.fetchChatHistoryByIds(
+    this.currentChatHistory = await this.backend.fetchChatHistoryByIds(
       this.backend.getUser().userId,
       user.userId,
     );
-    chatHistory.forEach((message) => {
+    console.log(this.currentChatHistory);
+    this.currentChatHistory.forEach((message) => {
       const messageBox = document.createElement("div");
       messageBox.className = "standard-dialog flex items-center self-start";
       const messageText = document.createElement("h1");
       messageText.textContent = message.message;
-      if (message.senderId != this.backend.getUser().userId) {
+      if (message.senderId == this.backend.getUser().userId) {
         messageBox.classList.add("!self-end");
         messageBox.classList.add("bg-black");
         messageBox.classList.add("text-white");
@@ -340,6 +359,11 @@ export class ChatPage {
       messageBox.appendChild(messageText);
       messages.appendChild(messageBox);
     });
+
+    // scroll to bottom after DOM has updated
+    setTimeout(() => {
+      messages.scrollTop = messages.scrollHeight;
+    }, 0);
 
     // input at bottom
     this.inputBox = document.createElement("div");
@@ -358,7 +382,8 @@ export class ChatPage {
     this.sendButton = document.createElement("button");
     this.sendButton.textContent = "send";
     this.sendButton.className = "btn items-center justify-center h-10 w-1/5";
-    this.sendButton.onclick = () => this.sendHook();
+    this.sendButton.onclick = () =>
+      this.sendHook(user, this.inputMessage.value);
     this.inputBox.appendChild(this.inputMessage);
     this.inputBox.appendChild(this.sendButton);
     this.bottomBar = this.inputBox;
@@ -679,8 +704,15 @@ export class ChatPage {
     });
   }
 
-  private async sendHook() {
-    console.log("send");
+  private async sendHook(user: User, message: string) {
+    if (message.trim() === "") return; // don't send empty messages
+    this.websocket.sendChatMessage(user, message);
+    await this.populateChatPanel(user);
+    this.inputMessage.value = ""; // clear the input after sending
+  }
+
+  private handleChatIncomingMessage(payload: ChatMessage) {
+    console.log(payload);
   }
 
   // standard mount unmount:

@@ -67,9 +67,7 @@ export interface PlayerInput {
 }
 
 export interface ChatMessage {
-  userId: number; // Sender ID
-  username: string; // Sender username //?
-  recipientId?: number; // for DMs
+  recieverId: string; // for DMs
   message: string;
   timestamp: string;
 }

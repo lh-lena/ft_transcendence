@@ -1,4 +1,5 @@
 //web socket
+import { User } from "../types";
 import {
   WsServerBroadcast,
   ClientMessageInterface,
@@ -42,17 +43,26 @@ export class Websocket {
     // web socket stuff
     this.ws.onopen = () => {
       console.log("opened web socket");
+      // this.onConnectionReady?.();
     };
 
     this.ws.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
         this.handleWebSocketMessage(data);
+        console.log(data);
       } catch (error) {
         console.error("Error parsing WebSocket message:", error);
       }
     };
   }
+
+  // // callback for when connection is ready
+  // private onConnectionReady?: () => void;
+
+  // public setConnectionReadyCallback(callback: () => void): void {
+  //   this.onConnectionReady = callback;
+  // }
 
   private handleWebSocketMessage(data: any): void {
     console.log(data);
@@ -118,6 +128,19 @@ export class Websocket {
       payload: { gameId: import.meta.env.DEV_GAMEID },
     };
     this.sendMessage(gameStartMessage);
+  }
+
+  public async sendChatMessage(user: User, message: string) {
+    console.log("WebSocket state:", this.ws?.readyState);
+    const chatMessage: ClientMessageInterface<"chat_message"> = {
+      event: "chat_message",
+      payload: {
+        recieverId: user.userId,
+        message: message,
+        timestamp: new Date().toString(),
+      },
+    };
+    this.sendMessage(chatMessage);
   }
 
   public messageGameUpdateDirection(
