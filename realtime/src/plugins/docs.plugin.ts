@@ -79,7 +79,7 @@ const docsPlugin: FastifyPluginCallback = async (app: FastifyInstance) => {
                 description: 'Invalid Payload',
               },
               '1011': {
-                description: 'Connection lost | Internal Server Error | Max connections reached',  
+                description: 'Connection lost | Internal Server Error | Max connections reached',
               },
             },
           },
