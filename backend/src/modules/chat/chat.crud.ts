@@ -7,7 +7,19 @@ export const chatModel = {
   },
 
   findBy: async (where: Prisma.ChatMessageWhereInput): Promise<ChatMessage[]> => {
-    return await prisma.chatMessage.findMany({ where });
+    if (where && where.senderId && where.recieverId) {
+      const newQuery = {
+        where: {
+          OR: [
+            { senderId: where.senderId, recieverId: where.recieverId },
+            { senderId: where.recieverId, recieverId: where.senderId },
+          ],
+        },
+      };
+      return await prisma.chatMessage.findMany(newQuery);
+    } else {
+      return await prisma.chatMessage.findMany({ where });
+    }
   },
 
   insert: async (data: Prisma.ChatMessageCreateInput): Promise<ChatMessage> => {

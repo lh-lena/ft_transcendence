@@ -86,6 +86,13 @@ const authRoutes = async (server: FastifyInstance) => {
       await server.api(config);
     }
 
+    const config: AxiosRequestConfig = {
+      method: 'patch',
+      url: `/user/${req.user.id}`,
+      data: { online: false },
+    };
+    await server.api(config);
+
     return reply
       .code(200)
       .clearCookie('jwt', { path: '/' })
