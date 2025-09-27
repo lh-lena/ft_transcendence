@@ -3,7 +3,12 @@ import { NETWORK_QUALITY } from '../../constants/network.constants.js';
 import type { EnvironmentConfig } from '../../config/config.js';
 import type { HeartbeatService, ConnectionRegistry } from '../types/ws.types.js';
 import type { UserIdType } from '../../schemas/user.schema.js';
-import { processDebugLog, processErrorLog, processInfoLog, processWarnLog } from '../../utils/error.handler.js';
+import {
+  processDebugLog,
+  processErrorLog,
+  processInfoLog,
+  processWarnLog,
+} from '../../utils/error.handler.js';
 
 export default function createHeartbeatService(
   app: FastifyInstance,
@@ -18,7 +23,11 @@ export default function createHeartbeatService(
   function startHeartbeat(userId: UserIdType, heartbeatInterval: number): void {
     const conn = userConnections.get(userId);
     if (conn === undefined) {
-      processWarnLog(app, 'connection-service', `Cannot start heartbeat for user ${userId} - connection not found`);
+      processWarnLog(
+        app,
+        'connection-service',
+        `Cannot start heartbeat for user ${userId} - connection not found`,
+      );
       return;
     }
 
@@ -31,7 +40,11 @@ export default function createHeartbeatService(
     conn.heartbeatTimer = timer;
     conn.missedPings = 0;
     conn.lastPong = Date.now();
-    processInfoLog(app, 'connection-service', `Heartbeat started: every ${heartbeatInterval / 1000}s`);
+    processInfoLog(
+      app,
+      'connection-service',
+      `Heartbeat started: every ${heartbeatInterval / 1000}s`,
+    );
   }
 
   function sendPing(id: UserIdType): void {
@@ -49,9 +62,17 @@ export default function createHeartbeatService(
       const timeout = CONNECTION_TIMEOUT;
       if (pingTime - conn.lastPong > timeout) {
         conn.missedPings++;
-        processInfoLog(app, 'connection-service', `Client ${id} missed ${conn.missedPings} pings. Timeout: ${timeout}ms`);
+        processInfoLog(
+          app,
+          'connection-service',
+          `Client ${id} missed ${conn.missedPings} pings. Timeout: ${timeout}ms`,
+        );
         if (conn.missedPings >= 3) {
-          processInfoLog(app, 'connection-service', `Client ${id} missed 3 pings - handling connection loss`);
+          processInfoLog(
+            app,
+            'connection-service',
+            `Client ${id} missed 3 pings - handling connection loss`,
+          );
           onTimeout(id);
         }
       }
@@ -67,7 +88,6 @@ export default function createHeartbeatService(
       processWarnLog(app, 'connection-service', `Received pong from unknown connection ${userId}`);
       return;
     }
-    processDebugLog(app, 'connection-service', `Received pong from connection ${userId}`);
 
     const now = Date.now();
     const latency = now - conn.lastPing;
@@ -94,7 +114,11 @@ export default function createHeartbeatService(
     if (connection.heartbeatTimer) {
       clearInterval(connection.heartbeatTimer);
       connection.heartbeatTimer = undefined;
-      processDebugLog(app, 'connection-service', `Heartbeat stopped for user ${connection.user.userId}`);
+      processDebugLog(
+        app,
+        'connection-service',
+        `Heartbeat stopped for user ${connection.user.userId}`,
+      );
     }
   }
 
