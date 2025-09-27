@@ -43,17 +43,26 @@ export class Websocket {
     // web socket stuff
     this.ws.onopen = () => {
       console.log("opened web socket");
+      // this.onConnectionReady?.();
     };
 
     this.ws.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
         this.handleWebSocketMessage(data);
+        console.log(data);
       } catch (error) {
         console.error("Error parsing WebSocket message:", error);
       }
     };
   }
+
+  // // callback for when connection is ready
+  // private onConnectionReady?: () => void;
+
+  // public setConnectionReadyCallback(callback: () => void): void {
+  //   this.onConnectionReady = callback;
+  // }
 
   private handleWebSocketMessage(data: any): void {
     console.log(data);
