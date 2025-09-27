@@ -727,7 +727,9 @@ export class ChatPage {
 
   private async sendHook(user: User, message: string) {
     if (message.trim() === "") return; // don't send empty messages
-    this.websocket.sendChatMessage(user, message);
+    await this.websocket.sendChatMessage(user, message);
+    // wait 300 miliseconds after updating database
+    await new Promise((resolve) => setTimeout(resolve, 300));
     await this.populateChatPanel(user);
     this.inputMessage.value = ""; // clear the input after sending
   }
