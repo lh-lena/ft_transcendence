@@ -32,11 +32,11 @@ export const userService = {
       tournamentService.leave(updated.userId);
 
       //delete guest user if it goes offline
-      if (updated.guest === true && updated.online === false) {
-        await userModel.deleteOne(id);
+      //if (updated.guest === true && updated.online === false) {
+      //  await userModel.deleteOne(id);
 
-        return updated;
-      }
+      //  return updated;
+      //}
       return updated;
     } catch (err: unknown) {
       if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
