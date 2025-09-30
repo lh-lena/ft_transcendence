@@ -72,6 +72,12 @@ export interface ChatMessage {
   timestamp: string;
 }
 
+export interface ReceivedChatMessage {
+  senderId: string;
+  message: string;
+  timestamp: string;
+}
+
 export interface NotificationPayload {
   type: "info" | "warn" | "error";
   message: string;
@@ -113,7 +119,7 @@ export interface WsServerBroadcast {
   game_pause: { gameId: string; reason: string };
   game_resume: { gameId: string };
   countdown_update: { gameId: string; countdown: number; message: string };
-  chat_message: ChatMessage;
+  chat_message: ReceivedChatMessage;
   notification: NotificationPayload;
   error: { message: string };
 }
