@@ -8,7 +8,7 @@ export default fp(async (fastify: FastifyInstance) => {
   await fastify.register(jwt, {
     secret: fastify.config.accessSecret,
     namespace: 'access',
-    sign: { expiresIn: '1m' },
+    sign: { expiresIn: '1s' },
   });
 
   await fastify.register(jwt, {
