@@ -1,11 +1,11 @@
 import fp from 'fastify-plugin';
 import type { FastifyInstance, FastifyPluginCallback } from 'fastify';
-import swagger from '@fastify/swagger';
 import swaggerUI from '@fastify/swagger-ui';
 import { UserIdJSON } from '../schemas/user.schema.js';
+import { fastifySwagger, SwaggerOptions } from '@fastify/swagger';
 
 const docsPlugin: FastifyPluginCallback = async (app: FastifyInstance) => {
-  app.register(swagger as any, {
+  app.register(fastifySwagger, {
     mode: 'dynamic',
     openapi: {
       info: {
@@ -86,7 +86,7 @@ const docsPlugin: FastifyPluginCallback = async (app: FastifyInstance) => {
         },
       },
     },
-  });
+  } as SwaggerOptions);
 
   await app.register(swaggerUI, {
     routePrefix: '/api/docs',
