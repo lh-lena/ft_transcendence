@@ -9,7 +9,7 @@ import {
   PADDLE_A_DEFAULTS,
   PADDLE_B_DEFAULTS,
 } from '../../../constants/game.constants.js';
-import type { GameState, BallType } from '../../../schemas/game.schema.js';
+import type { GameState } from '../../../schemas/game.schema.js';
 
 export function initializeGameState(gameId: string): GameState {
   const gameState: GameState = {

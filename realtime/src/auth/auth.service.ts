@@ -1,5 +1,4 @@
 import type { FastifyInstance, VerifyClientInfo } from 'fastify';
-import { parse as parseCookie } from 'cookie';
 import type { EnvironmentConfig } from '../config/config.js';
 import { User, UserSchema, UserIdType, UserIdObjectSchema } from '../schemas/user.schema.js';
 import { processDebugLog, processErrorLog, processInfoLog } from '../utils/error.handler.js';
