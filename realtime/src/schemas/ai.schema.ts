@@ -3,12 +3,22 @@ import { Direction } from '../constants/game.constants';
 import { AIDifficulty } from '../constants/ai.constants';
 import { GameIdSchema } from '../schemas/game.schema';
 
+/**
+ * @description AI configuration schema
+ * @property deadZone - Size of dead zone as ratio of paddle height (0-1)
+ * @property predictionError - Maximum error in pixels
+ * @property predictionAccuracy - Base accuracy level (0-1)
+ * @property errorBias - How centered errors are (0.5-1.5)
+ * @property focusLevel - How often AI stays focused (0-1)
+ * @property hesitationRange - Size of hesitation error (pixels)
+ */
 export const aiConfigSchema = z.object({
-  threshold: z.number(),
-  predictionTime: z.number(),
-  precision: z.number(),
+  deadZone: z.number(),
   predictionError: z.number(),
   predictionAccuracy: z.number(),
+  errorBias: z.number(),
+  focusLevel: z.number(),
+  hesitationRange: z.number(),
 });
 
 export const aiStateSchema = z.object({
