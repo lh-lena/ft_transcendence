@@ -11,13 +11,12 @@ import { showError } from "../components/toast";
 
 export class Backend {
   private user!: User;
-  private refreshInterval?: ReturnType<typeof setInterval>;
-  private isRefreshingToken: boolean = false;
+  private refreshTries: number = 0;
   //TODO change to not use any
-  private failedQueue: Array<{
-    resolve: (value?: any) => void;
-    reject: (error: any) => void;
-  }> = [];
+  //private failedQueue: Array<{
+  //  resolve: (value?: any) => void;
+  //  reject: (error: any) => void;
+  //}> = [];
 
   private api = axios.create({
     baseURL: import.meta.env.VITE_AUTH_URL,
@@ -34,94 +33,67 @@ export class Backend {
   private setupInterceptors() {
     this.api.interceptors.response.use(
       (response) => {
-        // console.log("API Response:", response.data);
+        console.log("API Response:", response.data);
+        this.refreshTries = 0;
         return response;
       },
       async (error) => {
         const originalRequest = error.config;
+        console.log("og request", originalRequest);
 
         //if 401 try retry
-        if (
-          error.response?.status === 401 &&
-          !originalRequest._retry &&
-          error.response?.data?.message !== "refresh token expired"
-        ) {
-          //if already retrying store request
-          if (this.isRefreshingToken) {
-            return new Promise((resolve, reject) => {
-              this.failedQueue.push({ resolve, reject });
-            })
-              .then(() => {
-                return this.api(originalRequest);
-              })
-              .catch((err) => {
-                return Promise.reject(err);
-              });
-          }
-
-          // mark as retry
-          originalRequest._retry = true;
-          this.isRefreshingToken = true;
-
+        if (error.response?.status === 401 && this.refreshTries < 1) {
           try {
+            this.refreshTries++;
             await this.refreshToken();
-            this.processQueue(null);
-
-            // retry request
-            return this.api(originalRequest);
-          } catch (refreshErr: unknown) {
-            this.processQueue(refreshErr);
-            await this.logout();
-            return Promise.reject(refreshErr);
-          } finally {
-            this.isRefreshingToken = false;
+            await this.api(originalRequest);
+          } catch {
+            console.log("Refresh token failed, logging out!");
+            localStorage.removeItem("user");
+            document.cookie = "jwt=";
+            document.cookie = "refreshToken=";
+            return;
           }
+        } else if (error.response?.status === 401) {
+          this.refreshTries++;
+          document.cookie = "jwt=";
+          document.cookie = "refreshToken=";
+          console.log("Refresh token failed, logging out!");
+          localStorage.removeItem("user");
+          return;
         }
 
         // handle the rest of the errors
         console.error("API Error:", error.response?.data || error.message);
         showError("Error: " + (error.response?.data?.message || error.message));
-        return Promise.reject(error);
+        return;
       },
     );
   }
 
-  //--------Handle reconnections and request gracefully--------------
-  private processQueue(error: unknown) {
-    this.failedQueue.forEach(({ resolve, reject }) => {
-      if (error) {
-        reject(error);
-      } else {
-        resolve();
-      }
-    });
+  //private startPeriodicRefreshToken() {
+  //  this.stopPeriodicRefreshToken();
 
-    this.failedQueue = [];
-  }
+  //  this.refreshInterval = setInterval(
+  //    async () => {
+  //      try {
+  //        await this.refreshToken();
+  //      } catch {
+  //        console.log("Periodic refresh failed, logging out!");
+  //        this.logout();
+  //      }
+  //    },
+  //    14 * 60 * 1000,
+  //  );
+  //}
 
-  private startPeriodicRefreshToken() {
-    this.stopPeriodicRefreshToken();
-
-    this.refreshInterval = setInterval(
-      async () => {
-        try {
-          await this.refreshToken();
-        } catch {
-          // console.log("Periodic refresh failed, logging out!");
-          this.logout();
-        }
-      },
-      14 * 60 * 1000,
-    );
-  }
-
-  ////TODO call this on logout -> done and call this on websocket connection loss
-  private stopPeriodicRefreshToken() {
-    if (this.refreshInterval) {
-      clearInterval(this.refreshInterval);
-      this.refreshInterval = undefined;
-    }
-  }
+  //////TODO call this on logout -> done and call this on websocket connection loss
+  //private stopPeriodicRefreshToken() {
+  //  if (this.refreshInterval) {
+  //    clearInterval(this.refreshInterval);
+  //    this.refreshInterval = undefined;
+  //  }
+  //}
 
   async refreshToken() {
     const response = await this.api.post("/api/refresh");
@@ -483,7 +455,7 @@ export class Backend {
   }
 
   async logout() {
-    this.stopPeriodicRefreshToken();
+    //this.stopPeriodicRefreshToken();
 
     //TODO cut ws connection
     try {
@@ -549,16 +521,15 @@ export class Backend {
 
   //TODO add to websokcet handler -> when connection brakes to stop refresh loop
   handleWsConnectionLoss() {
-    this.stopPeriodicRefreshToken();
+    //this.stopPeriodicRefreshToken();
   }
 
   //TODO add to websocket handler -> checks if still authentictaed and if start refresh
   async handleWsConnect() {
-    const isAuth = await this.checkAuth();
-
-    if (isAuth && this.user) {
-      this.startPeriodicRefreshToken();
-    }
+    //const isAuth = await this.checkAuth();
+    //if (isAuth && this.user) {
+    //  this.startPeriodicRefreshToken();
+    //}
   }
 
   private loadUserFromStorage() {
