@@ -122,7 +122,7 @@ dist
 .dynamodb/
 
 data/*
-public/*
+backend/public/*
 
 # TernJS port file
 .tern-port

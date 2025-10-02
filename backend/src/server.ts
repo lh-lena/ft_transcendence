@@ -83,7 +83,7 @@ const start = async () => {
 
   try {
     const PORT = parseInt(process.env.PORT || '8080');
-    const IP = process.env.IP || '0.0.0.0';
+    const IP = process.env.IP || '127.0.0.1';
     await server.listen({ port: PORT, host: IP });
   } catch (err) {
     console.error(err);
