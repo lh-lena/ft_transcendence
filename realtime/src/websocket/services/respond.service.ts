@@ -2,9 +2,10 @@ import { WebSocket } from 'ws';
 import type { FastifyInstance, WSConnection } from 'fastify';
 import type { WsServerBroadcast } from '../../schemas/ws.schema.js';
 import type { GameResult, GameState, GameSession, GameIdType } from '../../schemas/game.schema.js';
-import type { UserIdType } from '../../schemas/user.schema.js';
+import type { UserIdType, UserIdObject } from '../../schemas/user.schema.js';
 import type { NotificationType } from '../../constants/game.constants.js';
 import { GAME_EVENTS } from '../../constants/game.constants.js';
+import { CHAT_EVENTS } from '../../constants/chat.constants.js';
 import { processErrorLog } from '../../utils/error.handler.js';
 import type { RespondService, ConnectionService } from '../types/ws.types.js';
 import type { GameSessionService } from '../../game/types/game.types.js';
@@ -75,6 +76,10 @@ export default function createRespondService(app: FastifyInstance): RespondServi
     return send(userId, 'connected', { userId });
   }
 
+  function gameStarted(gameId: GameIdType, players: UserIdObject[]): boolean {
+    return broadcast(gameId, GAME_EVENTS.START, { gameId, players });
+  }
+
   function gameUpdate(userId: UserIdType, gameState: GameState): boolean {
     return send(userId, GAME_EVENTS.UPDATE, { ...gameState });
   }
@@ -88,7 +93,7 @@ export default function createRespondService(app: FastifyInstance): RespondServi
   }
 
   function chatMessage(userId: UserIdType, payload: ChatMessageBroadcast): boolean {
-    return send(userId, 'chat_message', {
+    return send(userId, CHAT_EVENTS.MESSAGE, {
       ...payload,
     });
   }
@@ -121,6 +126,7 @@ export default function createRespondService(app: FastifyInstance): RespondServi
 
   return {
     connected,
+    gameStarted,
     gameUpdate,
     gameEnded,
     gamePaused,
