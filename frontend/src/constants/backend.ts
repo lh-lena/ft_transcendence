@@ -8,13 +8,13 @@ import { UserProfile } from "../types";
 export const userStore: UserProfile = {
   username: "mo",
   color: "#D72E1D",
-  colorMap: ["#D72E1D", "#D72E1D", "#D72E1D", "#D72E1D"],
+  colormap: ["#D72E1D", "#D72E1D", "#D72E1D", "#D72E1D"],
 };
 
 export const userStore2: UserProfile = {
   username: "test",
   color: "#06833E",
-  colorMap: ["#06833E", "#FFFFFF", "#06833E", "#FFFFFF"],
+  colormap: ["#06833E", "#FFFFFF", "#06833E", "#FFFFFF"],
 };
 
 export const sampleScores = [

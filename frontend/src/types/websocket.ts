@@ -89,8 +89,8 @@ interface GameResult {
   gameId: string;
   scorePlayer1: number;
   scorePlayer2: number;
-  winnerId: number | null; // -1 for AI
-  loserId: number | null;
+  winnerId: string | null; // -1 for AI
+  loserId: string | null;
   player1Username: string | null; // for ai -> AI
   player2Username: string | null;
   status:

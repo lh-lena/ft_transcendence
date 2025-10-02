@@ -1,13 +1,10 @@
 import { ServiceContainer, Router, Websocket, Backend } from "../../services";
 import { PongGame } from "../../game";
-import { GameState, GameStatus } from "../../types";
+import { GameState, GameStatus, User } from "../../types";
 import { ScoreBar } from "../../components/scoreBar";
 import { Loading } from "../../components/loading";
 import { Menu } from "../../components/menu";
 import { WsServerBroadcast, Direction } from "../../types/websocket";
-
-// TODO-BACKEND switch out for backend data cached on merge
-import { userStore, userStore2 } from "../../constants/backend";
 import { ProfileAvatar } from "../../components/profileAvatar";
 
 export class VsPlayerGamePage {
@@ -26,6 +23,7 @@ export class VsPlayerGamePage {
   private ws: Websocket;
   private backend: Backend;
   private gameId!: string;
+  private userMe!: User;
 
   constructor(serviceContainer: ServiceContainer) {
     // services
@@ -34,16 +32,13 @@ export class VsPlayerGamePage {
     this.ws = this.serviceContainer.get<Websocket>("websocket");
     this.backend = this.serviceContainer.get<Backend>("backend");
 
+    // check which player is meant to be where
+
     this.gameState = {
       status: GameStatus.PLAYING,
       previousStatus: GameStatus.PLAYING,
-      // by default we always pull logged in player (local client) into player A at beg
       playerA: {
-        ...userStore,
-        score: 0,
-      },
-      playerB: {
-        ...userStore2,
+        ...this.userMe,
         score: 0,
       },
       pauseInitiatedByMe: false,
@@ -76,9 +71,13 @@ export class VsPlayerGamePage {
     // get game id from backed
     const response = await instance.backend.joinGame();
 
-    console.log("DATA ON CREAE: ", response);
+    console.log("DATA ON CREATE: ", response);
 
     instance.gameId = response.gameId;
+
+    // save the user (me) to remote game to use later
+    const responseUser = await instance.backend.getUser();
+    instance.userMe = responseUser;
 
     // send game id to web socket
     instance.ws.messageGameStart(instance.gameId);
@@ -124,8 +123,12 @@ export class VsPlayerGamePage {
     }
   }
 
-  private wsGameUpdateHandler(payload: WsServerBroadcast["game_update"]): void {
+  private async wsGameUpdateHandler(payload: WsServerBroadcast["game_update"]) {
     this.game?.updateGameStateFromServer(payload);
+    // set player B
+    // set player B
+    // check to make sure everythig it set right
+    if (!this.gameState.playerB) return;
     if (!this.gameState.activePaddle) {
       this.gameState.activePaddle = payload.activePaddle;
       // change paddle pos to paddleB if we aren't A
@@ -153,11 +156,19 @@ export class VsPlayerGamePage {
     this.gameStateCallback();
   }
 
-  private wsGameEndedHandler(payload: WsServerBroadcast["game_ended"]): void {
+  private async wsGameEndedHandler(payload: WsServerBroadcast["game_ended"]) {
     this.gameState.status = GameStatus.GAME_OVER;
+
+    // game winner will be null if AI
+    let winnerUser;
+    if (payload.winnerId) {
+      winnerUser = await this.backend.getUserById(payload.winnerId);
+    }
+
     this.showEndGameOverlay();
     // update score for end of game diff than during. TODO refresh on backend integration -> must use diff logic
     this.gameState.playerA.score = payload.scorePlayer1;
+    if (!this.gameState.playerB) return;
     this.gameState.playerB.score = payload.scorePlayer2;
     // need to refresh / change this when actual user ids exist
     this.scoreBar.updateScores(
@@ -165,7 +176,9 @@ export class VsPlayerGamePage {
       this.gameState.playerB.score,
     );
     // implement actual winning logic here based on winning user id. not score. this is only temporary for now (while backend isnt synced)
-    this.endResultText.innerText = `Winner: ${this.gameState.playerA.username}`;
+
+    const winner = winnerUser.username ? winnerUser.username : "AI";
+    this.endResultText.innerText = `Winner: ${winner}`;
   }
 
   private initializeGame(): void {
@@ -222,7 +235,7 @@ export class VsPlayerGamePage {
 
   private gameStateCallback(): void {
     // update score bar on hook
-    if (this.scoreBar) {
+    if (this.scoreBar && this.gameState.playerB) {
       this.scoreBar.updateScores(
         this.gameState.playerA.score,
         this.gameState.playerB.score,
@@ -292,7 +305,7 @@ export class VsPlayerGamePage {
     this.main.remove();
   }
 
-  private showEndGameOverlay(): void {
+  private async showEndGameOverlay() {
     this.game?.hideGamePieces();
     if (this.gameContainer && !this.menuPauseDiv) {
       this.menuEndDiv = document.createElement("div");
@@ -303,7 +316,7 @@ export class VsPlayerGamePage {
       // make a private class member in order to change with result of match
       let avatar = new ProfileAvatar(
         this.gameState.playerA.color,
-        this.gameState.playerA.colorMap,
+        this.gameState.playerA.colormap,
         40,
         40,
         2,

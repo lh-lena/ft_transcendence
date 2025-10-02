@@ -30,14 +30,14 @@ export interface Player {
   username: string;
   score: number;
   color: string;
-  colorMap: string[];
+  colormap: string[];
 }
 
 export interface GameState {
   status: GameStatus;
   previousStatus: GameStatus;
   playerA: Player;
-  playerB: Player;
+  playerB?: Player;
   pauseInitiatedByMe: boolean;
   blockedPlayButton: boolean;
   activeKey: string;
