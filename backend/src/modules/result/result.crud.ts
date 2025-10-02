@@ -30,7 +30,7 @@ export const resultModel = {
       WHERE gp.isWinner = true AND u.guest = false
       GROUP BY u.userId 
       ORDER BY wins DESC 
-      LIMIT 5 OFFSET 0 
+      LIMIT 8 OFFSET 0 
       `;
     return ret;
   },
