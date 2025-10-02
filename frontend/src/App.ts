@@ -11,6 +11,7 @@ import { ChatPage } from "./pages/chat";
 import { VsPlayerGamePage } from "./pages/remoteGame";
 import { TournamentAliasPage } from "./pages/tournament";
 import { protectedRoutes } from "./constants/routes";
+import { Page } from "openai/pagination";
 
 // single source of truth for pages and routes
 const PAGE_ROUTES = {
@@ -82,6 +83,7 @@ export class App {
 
     const currentRoute = this.router.getCurrentRoute();
 
+    // we always connect back to web socket before we load a page
     if (protectedRoutes.includes(currentRoute)) {
       this.websocket.initializeWebSocket();
       this.backend.handleWsConnect();
@@ -91,6 +93,8 @@ export class App {
     // else create new page
     if (PageClass === ChatPage) {
       this.currentPage = await ChatPage.create(this.serviceContainer);
+    } else if (PageClass === VsPlayerGamePage) {
+      this.currentPage = await VsPlayerGamePage.create(this.serviceContainer);
     } else {
       this.currentPage = new PageClass(this.serviceContainer);
     }

@@ -1,4 +1,5 @@
 //web socket
+import { showSuccess } from "../components/toast";
 import { User } from "../types";
 import {
   WsServerBroadcast,
@@ -43,6 +44,7 @@ export class Websocket {
     // web socket stuff
     this.ws.onopen = () => {
       console.log("opened web socket");
+      showSuccess("connected to web socket");
       // this.onConnectionReady?.();
     };
 
@@ -50,22 +52,14 @@ export class Websocket {
       try {
         const data = JSON.parse(event.data);
         this.handleWebSocketMessage(data);
-        console.log(data);
+        console.log("RECEIVED FROM WS: ", data);
       } catch (error) {
         console.error("Error parsing WebSocket message:", error);
       }
     };
   }
 
-  // // callback for when connection is ready
-  // private onConnectionReady?: () => void;
-
-  // public setConnectionReadyCallback(callback: () => void): void {
-  //   this.onConnectionReady = callback;
-  // }
-
   private handleWebSocketMessage(data: any): void {
-    console.log(data);
     const { event, payload } = data;
     const handlers = this.messageHandlers.get(event);
     if (handlers && handlers.length > 0) {
@@ -122,10 +116,10 @@ export class Websocket {
   }
 
   // send message functions (pre defined)
-  public messageGameStart(): void {
+  public messageGameStart(gameID: string): void {
     const gameStartMessage: ClientMessageInterface<"game_start"> = {
       event: "game_start",
-      payload: { gameId: import.meta.env.DEV_GAMEID },
+      payload: { gameId: gameID },
     };
     this.sendMessage(gameStartMessage);
   }

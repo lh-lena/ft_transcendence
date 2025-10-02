@@ -1,4 +1,4 @@
-import { ServiceContainer, Router, Websocket } from "../../services";
+import { ServiceContainer, Router, Websocket, Backend } from "../../services";
 import { PongGame } from "../../game";
 import { GameState, GameStatus } from "../../types";
 import { ScoreBar } from "../../components/scoreBar";
@@ -24,12 +24,14 @@ export class VsPlayerGamePage {
   private menuEndDiv!: HTMLDivElement;
   private endResultText!: HTMLElement;
   private ws: Websocket;
+  private backend: Backend;
 
   constructor(serviceContainer: ServiceContainer) {
     // services
     this.serviceContainer = serviceContainer;
     this.router = this.serviceContainer.get<Router>("router");
     this.ws = this.serviceContainer.get<Websocket>("websocket");
+    this.backend = this.serviceContainer.get<Backend>("backend");
 
     this.gameState = {
       status: GameStatus.PLAYING,
@@ -60,18 +62,31 @@ export class VsPlayerGamePage {
 
     // grab data from backend
     // get web socket before countdown
-    this.loadingOverlay = new Loading("connecting to server");
+    this.loadingOverlay = new Loading("waiting for opponent");
 
-    this.loadingOverlay.changeText("waiting for opponent");
     this.main.appendChild(this.loadingOverlay.getElement());
   }
 
+  public static async create(
+    serviceContainer: ServiceContainer,
+  ): Promise<VsPlayerGamePage> {
+    const instance = new VsPlayerGamePage(serviceContainer);
+
+    // get game id from backed
+    const response = await instance.backend.joinGame();
+
+    // send game id to web socket
+    instance.ws.messageGameStart(response.gameId);
+
+    return instance;
+  }
+
   private registerWebsocketHandlers(): void {
-    this.ws.onMessage("countdown_update", this.wsCountdownHandler);
-    this.ws.onMessage("notification", this.wsNotificationHandler);
-    this.ws.onMessage("game_update", this.wsGameUpdateHandler);
-    this.ws.onMessage("game_pause", this.wsGamePauseHandler);
-    this.ws.onMessage("game_ended", this.wsGameEndedHandler);
+    this.ws.onMessage("countdown_update", this.wsCountdownHandler.bind(this));
+    this.ws.onMessage("notification", this.wsNotificationHandler.bind(this));
+    this.ws.onMessage("game_update", this.wsGameUpdateHandler.bind(this));
+    this.ws.onMessage("game_pause", this.wsGamePauseHandler.bind(this));
+    this.ws.onMessage("game_ended", this.wsGameEndedHandler.bind(this));
   }
 
   private wsCountdownHandler(

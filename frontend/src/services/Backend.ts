@@ -124,13 +124,8 @@ export class Backend {
   }
 
   async refreshToken() {
-    try {
-      const response = await this.api.post("/api/refresh");
-      return response;
-    } catch (error: unknown) {
-      // console.log("Refresh token failed");
-      throw error;
-    }
+    const response = await this.api.post("/api/refresh");
+    return response;
   }
 
   //-------------Check Auth----------------
@@ -492,7 +487,7 @@ export class Backend {
 
     //TODO cut ws connection
     try {
-      const response = await this.api.post("/api/logout");
+      await this.api.post("/api/logout");
       // console.log("Logged out:", response.data);
     } catch {
       console.error("Logout failed, but local data is cleared anyway");

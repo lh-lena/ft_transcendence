@@ -52,8 +52,8 @@ export class MenuBar {
     this.router.navigate("/vs-player");
   }
 
-  private joinGameFlow() {
-    this.backend.joinGame();
+  private async joinGameFlow() {
+    // Create the message object and send it
     this.router.navigate("/vs-player");
   }
 
