@@ -25,6 +25,7 @@ export class VsPlayerGamePage {
   private endResultText!: HTMLElement;
   private ws: Websocket;
   private backend: Backend;
+  private gameId!: string;
 
   constructor(serviceContainer: ServiceContainer) {
     // services
@@ -75,8 +76,10 @@ export class VsPlayerGamePage {
     // get game id from backed
     const response = await instance.backend.joinGame();
 
+    instance.gameId = response.gameId;
+
     // send game id to web socket
-    instance.ws.messageGameStart(response.gameId);
+    instance.ws.messageGameStart(instance.gameId);
 
     return instance;
   }
@@ -231,16 +234,19 @@ export class VsPlayerGamePage {
         this.ws.messageGameUpdateDirection(
           Direction.UP,
           this.gameState.wsPaddleSequence,
+          this.gameId,
         );
       } else if (currentKey == "KEY_DOWN") {
         this.ws.messageGameUpdateDirection(
           Direction.DOWN,
           this.gameState.wsPaddleSequence,
+          this.gameId,
         );
       } else if (currentKey == "") {
         this.ws.messageGameUpdateDirection(
           Direction.STOP,
           this.gameState.wsPaddleSequence,
+          this.gameId,
         );
       }
       this.gameState.previousKey = currentKey;

@@ -140,10 +140,12 @@ export class Websocket {
   public messageGameUpdateDirection(
     direction: Direction,
     sequence: number,
+    gameId: string,
   ): void {
     const game_update: ClientMessageInterface<"game_update"> = {
       event: "game_update",
       payload: {
+        gameId: gameId,
         direction: direction,
         sequence: sequence,
       },

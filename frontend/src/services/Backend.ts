@@ -11,7 +11,7 @@ import { showError } from "../components/toast";
 
 export class Backend {
   private user!: User;
-  private refreshInterval?: number;
+  private refreshInterval?: ReturnType<typeof setInterval>;
   private isRefreshingToken: boolean = false;
   //TODO change to not use any
   private failedQueue: Array<{

@@ -62,6 +62,7 @@ export enum GameSessionStatus {
 }
 
 export interface PlayerInput {
+  gameId: string;
   direction: Direction;
   sequence: number; // default 0
 }

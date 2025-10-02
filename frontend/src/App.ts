@@ -11,7 +11,6 @@ import { ChatPage } from "./pages/chat";
 import { VsPlayerGamePage } from "./pages/remoteGame";
 import { TournamentAliasPage } from "./pages/tournament";
 import { protectedRoutes } from "./constants/routes";
-import { Page } from "openai/pagination";
 
 // single source of truth for pages and routes
 const PAGE_ROUTES = {

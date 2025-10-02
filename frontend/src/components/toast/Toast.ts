@@ -7,7 +7,7 @@ export interface ToastOptions {
 
 export class Toast {
   private element: HTMLElement;
-  private timeout: number | null = null;
+  private timeout: ReturnType<typeof setTimeout> | null = null;
 
   constructor({
     title,
