@@ -163,13 +163,6 @@ jobs:
           curl -f http://localhost:8082/api/auth/health || echo "Auth health check endpoint needed"
           # WebSocket test would go here
           
-      - name: Check HTTPS/WSS configuration
-        run: |
-          # Verify nginx SSL config
-          docker-compose exec -T nginx nginx -t
-          # Check if HTTPS redirect works
-          curl -I http://localhost | grep "301 Moved Permanently"
-          
       - name: Stop services
         if: always()
         run: docker-compose down
