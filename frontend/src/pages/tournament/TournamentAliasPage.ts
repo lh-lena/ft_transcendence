@@ -109,7 +109,7 @@ export class TournamentAliasPage {
     contactName.textContent = username;
     const contactAvatar = new ProfileAvatar(
       userStore.color,
-      userStore.colorMap,
+      userStore.colormap,
       30,
       30,
       2,

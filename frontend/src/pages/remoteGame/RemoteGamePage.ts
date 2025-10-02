@@ -6,6 +6,7 @@ import { Loading } from "../../components/loading";
 import { Menu } from "../../components/menu";
 import { WsServerBroadcast, Direction } from "../../types/websocket";
 import { ProfileAvatar } from "../../components/profileAvatar";
+import { profilePrintToArray } from "../../utils/profilePrintFunctions";
 
 export class VsPlayerGamePage {
   private main: HTMLElement;
@@ -24,6 +25,7 @@ export class VsPlayerGamePage {
   private backend: Backend;
   private gameId!: string;
   private userMe!: User;
+  private userOther!: User;
 
   constructor(serviceContainer: ServiceContainer) {
     // services
@@ -33,21 +35,6 @@ export class VsPlayerGamePage {
     this.backend = this.serviceContainer.get<Backend>("backend");
 
     // check which player is meant to be where
-
-    this.gameState = {
-      status: GameStatus.PLAYING,
-      previousStatus: GameStatus.PLAYING,
-      playerA: {
-        ...this.userMe,
-        score: 0,
-      },
-      pauseInitiatedByMe: false,
-      blockedPlayButton: false,
-      activeKey: "",
-      previousKey: "",
-      activePaddle: undefined,
-      wsPaddleSequence: 0,
-    };
 
     this.main = document.createElement("div");
     this.main.className =
@@ -71,13 +58,27 @@ export class VsPlayerGamePage {
     // get game id from backed
     const response = await instance.backend.joinGame();
 
-    console.log("DATA ON CREATE: ", response);
-
     instance.gameId = response.gameId;
 
     // save the user (me) to remote game to use later
     const responseUser = await instance.backend.getUser();
     instance.userMe = responseUser;
+
+    // Initialize gameState with complete data
+    instance.gameState = {
+      status: GameStatus.PLAYING,
+      previousStatus: GameStatus.PLAYING,
+      playerA: {
+        ...instance.userMe,
+        score: 0,
+      },
+      pauseInitiatedByMe: false,
+      blockedPlayButton: false,
+      activeKey: "",
+      previousKey: "",
+      activePaddle: undefined,
+      wsPaddleSequence: 0,
+    };
 
     // send game id to web socket
     instance.ws.messageGameStart(instance.gameId);
@@ -91,6 +92,25 @@ export class VsPlayerGamePage {
     this.ws.onMessage("game_update", this.wsGameUpdateHandler.bind(this));
     this.ws.onMessage("game_pause", this.wsGamePauseHandler.bind(this));
     this.ws.onMessage("game_ended", this.wsGameEndedHandler.bind(this));
+    this.ws.onMessage("game_start", this.wsStartGameHandler.bind(this));
+  }
+
+  // this happens at start of the game
+  private async wsStartGameHandler(payload: WsServerBroadcast["game_start"]) {
+    // finds the user that is not userMe
+    const otherUserId = payload.players.find(
+      (player) => player.userId !== this.userMe.userId,
+    );
+
+    if (!otherUserId) return;
+
+    const otherUser = await this.backend.getUserById(otherUserId.userId);
+    otherUser.colormap = profilePrintToArray(otherUser.colormap);
+    this.gameState.playerB = {
+      ...otherUser,
+      score: 0,
+    };
+    this.userOther = otherUser;
   }
 
   private wsCountdownHandler(
@@ -125,10 +145,9 @@ export class VsPlayerGamePage {
 
   private async wsGameUpdateHandler(payload: WsServerBroadcast["game_update"]) {
     this.game?.updateGameStateFromServer(payload);
-    // set player B
-    // set player B
     // check to make sure everythig it set right
     if (!this.gameState.playerB) return;
+    if (!this.userOther) return;
     if (!this.gameState.activePaddle) {
       this.gameState.activePaddle = payload.activePaddle;
       // change paddle pos to paddleB if we aren't A
@@ -163,9 +182,10 @@ export class VsPlayerGamePage {
     let winnerUser;
     if (payload.winnerId) {
       winnerUser = await this.backend.getUserById(payload.winnerId);
+      winnerUser.colormap = profilePrintToArray(winnerUser.colormap);
     }
 
-    this.showEndGameOverlay();
+    this.showEndGameOverlay(winnerUser);
     // update score for end of game diff than during. TODO refresh on backend integration -> must use diff logic
     this.gameState.playerA.score = payload.scorePlayer1;
     if (!this.gameState.playerB) return;
@@ -186,6 +206,7 @@ export class VsPlayerGamePage {
     this.gameContainer.className = "flex items-center justify-center relative";
 
     // create game instance before score bar so we can pass game (need for pausing) into scorebar
+    console.log("INITIALIZING GAME: ", this.gameState);
     this.game = new PongGame(
       this.gameState,
       () => this.gameStateCallback(),
@@ -305,28 +326,18 @@ export class VsPlayerGamePage {
     this.main.remove();
   }
 
-  private async showEndGameOverlay() {
+  private async showEndGameOverlay(user: User) {
     this.game?.hideGamePieces();
     if (this.gameContainer && !this.menuPauseDiv) {
       this.menuEndDiv = document.createElement("div");
       this.menuEndDiv.className = "flex flex-col gap-5 items-center";
       // Create and mount menu to game container instead of main element
-      const menuItems = [{ name: "quit", link: "/profile" }];
+      const menuItems = [{ name: "quit", link: "/chat" }];
       const menuEnd = new Menu(this.router, menuItems);
-      // make a private class member in order to change with result of match
-      let avatar = new ProfileAvatar(
-        this.gameState.playerA.color,
-        this.gameState.playerA.colormap,
-        40,
-        40,
-        2,
-        //TODO need these in gameState
-        //this.gameState.playerA.avatar ? "image" : undefined,
-        //this.gameState.playerA.userId,
-      );
+      let avatar = new ProfileAvatar(user.color, user.colormap, 40, 40, 2);
       this.menuEndDiv.appendChild(avatar.getElement());
       this.endResultText = document.createElement("h1");
-      this.endResultText.textContent = "XXX wins";
+      this.endResultText.textContent = `${user.username} wins`;
       this.endResultText.className = "text-white text text-center";
       this.menuEndDiv.appendChild(this.endResultText);
       menuEnd.mount(this.menuEndDiv);

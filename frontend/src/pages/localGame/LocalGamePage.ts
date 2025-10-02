@@ -20,6 +20,9 @@ export class LocalGamePage {
   private menu: Menu | null = null;
   private gameContainer: HTMLElement | null = null;
 
+  // TODO create function on local
+  // populate user B as user we fetch from backend (real user)
+
   constructor(serviceContainer: ServiceContainer) {
     // router / services container
     this.serviceContainer = serviceContainer;
@@ -108,7 +111,7 @@ export class LocalGamePage {
 
   private gameStateCallback(): void {
     // update score bar on hook
-    if (this.scoreBar) {
+    if (this.scoreBar && this.gameState.playerB) {
       this.scoreBar.updateScores(
         this.gameState.playerA.score,
         this.gameState.playerB.score,
