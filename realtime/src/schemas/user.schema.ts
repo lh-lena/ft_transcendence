@@ -12,7 +12,7 @@ export const UserIdObjectSchema = z.object({
   userId: UserIdSchema,
 });
 
-export const UserIdJSON = z.toJSONSchema(UserIdObjectSchema as unknown as any, {
+export const UserIdJSON = z.toJSONSchema(UserIdObjectSchema as unknown as z.ZodTypeAny, {
   reused: 'ref',
   target: 'draft-7',
   unrepresentable: 'any',

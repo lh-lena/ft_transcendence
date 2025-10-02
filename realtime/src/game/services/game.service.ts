@@ -22,7 +22,7 @@ import type {
 import createGameValidator from '../utils/game.validation.js';
 import type { EnvironmentConfig } from '../../config/config.js';
 import { addAIPlayerToGame, createPlayerFromUser } from '../utils/player.utils.js';
-import { AuthService } from '../../auth/auth.js';
+import { AuthService } from '../../auth/auth.types.js';
 
 export default function createGameService(app: FastifyInstance): GameService {
   const config = app.config as EnvironmentConfig;

@@ -8,10 +8,10 @@ import { GAME_EVENTS, GameEventType } from '../constants/game.constants.js';
 
 function logMessage(
   app: FastifyInstance,
-  level: 'error' | 'debug' | 'info',
+  level: 'error' | 'debug' | 'info' | 'warn',
   service: string,
   message: string,
-  details?: string,
+  details: string = '',
 ): void {
   app.log[level](`[${service}] ${message} ${details}`);
 }
@@ -36,6 +36,10 @@ export function processDebugLog(
 
 export function processInfoLog(app: FastifyInstance, service: string, message: string = ''): void {
   logMessage(app, 'info', service, message);
+}
+
+export function processWarnLog(app: FastifyInstance, service: string, message: string = ''): void {
+  logMessage(app, 'warn', service, message);
 }
 
 export function safeErrorToString(error?: unknown): string {
@@ -109,12 +113,6 @@ export function handleWebSocketError(
       'websocket-service',
       `Error processing message from user ${userId}`,
       error.message,
-    );
-    sendErrorResponse(
-      respond,
-      userId,
-      GAME_EVENTS.ERROR,
-      `Error processing message: ${error.message}`,
     );
   } else {
     logMessage(app, 'error', 'websocket-service', `Unknown error for user ${userId}`, errorMsg);

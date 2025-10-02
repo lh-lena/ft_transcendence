@@ -9,7 +9,7 @@ import {
   PADDLE_A_DEFAULTS,
   PADDLE_B_DEFAULTS,
 } from '../../../constants/game.constants.js';
-import type { GameState, BallType } from '../../../schemas/game.schema.js';
+import type { GameState } from '../../../schemas/game.schema.js';
 
 export function initializeGameState(gameId: string): GameState {
   const gameState: GameState = {
@@ -50,19 +50,18 @@ export function updateGame(state: GameState, deltaTime: number): void {
     paddleB.y += paddleB.direction * paddleB.speed * deltaTime;
   }
 
-  paddleA.y = Math.max(
-    0,
-    Math.min(paddleA.y, BOARD_DEFAULTS.height - PADDLE_DEFAULTS.height - PADDLE_DEFAULTS.x),
-  );
-  paddleB.y = Math.max(
-    0,
-    Math.min(paddleB.y, BOARD_DEFAULTS.height - PADDLE_DEFAULTS.height - PADDLE_DEFAULTS.x),
-  );
+  paddleA.y = Math.max(0, Math.min(paddleA.y, BOARD_DEFAULTS.height - PADDLE_DEFAULTS.height));
+  paddleB.y = Math.max(0, Math.min(paddleB.y, BOARD_DEFAULTS.height - PADDLE_DEFAULTS.height));
 
   ball.x += ball.v * ball.dx * deltaTime;
   ball.y += ball.v * ball.dy * deltaTime;
 
-  if (ball.y <= 0 || ball.y >= BOARD_DEFAULTS.height - BALL_DEFAULTS.size) {
+  if (ball.y <= 0) {
+    ball.y = 0;
+    ball.dy *= -1;
+  }
+  if (ball.y >= BOARD_DEFAULTS.height - BALL_DEFAULTS.size) {
+    ball.y = BOARD_DEFAULTS.height - BALL_DEFAULTS.size;
     ball.dy *= -1;
   }
 
@@ -85,7 +84,7 @@ export function updateGame(state: GameState, deltaTime: number): void {
     ball.x = paddleA.x + paddleA.width;
     ball.dx = Math.abs(ball.dx);
     ball.v += PONG_CONFIG.INCREMENT_BALL_VELOCITY;
-    randomizeBallDirection(ball);
+    ball.dy = randomizeBallDirection(ball.dy);
   }
   if (
     ball.x >= paddleB.x - BALL_DEFAULTS.size &&
@@ -95,7 +94,7 @@ export function updateGame(state: GameState, deltaTime: number): void {
     ball.x = paddleB.x - BALL_DEFAULTS.size;
     ball.dx = -Math.abs(ball.dx);
     ball.v += PONG_CONFIG.INCREMENT_BALL_VELOCITY;
-    randomizeBallDirection(ball);
+    ball.dy = randomizeBallDirection(ball.dy);
   }
 
   if (ball.dy > PONG_CONFIG.MAX_BALL_DY) ball.dy = PONG_CONFIG.MAX_BALL_DY;
@@ -110,9 +109,11 @@ function resetBall(state: GameState): void {
   };
 }
 
-function randomizeBallDirection(ball: BallType): void {
-  ball.dy += (Math.random() - 0.5) * 0.5;
-  ball.dy *= Math.random() < 0.5 ? -1 : 1;
+export function randomizeBallDirection(dy: number): number {
+  let new_dv = dy;
+  new_dv += (Math.random() - 0.5) * 0.5;
+  new_dv *= Math.random() < 0.5 ? -1 : 1;
+  return new_dv;
 }
 
 function resetPadlesPosition(state: GameState): void {
