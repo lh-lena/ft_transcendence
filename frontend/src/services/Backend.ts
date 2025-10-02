@@ -34,7 +34,7 @@ export class Backend {
   private setupInterceptors() {
     this.api.interceptors.response.use(
       (response) => {
-        console.log("API Response:", response.data);
+        // console.log("API Response:", response.data);
         return response;
       },
       async (error) => {
@@ -107,7 +107,7 @@ export class Backend {
         try {
           await this.refreshToken();
         } catch {
-          console.log("Periodic refresh failed, logging out!");
+          // console.log("Periodic refresh failed, logging out!");
           this.logout();
         }
       },
@@ -128,7 +128,7 @@ export class Backend {
       const response = await this.api.post("/api/refresh");
       return response;
     } catch (error: unknown) {
-      console.log("Refresh token failed");
+      // console.log("Refresh token failed");
       throw error;
     }
   }
@@ -209,9 +209,9 @@ export class Backend {
       }
 
       const messageHandler = (event: MessageEvent) => {
-        console.log("Message received:", event);
-        console.log("Expected origin:", window.location.origin);
-        console.log("Event origin:", event.origin);
+        // console.log("Message received:", event);
+        // console.log("Expected origin:", window.location.origin);
+        // console.log("Event origin:", event.origin);
         if (event.origin !== `${import.meta.env.VITE_AUTH_URL}`) {
           return;
         }
@@ -219,7 +219,7 @@ export class Backend {
         const { type, data } = event.data;
 
         if (type === "OAUTH_RESULT") {
-          console.log(type, data);
+          // console.log(type, data);
           window.removeEventListener("message", messageHandler);
 
           if (!popup.closed) {
@@ -248,7 +248,9 @@ export class Backend {
   }
 
   async fetchUserStatsById(userId: string) {
-    const response = await this.api.get(`/api/result?userId=${userId}`);
+    const response = await this.api.get(
+      `/api/result?gamePlayed.userId=${userId}`,
+    );
     return response.data;
   }
 
@@ -258,7 +260,7 @@ export class Backend {
   }
 
   setUser(response: User) {
-    console.log(response);
+    // console.log(response);
     this.user = response;
     this.user = {
       ...response,
@@ -344,7 +346,7 @@ export class Backend {
 
   // Game-related API calls
   async createGame(gameConfig: any) {
-    console.log("Creating game with config:", gameConfig);
+    // console.log("Creating game with config:", gameConfig);
     const response = await this.api.post("/api/game", gameConfig);
     return response.data;
   }
@@ -369,7 +371,7 @@ export class Backend {
     const response = await this.api.post("/api/upload", formData);
 
     const avatarUrl = response.data.storedName;
-    console.log(avatarUrl);
+    // console.log(avatarUrl);
 
     const response2 = await this.api.patch(
       `/api/user/${this.getUser().userId}`,
@@ -436,7 +438,7 @@ export class Backend {
   //join a tournament --> if user is loged in alias gets updated and if guest, guest account gets created. returns -> tournamentId: uuid, round: number, playerAmount: number, players: [userId: uuid], status: string(waiting, ready, finished), games: [gameSchema]
 
   async joinTournament(alias: string) {
-    console.log("Joining tournament", this.getUser());
+    // console.log("Joining tournament", this.getUser());
     if (!this.getUser()) {
       await this.registerGuest(alias);
     } else {
@@ -446,7 +448,7 @@ export class Backend {
     }
 
     const userId = this.getUser().userId;
-    console.log(userId);
+    // console.log(userId);
     const response = await this.api.post("/api/tournament", {
       playerAmount: 4,
       userId: userId,
@@ -491,7 +493,7 @@ export class Backend {
     //TODO cut ws connection
     try {
       const response = await this.api.post("/api/logout");
-      console.log("Logged out:", response.data);
+      // console.log("Logged out:", response.data);
     } catch {
       console.error("Logout failed, but local data is cleared anyway");
     }
@@ -508,7 +510,7 @@ export class Backend {
       userId: userId,
       type: "totp",
     });
-    console.log(response);
+    // console.log(response);
     return response;
   }
 
@@ -521,7 +523,7 @@ export class Backend {
       code: code,
     });
 
-    console.log("2FA Verification Response:", response.data);
+    // console.log("2FA Verification Response:", response.data);
 
     if (response.status === 200) {
       const userResponse = await this.fetchUserById(response.data.userId);
@@ -540,7 +542,7 @@ export class Backend {
       code: code,
     });
 
-    console.log("2FA Verification Response:", response.data);
+    // console.log("2FA Verification Response:", response.data);
 
     if (response.status === 200) {
       const userResponse = await this.fetchUserById(response.data.userId);

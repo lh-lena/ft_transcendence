@@ -105,7 +105,6 @@ export class ChatPage {
     instance.blockedList = await instance.backend.getBlockedListById(
       instance.backend.getUser().userId,
     );
-    console.log(instance.blockedList);
 
     // // register WebSocket handlers after connection is established
     instance.websocket.onMessage("chat_message", (payload) => {
@@ -341,7 +340,6 @@ export class ChatPage {
       this.backend.getUser().userId,
       user.userId,
     );
-    console.log(this.currentChatHistory);
     this.currentChatHistory.forEach((message) => {
       const messageBox = document.createElement("div");
       messageBox.className = "standard-dialog flex items-center self-start";
@@ -431,7 +429,6 @@ export class ChatPage {
         clickableContact.appendChild(contact);
 
         // insert logic for online offline
-        console.log("friendONLINE: ", friend.online);
         if (friend.online) {
           this.friends.appendChild(clickableContact);
         } else {

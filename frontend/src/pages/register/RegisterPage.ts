@@ -52,7 +52,7 @@ export class RegisterPage {
     try {
       const response = await this.backend.oAuth2Login();
 
-      console.log(response);
+      // console.log(response);
 
       if (response.type === "2FA_REQUIRED") {
         this.main.removeChild(this.firstMenu.getMenuElement());
@@ -63,9 +63,9 @@ export class RegisterPage {
 
       if (response.type === "OAUTH_SUCCESS") {
         localStorage.setItem("jwt", response.data.jwt);
-        console.log("OAuth successful, fetching user data...", response);
+        // console.log("OAuth successful, fetching user data...", response);
         const ret = await this.backend.fetchUserById(response.userId);
-        console.log("Fetched user data:", ret);
+        // console.log("Fetched user data:", ret);
         this.backend.setUser(ret.data);
         this.router.navigate("/chat");
         return;

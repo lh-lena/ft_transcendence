@@ -28,7 +28,7 @@ export class Websocket {
       : wsUrl;
 
     // connect to ws with token
-    console.log(urlWithToken);
+    // console.log(urlWithToken);
     this.ws = new WebSocket(urlWithToken);
 
     this.ws.onclose = (event) => {
