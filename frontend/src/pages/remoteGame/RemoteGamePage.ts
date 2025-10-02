@@ -76,6 +76,8 @@ export class VsPlayerGamePage {
     // get game id from backed
     const response = await instance.backend.joinGame();
 
+    console.log("DATA ON CREAE: ", response);
+
     instance.gameId = response.gameId;
 
     // send game id to web socket
