@@ -59,6 +59,29 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y docker-compose
       
+      - name: Create environment files for CI
+        run: |
+          # Create main .env file with test values
+          cat > .env << EOF
+          GOOGLE_CLIENT_ID=test_client_id
+          GOOGLE_CLIENT_SECRET=test_client_secret
+          JWT_SECRET=test_jwt_secret_minimum_32_characters_long_for_ci
+          GRAFANA_ADMIN_USER=admin
+          GRAFANA_ADMIN_PASSWORD=test_password
+          DATABASE_URL=file:/app/data/db.sqlite
+          EOF
+          
+          # Create auth-service .env file
+          cat > auth-service/.env << EOF
+          GOOGLE_CLIENT_ID=test_client_id
+          GOOGLE_CLIENT_SECRET=test_client_secret
+          JWT_SECRET=test_jwt_secret_minimum_32_characters_long_for_ci
+          DATABASE_URL=file:/app/data/db.sqlite
+          AUTH_PORT=8082
+          AUTH_HOST=0.0.0.0
+          BACKEND_URL=http://backend:8080
+          EOF
+      
       - name: Build all services
         run: docker-compose build
       
@@ -199,6 +222,29 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y docker-compose
+      
+      - name: Create environment files for CI
+        run: |
+          # Create main .env file with test values
+          cat > .env << EOF
+          GOOGLE_CLIENT_ID=test_client_id
+          GOOGLE_CLIENT_SECRET=test_client_secret
+          JWT_SECRET=test_jwt_secret_minimum_32_characters_long_for_ci
+          GRAFANA_ADMIN_USER=admin
+          GRAFANA_ADMIN_PASSWORD=test_password
+          DATABASE_URL=file:/app/data/db.sqlite
+          EOF
+          
+          # Create auth-service .env file
+          cat > auth-service/.env << EOF
+          GOOGLE_CLIENT_ID=test_client_id
+          GOOGLE_CLIENT_SECRET=test_client_secret
+          JWT_SECRET=test_jwt_secret_minimum_32_characters_long_for_ci
+          DATABASE_URL=file:/app/data/db.sqlite
+          AUTH_PORT=8082
+          AUTH_HOST=0.0.0.0
+          BACKEND_URL=http://backend:8080
+          EOF
       
       - name: Create SSL certificates for CI
         run: |
