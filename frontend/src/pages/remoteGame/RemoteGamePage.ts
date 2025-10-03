@@ -46,7 +46,13 @@ export class VsPlayerGamePage {
 
     // grab data from backend
     // get web socket before countdown
-    this.loadingOverlay = new Loading("waiting for opponent");
+    this.loadingOverlay = new Loading("waiting for opponent", "button", () => {
+      // callback to handle button click - maybe navigate back or cancel game
+      this.ws.messageGameLeave(this.gameId);
+      this.unmount();
+      this.router.navigate("/chat");
+    });
+    this.loadingOverlay.mount(this.main);
 
     this.main.appendChild(this.loadingOverlay.getElement());
   }
@@ -333,6 +339,7 @@ export class VsPlayerGamePage {
     this.ws.clearHandlers("game_pause");
     this.ws.clearHandlers("game_ended");
     this.ws.clearHandlers("game_start");
+    this.loadingOverlay.unmount;
     this.main.remove();
   }
 

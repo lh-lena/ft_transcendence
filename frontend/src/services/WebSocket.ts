@@ -161,6 +161,14 @@ export class Websocket {
     this.sendMessage(game_resume);
   }
 
+  public messageGameLeave(gameId: string): void {
+    const game_leave: ClientMessageInterface<"game_leave"> = {
+      event: "game_leave",
+      payload: { gameId: gameId },
+    };
+    this.sendMessage(game_leave);
+  }
+
   public messageGamePause(): void {
     const game_pause: ClientMessageInterface<"game_pause"> = {
       event: "game_pause",
