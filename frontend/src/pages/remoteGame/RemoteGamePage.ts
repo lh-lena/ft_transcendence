@@ -11,7 +11,8 @@ import { profilePrintToArray } from "../../utils/profilePrintFunctions";
 export class VsPlayerGamePage {
   private main: HTMLElement;
   private game: PongGame | null = null;
-  private gameState: GameState;
+  // initialize game state in create() now
+  private gameState!: GameState;
   private scoreBar!: ScoreBar;
   private menuPauseDiv: HTMLDivElement | null = null;
   private gameContainer: HTMLElement | null = null;
