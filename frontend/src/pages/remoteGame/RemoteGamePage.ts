@@ -46,12 +46,9 @@ export class VsPlayerGamePage {
 
     // grab data from backend
     // get web socket before countdown
-    this.loadingOverlay = new Loading("waiting for opponent", "button", () => {
-      // callback to handle button click - maybe navigate back or cancel game
-      this.ws.messageGameLeave(this.gameId);
-      this.unmount();
-      this.router.navigate("/chat");
-    });
+    this.loadingOverlay = new Loading("waiting for opponent", "button", () =>
+      this.quitHook(),
+    );
     this.loadingOverlay.mount(this.main);
 
     this.main.appendChild(this.loadingOverlay.getElement());
@@ -66,7 +63,6 @@ export class VsPlayerGamePage {
     const response = await instance.backend.joinGame();
 
     instance.gameId = response.gameId;
-    console.log("setting game id to: ", instance.gameId);
 
     // save the user (me) to remote game to use later
     const responseUser = await instance.backend.getUser();
@@ -236,7 +232,7 @@ export class VsPlayerGamePage {
       this.menuPauseDiv = document.createElement("div");
       this.menuPauseDiv.className = "flex flex-col gap-5";
       // Create and mount menu to game container instead of main element
-      const menuItems = [{ name: "quit", link: "/profile" }];
+      const menuItems = [{ name: "quit", onClick: () => this.quitHook() }];
       const menuPause = new Menu(this.router, menuItems);
       this.pauseCountdown = document.createElement("h1");
       this.pauseCountdown.innerText = "paused";
@@ -251,6 +247,12 @@ export class VsPlayerGamePage {
       this.menuPauseDiv.style.transform = "translate(-50%, -50%)";
       this.menuPauseDiv.style.zIndex = "1000";
     }
+  }
+
+  private quitHook() {
+    this.ws.messageGameLeave(this.gameId);
+    this.unmount();
+    this.router.navigate("/chat");
   }
 
   private hidePauseOverlay(): void {
@@ -306,7 +308,7 @@ export class VsPlayerGamePage {
       this.scoreBar.pausePlay.toggleIsPlaying(true);
       this.gameState.previousStatus = GameStatus.PLAYING;
       if (this.gameState.pauseInitiatedByMe == true) {
-        this.ws.messageGameResume();
+        this.ws.messageGameResume(this.gameId);
       }
       // paused
     } else if (
@@ -320,7 +322,7 @@ export class VsPlayerGamePage {
       // send game pause to ws -> only from client who actually paused the button (otherwise we get duplicate send)
       this.gameState.previousStatus = GameStatus.PAUSED;
       if (this.gameState.pauseInitiatedByMe == true) {
-        this.ws.messageGamePause();
+        this.ws.messageGamePause(this.gameId);
       } else {
         this.gameState.blockedPlayButton = true;
       }

@@ -44,7 +44,6 @@ export class Websocket {
     // web socket stuff
     this.ws.onopen = () => {
       console.log("opened web socket");
-      showSuccess("connected to web socket");
       // this.onConnectionReady?.();
     };
 
@@ -153,10 +152,10 @@ export class Websocket {
     this.sendMessage(game_update);
   }
 
-  public messageGameResume(): void {
+  public messageGameResume(gameId: string): void {
     const game_resume: ClientMessageInterface<"game_resume"> = {
       event: "game_resume",
-      payload: { gameId: import.meta.env.DEV_GAMEID },
+      payload: { gameId: gameId },
     };
     this.sendMessage(game_resume);
   }
@@ -169,10 +168,10 @@ export class Websocket {
     this.sendMessage(game_leave);
   }
 
-  public messageGamePause(): void {
+  public messageGamePause(gameId: string): void {
     const game_pause: ClientMessageInterface<"game_pause"> = {
       event: "game_pause",
-      payload: { gameId: import.meta.env.DEV_GAMEID },
+      payload: { gameId: gameId },
     };
     this.sendMessage(game_pause);
   }

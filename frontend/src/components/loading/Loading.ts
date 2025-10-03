@@ -33,7 +33,7 @@ export class Loading {
       this.element.appendChild(this.backButton);
 
       // Set up mouse move handler
-      this.mouseMoveHandler = (event: MouseEvent) => {
+      this.mouseMoveHandler = (_event: MouseEvent) => {
         if (this.backButton) {
           // Clear any existing timeout
           if (this.hideTimeout) {
