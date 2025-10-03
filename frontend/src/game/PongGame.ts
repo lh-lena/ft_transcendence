@@ -233,6 +233,7 @@ export class PongGame {
         this.gameState.activeKey !== ""
       ) {
         this.gameState.activeKey = "";
+        this.gameState.wsPaddleSequence++;
         this.gameStateCallBackParent();
         this.lastPaddleUpdateTime = now;
       }

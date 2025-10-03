@@ -60,6 +60,7 @@ export class VsPlayerGamePage {
     const response = await instance.backend.joinGame();
 
     instance.gameId = response.gameId;
+    console.log("setting game id to: ", instance.gameId);
 
     // save the user (me) to remote game to use later
     const responseUser = await instance.backend.getUser();
@@ -265,6 +266,7 @@ export class VsPlayerGamePage {
     }
 
     const currentKey = this.gameState.activeKey;
+    console.log("GAME ID IS : ", this.gameId);
     if (currentKey != this.gameState.previousKey) {
       // key event handling
       if (currentKey == "KEY_UP") {
@@ -324,6 +326,13 @@ export class VsPlayerGamePage {
   }
 
   public unmount(): void {
+    // clean up WebSocket handlers to prevent memory leaks and duplicate handlers
+    this.ws.clearHandlers("countdown_update");
+    this.ws.clearHandlers("notification");
+    this.ws.clearHandlers("game_update");
+    this.ws.clearHandlers("game_pause");
+    this.ws.clearHandlers("game_ended");
+    this.ws.clearHandlers("game_start");
     this.main.remove();
   }
 
