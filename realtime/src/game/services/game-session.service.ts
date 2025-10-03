@@ -26,7 +26,8 @@ export default function createGameSessionService(app: FastifyInstance): GameSess
 
   function createGameSession(gameId: GameIdType, gameData: StartGame): GameSession | null {
     if (gameSessions.has(gameId)) {
-      processDebugLog(app, 'game-session', `Game session ${gameId} already exists. Replacing it`);
+      processDebugLog(app, 'game-session', `Game session ${gameId} already exists. Returning it`);
+      return gameSessions.get(gameId) as GameSession;
     }
 
     const newGame: GameSession = {
