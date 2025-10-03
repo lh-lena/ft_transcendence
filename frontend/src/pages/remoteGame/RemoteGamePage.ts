@@ -128,6 +128,7 @@ export class VsPlayerGamePage {
     ) {
       this.pauseCountdown.innerText = "game resumes in: " + message;
       if (message == "GO!") this.pauseCountdown.innerText = message;
+      // could do a show info in here instead but looked cluttered
     } else this.loadingOverlay.changeText(message);
   }
 
@@ -135,7 +136,8 @@ export class VsPlayerGamePage {
     payload: WsServerBroadcast["notification"],
   ): void {
     const message = payload.message;
-    if (message == "Game started!") {
+    if (message == "Game started!" || message == "Game resumed!") {
+      console.log("HEREEEEEE");
       this.loadingOverlay.hide();
       // added from game resume for now
       this.gameState.status = GameStatus.PLAYING;

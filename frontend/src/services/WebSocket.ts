@@ -1,4 +1,5 @@
 //web socket
+import { showInfo } from "../components/toast";
 import { User } from "../types";
 import {
   WsServerBroadcast,
@@ -50,7 +51,9 @@ export class Websocket {
       try {
         const data = JSON.parse(event.data);
         this.handleWebSocketMessage(data);
-        console.log("RECEIVED FROM WS: ", data);
+        if (data.event === "notification") showInfo(data.payload.message);
+        if (data.event !== "game_update") console.log(`${data.event}: `, data.payload.message);
+        // console.log("RECEIVED FROM WS: ", data);
       } catch (error) {
         console.error("Error parsing WebSocket message:", error);
       }

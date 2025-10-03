@@ -304,6 +304,13 @@ export class ChatPage {
     this.profilePopUp = new ProfilePopUp(
       () => this.toggleProfilePopUp(user),
       user,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
     ).getNode();
     this.rightPanel = this.profilePopUp;
     // this.chatRow.appendChild(this.rightPanel);
