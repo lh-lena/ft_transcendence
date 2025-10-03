@@ -85,7 +85,7 @@ export class VsPlayerGamePage {
     };
 
     // send game id to web socket
-    instance.ws.messageGameStart(instance.gameId);
+    // instance.ws.messageGameStart(instance.gameId);
 
     return instance;
   }
