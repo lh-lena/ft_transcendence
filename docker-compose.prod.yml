@@ -34,11 +34,8 @@ services:
   frontend:
     build: ./frontend
     container_name: ft_transcendence_frontend
-    ports:
-      - "3000:3000"
     volumes:
-      - ./frontend:/app
-      - /app/node_modules
+      - frontend_node_modules:/app/node_modules
     networks:
       - pong-network
     healthcheck:
@@ -51,14 +48,11 @@ services:
   backend:
     build: ./backend
     container_name: ft_transcendence_backend
-    ports:
-      - "8080:8080"
     env_file:
       - ./backend/.env
     volumes:
-      - ./data:/app/data
-      - ./backend:/app
-      - /app/node_modules
+      - backend_node_modules:/app/node_modules
+      - backend_data:/app/data
     networks:
       - pong-network
     healthcheck:
@@ -71,13 +65,10 @@ services:
   realtime:
     build: ./realtime
     container_name: ft_transcendence_realtime
-    ports:
-      - "8081:8081"
     env_file:
       - ./realtime/.env
     volumes:
-      - ./realtime:/app
-      - /app/node_modules
+      - realtime_node_modules:/app/node_modules
     networks:
       - pong-network
     healthcheck:
@@ -86,24 +77,11 @@ services:
       timeout: 5s
       retries: 10
 
-      
-
   auth-service:
     build: ./auth-service
     container_name: ft_transcendence_auth
-    ports:
-      - "8082:8082"
     volumes:
-      - ./auth-service:/app
-      - /app/node_modules
-      - ../backend/prisma:/app/prisma
-    environment:
-      - GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID}
-      - GITHUB_CLIENT_SECRET=${GITHUB_CLIENT_SECRET}
-      - ACCESS_TOKEN_SECRET=${JWT_SECRET:-$(openssl rand -base64 64)}
-      - REFRESH_TOKEN_SECRET=${JWT_SECRET:-$(openssl rand -base64 64)}
-    env_file:
-      - ./auth-service/.env
+      - auth_node_modules:/app/node_modules
     networks:
       - pong-network
     healthcheck:
@@ -115,8 +93,6 @@ services:
   prometheus:
     image: prom/prometheus:latest
     container_name: ft_transcendence_prometheus
-    ports:
-      - "9090:9090"
     volumes:
       - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - ./monitoring/prometheus/alerts.yml:/etc/prometheus/alerts.yml:ro
@@ -125,7 +101,7 @@ services:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
       - '--storage.tsdb.retention.time=15d'
-      - '--storage.tsdb.retention.size=5GB' 
+      - '--storage.tsdb.retention.size=5GB'  
       - '--web.enable-lifecycle'
       - '--web.route-prefix=/prometheus'
       - '--web.external-url=https://localhost/prometheus'
@@ -135,8 +111,6 @@ services:
   grafana:
     image: grafana/grafana:latest
     container_name: ft_transcendence_grafana
-    ports:
-      - "3001:3000"
     environment:
       - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER}
       - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD}
@@ -162,3 +136,8 @@ networks:
 volumes:
   prometheus_data:
   grafana_data:
+  frontend_node_modules:
+  backend_node_modules:
+  backend_data:
+  realtime_node_modules:
+  auth_node_modules:
