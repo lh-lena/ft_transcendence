@@ -5,7 +5,7 @@ import fastifyCookie from '@fastify/cookie';
 import fastifyCsrf from '@fastify/csrf-protection';
 import fastifyOauth2 from '@fastify/oauth2';
 import fastifyHttpProxy from '@fastify/http-proxy';
-//import * as client from 'prom-client';
+import * as client from 'prom-client';
 
 import cronPlugin from './plugins/000_cron';
 import AutoLoad from '@fastify/autoload';
@@ -14,49 +14,31 @@ import path from 'path';
 import { config } from './config/index';
 
 // Initialize Prometheus registry
-//const register = new client.Registry();
-//
-//// collect default metrics (CPU, memory, etc.)
-//client.collectDefaultMetrics({ register });
-//
-//// create custom metrics for auth service
-//const authServiceStatus = new client.Gauge({
-//  name: 'auth_service_status',
-//  help: 'Auth service status (1 = up, 0 = down)',
-//  registers: [register],
-//});
-//
-//const dbConnectionStatus = new client.Gauge({
-//  name: 'auth_db_connection_status',
-//  help: 'Auth database connection status (1 = up, 0 = down)',
-//  registers: [register],
-//});
-//
-//const loginAttempts = new client.Counter({
-//  name: 'auth_login_attempts_total',
-//  help: 'Total number of login attempts',
-//  labelNames: ['status'],
-//  registers: [register],
-//});
-//
-//const registrationCounter = new client.Counter({
-//  name: 'auth_user_registrations_total',
-//  help: 'Total number of user registrations',
-//  labelNames: ['status'],
-//  registers: [register],
-//});
-//
-//type User = {
-//  id: number;
-//  email: string;
-//  username: string;
-//  alias?: string;
-//  password_hash: string;
-//  is_2fa_enabled: number;
-//  twofa_secret?: string | null;
-//  created_at: string;
-//  updated_at: string;
-//};
+export const register = new client.Registry();
+
+// collect default metrics (CPU, memory, etc.)
+client.collectDefaultMetrics({ register });
+
+// create custom metrics for auth service
+export const authServiceHealth = new client.Gauge({
+  name: 'auth_service_health',
+  help: 'Auth service health status (1 = up, 0 = down)',
+  registers: [register],
+});
+
+export const loginAttempts = new client.Counter({
+  name: 'auth_login_attempts_total',
+  help: 'Total number of login attempts',
+  labelNames: ['status'],
+  registers: [register],
+});
+
+export const registrationCounter = new client.Counter({
+  name: 'auth_user_registrations_total',
+  help: 'Total number of user registrations',
+  labelNames: ['status'],
+  registers: [register],
+});
 
 export const server = Fastify({ logger: true });
 

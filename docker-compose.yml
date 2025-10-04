@@ -53,10 +53,8 @@ services:
     container_name: ft_transcendence_backend
     ports:
       - "8080:8080"
-    environment:
-      - PORT=8080
-      - IP=0.0.0.0
-      - DATABASE_URL=file:/app/data/db.sqlite
+    env_file:
+      - ./backend/.env
     volumes:
       - ./data:/app/data
       - ./backend:/app
@@ -75,6 +73,8 @@ services:
     container_name: ft_transcendence_realtime
     ports:
       - "8081:8081"
+    env_file:
+      - ./realtime/.env
     volumes:
       - ./realtime:/app
       - /app/node_modules

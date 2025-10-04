@@ -7,6 +7,7 @@ export default fp(async function onRequestHook(server) {
   server.addHook('preHandler', async (req: FastifyRequest, reply: FastifyReply) => {
     const publicRoutes = [
       '/api/auth/health',
+      '/metrics',
       '/api/auth/google',
       '/api/auth/google/callback',
       '/api/register',

@@ -1,10 +1,6 @@
 import { FastifyInstance } from "fastify";
 import { StartGame } from "../schemas/game.schema.js";
-<<<<<<< HEAD
 import { GameMode } from "../constants/game.constants.js";
-=======
-import { GameMode } from "../types/game.types.js";
->>>>>>> develop
 import { GameResult, GameResultSchema } from "../schemas/game.schema.js";
 import { z } from "zod";
 
@@ -13,10 +9,10 @@ export function fetchStartGame(app: FastifyInstance) {
   const MOCK_GAME_RESPONSES: { [key: string]: StartGame } = {
       'test-game-1': {
         gameId: 'test-game-1',
-        gameMode: GameMode.PVP_REMOTE,
+        mode: GameMode.PVP_REMOTE,
         players: [
-          { userId: 0, userAlias: 'PlayerA', username: 'n/a' },
-          { userId: 1, userAlias: 'PlayerB', username: 'n/a' }
+          { userId: '0', userAlias: 'PlayerA', username: 'n/a', isAI: false },
+          { userId: '1', userAlias: 'PlayerB', username: 'n/a', isAI: false }
         ]
       }
     }
@@ -69,14 +65,10 @@ export function fetchStartGame(app: FastifyInstance) {
           });
         }
     
-<<<<<<< HEAD
-    app.log.info(`[Mock Backend] Received game result for game ${gameResult.gameId}: winnerId=${gameResult.winnerId}`);
-=======
-    app.log.info(`[Mock Backend] Received game result for game ${gameResult.gameId}`, {
+    app.log.info({
       gameId: gameResult.gameId,
       winnerId: gameResult.winnerId,
-    });
->>>>>>> develop
+    }, `[Mock Backend] Received game result for game ${gameResult.gameId}`);
     return reply.status(200).send({
       success: true,
       message: `Game result for ${gameResult.gameId} saved successfully`,
@@ -84,11 +76,7 @@ export function fetchStartGame(app: FastifyInstance) {
       processedAt: new Date().toISOString()
     });
   } catch (error) {
-<<<<<<< HEAD
-    app.log.error(`[Mock Backend] Error processing game result: ${error}`);
-=======
-    app.log.error(`[Mock Backend] Error processing game result:`, error);
->>>>>>> develop
+    app.log.error(error, `[Mock Backend] Error processing game result:`);
     return reply.status(500).send({
       success: false,
       error: 'Internal server error',

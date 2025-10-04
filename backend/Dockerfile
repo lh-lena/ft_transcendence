@@ -12,4 +12,4 @@ COPY . .
 
 RUN npm exec prisma generate
 
-CMD [ "/bin/sh", "-c", "npx prisma migrate deploy && npx prisma db seed && npm run run" ]
+CMD [ "/bin/sh", "-c", "npx prisma migrate deploy && (npx prisma db seed || echo 'Seed already run or failed, continuing...') && npm run run" ]
