@@ -21,6 +21,15 @@ const dbConnectionStatus = new client.Gauge({
   registers: [register],
 });
 
+const backendServiceHealth = new client.Gauge({
+  name: 'backend_service_health',
+  help: 'Backend service health status (1 = up, 0 = down)',
+  registers: [register],
+});
+
+// Set as healthy by default
+backendServiceHealth.set(1);
+
 const healthRoute = async (server: FastifyInstance) => {
   // Existing health check endpoint
   server.get('/api/health', {
@@ -49,6 +58,7 @@ const healthRoute = async (server: FastifyInstance) => {
 
       // Update metrics
       dbConnectionStatus.set(dbStatusCode);
+      backendServiceHealth.set(1); // service is healthy
       httpRequestDuration.observe(
         { method: 'GET', route: '/api/health', status_code: '200' },
         (Date.now() - startTime) / 1000,
