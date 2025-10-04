@@ -12,7 +12,12 @@ export class ScoreBar {
   private gameState: GameState;
   private gameStateCallbackParent: () => void;
 
-  constructor(gameState: GameState, gameStateCallbackParent: () => void) {
+  constructor(
+    gameState: GameState,
+    gameStateCallbackParent: () => void,
+    wsGamePauseCallback?: () => void,
+    wsGameResumeCallback?: () => void,
+  ) {
     this.gameState = gameState;
     this.gameStateCallbackParent = gameStateCallbackParent;
     this.element = document.createElement("div");
@@ -38,9 +43,20 @@ export class ScoreBar {
     this.element.appendChild(this.playerLeftContainer);
 
     // Pause/Play button
-    this.pausePlay = new PausePlay(this.gameState, () =>
-      this.gameStateCallbackParent(),
-    );
+    // for remote game
+    if (wsGamePauseCallback && wsGameResumeCallback) {
+      this.pausePlay = new PausePlay(
+        this.gameState,
+        () => this.gameStateCallbackParent(),
+        wsGamePauseCallback,
+        wsGameResumeCallback,
+      );
+    } else {
+      // for local game
+      this.pausePlay = new PausePlay(this.gameState, () =>
+        this.gameStateCallbackParent(),
+      );
+    }
     this.pausePlay.mount(this.element);
 
     // Player B profile and score
@@ -66,6 +82,10 @@ export class ScoreBar {
       this.playerRightContainer.appendChild(profileB);
     }
     this.element.appendChild(this.playerRightContainer);
+  }
+
+  public clear() {
+    this.pausePlay.unmount();
   }
 
   public updateScores(scoreA: number, scoreB: number): void {

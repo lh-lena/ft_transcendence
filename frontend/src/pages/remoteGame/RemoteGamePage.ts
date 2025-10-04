@@ -6,7 +6,12 @@ import { Loading } from "../../components/loading";
 import { Menu } from "../../components/menu";
 import { WsServerBroadcast, Direction } from "../../types/websocket";
 import { ProfileAvatar } from "../../components/profileAvatar";
-import { profilePrintToArray } from "../../utils/profilePrintFunctions";
+import {
+  generateProfilePrint,
+  profilePrintToArray,
+} from "../../utils/profilePrintFunctions";
+
+export type GameType = "ai" | "vs-player" | "tournament";
 
 export class VsPlayerGamePage {
   private main: HTMLElement;
@@ -27,6 +32,7 @@ export class VsPlayerGamePage {
   private gameId!: string;
   private userMe!: User;
   private userOther!: User;
+  private gameType!: GameType;
 
   constructor(serviceContainer: ServiceContainer) {
     // services
@@ -59,10 +65,34 @@ export class VsPlayerGamePage {
   ): Promise<VsPlayerGamePage> {
     const instance = new VsPlayerGamePage(serviceContainer);
 
-    // get game id from backed
-    const response = await instance.backend.joinGame();
+    // get game type from url params in router
+    const router = serviceContainer.get<Router>("router");
+    const params = router.getQueryParams();
+    const gameType = (params.get("gameType") as GameType) || "vs-player";
+    instance.gameType = gameType;
 
-    instance.gameId = response.gameId;
+    console.log("game type: ", gameType, "params: ", params);
+
+    // call appropriate backend method based on game type
+    let response;
+    switch (gameType) {
+      case "ai": {
+        const aiDifficulty = params.get("aiDifficulty") || "medium";
+        response = await instance.backend.createAiGame(aiDifficulty);
+        // need to talk to moritz about this
+        instance.gameId = response.gameRet.gameId;
+        break;
+      }
+      case "tournament":
+        response = await instance.backend.joinTournament("alias-demo");
+        break;
+      case "vs-player":
+      default:
+        response = await instance.backend.joinGame();
+        instance.gameId = response.gameId;
+        break;
+    }
+    console.log("game ID on create is: ", instance.gameId);
 
     // save the user (me) to remote game to use later
     const responseUser = await instance.backend.getUser();
@@ -84,8 +114,29 @@ export class VsPlayerGamePage {
       wsPaddleSequence: 0,
     };
 
-    // send game id to web socket
-    // instance.ws.messageGameStart(instance.gameId);
+    // load mock AI player for AI game type
+    if (instance.gameType === "ai") {
+      const { color, colorMap } = generateProfilePrint();
+      const otherUser: User = {
+        colormap: colorMap,
+        color: color,
+        userId: "ai69",
+        username: "AI",
+        createdAt: "",
+        updatedAt: "",
+        email: "",
+        password_hash: "",
+        avatar: "",
+        tfaEnabled: false,
+        twofa_secret: "",
+        guest: false,
+      };
+      instance.gameState.playerB = {
+        ...otherUser,
+        score: 0,
+      };
+      instance.userOther = otherUser;
+    }
 
     return instance;
   }
@@ -101,6 +152,8 @@ export class VsPlayerGamePage {
 
   // this happens at start of the game
   private async wsStartGameHandler(payload: WsServerBroadcast["game_start"]) {
+    if (this.gameType === "ai") return;
+    // only for vs player and tournament
     // finds the user that is not userMe
     const otherUserId = payload.players.find(
       (player) => player.userId !== this.userMe.userId,
@@ -137,14 +190,16 @@ export class VsPlayerGamePage {
   ): void {
     const message = payload.message;
     if (message == "Game started!" || message == "Game resumed!") {
-      console.log("HEREEEEEE");
       this.loadingOverlay.hide();
       // added from game resume for now
       this.gameState.status = GameStatus.PLAYING;
       this.gameState.pauseInitiatedByMe = false;
       this.gameState.blockedPlayButton = false;
       this.game?.showGamePieces();
-      this.hidePauseOverlay();
+      if (message === "Game resumed!") {
+        this.hidePauseOverlay();
+        this.scoreBar.pausePlay.toggleIsPlaying(true);
+      }
       this.gameStateCallback();
     }
   }
@@ -178,6 +233,8 @@ export class VsPlayerGamePage {
 
   private wsGamePauseHandler(): void {
     this.gameState.status = GameStatus.PAUSED;
+    this.scoreBar.pausePlay.toggleIsPlaying(false);
+    this.showPauseOverlay();
     this.gameStateCallback();
   }
 
@@ -189,6 +246,12 @@ export class VsPlayerGamePage {
     if (payload.winnerId) {
       winnerUser = await this.backend.getUserById(payload.winnerId);
       winnerUser.colormap = profilePrintToArray(winnerUser.colormap);
+    } else {
+      // AI case
+      winnerUser =
+        this.gameState.playerA.username === "AI"
+          ? this.gameState.playerA
+          : this.gameState.playerB;
     }
 
     this.showEndGameOverlay(winnerUser);
@@ -212,15 +275,17 @@ export class VsPlayerGamePage {
     this.gameContainer.className = "flex items-center justify-center relative";
 
     // create game instance before score bar so we can pass game (need for pausing) into scorebar
-    console.log("INITIALIZING GAME: ", this.gameState);
     this.game = new PongGame(
       this.gameState,
       () => this.gameStateCallback(),
       "remote",
     );
 
-    this.scoreBar = new ScoreBar(this.gameState, () =>
-      this.gameStateCallback(),
+    this.scoreBar = new ScoreBar(
+      this.gameState,
+      () => this.gameStateCallback(),
+      () => this.ws.messageGamePause(this.gameId),
+      () => this.ws.messageGameResume(this.gameId),
     );
     this.scoreBar.mount(this.main);
 
@@ -276,7 +341,6 @@ export class VsPlayerGamePage {
     }
 
     const currentKey = this.gameState.activeKey;
-    console.log("GAME ID IS : ", this.gameId);
     if (currentKey != this.gameState.previousKey) {
       // key event handling
       if (currentKey == "KEY_UP") {
@@ -301,34 +365,34 @@ export class VsPlayerGamePage {
       this.gameState.previousKey = currentKey;
     }
 
-    // pause play stuff
-    // playing
-    if (
-      this.gameState.status == GameStatus.PLAYING &&
-      this.gameState.previousStatus == GameStatus.PAUSED
-    ) {
-      this.scoreBar.pausePlay.toggleIsPlaying(true);
-      this.gameState.previousStatus = GameStatus.PLAYING;
-      if (this.gameState.pauseInitiatedByMe == true) {
-        this.ws.messageGameResume(this.gameId);
-      }
-      // paused
-    } else if (
-      this.gameState.status == GameStatus.PAUSED &&
-      this.gameState.previousStatus == GameStatus.PLAYING
-    ) {
-      // this.gameState.blockedPlayButton = true;
-      this.scoreBar.pausePlay.toggleIsPlaying(false);
-      this.game?.hideGamePieces();
-      this.showPauseOverlay();
-      // send game pause to ws -> only from client who actually paused the button (otherwise we get duplicate send)
-      this.gameState.previousStatus = GameStatus.PAUSED;
-      if (this.gameState.pauseInitiatedByMe == true) {
-        this.ws.messageGamePause(this.gameId);
-      } else {
-        this.gameState.blockedPlayButton = true;
-      }
-    }
+    // old pause play logic
+    // // pause play stuff
+    // // playing
+    // if (
+    //   this.gameState.status == GameStatus.PLAYING &&
+    //   this.gameState.previousStatus == GameStatus.PAUSED
+    // ) {
+    //   this.scoreBar.pausePlay.toggleIsPlaying(true);
+    //   this.gameState.previousStatus = GameStatus.PLAYING;
+    //   if (this.gameState.pauseInitiatedByMe == true) {
+    //     this.ws.messageGameResume(this.gameId);
+    //   }
+    //   // paused
+    // } else if (
+    //   this.gameState.status == GameStatus.PAUSED &&
+    //   this.gameState.previousStatus == GameStatus.PLAYING
+    // ) {
+    //   this.scoreBar.pausePlay.toggleIsPlaying(false);
+    //   this.game?.hideGamePieces();
+    //   this.showPauseOverlay();
+    //   // send game pause to ws
+    //   this.gameState.previousStatus = GameStatus.PAUSED;
+    //   if (this.gameState.pauseInitiatedByMe == true) {
+    //     this.ws.messageGamePause(this.gameId);
+    //   } else {
+    //     this.gameState.blockedPlayButton = true;
+    //   }
+    // }
   }
 
   public mount(parent: HTMLElement): void {
@@ -336,6 +400,10 @@ export class VsPlayerGamePage {
   }
 
   public unmount(): void {
+    // Send leave message before cleaning up handlers
+    if (this.gameId) {
+      this.ws.messageGameLeave(this.gameId);
+    }
     // clean up WebSocket handlers to prevent memory leaks and duplicate handlers
     this.ws.clearHandlers("countdown_update");
     this.ws.clearHandlers("notification");
@@ -343,12 +411,19 @@ export class VsPlayerGamePage {
     this.ws.clearHandlers("game_pause");
     this.ws.clearHandlers("game_ended");
     this.ws.clearHandlers("game_start");
-    this.loadingOverlay.unmount;
+    // Clean up game instance
+    if (this.game) {
+      this.game.unmount();
+      this.game = null;
+    }
+    // Fix: Call unmount method properly
+    this.loadingOverlay.unmount();
     this.main.remove();
   }
 
   private async showEndGameOverlay(user: User) {
     this.game?.hideGamePieces();
+    this.scoreBar.clear();
     if (this.gameContainer && !this.menuPauseDiv) {
       this.menuEndDiv = document.createElement("div");
       this.menuEndDiv.className = "flex flex-col gap-5 items-center";

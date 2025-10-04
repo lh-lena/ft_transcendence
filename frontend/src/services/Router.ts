@@ -18,9 +18,20 @@ export class Router {
     this.routes.set(path, callback);
   }
 
-  public navigate(path: string): void {
-    window.history.pushState({}, "", path);
+  // also allows to add query params to navigation call
+  public navigate(path: string, params?: Record<string, string>): void {
+    let fullPath = path;
+    if (params) {
+      const searchParams = new URLSearchParams(params);
+      fullPath = `${path}?${searchParams.toString()}`;
+    }
+    window.history.pushState({}, "", fullPath);
     this.handleRoute(path);
+  }
+
+  // Add method to get current query parameters
+  public getQueryParams(): URLSearchParams {
+    return new URLSearchParams(window.location.search);
   }
 
   public navigateBack(): void {
