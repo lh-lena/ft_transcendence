@@ -130,7 +130,6 @@ export default function createGameLoopService(app: FastifyInstance): GameLoopSer
       if (count === 0) {
         clearInterval(game.countdownInterval);
         game.countdownInterval = undefined;
-        respond.notificationToGame(game.gameId, NotificationType.INFO, infoMsg);
         registerGame(game);
         startAIGame(game);
       }
