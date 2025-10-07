@@ -16,7 +16,7 @@ export default function createAuthService(app: FastifyInstance): AuthService {
 
     const res = await fetch(`${backendUrl}/api/user/${id}`);
     if (res.status !== 200) {
-      processErrorLog(
+      processInfoLog(
         app,
         'auth-service',
         `Failed to get user info: ${res.status} ${res.statusText}`,
@@ -47,7 +47,7 @@ export default function createAuthService(app: FastifyInstance): AuthService {
       }
       const authUrl = `${AUTH_URL}/api/auth/me`;
 
-      processInfoLog(
+      processDebugLog(
         app,
         'auth-service',
         `Token found in validateUser, ${token} starting validation`,
@@ -59,17 +59,18 @@ export default function createAuthService(app: FastifyInstance): AuthService {
         },
       });
       if (res.status !== 200) {
-        processErrorLog(
+        processDebugLog(
           app,
           'auth-service',
           `Token validation failed: ${res.status} ${res.statusText}`,
         );
+        return null;
       }
       const rawUserData = await res.json();
       const validationResult = UserIdObjectSchema.safeParse(rawUserData);
       if (!validationResult.success) {
         const errorMessages = validationResult.error.issues.map((err) => err.message).join(', ');
-        processErrorLog(app, 'auth-service', `Invalid user data received from auth service`);
+        processDebugLog(app, 'auth-service', `Invalid user data received from auth service`);
         processDebugLog(
           app,
           'auth-service',
@@ -95,20 +96,20 @@ export default function createAuthService(app: FastifyInstance): AuthService {
     try {
       const token = extractTokenFromRequest(info);
       if (token === null) {
-        processErrorLog(
+        processDebugLog(
           app,
           'auth-service',
           `Connection rejected - No authentication token provided`,
         );
         return false;
       }
-      processInfoLog(app, 'auth-service', `Token found, ${token} starting validation`);
+      processDebugLog(app, 'auth-service', `Token found, ${token} starting validation`);
       const user = await validateUser(token);
       if (!user) {
-        processErrorLog(
+        processDebugLog(
           app,
           'auth-service',
-          `Connection rejected - Invalid token or expired authentication credentials: ${user}`,
+          `Connection rejected - Invalid token or expired authentication credentials`,
         );
         return false;
       }
