@@ -12,11 +12,6 @@ import { showError } from "../components/toast";
 export class Backend {
   private user!: User;
   private refreshTries: number = 0;
-  //TODO change to not use any
-  //private failedQueue: Array<{
-  //  resolve: (value?: any) => void;
-  //  reject: (error: any) => void;
-  //}> = [];
 
   private api = axios.create({
     baseURL: import.meta.env.VITE_AUTH_URL,
@@ -215,9 +210,8 @@ export class Backend {
   }
 
   async fetchUserStatsById(userId: string) {
-    const response = await this.api.get(
-      `/api/result?gamePlayed.userId=${userId}`,
-    );
+    const response = await this.api.get(`/api/result/stats/${userId}`);
+    console.log(response.data);
     return response.data;
   }
 

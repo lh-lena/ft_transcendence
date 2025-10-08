@@ -1,6 +1,6 @@
 import { prisma } from '../../plugins/001_prisma';
 import { Prisma } from '@prisma/client';
-import { leaderboardType, resultIdType } from '../../schemas/result';
+import { leaderboardType, resultIdType, resultWinsLosesType } from '../../schemas/result';
 
 const options = { include: { gamePlayed: true } };
 type ResultWithGP = Prisma.ResultGetPayload<typeof options>;
@@ -20,6 +20,20 @@ export const resultModel = {
 
   insert: async (data: Prisma.ResultCreateInput): Promise<ResultWithGP> => {
     return await prisma.result.create({ data, ...options });
+  },
+
+  getWinsLoses: async (userId: string): Promise<resultWinsLosesType> => {
+    const winsAndLosses = await prisma.gamePlayed.groupBy({
+      by: ['isWinner'],
+      where: { userId },
+      _count: { id: true },
+    });
+
+    const wins = winsAndLosses.find((g) => g.isWinner)?.['_count'].id || 0;
+    const loses = winsAndLosses.find((g) => !g.isWinner)?.['_count'].id || 0;
+
+    console.log({ wins, loses });
+    return { userId: userId, wins, loses };
   },
 
   getLeaderboard: async (): Promise<leaderboardType> => {

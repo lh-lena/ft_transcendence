@@ -4,31 +4,52 @@ import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { AxiosRequestConfig } from 'axios';
 import { apiClientBackend } from '../utils/apiClient';
 
+import { userIdSchema } from '../schemas/user';
+import type { UserIdType } from '../schemas/user';
+
 import { resultQuerySchema, resultResponseArraySchema } from '../schemas/result';
 import type {
   ResultQueryType,
   ResultResponseType,
   ResultResponseArrayType,
+  ResultStatsResponseType,
   LeaderboardType,
 } from '../schemas/result';
 
 const backendResultRoutes = async (fastify: FastifyInstance) => {
   //-------Result Routes-------//
-  fastify.get('/api/result/leaderboard', async (req: FastifyRequest, reply: FastifyReply) => {
-    const method = req.method.toLowerCase();
-    const url = '/result/leaderboard';
-
+  fastify.get('/api/result/leaderboard', async (_, reply: FastifyReply) => {
     const config: AxiosRequestConfig = {
-      method,
-      url,
-      headers: req.headers,
+      method: `get`,
+      url: '/result/leaderboard',
     };
 
     const results: LeaderboardType[] = await apiClientBackend(config);
     return reply.code(200).send(results);
   });
 
-  fastify.get('/api/result/*', async (req: FastifyRequest, reply: FastifyReply) => {
+  fastify.get('/api/result/stats/:userId', async (req: FastifyRequest, reply: FastifyReply) => {
+    const parsedReq = userIdSchema.safeParse(req.params);
+
+    if (!parsedReq.success) {
+      return reply.code(400).send({ message: 'Invalid user Id' });
+    }
+
+    const userId: UserIdType = parsedReq.data;
+
+    const config: AxiosRequestConfig = {
+      method: 'get',
+      url: `/result/stats/${userId.userId}`,
+    };
+
+    const results: ResultStatsResponseType[] = await apiClientBackend(config);
+
+    console.log(results);
+
+    return reply.code(200).send(results);
+  });
+
+  fastify.get('/api/result', async (req: FastifyRequest, reply: FastifyReply) => {
     const parsedReq = resultQuerySchema.safeParse(req.query);
 
     if (!parsedReq.success) {
@@ -41,13 +62,9 @@ const backendResultRoutes = async (fastify: FastifyInstance) => {
       return reply.code(403).send({ message: 'Forbidden: You can only access your own results' });
     }
 
-    const method = req.method.toLowerCase();
-    const url = req.url.replace('/^/result/', '/result/');
-
     const config: AxiosRequestConfig = {
-      method,
-      url,
-      headers: req.headers,
+      method: 'get',
+      url: '/result',
       params: resultQuery,
     };
 

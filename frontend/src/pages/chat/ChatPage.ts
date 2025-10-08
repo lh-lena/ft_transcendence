@@ -297,8 +297,8 @@ export class ChatPage {
     this.populateAddFriends(this.allUserData);
 
     // get user stats from backend
-    // const userStats = await this.backend.fetchUserStatsById(user.userId);
-    // console.log(userStats);
+    const userStats = await this.backend.fetchUserStatsById(user.userId);
+    console.log(userStats);
 
     // default profile pop up that shows our own profile at start
     this.profilePopUp = new ProfilePopUp(
