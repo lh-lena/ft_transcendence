@@ -2,7 +2,6 @@ import type { FastifyInstance } from 'fastify';
 import type { GameSession } from '../../schemas/index.js';
 import {
   PONG_CONFIG,
-  NotificationType,
   GameSessionStatus,
   GameMode,
   AIDifficulty,
@@ -16,8 +15,8 @@ import type { AIService } from '../../ai/ai.types.js';
 import { broadcastGameUpdate } from '../utils/game.utils.js';
 
 export default function createGameLoopService(app: FastifyInstance): GameLoopService {
-  const activeGames = new Map<string, GameSession>();
-  const lastTickAt = new Map<string, number>();
+  const activeGames: Map<string, GameSession> = new Map();
+  const lastTickAt: Map<string, number> = new Map();
   let ticker: NodeJS.Timeout | undefined;
   const { log } = app;
 
