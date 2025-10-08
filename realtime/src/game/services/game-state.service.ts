@@ -77,6 +77,7 @@ export default function createGameStateService(app: FastifyInstance): GameStateS
     if (existingPausedGame) {
       existingPausedGame.pausedAt = Date.now();
       existingPausedGame.playersWhoPaused.add(pausedByPlayerId);
+      existingPausedGame.pausedByPlayerId = pausedByPlayerId;
     } else {
       const pausedInfo: PausedGameState = {
         gameId: game.gameId,
