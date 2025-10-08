@@ -73,6 +73,13 @@ async function build() {
 
   server.setErrorHandler(errorHandler);
 
+  // graceful shutdown
+  process.on('SIGTERM', async () => {
+    // authServiceStatus.set(0);
+    await server.close();
+    process.exit(0);
+  });
+
   await server.ready();
 
   return server;
@@ -83,8 +90,8 @@ const start = async () => {
 
   try {
     const PORT = parseInt(process.env.PORT || '8080');
-    const IP = process.env.IP || '0.0.0.0';
-    await server.listen({ port: PORT, host: IP });
+    const HOST = process.env.IP || '127.0.0.1';
+    await server.listen({ port: PORT, host: HOST });
   } catch (err) {
     console.error(err);
     process.exit(1);

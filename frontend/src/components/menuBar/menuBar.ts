@@ -1,4 +1,4 @@
-import { Router, ServiceContainer, Backend } from "../../services";
+import { Router, ServiceContainer, Backend, Websocket } from "../../services";
 import { HomeIcon } from "../homeIcon/HomeIcon";
 
 export interface MenuBarItem {
@@ -18,6 +18,7 @@ export interface MenuBarItem {
 export class MenuBar {
   router: Router;
   backend: Backend;
+  websocket: Websocket;
   menuBarItems: MenuBarItem[];
   skipThis: string | undefined;
 
@@ -40,23 +41,31 @@ export class MenuBar {
     ];
     this.router = serviceContainer.get<Router>("router");
     this.backend = serviceContainer.get<Backend>("backend");
+    this.websocket = serviceContainer.get<Websocket>("websocket");
     this.skipThis = skipThis;
     this.menuBarItems = defaultMenuBarItems.slice();
   }
 
   private aiGameFlow() {
-    //create ai difficulty inpute
-    this.backend.createAiGame("easy");
-    this.router.navigate("/vs-player");
+    // navigate with game type parameter
+    this.router.navigate("/vs-player", {
+      gameType: "ai",
+      // hard coded medium for rn
+      // TODO ADD MENU OPTION FOR DIFF LEVELS?
+      aiDifficulty: "medium",
+    });
   }
 
-  private joinGameFlow() {
-    this.backend.joinGame();
-    this.router.navigate("/vs-player");
+  private async joinGameFlow() {
+    // navigate with game type parameter
+    this.router.navigate("/vs-player", {
+      gameType: "vs-player",
+    });
   }
 
   private logoutFlow() {
     this.backend.logout();
+    this.websocket.close();
     this.router.navigate("/");
   }
 

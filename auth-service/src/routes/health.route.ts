@@ -7,7 +7,7 @@ const healthRoute = async (server: FastifyInstance) => {
   server.get('/api/auth/health', async () => {
     // Update metrics
     authServiceHealth.set(1); // service is up if this endpoint responds
-    
+
     return {
       status: 'ok',
       service: 'auth-service',
@@ -22,7 +22,7 @@ const healthRoute = async (server: FastifyInstance) => {
       const metrics = await register.metrics();
       reply.header('Content-Type', register.contentType).code(200).send(metrics);
     } catch (err) {
-      server.log.error('Error generating metrics:', err);
+      server.log.error('Error generating metrics:');
       reply.code(500).send({ error: 'Failed to generate metrics' });
     }
   });

@@ -1,4 +1,5 @@
 //web socket
+import { showInfo } from "../components/toast";
 import { User } from "../types";
 import {
   WsServerBroadcast,
@@ -28,7 +29,7 @@ export class Websocket {
       : wsUrl;
 
     // connect to ws with token
-    console.log(urlWithToken);
+    // console.log(urlWithToken);
     this.ws = new WebSocket(urlWithToken);
 
     this.ws.onclose = (event) => {
@@ -43,12 +44,17 @@ export class Websocket {
     // web socket stuff
     this.ws.onopen = () => {
       console.log("opened web socket");
+      // this.onConnectionReady?.();
     };
 
     this.ws.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
         this.handleWebSocketMessage(data);
+        if (data.event === "notification") showInfo(data.payload.message);
+        if (data.event !== "game_update")
+          console.log(`${data.event}: `, data.payload.message);
+        // console.log("RECEIVED FROM WS: ", data);
       } catch (error) {
         console.error("Error parsing WebSocket message:", error);
       }
@@ -56,7 +62,6 @@ export class Websocket {
   }
 
   private handleWebSocketMessage(data: any): void {
-    console.log(data);
     const { event, payload } = data;
     const handlers = this.messageHandlers.get(event);
     if (handlers && handlers.length > 0) {
@@ -113,16 +118,16 @@ export class Websocket {
   }
 
   // send message functions (pre defined)
-  public messageGameStart(): void {
+  public messageGameStart(gameID: string): void {
     const gameStartMessage: ClientMessageInterface<"game_start"> = {
       event: "game_start",
-      payload: { gameId: import.meta.env.DEV_GAMEID },
+      payload: { gameId: gameID },
     };
     this.sendMessage(gameStartMessage);
   }
 
   public async sendChatMessage(user: User, message: string) {
-    console.log('WebSocket state:', this.ws?.readyState);
+    console.log("WebSocket state:", this.ws?.readyState);
     const chatMessage: ClientMessageInterface<"chat_message"> = {
       event: "chat_message",
       payload: {
@@ -137,10 +142,12 @@ export class Websocket {
   public messageGameUpdateDirection(
     direction: Direction,
     sequence: number,
+    gameId: string,
   ): void {
     const game_update: ClientMessageInterface<"game_update"> = {
       event: "game_update",
       payload: {
+        gameId: gameId,
         direction: direction,
         sequence: sequence,
       },
@@ -148,19 +155,31 @@ export class Websocket {
     this.sendMessage(game_update);
   }
 
-  public messageGameResume(): void {
+  public messageGameResume(gameId: string): void {
     const game_resume: ClientMessageInterface<"game_resume"> = {
       event: "game_resume",
-      payload: { gameId: import.meta.env.DEV_GAMEID },
+      payload: { gameId: gameId },
     };
     this.sendMessage(game_resume);
   }
 
-  public messageGamePause(): void {
+  public messageGameLeave(gameId: string): void {
+    const game_leave: ClientMessageInterface<"game_leave"> = {
+      event: "game_leave",
+      payload: { gameId: gameId },
+    };
+    this.sendMessage(game_leave);
+  }
+
+  public messageGamePause(gameId: string): void {
     const game_pause: ClientMessageInterface<"game_pause"> = {
       event: "game_pause",
-      payload: { gameId: import.meta.env.DEV_GAMEID },
+      payload: { gameId: gameId },
     };
     this.sendMessage(game_pause);
+  }
+
+  public close(): void {
+    this.ws?.close();
   }
 }

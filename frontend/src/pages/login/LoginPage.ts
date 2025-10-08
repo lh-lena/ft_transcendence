@@ -48,7 +48,7 @@ export class LoginPage {
     try {
       const response = await this.backend.oAuth2Login();
 
-      console.log(response);
+      //console.log(response);
 
       if (response.type === "2FA_REQUIRED") {
         this.main.removeChild(this.firstMenu.getMenuElement());
@@ -58,14 +58,10 @@ export class LoginPage {
       }
 
       if (response.type === "OAUTH_SUCCESS") {
-        console.log("OAuth successful, fetching user data...", response);
+        //console.log("OAuth successful, fetching user data...", response);
         const ret = await this.backend.fetchUserById(response.userId);
-        console.log("Fetched user data:", ret);
+        //console.log("Fetched user data:", ret);
         this.backend.setUser(ret.data);
-
-        this.websocket.initializeWebSocket();
-        this.backend.handleWsConnect();
-
         this.router.navigate("/chat");
         return;
       }
@@ -79,12 +75,6 @@ export class LoginPage {
       console.error("OAuth process failed:", error);
     }
   }
-  //private async toggleoAuth2Menu() {
-  //  await this.backend.oAuth2Login();
-
-  //  this.websocket.initializeWebSocket();
-  //  this.router.navigate("/chat");
-  //}
 
   private toggleLoginMenu(): void {
     this.main.removeChild(this.firstMenu.getMenuElement());
@@ -159,8 +149,6 @@ export class LoginPage {
       this.check2FA(response.data.userId, response.data.sessionId);
       return;
     }
-    this.websocket.initializeWebSocket();
-    this.backend.handleWsConnect();
     this.router.navigate("/chat");
   }
 
@@ -218,8 +206,6 @@ export class LoginPage {
 
     if (response && response.status === 200) {
       localStorage.setItem("jwt", response.data.jwt);
-      this.websocket.initializeWebSocket();
-      this.backend.handleWsConnect();
       this.router.navigate("/chat");
     } else showError("incorrect 2fa token");
   }

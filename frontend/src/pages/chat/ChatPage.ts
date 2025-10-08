@@ -15,6 +15,8 @@ import { FriendsIcon } from "../../components/friendsIcon";
 import { Leaderboard } from "../../types/leaderboard";
 import { profilePrintToArray } from "../../utils/profilePrintFunctions";
 import { User } from "../../types";
+import { ReceivedChatMessage } from "../../types/websocket";
+import { showSuccess } from "../../components/toast";
 
 export class ChatPage {
   // jesus christ this is an ugly piece of shieeet
@@ -48,6 +50,8 @@ export class ChatPage {
   private contacts!: HTMLDivElement;
   private friends!: HTMLDivElement;
   private websocket: Websocket;
+  private currentChatHistory!: ChatHistory;
+  private messageNotificationTimeout?: number;
 
   constructor(serviceContainer: ServiceContainer) {
     // router / services container
@@ -102,7 +106,11 @@ export class ChatPage {
     instance.blockedList = await instance.backend.getBlockedListById(
       instance.backend.getUser().userId,
     );
-    console.log(instance.blockedList);
+
+    // // register WebSocket handlers after connection is established
+    instance.websocket.onMessage("chat_message", (payload) => {
+      instance.handleChatIncomingMessage(payload);
+    });
 
     // Complete the UI setup
     instance.setupUI();
@@ -289,13 +297,20 @@ export class ChatPage {
     this.populateAddFriends(this.allUserData);
 
     // get user stats from backend
-    // const userStats = await this.backend.fetchUserStatsById(user.userId);
-    // console.log(userStats);
+    const userStats = await this.backend.fetchUserStatsById(user.userId);
+    console.log(userStats);
 
     // default profile pop up that shows our own profile at start
     this.profilePopUp = new ProfilePopUp(
       () => this.toggleProfilePopUp(user),
       user,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
     ).getNode();
     this.rightPanel = this.profilePopUp;
     // this.chatRow.appendChild(this.rightPanel);
@@ -329,16 +344,16 @@ export class ChatPage {
     const messages = document.createElement("div");
     messages.className = "flex flex-col flex-1 overflow-y-auto p-2 gap-2";
     this.chatPanel.appendChild(messages);
-    const chatHistory: ChatHistory = await this.backend.fetchChatHistoryByIds(
+    this.currentChatHistory = await this.backend.fetchChatHistoryByIds(
       this.backend.getUser().userId,
       user.userId,
     );
-    chatHistory.forEach((message) => {
+    this.currentChatHistory.forEach((message) => {
       const messageBox = document.createElement("div");
       messageBox.className = "standard-dialog flex items-center self-start";
       const messageText = document.createElement("h1");
       messageText.textContent = message.message;
-      if (message.senderId != this.backend.getUser().userId) {
+      if (message.senderId == this.backend.getUser().userId) {
         messageBox.classList.add("!self-end");
         messageBox.classList.add("bg-black");
         messageBox.classList.add("text-white");
@@ -346,6 +361,11 @@ export class ChatPage {
       messageBox.appendChild(messageText);
       messages.appendChild(messageBox);
     });
+
+    // scroll to bottom after DOM has updated
+    setTimeout(() => {
+      messages.scrollTop = messages.scrollHeight;
+    }, 0);
 
     // input at bottom
     this.inputBox = document.createElement("div");
@@ -373,15 +393,23 @@ export class ChatPage {
   }
 
   private async populateFriends() {
+    // Clear existing friends first
+    this.friends.innerHTML = "";
+
     for (const friend of this.friendsList) {
       const isBlocked = this.blockedList.some((blockedUser) => {
         return blockedUser.blockedUserId === friend.friendUserId;
       });
       if (isBlocked) continue;
+
+      const clickableContact = document.createElement("a");
+      clickableContact.style.cursor = "pointer";
+      clickableContact.className = "w-full";
+
       const contact = document.createElement("div");
       contact.className =
         "flex flex-row gap-2 box standard-dialog w-full items-center";
-      const clickableContact = document.createElement("a");
+
       const userResponse = await this.backend.fetchUserById(
         friend.friendUserId,
       );
@@ -389,9 +417,10 @@ export class ChatPage {
       user.friendId = friend.friendId;
       user.colormap = profilePrintToArray(userResponse.data.colormap);
       clickableContact.onclick = () => this.toggleChatPanel(contact, user);
-      clickableContact.style.cursor = "pointer";
+
       const contactName = document.createElement("h1");
       contactName.textContent = friend.username;
+
       if (friend.color && friend.colormap) {
         const contactAvatar = new ProfileAvatar(
           friend.color,
@@ -402,52 +431,67 @@ export class ChatPage {
           friend.avatar ? "image" : undefined,
           user.userId,
         ).getElement();
-        clickableContact.appendChild(contact);
+
         contact.appendChild(contactAvatar);
         contact.appendChild(contactName);
+        clickableContact.appendChild(contact);
+
         // insert logic for online offline
-        if (friend.online == "online") {
-          this.friends.insertBefore(clickableContact, this.offlineheader);
+        if (friend.online) {
+          this.friends.appendChild(clickableContact);
         } else {
           this.friends.appendChild(clickableContact);
         }
       }
     }
-    // Check if we have any online friends that aren't blocked
-    const hasOnlineFriends = this.friendsList.some((friend) => {
-      const isBlocked = this.blockedList.some((blockedUser) => {
-        return blockedUser.blockedUserId === friend.friendUserId;
+
+    // Now handle the headers and reorder elements
+    const onlineFriends: HTMLElement[] = [];
+    const offlineFriends: HTMLElement[] = [];
+
+    // Separate online and offline friends
+    Array.from(this.friends.children).forEach((element, index) => {
+      const friendData = this.friendsList.find((_, i) => {
+        const isBlocked = this.blockedList.some((blockedUser) => {
+          return blockedUser.blockedUserId === this.friendsList[i].friendUserId;
+        });
+        return !isBlocked;
       });
-      return friend.online === "online" && !isBlocked;
-    });
-    // Check if we have any offline friends that aren't blocked
-    const hasOfflineFriends = this.friendsList.some((friend) => {
-      const isBlocked = this.blockedList.some((blockedUser) => {
-        return blockedUser.blockedUserId === friend.friendUserId;
-      });
-      return friend.online !== "online" && !isBlocked;
+
+      if (
+        friendData &&
+        this.friendsList[index] &&
+        this.friendsList[index].online
+      ) {
+        onlineFriends.push(element as HTMLElement);
+      } else {
+        offlineFriends.push(element as HTMLElement);
+      }
     });
 
-    // Update online header
-    if (this.onlineheader) {
-      if (hasOnlineFriends) {
-        this.onlineheader.textContent = "online:";
-        this.onlineheader.className = "text-center text-emerald-800";
-      } else {
-        this.onlineheader.innerHTML = "";
-        this.onlineheader.className = "";
-      }
+    // Clear and rebuild with proper order
+    this.friends.innerHTML = "";
+
+    // Add online header if we have online friends
+    if (onlineFriends.length > 0) {
+      this.onlineheader.textContent = "online:";
+      this.onlineheader.className = "text-center text-emerald-800";
+      this.friends.appendChild(this.onlineheader);
+      onlineFriends.forEach((friend) => this.friends.appendChild(friend));
+    } else {
+      this.onlineheader.innerHTML = "";
+      this.onlineheader.className = "";
     }
 
-    // Update offline header
-    if (this.offlineheader) {
-      if (hasOfflineFriends) {
-        this.offlineheader.textContent = "offline:";
-        this.offlineheader.className = "text-center text-red-800";
-      } else {
-        this.offlineheader.innerHTML = "";
-        this.offlineheader.className = "";
-      }
+    // Add offline header if we have offline friends
+    if (offlineFriends.length > 0) {
+      this.offlineheader.textContent = "offline:";
+      this.offlineheader.className = "text-center text-red-800";
+      this.friends.appendChild(this.offlineheader);
+      offlineFriends.forEach((friend) => this.friends.appendChild(friend));
+    } else {
+      this.offlineheader.innerHTML = "";
+      this.offlineheader.className = "";
     }
   }
 
@@ -688,8 +732,27 @@ export class ChatPage {
 
   private async sendHook(user: User, message: string) {
     if (message.trim() === "") return; // don't send empty messages
-    this.websocket.sendChatMessage(user, message);
+    await this.websocket.sendChatMessage(user, message);
+    // wait 300 miliseconds after updating database
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    await this.populateChatPanel(user);
     this.inputMessage.value = ""; // clear the input after sending
+  }
+
+  private async handleChatIncomingMessage(payload: ReceivedChatMessage) {
+    console.log("got message lol", payload);
+    const userResponse = await this.backend.fetchUserById(payload.senderId);
+    const user: User = userResponse.data;
+    // clear existing timeout and set a new one
+    // makes sure we dont spam showSuccess if we get multiple from web socket
+    if (this.messageNotificationTimeout) {
+      clearTimeout(this.messageNotificationTimeout);
+    }
+    this.messageNotificationTimeout = setTimeout(() => {
+      showSuccess(`message from ${user.username}`);
+    }, 500);
+
+    await this.populateChatPanel(user);
   }
 
   // standard mount unmount:

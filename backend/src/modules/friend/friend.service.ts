@@ -20,6 +20,7 @@ export const friendService = {
     const prismaData = await transformInput(data);
     try {
       const ret = await friendModel.insert(prismaData);
+      this.create({ userId: data.friendUserId, friendUserId: data.userId });
       return ret;
     } catch (err) {
       if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {

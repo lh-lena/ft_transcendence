@@ -8,6 +8,9 @@ import { transformInput } from './result.helper';
 import { gameService } from '../game/game.service';
 import { tournamentService } from '../tournament/tournament.service';
 
+import type { resultWinsLosesType } from '../../schemas/result';
+import type { userIdType } from '../../schemas/user';
+
 type options = { include: { gamePlayed: true } };
 type ResultWithGP = Prisma.ResultGetPayload<options>;
 
@@ -42,8 +45,11 @@ export const resultService = {
     return ret;
   },
 
+  async getWinsLoses(userId: userIdType): Promise<resultWinsLosesType> {
+    return resultModel.getWinsLoses(userId.userId);
+  },
+
   async getLeaderboard(): Promise<leaderboardType> {
-    const ret = await resultModel.getLeaderboard();
-    return ret;
+    return await resultModel.getLeaderboard();
   },
 };

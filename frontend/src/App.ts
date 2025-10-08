@@ -1,8 +1,6 @@
 // services
 import { ServiceContainer, Router, Websocket, Backend, Auth } from "./services";
 
-import { Loading } from "./components/loading";
-
 // pages
 import { HomePage } from "./pages/home";
 import { LocalGamePage } from "./pages/localGame";
@@ -12,16 +10,15 @@ import { SettingsPage } from "./pages/settings";
 import { ChatPage } from "./pages/chat";
 import { VsPlayerGamePage } from "./pages/remoteGame";
 import { TournamentAliasPage } from "./pages/tournament";
+import { protectedRoutes } from "./constants/routes";
 
 // single source of truth for pages and routes
 const PAGE_ROUTES = {
   "/": HomePage,
   "/local": LocalGamePage,
-  // "/profile": ProfilePage,
   "/login": LoginPage,
   "/register": RegisterPage,
   "/settings": SettingsPage,
-  // "/leaderboard": LeaderboardPage,
   "/chat": ChatPage, // -> main page now (home when logged in)
   "/vs-player": VsPlayerGamePage,
   "/tournament-start": TournamentAliasPage,
@@ -36,6 +33,8 @@ export class App {
   private router: Router;
   private container: HTMLElement;
   private currentPage: PageInstance;
+  private websocket: Websocket;
+  private backend: Backend;
 
   constructor() {
     // full screen div for app
@@ -51,6 +50,10 @@ export class App {
     this.serviceContainer.register("websocket", new Websocket());
     this.serviceContainer.register("backend", new Backend());
     this.serviceContainer.register("auth", new Auth());
+
+    // save web socket
+    this.websocket = this.serviceContainer.get<Websocket>("websocket");
+    this.backend = this.serviceContainer.get<Backend>("backend");
 
     // grab route from service container
     this.router = this.serviceContainer.get<Router>("router");
@@ -69,19 +72,28 @@ export class App {
   }
 
   private async showPage(PageClass: PageConstructor) {
+    // unmount current page
     if (this.currentPage) {
       this.currentPage.unmount();
     }
-    // show loading for a second
-    const loading = new Loading("pong");
-    loading.mount(this.container);
-    // show loading screen
-    // random range between 400 and 800
-    loading.hide();
 
-    // Handle ChatPage's async initialization
+    // create a new web socket connection across each page reload
+    // only if in logged in area
+
+    const currentRoute = this.router.getCurrentRoute();
+
+    // we always connect back to web socket before we load a page
+    if (protectedRoutes.includes(currentRoute)) {
+      this.websocket.initializeWebSocket();
+      this.backend.handleWsConnect();
+    }
+
+    // handle ChatPage's async initialization
+    // else create new page
     if (PageClass === ChatPage) {
       this.currentPage = await ChatPage.create(this.serviceContainer);
+    } else if (PageClass === VsPlayerGamePage) {
+      this.currentPage = await VsPlayerGamePage.create(this.serviceContainer);
     } else {
       this.currentPage = new PageClass(this.serviceContainer);
     }

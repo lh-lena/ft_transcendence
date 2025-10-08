@@ -7,8 +7,11 @@ import type {
   resultResponseType,
   resultResponseArrayType,
   resultIdType,
+  resultWinsLosesType,
   leaderboardType,
 } from '../../schemas/result';
+
+import type { userIdType } from '../../schemas/user';
 
 export const resultController = {
   //controller to create an result
@@ -55,8 +58,13 @@ export const resultController = {
     return resultRet;
   },
 
-  async getLeaderboard(): Promise<leaderboardType> {
-    const ret = await resultService.getLeaderboard();
+  async getWinsLoses(userId: userIdType): Promise<resultWinsLosesType> {
+    const ret = await resultService.getWinsLoses(userId);
+    console.log(ret);
     return ret;
+  },
+
+  async getLeaderboard(): Promise<leaderboardType> {
+    return await resultService.getLeaderboard();
   },
 };
