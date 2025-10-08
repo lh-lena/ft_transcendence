@@ -27,7 +27,7 @@ const plugin: FastifyPluginCallback = (app: FastifyInstance): void => {
 
   app.eventBus.on(
     GAME_EVENTS.START,
-    ({ user, payload }: { user: User; payload: ClientEventPayload<'game_start'> }) => {
+    ({ user, payload }: { user: User; payload: ClientEventPayload<GAME_EVENTS.START> }) => {
       gameService.handleStartGame(user, payload.gameId).catch((err: unknown) => {
         processErrorLog(
           app,
@@ -41,14 +41,14 @@ const plugin: FastifyPluginCallback = (app: FastifyInstance): void => {
 
   app.eventBus.on(
     GAME_EVENTS.UPDATE,
-    ({ user, payload }: { user: User; payload: ClientEventPayload<'game_update'> }) => {
+    ({ user, payload }: { user: User; payload: ClientEventPayload<GAME_EVENTS.UPDATE> }) => {
       gameService.handlePlayerInput(user, payload);
     },
   );
 
   app.eventBus.on(
     GAME_EVENTS.LEAVE,
-    ({ user, payload }: { user: User; payload: ClientEventPayload<'game_leave'> }) => {
+    ({ user, payload }: { user: User; payload: ClientEventPayload<GAME_EVENTS.LEAVE> }) => {
       gameService.handleGameLeave(user, payload.gameId).catch((err: unknown) => {
         processErrorLog(
           app,
@@ -62,14 +62,14 @@ const plugin: FastifyPluginCallback = (app: FastifyInstance): void => {
 
   app.eventBus.on(
     GAME_EVENTS.PAUSE,
-    ({ user, payload }: { user: User; payload: ClientEventPayload<'game_pause'> }) => {
+    ({ user, payload }: { user: User; payload: ClientEventPayload<GAME_EVENTS.PAUSE> }) => {
       gameService.handleGamePause(user, payload.gameId);
     },
   );
 
   app.eventBus.on(
     GAME_EVENTS.RESUME,
-    ({ user, payload }: { user: User; payload: ClientEventPayload<'game_resume'> }) => {
+    ({ user, payload }: { user: User; payload: ClientEventPayload<GAME_EVENTS.RESUME> }) => {
       gameService.handleGameResume(user, payload.gameId);
     },
   );
