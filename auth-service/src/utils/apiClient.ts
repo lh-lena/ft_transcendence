@@ -2,7 +2,7 @@ import axios, { AxiosRequestConfig } from 'axios';
 import axiosRetry from 'axios-retry';
 
 const backendApi = axios.create({
-  baseURL: process.env.BACKEND_URL + '/api',
+  baseURL: process.env.BACKEND_URL ? `${process.env.BACKEND_URL}/api` : 'http://backend:8080/api',
   timeout: 5000,
 });
 
