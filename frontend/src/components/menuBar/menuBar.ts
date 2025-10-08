@@ -47,14 +47,20 @@ export class MenuBar {
   }
 
   private aiGameFlow() {
-    //create ai difficulty inpute
-    this.backend.createAiGame("easy");
-    this.router.navigate("/vs-player");
+    // navigate with game type parameter
+    this.router.navigate("/vs-player", {
+      gameType: "ai",
+      // hard coded medium for rn
+      // TODO ADD MENU OPTION FOR DIFF LEVELS?
+      aiDifficulty: "medium",
+    });
   }
 
-  private joinGameFlow() {
-    this.backend.joinGame();
-    this.router.navigate("/vs-player");
+  private async joinGameFlow() {
+    // navigate with game type parameter
+    this.router.navigate("/vs-player", {
+      gameType: "vs-player",
+    });
   }
 
   private logoutFlow() {

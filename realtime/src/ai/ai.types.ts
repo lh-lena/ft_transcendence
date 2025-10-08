@@ -1,8 +1,7 @@
 import type { AIDifficulty } from '../constants/ai.constants.js';
 import type { GameState, GameIdType, Paddle, BallType } from '../schemas/game.schema.js';
 import { Direction } from '../constants/game.constants.js';
-import type { aiConfigType } from '../schemas/ai.schema.js';
-import type { aiState } from '../schemas/ai.schema.js';
+import type { aiConfigType, aiState } from '../schemas/ai.schema.js';
 
 export interface AIService {
   startAI(gameId: GameIdType, difficulty: AIDifficulty): void;
@@ -26,8 +25,8 @@ export interface AIPredictionEngine {
     ball: BallType,
     aiPaddle: Paddle,
     timeAhead: number,
-    config: aiConfigType,
   ): { x: number; y: number };
+  calculateTimeToPaddle(paddleX: number, ballX: number, dx: number, velocity: number): number;
 }
 
 export interface AIMovementController {

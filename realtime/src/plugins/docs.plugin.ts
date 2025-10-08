@@ -1,11 +1,11 @@
 import fp from 'fastify-plugin';
 import type { FastifyInstance, FastifyPluginCallback } from 'fastify';
-import swagger from '@fastify/swagger';
 import swaggerUI from '@fastify/swagger-ui';
 import { UserIdJSON } from '../schemas/user.schema.js';
+import { fastifySwagger, SwaggerOptions } from '@fastify/swagger';
 
 const docsPlugin: FastifyPluginCallback = async (app: FastifyInstance) => {
-  app.register(swagger as any, {
+  app.register(fastifySwagger, {
     mode: 'dynamic',
     openapi: {
       info: {
@@ -14,6 +14,18 @@ const docsPlugin: FastifyPluginCallback = async (app: FastifyInstance) => {
           'API documentation for the WebSocket and REST endpoints of the ft_transcendence project.',
         version: '1.0.0',
       },
+      parameters: [
+        {
+          name: 'token',
+          in: 'query',
+          required: true,
+          description: 'JWT token for WebSocket authentication',
+          schema: {
+            type: 'string',
+            format: 'jwt',
+          },
+        },
+      ],
       servers: [
         { url: 'ws://localhost:8081', description: 'WebSocket Server' },
         { url: 'http://localhost:8081', description: 'REST API Server' },
@@ -24,12 +36,24 @@ const docsPlugin: FastifyPluginCallback = async (app: FastifyInstance) => {
         },
       },
       paths: {
-        '/ws': {
+        '/ws?token={token}': {
           get: {
             summary: 'WebSocket Entry Point',
             description:
               'Establishes a WebSocket connection for real-time game and chat communication',
             tags: ['WebSocket'],
+            parameters: [
+              {
+                name: 'token',
+                in: 'query',
+                required: true,
+                description: 'JWT token for WebSocket authentication',
+                schema: {
+                  type: 'string',
+                  format: 'jwt',
+                },
+              },
+            ],
             responses: {
               connected: {
                 description: 'WebSocket connection established',
@@ -62,10 +86,9 @@ const docsPlugin: FastifyPluginCallback = async (app: FastifyInstance) => {
         },
       },
     },
-  });
+  } as SwaggerOptions);
 
-  await app.register(swaggerUI as any, {
-    mode: 'dynamic',
+  await app.register(swaggerUI, {
     routePrefix: '/api/docs',
     uiConfig: {
       docExpansion: 'list',

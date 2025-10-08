@@ -62,6 +62,7 @@ export enum GameSessionStatus {
 }
 
 export interface PlayerInput {
+  gameId: string;
   direction: Direction;
   sequence: number; // default 0
 }
@@ -88,8 +89,8 @@ interface GameResult {
   gameId: string;
   scorePlayer1: number;
   scorePlayer2: number;
-  winnerId: number | null; // -1 for AI
-  loserId: number | null;
+  winnerId: string | null; // -1 for AI
+  loserId: string | null;
   player1Username: string | null; // for ai -> AI
   player2Username: string | null;
   status:
@@ -118,6 +119,7 @@ export interface WsServerBroadcast {
   game_ended: GameResult;
   game_pause: { gameId: string; reason: string };
   game_resume: { gameId: string };
+  game_start: { gameId: string; players: { userId: string }[] };
   countdown_update: { gameId: string; countdown: number; message: string };
   chat_message: ReceivedChatMessage;
   notification: NotificationPayload;

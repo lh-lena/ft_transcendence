@@ -10,4 +10,4 @@ then
 fi
 
 npx prisma generate
-npm run dev
+npm run run

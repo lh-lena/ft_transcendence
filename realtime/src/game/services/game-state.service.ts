@@ -9,7 +9,6 @@ import {
 } from '../../constants/index.js';
 import { processErrorLog, processDebugLog } from '../../utils/error.handler.js';
 import { resetGameState } from '../../game/engines/pong/pong.engine.js';
-import createGameValidator from '../utils/game.validation.js';
 import type { ConnectionService, RespondService } from '../../websocket/types/ws.types.js';
 import type {
   GameSessionService,
@@ -18,7 +17,13 @@ import type {
   GameLoopService,
 } from '../types/game.types.js';
 import type { EnvironmentConfig } from '../../config/config.js';
-import { createGameResult, broadcastGameUpdate, assignPaddleToPlayers } from '../utils/index.js';
+import {
+  createGameResult,
+  broadcastGameUpdate,
+  assignPaddleToPlayers,
+  getUserIdObjectArray,
+  createGameValidator,
+} from '../utils/index.js';
 
 export default function createGameStateService(app: FastifyInstance): GameStateService {
   const pausedGames: Map<GameIdType, PausedGameState> = new Map();
@@ -152,7 +157,8 @@ export default function createGameStateService(app: FastifyInstance): GameStateS
     updateGameToActive(game);
     resetGameState(game.gameState);
     assignPaddleToPlayers(game);
-    broadcastGameUpdate(respond, game.players, game.gameState);
+    respond.gameStarted(game.gameId, getUserIdObjectArray(game.players));
+    // broadcastGameUpdate(respond, game.players, game.gameState); // rm ??
     gameLoopService.startCountdownSequence(game, 'Game started!', PONG_CONFIG.COUNTDOWN);
   }
 

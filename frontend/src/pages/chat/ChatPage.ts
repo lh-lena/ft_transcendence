@@ -51,6 +51,7 @@ export class ChatPage {
   private friends!: HTMLDivElement;
   private websocket: Websocket;
   private currentChatHistory!: ChatHistory;
+  private messageNotificationTimeout?: number;
 
   constructor(serviceContainer: ServiceContainer) {
     // router / services container
@@ -105,7 +106,6 @@ export class ChatPage {
     instance.blockedList = await instance.backend.getBlockedListById(
       instance.backend.getUser().userId,
     );
-    console.log(instance.blockedList);
 
     // // register WebSocket handlers after connection is established
     instance.websocket.onMessage("chat_message", (payload) => {
@@ -304,6 +304,13 @@ export class ChatPage {
     this.profilePopUp = new ProfilePopUp(
       () => this.toggleProfilePopUp(user),
       user,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
     ).getNode();
     this.rightPanel = this.profilePopUp;
     // this.chatRow.appendChild(this.rightPanel);
@@ -341,7 +348,6 @@ export class ChatPage {
       this.backend.getUser().userId,
       user.userId,
     );
-    console.log(this.currentChatHistory);
     this.currentChatHistory.forEach((message) => {
       const messageBox = document.createElement("div");
       messageBox.className = "standard-dialog flex items-center self-start";
@@ -431,7 +437,6 @@ export class ChatPage {
         clickableContact.appendChild(contact);
 
         // insert logic for online offline
-        console.log("friendONLINE: ", friend.online);
         if (friend.online) {
           this.friends.appendChild(clickableContact);
         } else {
@@ -735,9 +740,18 @@ export class ChatPage {
   }
 
   private async handleChatIncomingMessage(payload: ReceivedChatMessage) {
+    console.log("got message lol", payload);
     const userResponse = await this.backend.fetchUserById(payload.senderId);
     const user: User = userResponse.data;
-    showSuccess(`message from ${user.username}`);
+    // clear existing timeout and set a new one
+    // makes sure we dont spam showSuccess if we get multiple from web socket
+    if (this.messageNotificationTimeout) {
+      clearTimeout(this.messageNotificationTimeout);
+    }
+    this.messageNotificationTimeout = setTimeout(() => {
+      showSuccess(`message from ${user.username}`);
+    }, 500);
+
     await this.populateChatPanel(user);
   }
 

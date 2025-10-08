@@ -13,7 +13,7 @@ export default function createAIService(app: FastifyInstance): AIService {
   const { log } = app;
   const config = app.config as EnvironmentConfig;
   const aiStateManager = createAIStateManager(app);
-  const aiPredictionEngine = createAIPredictionEngine(app);
+  const aiPredictionEngine = createAIPredictionEngine();
   const aiMovementController = createAIMovementController();
 
   function updateAIDecision(gameState: GameState, deltaTime: number, aiInterval: number): void {

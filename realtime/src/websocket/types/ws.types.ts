@@ -2,11 +2,12 @@ import type { WSConnection } from 'fastify';
 import type { DisconnectInfo } from './network.types.js';
 import type { GameState, GameResult, GameIdType } from '../../schemas/game.schema.js';
 import type { NotificationType } from '../../constants/game.constants.js';
-import type { User, UserIdType } from '../../schemas/user.schema.js';
+import type { User, UserIdObject, UserIdType } from '../../schemas/user.schema.js';
 import type { ChatMessageBroadcast } from '../../schemas/chat.schema.js';
 
 export interface RespondService {
   connected: (userId: UserIdType) => boolean;
+  gameStarted: (gameId: GameIdType, players: UserIdObject[]) => boolean;
   gameUpdate: (userId: UserIdType, gameState: GameState) => boolean;
   gameEnded: (gameId: GameIdType, result: GameResult) => boolean;
   gamePaused: (gameId: GameIdType, reason: string) => boolean;

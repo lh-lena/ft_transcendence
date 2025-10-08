@@ -1,9 +1,8 @@
 import type { FastifyInstance, VerifyClientInfo } from 'fastify';
-import { parse as parseCookie } from 'cookie';
 import type { EnvironmentConfig } from '../config/config.js';
 import { User, UserSchema, UserIdType, UserIdObjectSchema } from '../schemas/user.schema.js';
 import { processDebugLog, processErrorLog, processInfoLog } from '../utils/error.handler.js';
-import type { AuthService } from './auth.js';
+import type { AuthService } from './auth.types.js';
 
 export default function createAuthService(app: FastifyInstance): AuthService {
   const config = app.config as EnvironmentConfig;
@@ -123,30 +122,6 @@ export default function createAuthService(app: FastifyInstance): AuthService {
   }
 
   function extractTokenFromRequest(info: VerifyClientInfo): string | null {
-    // const cookieToken = extractTokenFromCookie(info);
-    // if (cookieToken !== null) {
-    //   return cookieToken;
-    // }
-    return extractTokenFromQuery(info);
-  }
-
-  function extractTokenFromCookie(info: VerifyClientInfo): string | null {
-    const cookieHeader = info.req.headers.cookie;
-    if (cookieHeader === undefined) {
-      return null;
-    }
-
-    const cookies = parseCookie(cookieHeader);
-    const token = cookies['token'] as string | null;
-
-    if (token === null || token === '') {
-      return null;
-    }
-    processDebugLog(app, 'auth-service', `Token extracted from cookies successfully`);
-    return token;
-  }
-
-  function extractTokenFromQuery(info: VerifyClientInfo): string | null {
     const urlPath = info.req.url !== undefined ? info.req.url : '';
     const url = new URL(urlPath, `http://${info.req.headers.host}`);
     const searchParams = url.searchParams;

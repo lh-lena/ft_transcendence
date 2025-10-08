@@ -3,7 +3,7 @@ import { Direction, NotificationType, GAME_EVENTS } from '../constants/game.cons
 import type { GameStateSchema, GameResultSchema } from './game.schema.js';
 import { GameIdSchema } from './game.schema.js';
 import { ChatMessagePayloadSchema, ChatMessageBroadcastSchema } from './chat.schema.js';
-import { UserIdSchema } from './user.schema.js';
+import { UserIdObjectSchema, UserIdSchema } from './user.schema.js';
 import { CHAT_EVENTS } from '../constants/chat.constants.js';
 
 export const GameIdPayloadSchema = z.object({
@@ -33,6 +33,11 @@ export const NotificationPayloadSchema = z.object({
 
 export const ConnectedPayloadSchema = z.object({
   userId: UserIdSchema,
+});
+
+export const GameStartedPayloadSchema = z.object({
+  gameId: GameIdSchema,
+  players: z.array(UserIdObjectSchema),
 });
 
 export const GamePauseBroadcastSchema = z.object({
@@ -83,6 +88,7 @@ export const WsClientMessageSchema = z.discriminatedUnion('event', [
 
 export interface WsServerBroadcast {
   connected: z.infer<typeof ConnectedPayloadSchema>;
+  game_start: z.infer<typeof GameStartedPayloadSchema>;
   game_update: z.infer<typeof GameStateSchema>;
   game_ended: z.infer<typeof GameResultSchema>;
   game_pause: z.infer<typeof GamePauseBroadcastSchema>;

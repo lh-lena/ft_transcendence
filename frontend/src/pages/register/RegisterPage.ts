@@ -9,6 +9,11 @@ import {
 import validator from "validator";
 import { showError, showInfo } from "../../components/toast";
 
+// using for dev
+const demoUsername = `${Date.now().toString().slice(-6)}`;
+const demoPassword = `demo${Math.random().toString(36).slice(-8)}`;
+const demoEmail = `demo${Date.now()}@example.com`;
+
 export class RegisterPage {
   private main: HTMLElement;
   private firstMenu: Menu;
@@ -52,7 +57,7 @@ export class RegisterPage {
     try {
       const response = await this.backend.oAuth2Login();
 
-      console.log(response);
+      // console.log(response);
 
       if (response.type === "2FA_REQUIRED") {
         this.main.removeChild(this.firstMenu.getMenuElement());
@@ -63,9 +68,9 @@ export class RegisterPage {
 
       if (response.type === "OAUTH_SUCCESS") {
         localStorage.setItem("jwt", response.data.jwt);
-        console.log("OAuth successful, fetching user data...", response);
+        // console.log("OAuth successful, fetching user data...", response);
         const ret = await this.backend.fetchUserById(response.userId);
-        console.log("Fetched user data:", ret);
+        // console.log("Fetched user data:", ret);
         this.backend.setUser(ret.data);
         this.router.navigate("/chat");
         return;
@@ -142,6 +147,8 @@ export class RegisterPage {
     inputName.type = "text";
     inputName.id = "text_username";
     inputName.placeholder = "username";
+    // dev
+    inputName.value = demoUsername;
     inputName.style.paddingLeft = "0.5em"; // Add left padding
     form.appendChild(inputName);
 
@@ -150,6 +157,8 @@ export class RegisterPage {
     inputEmail.type = "email";
     inputEmail.id = "text_email";
     inputEmail.placeholder = "email";
+    // dev
+    inputEmail.value = demoEmail;
     inputEmail.style.paddingLeft = "0.5em"; // Add left padding
     form.appendChild(inputEmail);
 
@@ -158,6 +167,7 @@ export class RegisterPage {
     inputPassword.type = "password";
     inputPassword.id = "text_password";
     inputPassword.placeholder = "password";
+    inputPassword.value = demoPassword;
     inputPassword.style.paddingLeft = "0.5em"; // Add left padding
     form.appendChild(inputPassword);
 
@@ -166,6 +176,7 @@ export class RegisterPage {
     inputPasswordConfirm.type = "password";
     inputPasswordConfirm.id = "text_password_confirm";
     inputPasswordConfirm.placeholder = "confirm password";
+    inputPasswordConfirm.value = demoPassword;
     inputPasswordConfirm.style.paddingLeft = "0.5em"; // Add left padding
     form.appendChild(inputPasswordConfirm);
 

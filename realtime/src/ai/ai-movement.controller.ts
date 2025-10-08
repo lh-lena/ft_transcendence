@@ -14,16 +14,16 @@ export default function createAIMovementController(): AIMovementController {
     const targetCenter = aiState.targetYPosition + BALL_DEFAULTS.size / 2;
     const currentCenter = aiPaddle.y + aiPaddle.height / 2;
 
-    const threshold = getDeadZone(aiPaddle.height, aiState.config.threshold);
-    if (Math.abs(targetCenter - currentCenter) < threshold) {
+    const deadZone = getDeadZone(aiPaddle.height, aiState.config.deadZone);
+    if (Math.abs(targetCenter - currentCenter) < deadZone) {
       return Direction.STOP;
     }
     const correctDirection = targetCenter > currentCenter ? Direction.DOWN : Direction.UP;
     return correctDirection;
   }
 
-  function getDeadZone(height: number, threshold: number): number {
-    return height * threshold;
+  function getDeadZone(height: number, deadZoneRatio: number): number {
+    return height * deadZoneRatio;
   }
 
   return {
