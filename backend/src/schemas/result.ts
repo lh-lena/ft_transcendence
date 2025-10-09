@@ -3,7 +3,7 @@ import { sharedGamePlayedBase, sharedGamePlayedQueryBase } from './shared';
 import { dtString } from './basics';
 
 //define the possible statie
-const resultStatusBase = z.enum(['finished', 'cancled', 'cancled_server_error']);
+const resultStatusBase = z.enum(['finished', 'cancelled', 'cancelled_server_error']);
 
 //define basic object for input
 const resultTypeBase = z.object({
