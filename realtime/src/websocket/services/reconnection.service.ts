@@ -119,7 +119,7 @@ export default function createReconnectionService(app: FastifyInstance): Reconne
       respond.notificationToGame(
         info.gameId,
         NotificationType.WARN,
-        `game ended: ${info.username} failed to reconnect`,
+        `game over: ${info.username} failed to reconnect`,
         [userId],
       );
       await gameStateService
