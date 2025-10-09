@@ -31,7 +31,8 @@ export function createGameResult(
 }
 
 function formatBaseResult(game: GameSession, status: GameSessionStatus): Partial<GameResult> {
-  const finishedAt = getFinishedAt(game);
+  const finishedAt = getTimestamp(game, 'finishedAt');
+  const startedAt = getTimestamp(game, 'startedAt');
   const player1Username = getPlayer1Username(game);
   const player2Username = getPlayer2Username(game);
 
@@ -42,7 +43,7 @@ function formatBaseResult(game: GameSession, status: GameSessionStatus): Partial
     player1Username: player1Username,
     player2Username: player2Username,
     mode: game.mode,
-    startedAt: game.startedAt,
+    startedAt: startedAt,
     finishedAt: finishedAt,
     status: status,
   } as GameResult;
@@ -97,12 +98,12 @@ function reformatServerCancelledResult(baseResult: Partial<GameResult>): GameRes
   } as GameResult;
 }
 
-function getFinishedAt(game: GameSession): string {
-  let finishedAt = game.finishedAt;
-  if (finishedAt === undefined || finishedAt === null) {
-    finishedAt = Date.now().toString();
+function getTimestamp(game: GameSession, type: 'finishedAt' | 'startedAt'): string {
+  let timestamp = game[type];
+  if (timestamp === undefined || timestamp === null) {
+    timestamp = Date.now().toString();
   }
-  return finishedAt;
+  return timestamp;
 }
 
 function getWinnerPlayer(game: GameSession): Player | null {
