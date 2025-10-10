@@ -30,6 +30,7 @@ declare module 'fastify' {
       id: string;
       iat: number;
       exp: number;
+      role?: string;
     };
     startTime: number;
   }
