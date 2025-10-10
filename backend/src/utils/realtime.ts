@@ -24,7 +24,7 @@ export async function notifyPlayer(
 ): Promise<void> {
   try {
     wsApiClient.post('/notify', {
-      event: 'INFO',
+      event: 'info',
       reciever: reciever,
       sender: sender,
       payload: { message: message },
