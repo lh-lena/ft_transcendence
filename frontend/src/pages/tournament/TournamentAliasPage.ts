@@ -7,9 +7,8 @@ import { showInfo } from "../../components/toast";
 import { TournamentData } from "../../types/tournament";
 
 // replace with stuff from backend
-const demoMatchup1 = ["alex", "naledi"];
-const demoMatchup2 = ["lucas", "mo"];
-const matchUps = [demoMatchup1, demoMatchup2];
+const demoMatchup1 = ["alex"];
+const matchUps = [demoMatchup1];
 
 export class TournamentAliasPage {
   private main: HTMLElement;
@@ -62,7 +61,6 @@ export class TournamentAliasPage {
   }
 
   private async showBracket(tournamentData: TournamentData) {
-    console.log(tournamentData);
     // hide other stuff
     this.form.remove();
     this.pongButton.unmount();

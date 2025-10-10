@@ -1,5 +1,6 @@
 export interface Player {
   userId: string;
+  username?: string;
 }
 
 export interface TournamentData {
