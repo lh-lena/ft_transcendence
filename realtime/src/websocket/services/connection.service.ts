@@ -13,6 +13,7 @@ import type { GameSessionService, GameStateService } from '../../game/types/game
 import createGameValidator from '../../game/utils/game.validation.js';
 import type { UserIdType } from '../../schemas/user.schema.js';
 import type { GameIdType } from '../../schemas/game.schema.js';
+import { metricsService } from '../../metrics/metrics.service.js';
 
 export default function createConnectionService(app: FastifyInstance): ConnectionService {
   const { log } = app;
@@ -83,6 +84,7 @@ export default function createConnectionService(app: FastifyInstance): Connectio
 
     userConnections.set(userId, conn);
     heartbeatService.startHeartbeat(userId, HEARTBEAT_INTERVAL);
+    metricsService.wsConnectionsGauge.set(userConnections.size());
     log.info(
       `[connection-service] New connection added to service. Total connections: ${userConnections.size()}`,
     );
@@ -120,6 +122,7 @@ export default function createConnectionService(app: FastifyInstance): Connectio
       reconnectionService.handlePlayerDisconnect(conn.user, gameId);
     }
     userConnections.remove(userId);
+    metricsService.wsConnectionsGauge.set(userConnections.size());
     log.info(
       `[connection-service] Connection removed for user ${userId}. Remaining: ${userConnections.size()}`,
     );

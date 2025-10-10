@@ -3,7 +3,7 @@ import { sharedGamePlayedBase, sharedGamePlayedQueryBase } from './shared';
 import { dtString } from './basics';
 
 //define the possible statie
-const resultStatusBase = z.enum(['finished', 'cancled', 'cancled_server_error']);
+const resultStatusBase = z.enum(['finished', 'cancelled', 'cancelled_server_error']);
 
 //define basic object for input
 const resultTypeBase = z.object({
@@ -72,6 +72,14 @@ const resultResponseBase = z.object({
 export const resultResponse = resultResponseBase.meta({ $id: 'resultResponse' });
 export const resultResponseArray = z.array(resultResponseBase).meta({ $id: 'resultResponseArray' });
 
+export const resultWinsLoses = z
+  .object({
+    userId: z.uuid(),
+    wins: z.number(),
+    loses: z.number(),
+  })
+  .meta({ $id: 'resultWinsLoses' });
+
 //export schemas
 export const resultSchemas = [
   //  resultStatusSchema,
@@ -80,6 +88,7 @@ export const resultSchemas = [
   resultId,
   resultResponse,
   resultResponseArray,
+  resultWinsLoses,
   leaderboard,
 ];
 //
@@ -90,3 +99,4 @@ export type resultQueryType = z.infer<typeof resultQuery>;
 export type resultResponseType = z.infer<typeof resultResponse>;
 export type resultResponseArrayType = z.infer<typeof resultResponseArray>;
 export type leaderboardType = z.infer<typeof leaderboard>;
+export type resultWinsLosesType = z.infer<typeof resultWinsLoses>;

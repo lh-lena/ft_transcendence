@@ -7,14 +7,14 @@ import type {
   BackendStartGame,
 } from '../../schemas/game.schema.js';
 import type { ClientEventPayload } from '../../schemas/ws.schema.js';
-import type { GameSessionStatus } from '../../constants/game.constants.js';
+import type { GameSessionStatus, GAME_EVENTS } from '../../constants/game.constants.js';
 import type { PausedGameState } from '../../websocket/types/network.types.js';
 import type { User, UserIdObject, UserIdType } from '../../schemas/user.schema.js';
 
 export interface GameService {
   handleStartGame(user: User, gameId: GameIdType): Promise<boolean>;
   handleStartGame(data: BackendStartGame): Promise<boolean>;
-  handlePlayerInput: (user: User, payload: ClientEventPayload<'game_update'>) => void;
+  handlePlayerInput: (user: User, payload: ClientEventPayload<GAME_EVENTS.UPDATE>) => void;
   handleGameLeave: (user: User, gameId: GameIdType) => Promise<void>;
   handleGamePause: (user: User, gameId: GameIdType) => void;
   handleGameResume: (user: User, gameId: GameIdType) => void;

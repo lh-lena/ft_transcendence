@@ -2,7 +2,7 @@ import axios, { AxiosRequestConfig } from 'axios';
 import axiosRetry from 'axios-retry';
 
 const backendApi = axios.create({
-  baseURL: process.env.BACKEND_URL + '/api',
+  baseURL: process.env.BACKEND_URL ? `${process.env.BACKEND_URL}/api` : 'http://backend:8080/api',
   timeout: 5000,
 });
 
@@ -20,6 +20,7 @@ export async function apiClientBackend<T = any>(config: AxiosRequestConfig): Pro
   try {
     console.log('Axios Request: ', config);
     const response = await backendApi.request<T>(config);
+    console.log('Axios Response: ', response.data);
     return response.data;
   } catch (err: any) {
     if (axios.isAxiosError(err)) {

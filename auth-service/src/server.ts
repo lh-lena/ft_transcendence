@@ -1,6 +1,7 @@
 import Fastify from 'fastify';
 import fastifyCsrf from '@fastify/csrf-protection';
 import fastifyHttpProxy from '@fastify/http-proxy';
+import * as client from 'prom-client';
 
 import AutoLoad from '@fastify/autoload';
 import path from 'path';
@@ -21,6 +22,33 @@ server.setErrorHandler((error: unknown, _, reply) => {
       message: message || 'Internal Server Error',
     });
   }
+});
+
+// Initialize Prometheus registry
+export const register = new client.Registry();
+
+// collect default metrics (CPU, memory, etc.)
+client.collectDefaultMetrics({ register });
+
+// create custom metrics for auth service
+export const authServiceHealth = new client.Gauge({
+  name: 'auth_service_health',
+  help: 'Auth service health status (1 = up, 0 = down)',
+  registers: [register],
+});
+
+export const loginAttempts = new client.Counter({
+  name: 'auth_login_attempts_total',
+  help: 'Total number of login attempts',
+  labelNames: ['status'],
+  registers: [register],
+});
+
+export const registrationCounter = new client.Counter({
+  name: 'auth_user_registrations_total',
+  help: 'Total number of user registrations',
+  labelNames: ['status'],
+  registers: [register],
 });
 
 // ------------ Start Server ------------
@@ -51,8 +79,6 @@ const start = async () => {
   try {
     await server.listen({ port: server.config.port, host: server.config.host });
     server.log.info(`Server listening on ${server.config.host}:${server.config.port}`);
-    //await server.listen({ port: 8082, host: '0.0.0.0' });
-    // set service status to up when server starts successfully
     //  authServiceStatus.set(1);
   } catch (err) {
     server.log.error(err);
