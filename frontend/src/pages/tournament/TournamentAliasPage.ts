@@ -1,4 +1,4 @@
-import { ServiceContainer, Router, Backend } from "../../services";
+import { ServiceContainer, Router, Backend, Websocket } from "../../services";
 import { Menu } from "../../components/menu";
 import { PongButton } from "../../components/pongButton";
 import { userStore } from "../../constants/backend";
@@ -15,12 +15,14 @@ export class TournamentAliasPage {
   private pongButton: PongButton;
   private menu: Menu;
   private inputAlias: HTMLInputElement;
+  private websocket: Websocket;
 
   constructor(serviceContainer: ServiceContainer) {
     // router / services container
     this.serviceContainer = serviceContainer;
     this.router = this.serviceContainer.get<Router>("router");
     this.backend = this.serviceContainer.get<Backend>("backend");
+    this.websocket = this.serviceContainer.get<Websocket>("websocket");
 
     this.main = document.createElement("div");
     this.main.className =
@@ -52,7 +54,14 @@ export class TournamentAliasPage {
       showInfo("please enter an alias");
       return;
     }
-    const response = await this.backend.joinTournament(alias);
+    const params = this.router.getQueryParams();
+    const userType = params.get("userType") ?? undefined;
+    // case guest`
+    if (userType === "guest") {
+      await this.backend.registerGuest(alias);
+    }
+    // once guest is a "registered user we go here" or also just for reg restirred users
+    const response = await this.backend.joinTournament(alias, userType);
     this.showBracket(response.data.createdTournament);
   }
 
@@ -60,7 +69,7 @@ export class TournamentAliasPage {
     console.log("tournamentdata: ", tournamentData);
     for (const player of tournamentData.players) {
       const user = await this.backend.getUserById(player.userId);
-      player.username = user.username;
+      player.alias = user.alias;
     }
     // hide other stuff
     this.form.remove();
@@ -71,7 +80,7 @@ export class TournamentAliasPage {
     bracketCol.className = "flex flex-col gap-10";
     this.main.appendChild(bracketCol);
     const bracketTitle = document.createElement("h1");
-    bracketTitle.textContent = "match-ups:";
+    bracketTitle.textContent = "match-up:";
     bracketTitle.className = "text-white text-center";
     bracketCol.appendChild(bracketTitle);
 
@@ -82,14 +91,15 @@ export class TournamentAliasPage {
     bracket.className = "flex flex-col gap-2 w-48";
     bracketsRow.appendChild(bracket);
     tournamentData.players.forEach((player, index) => {
+      if (index >= 2) return;
       if (index === 1) {
         const vsText = document.createElement("p");
         vsText.textContent = "|";
         vsText.className = "text-white text-center";
         bracket.appendChild(vsText);
       }
-      if (player.username) {
-        const playerDiv = this.createPlayer(player.username);
+      if (player.alias) {
+        const playerDiv = this.createPlayer(player.alias);
         bracket.appendChild(playerDiv);
       }
       if (index === 0) bracket.classList.add("animate-pulse");
