@@ -1,8 +1,10 @@
 import axios from 'axios';
 import { gameType } from '../schemas/game';
 
+const realtimeip = process.env.REALTIME_IP || 'realtime';
+
 const wsApiClient = axios.create({
-  baseURL: 'http://realtime:8081/api',
+  baseURL: `http://${realtimeip}:8081/api`,
   timeout: 5000,
 });
 
@@ -22,7 +24,7 @@ export async function notifyPlayer(
 ): Promise<void> {
   try {
     wsApiClient.post('/notify', {
-      event: 'INFO',
+      event: 'info',
       reciever: reciever,
       sender: sender,
       payload: { message: message },
