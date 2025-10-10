@@ -20,7 +20,7 @@ export default fp(async function onRequestHook(server) {
       '/api/auth/me',
     ];
 
-    console.log(req.headers);
+    //console.log(req.headers);
 
     const routePath = req.routeOptions.url || req.url;
     console.log('\n\nROUTE PATH\n', routePath, '\n');

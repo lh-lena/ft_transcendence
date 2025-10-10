@@ -123,7 +123,7 @@ const authRoutes = async (server: FastifyInstance) => {
 
   server.get('/api/auth/me', async (req: FastifyRequest, reply: FastifyReply) => {
     const authHeader = req.headers.authorization;
-    console.log(authHeader);
+    //console.log(authHeader);
 
     if (!authHeader) {
       return reply.code(401).send({ error: 'Authorization header missing' });
