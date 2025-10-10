@@ -1,7 +1,4 @@
 TODO:
--check required for user creation
--make guest login possible 
--add cors for realtime and auth(nginx proxy)
 -game session gets send twice on start
 -sometimes games doesnt get send to ws when ready but frontend gets it
 -game leave route -> talk to alec
