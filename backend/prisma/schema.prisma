@@ -112,8 +112,8 @@ model BlackList {
 
 enum GameStatus {
   finished
-  cancled
-  cancled_server_error
+  cancelled
+  cancelled_server_error
 }
 
 enum GameMode {

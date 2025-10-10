@@ -5,7 +5,7 @@ const { faker } = require('@faker-js/faker');
 const prisma = new PrismaClient();
 
 const COLORMAPS = ['warm', 'cool', 'neutral'];
-const GAME_STATUS = ['finished', 'cancled', 'cancled_server_error'];
+const GAME_STATUS = ['finished', 'cancelled', 'cancelled_server_error'];
 const GAME_MODES = ['pvp_remote', 'pvp_ai', 'tournamnet'];
 
 async function main() {
