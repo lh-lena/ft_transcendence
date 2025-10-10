@@ -45,7 +45,8 @@ export class tournamentClass {
   async join(tournament: tournamentType, playerId: string): Promise<tournamentType> {
     tournament.players.push({ userId: playerId });
     for (const player of tournament.players) {
-      notifyPlayer(player.userId, `INFO: ${playerId} joined a tournament`);
+      console.log('Notifying player:', player.userId, 'about new player:', playerId);
+      notifyPlayer(player.userId, `INFO: New Player joined the tournament`, playerId);
     }
     return tournament;
   }
