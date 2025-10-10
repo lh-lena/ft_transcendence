@@ -52,6 +52,12 @@ export class Loading {
     }
   }
 
+  public hideButton() {
+    if (this.backButton && this.backButton.parentNode === this.element) {
+      this.element.removeChild(this.backButton);
+    }
+  }
+
   public getElement(): HTMLElement {
     return this.element;
   }
