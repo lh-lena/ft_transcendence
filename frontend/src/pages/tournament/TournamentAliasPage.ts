@@ -53,11 +53,11 @@ export class TournamentAliasPage {
       return;
     }
     const response = await this.backend.joinTournament(alias);
-    this.showBracket(response.data);
+    this.showBracket(response.data.createdTournament);
   }
 
   private async showBracket(tournamentData: TournamentData) {
-    console.log(tournamentData);
+    console.log("tournamentdata: ", tournamentData);
     for (const player of tournamentData.players) {
       const user = await this.backend.getUserById(player.userId);
       player.username = user.username;
