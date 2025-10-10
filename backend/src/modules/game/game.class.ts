@@ -82,8 +82,10 @@ export class gameClass {
       (game.players.length === 2 && game.mode === 'pvp_remote') ||
       (game.players.length === 1 && game.mode === 'pvb_ai')
     ) {
+      if (game.status === 'ready') return;
       game.status = 'ready';
       game.createdAt = new Date().toISOString();
+      console.log(`Game ${game.gameId} started with players:`, game.players);
       sendGameStartRealtime(game);
     }
   }
