@@ -1,5 +1,5 @@
-export type userWinsLosses =  {
-  userId: string,
-  wins: number,
-  loses: number,
-}
+export type userWinsLosses = {
+  userId: string;
+  wins: number;
+  loses: number;
+};

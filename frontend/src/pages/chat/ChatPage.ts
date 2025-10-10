@@ -298,7 +298,9 @@ export class ChatPage {
     this.populateAddFriends(this.allUserData);
 
     // get user stats from backend
-    const userStats: userWinsLosses = await this.backend.fetchUserStatsById(user.userId);
+    const userStats: userWinsLosses = await this.backend.fetchUserStatsById(
+      user.userId,
+    );
     console.log(userStats);
 
     // default profile pop up that shows our own profile at start
@@ -312,7 +314,7 @@ export class ChatPage {
       undefined,
       undefined,
       undefined,
-      userStats
+      userStats,
     ).getNode();
     this.rightPanel = this.profilePopUp;
     // this.chatRow.appendChild(this.rightPanel);
@@ -611,7 +613,9 @@ export class ChatPage {
 
     if (user.userId === this.backend.getUser().userId && !user.friendId) {
       // get user stats from backend
-      const userStats: userWinsLosses = await this.backend.fetchUserStatsById(user.userId);
+      const userStats: userWinsLosses = await this.backend.fetchUserStatsById(
+        user.userId,
+      );
       // console.log(userStats);
       // case is pop up for local user
       this.profilePopUp = new ProfilePopUp(
@@ -628,7 +632,9 @@ export class ChatPage {
       ).getNode();
       // case user is friend
     } else {
-      const userStats: userWinsLosses = await this.backend.fetchUserStatsById(user.userId);
+      const userStats: userWinsLosses = await this.backend.fetchUserStatsById(
+        user.userId,
+      );
       this.profilePopUp = new ProfilePopUp(
         () => this.toggleProfilePopUp(user, true),
         user,
@@ -755,7 +761,6 @@ export class ChatPage {
   }
 
   private async handleChatIncomingMessage(payload: ReceivedChatMessage) {
-    console.log("got message lol", payload);
     const userResponse = await this.backend.fetchUserById(payload.senderId);
     const user: User = userResponse.data;
     // clear existing timeout and set a new one

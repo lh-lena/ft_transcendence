@@ -180,9 +180,14 @@ export class VsPlayerGamePage {
         this.gameState.pauseInitiatedByMe == true)
     ) {
       this.pauseCountdown.innerText = "game resumes in: " + message;
-      if (message == "GO!") this.pauseCountdown.innerText = message;
+      if (message == "GO!") {
+        this.pauseCountdown.innerText = message;
+      }
       // could do a show info in here instead but looked cluttered
-    } else this.loadingOverlay.changeText(message);
+    } else {
+      this.loadingOverlay.changeText(message);
+      if (message == "GO!") this.loadingOverlay.hide();
+    }
   }
 
   private wsNotificationHandler(
