@@ -61,6 +61,7 @@ export class TournamentAliasPage {
   }
 
   private async showBracket(tournamentData: TournamentData) {
+    console.log(tournamentData);
     // hide other stuff
     this.form.remove();
     this.pongButton.unmount();

@@ -182,6 +182,12 @@ export class VsPlayerGamePage {
       this.pauseCountdown.innerText = "game resumes in: " + message;
       if (message == "GO!") {
         this.pauseCountdown.innerText = message;
+        this.gameState.status = GameStatus.PLAYING;
+        this.gameState.pauseInitiatedByMe = false;
+        this.gameState.blockedPlayButton = false;
+        this.game?.showGamePieces();
+        this.hidePauseOverlay();
+        this.scoreBar.pausePlay.toggleIsPlaying(true);
       }
       // could do a show info in here instead but looked cluttered
     } else {
