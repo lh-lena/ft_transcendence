@@ -4,6 +4,7 @@ import { PongButton } from "../../components/pongButton";
 import { userStore } from "../../constants/backend";
 import { ProfileAvatar } from "../../components/profileAvatar";
 import { showInfo } from "../../components/toast";
+import { TournamentData } from "../../types/tournament";
 
 // replace with stuff from backend
 const demoMatchup1 = ["alex", "naledi"];
@@ -50,17 +51,18 @@ export class TournamentAliasPage {
     this.main.appendChild(this.menu.getMenuElement());
   }
 
-  private handlePlay() {
+  private async handlePlay() {
     const alias = this.inputAlias.value.trim();
     if (!alias) {
       showInfo("please enter an alias");
       return;
     }
-    this.backend.joinTournament(alias);
-    this.showBracket();
+    const response = await this.backend.joinTournament(alias);
+    this.showBracket(response.data);
   }
 
-  private showBracket(): void {
+  private async showBracket(tournamentData: TournamentData) {
+    console.log(tournamentData);
     // hide other stuff
     this.form.remove();
     this.pongButton.unmount();

@@ -518,7 +518,7 @@ export class ChatPage {
     this.sendInvite.className =
       "standard-dialog roded flex items-center w-4/5 h-10";
     const sendInviteText = document.createElement("h1");
-    sendInviteText.textContent = "send game invite to user XXX?";
+    sendInviteText.textContent = "invite to game?";
     sendInviteText.className = "text-center w-full";
     this.sendInvite.appendChild(sendInviteText);
     this.inputBox.insertBefore(this.sendInvite, this.sendButton);
