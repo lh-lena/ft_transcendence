@@ -2,24 +2,30 @@ import fp from 'fastify-plugin';
 import { FastifyInstance, FastifyReply } from 'fastify';
 
 import fastifyCookie from '@fastify/cookie';
-import { CookieOptions } from '../schemas/cookie';
 
 const cookiePlugin = async (fastify: FastifyInstance) => {
   await fastify.register(fastifyCookie);
 
-  fastify.decorateReply(
-    'setAuthCookie',
-    function (this: FastifyReply, name: string, value: string, options?: CookieOptions) {
-      const deafultOptions: CookieOptions = {
-        httpOnly: true,
-        secure: false, //TODO set to true in production
-        sameSite: 'strict',
-        path: '/',
-      };
-      const opts = { ...deafultOptions, ...options };
-      return this.setCookie(name, value, opts);
-    },
-  );
+  fastify.decorateReply('setAuthCookies', function (this: FastifyReply, userId: string) {
+    const accessOptions = {
+      httpOnly: true,
+      secure: false, //TODO set to true in production
+      sameSite: 'strict' as const,
+      path: '/',
+    };
+    const accessToken = fastify.generateAccessToken({ id: userId });
+    this.setCookie('jwt', accessToken, accessOptions);
+
+    const refreshOptions = {
+      httpOnly: true,
+      secure: false, //TODO set to true in production
+      sameSite: 'strict' as const,
+      path: '/api',
+    };
+    const refreshToken = fastify.generateRefreshToken({ id: userId });
+    this.setCookie('refreshJwt', refreshToken, refreshOptions);
+    return this;
+  });
 };
 
 export default fp(cookiePlugin);

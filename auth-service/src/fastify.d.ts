@@ -3,7 +3,6 @@ import { OAuth2Namespace } from '@fastify/oauth2';
 import { tfaHandler } from './utils/tfa';
 import { apiClientBackend } from './utils/apiClient';
 import { userActions } from './utils/userActions';
-import { CookieOptions } from './schemas/cookie';
 import { FastifyJwTNamespace } from './schemas/jwt';
 
 declare module 'fastify' {
@@ -35,6 +34,6 @@ declare module 'fastify' {
     startTime: number;
   }
   interface FastifyReply {
-    setAuthCookie(name: string, value: string, options?: CookieOptions): FastifyReply;
+    setAuthCookies(userId: string): FastifyReply;
   }
 }
