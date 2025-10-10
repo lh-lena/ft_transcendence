@@ -4,11 +4,7 @@ import { PongButton } from "../../components/pongButton";
 import { userStore } from "../../constants/backend";
 import { ProfileAvatar } from "../../components/profileAvatar";
 import { showInfo } from "../../components/toast";
-
-// replace with stuff from backend
-const demoMatchup1 = ["alex", "naledi"];
-const demoMatchup2 = ["lucas", "mo"];
-const matchUps = [demoMatchup1, demoMatchup2];
+import { TournamentData } from "../../types/tournament";
 
 export class TournamentAliasPage {
   private main: HTMLElement;
@@ -50,17 +46,22 @@ export class TournamentAliasPage {
     this.main.appendChild(this.menu.getMenuElement());
   }
 
-  private handlePlay() {
+  private async handlePlay() {
     const alias = this.inputAlias.value.trim();
     if (!alias) {
       showInfo("please enter an alias");
       return;
     }
-    this.backend.joinTournament(alias);
-    this.showBracket();
+    const response = await this.backend.joinTournament(alias);
+    this.showBracket(response.data);
   }
 
-  private showBracket(): void {
+  private async showBracket(tournamentData: TournamentData) {
+    console.log(tournamentData);
+    for (const player of tournamentData.players) {
+      const user = await this.backend.getUserById(player.userId);
+      player.username = user.username;
+    }
     // hide other stuff
     this.form.remove();
     this.pongButton.unmount();
@@ -77,26 +78,23 @@ export class TournamentAliasPage {
     const bracketsRow = document.createElement("div");
     bracketsRow.className = "flex flex-row gap-20";
     bracketCol.appendChild(bracketsRow);
-    // loop over match ups
-    matchUps.forEach((matchup) => {
-      const bracket = document.createElement("div");
-      bracket.className = "flex flex-col gap-2 w-48";
-      bracketsRow.appendChild(bracket);
-      // for each matchup
-      matchup.forEach((player) => {
-        if (matchup.indexOf(player) == 1) {
-          const vsText = document.createElement("p");
-          vsText.textContent = "|";
-          vsText.className = "text-white text-center";
-          bracket.appendChild(vsText);
-        }
-        const playerDiv = this.createPlayer(player);
+    const bracket = document.createElement("div");
+    bracket.className = "flex flex-col gap-2 w-48";
+    bracketsRow.appendChild(bracket);
+    tournamentData.players.forEach((player, index) => {
+      if (index === 1) {
+        const vsText = document.createElement("p");
+        vsText.textContent = "|";
+        vsText.className = "text-white text-center";
+        bracket.appendChild(vsText);
+      }
+      if (player.username) {
+        const playerDiv = this.createPlayer(player.username);
         bracket.appendChild(playerDiv);
-        if (matchUps.indexOf(matchup) == 0)
-          bracket.classList.add("animate-pulse");
-      });
-      // replace with check to see if player is you (reference check)
+      }
+      if (index === 0) bracket.classList.add("animate-pulse");
     });
+    // replace with check to see if player is you (reference check)
 
     // setTimeout(() => this.router.navigate("/vs-player"), 5000);
   }

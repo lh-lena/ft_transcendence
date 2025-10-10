@@ -17,6 +17,7 @@ import { profilePrintToArray } from "../../utils/profilePrintFunctions";
 import { User } from "../../types";
 import { ReceivedChatMessage } from "../../types/websocket";
 import { showSuccess } from "../../components/toast";
+import { userWinsLosses } from "../../types/backend";
 
 export class ChatPage {
   // jesus christ this is an ugly piece of shieeet
@@ -297,7 +298,9 @@ export class ChatPage {
     this.populateAddFriends(this.allUserData);
 
     // get user stats from backend
-    const userStats = await this.backend.fetchUserStatsById(user.userId);
+    const userStats: userWinsLosses = await this.backend.fetchUserStatsById(
+      user.userId,
+    );
     console.log(userStats);
 
     // default profile pop up that shows our own profile at start
@@ -311,6 +314,7 @@ export class ChatPage {
       undefined,
       undefined,
       undefined,
+      userStats,
     ).getNode();
     this.rightPanel = this.profilePopUp;
     // this.chatRow.appendChild(this.rightPanel);
@@ -518,7 +522,7 @@ export class ChatPage {
     this.sendInvite.className =
       "standard-dialog roded flex items-center w-4/5 h-10";
     const sendInviteText = document.createElement("h1");
-    sendInviteText.textContent = "send game invite to user XXX?";
+    sendInviteText.textContent = "invite to game?";
     sendInviteText.className = "text-center w-full";
     this.sendInvite.appendChild(sendInviteText);
     this.inputBox.insertBefore(this.sendInvite, this.sendButton);
@@ -578,7 +582,7 @@ export class ChatPage {
 
   // right side panel (only type that populates right side panel as of rn)
   // watch out -> could be a friend thats passed or a user
-  private toggleProfilePopUp(user: any, close?: boolean): void {
+  private async toggleProfilePopUp(user: any, close?: boolean) {
     // remove profile pop up if it is already shown on screen
     if (this.profilePopUp && this.chatRow.contains(this.rightPanel)) {
       this.chatRow.removeChild(this.rightPanel);
@@ -608,13 +612,29 @@ export class ChatPage {
     }
 
     if (user.userId === this.backend.getUser().userId && !user.friendId) {
+      // get user stats from backend
+      const userStats: userWinsLosses = await this.backend.fetchUserStatsById(
+        user.userId,
+      );
+      // console.log(userStats);
       // case is pop up for local user
       this.profilePopUp = new ProfilePopUp(
         () => this.toggleProfilePopUp(user, true),
         user,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        userStats,
       ).getNode();
       // case user is friend
     } else {
+      const userStats: userWinsLosses = await this.backend.fetchUserStatsById(
+        user.userId,
+      );
       this.profilePopUp = new ProfilePopUp(
         () => this.toggleProfilePopUp(user, true),
         user,
@@ -625,6 +645,7 @@ export class ChatPage {
         () => this.removeFriendHook(friendID),
         isBlocked,
         () => this.unblockFriendCallback(blockedFriendId),
+        userStats,
       ).getNode();
     }
     this.rightPanel = this.profilePopUp;
@@ -740,7 +761,6 @@ export class ChatPage {
   }
 
   private async handleChatIncomingMessage(payload: ReceivedChatMessage) {
-    console.log("got message lol", payload);
     const userResponse = await this.backend.fetchUserById(payload.senderId);
     const user: User = userResponse.data;
     // clear existing timeout and set a new one

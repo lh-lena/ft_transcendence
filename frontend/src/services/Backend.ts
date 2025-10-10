@@ -211,7 +211,7 @@ export class Backend {
 
   async fetchUserStatsById(userId: string) {
     const response = await this.api.get(`/api/result/stats/${userId}`);
-    console.log(response.data);
+    console.log("Stats: ", response.data);
     return response.data;
   }
 
