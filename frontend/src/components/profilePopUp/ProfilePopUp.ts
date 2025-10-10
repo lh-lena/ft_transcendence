@@ -1,6 +1,7 @@
 import { CloseIcon } from "../closeIcon/CloseIcon";
 import { ProfileAvatar } from "../profileAvatar";
 import { User } from "../../types";
+import { userWinsLosses } from "../../types/backend";
 
 export class ProfilePopUp {
   private main: HTMLElement;
@@ -15,7 +16,7 @@ export class ProfilePopUp {
     removeFriendCallback?: () => void,
     isBlocked?: boolean,
     unBlockFriendCallback?: () => void,
-    winsAndLosses?: Map<string, number>,
+    winsAndLosses?: userWinsLosses,
   ) {
     this.main = document.createElement("div");
     this.main.className =
@@ -52,7 +53,7 @@ export class ProfilePopUp {
       const winLossRow = document.createElement("div");
       winLossRow.className = "flex flex-row gap-3";
       const wins = document.createElement("h1");
-      wins.textContent = `${winsAndLosses.get("wins")} wins`;
+      wins.textContent = `${winsAndLosses.wins} wins`;
       wins.className = "text-xs text-emerald-800";
       winLossRow.appendChild(wins);
       const seperator = document.createElement("h1");
@@ -60,7 +61,7 @@ export class ProfilePopUp {
       seperator.className = "text-xs";
       winLossRow.appendChild(seperator);
       const losses = document.createElement("h1");
-      losses.textContent = `${winsAndLosses.get("losses")} losses`;
+      losses.textContent = `${winsAndLosses.loses} losses`;
       losses.className = "text-xs text-red-700";
       winLossRow.appendChild(losses);
       userDiv.appendChild(winLossRow);
