@@ -10,6 +10,8 @@ export const setupNotificationRoutes = (server: FastifyInstance): void => {
 
   server.post('/notify', {
     schema: {
+      tags: ['Notification'],
+      description: 'Notify a user with a message',
       body: NotificationRequestSchema,
       response: {
         200: ResponseSchema,
