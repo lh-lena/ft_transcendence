@@ -48,7 +48,12 @@ export default function createGameDataService(app: FastifyInstance): GameDataSer
       return true;
     } catch (error: unknown) {
       app.log.debug(`${JSON.stringify(result)}`);
-      processErrorLog(app, 'game-data', `Failed to send game result. Game ID ${result.gameId}`, error);
+      processErrorLog(
+        app,
+        'game-data',
+        `Failed to send game result. Game ID ${result.gameId}`,
+        error,
+      );
       return false;
     }
   }
