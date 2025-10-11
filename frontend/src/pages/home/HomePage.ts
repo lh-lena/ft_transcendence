@@ -28,7 +28,8 @@ export class HomePage {
       { name: "register", link: "/register" },
       {
         name: "guest",
-        onClick: () => this.router.navigate("/tournament-start"),
+        onClick: () =>
+          this.router.navigate("/tournament-start", { userType: "guest" }),
       },
     ];
     this.menu = new Menu(this.router, notLoggedInMenu);

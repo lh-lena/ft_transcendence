@@ -1,6 +1,6 @@
 export interface Player {
   userId: string;
-  username?: string;
+  alias?: string;
 }
 
 export interface TournamentData {
