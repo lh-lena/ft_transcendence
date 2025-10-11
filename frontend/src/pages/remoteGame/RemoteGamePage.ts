@@ -58,18 +58,14 @@ export class VsPlayerGamePage {
     this.loadingOverlay.mount(this.main);
 
     this.main.appendChild(this.loadingOverlay.getElement());
+
+    this.setupGame();
   }
 
-  public static async create(
-    serviceContainer: ServiceContainer,
-  ): Promise<VsPlayerGamePage> {
-    const instance = new VsPlayerGamePage(serviceContainer);
-
-    // get game type from url params in router
-    const router = serviceContainer.get<Router>("router");
-    const params = router.getQueryParams();
+  public async setupGame() {
+    const params = this.router.getQueryParams();
     const gameType = (params.get("gameType") as GameType) || "vs-player";
-    instance.gameType = gameType;
+    this.gameType = gameType;
 
     console.log("game type: ", gameType, "params: ", params);
 
@@ -78,32 +74,32 @@ export class VsPlayerGamePage {
     switch (gameType) {
       case "ai": {
         const aiDifficulty = params.get("aiDifficulty") || "medium";
-        response = await instance.backend.createAiGame(aiDifficulty);
+        response = await this.backend.createAiGame(aiDifficulty);
         // need to talk to moritz about this
-        instance.gameId = response.gameRet.gameId;
+        this.gameId = response.gameRet.gameId;
         break;
       }
       case "tournament":
-        response = await instance.backend.joinTournament("alias-demo");
+        response = await this.backend.joinTournament("alias-demo");
         break;
       case "vs-player":
       default:
-        response = await instance.backend.joinGame();
-        instance.gameId = response.gameId;
+        response = await this.backend.joinGame();
+        this.gameId = response.gameId;
         break;
     }
-    console.log("game ID on create is: ", instance.gameId);
+    console.log("game ID on create is: ", this.gameId);
 
     // save the user (me) to remote game to use later
-    const responseUser = await instance.backend.getUser();
-    instance.userMe = responseUser;
+    const responseUser = await this.backend.getUser();
+    this.userMe = responseUser;
 
     // Initialize gameState with complete data
-    instance.gameState = {
+    this.gameState = {
       status: GameStatus.PLAYING,
       previousStatus: GameStatus.PLAYING,
       playerA: {
-        ...instance.userMe,
+        ...this.userMe,
         score: 0,
       },
       pauseInitiatedByMe: false,
@@ -115,7 +111,7 @@ export class VsPlayerGamePage {
     };
 
     // load mock AI player for AI game type
-    if (instance.gameType === "ai") {
+    if (this.gameType === "ai") {
       const { color, colorMap } = generateProfilePrint();
       const otherUser: User = {
         colormap: colorMap,
@@ -131,14 +127,12 @@ export class VsPlayerGamePage {
         twofa_secret: "",
         guest: false,
       };
-      instance.gameState.playerB = {
+      this.gameState.playerB = {
         ...otherUser,
         score: 0,
       };
-      instance.userOther = otherUser;
+      this.userOther = otherUser;
     }
-
-    return instance;
   }
 
   private registerWebsocketHandlers(): void {
@@ -245,6 +239,9 @@ export class VsPlayerGamePage {
       this.gameState.playerA.score,
       this.gameState.playerB.score,
     );
+    // just always make sure if we get a game update the board is showing showGamePieces
+    this.loadingOverlay.hide();
+    this.hidePauseOverlay();
   }
 
   private wsGamePauseHandler(): void {
@@ -449,7 +446,7 @@ export class VsPlayerGamePage {
       this.menuEndDiv = document.createElement("div");
       this.menuEndDiv.className = "flex flex-col gap-5 items-center";
       // Create and mount menu to game container instead of main element
-      const menuItems = [{ name: "quit", link: "/chat" }];
+      const menuItems = [{ name: "back", link: "/chat" }];
       const menuEnd = new Menu(this.router, menuItems);
       let avatar = new ProfileAvatar(user.color, user.colormap, 40, 40, 2);
       this.menuEndDiv.appendChild(avatar.getElement());

@@ -92,8 +92,6 @@ export class App {
     // else create new page
     if (PageClass === ChatPage) {
       this.currentPage = await ChatPage.create(this.serviceContainer);
-    } else if (PageClass === VsPlayerGamePage) {
-      this.currentPage = await VsPlayerGamePage.create(this.serviceContainer);
     } else {
       this.currentPage = new PageClass(this.serviceContainer);
     }

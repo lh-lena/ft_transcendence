@@ -19,6 +19,7 @@ export class Websocket {
   private ws!: WebSocket | null;
   private messageHandlers: Map<string, MessageHandler<any>[]> = new Map();
   private gameStatus!: wsGameStatus;
+  private cleanupHandler?: () => void;
 
   // web socket (init on profile load?)
   public initializeWebSocket(): void {
@@ -64,6 +65,18 @@ export class Websocket {
         console.error("Error parsing WebSocket message:", error);
       }
     };
+
+    // define behavior when user closes window
+    this.cleanupHandler = this.handleWindowClose.bind(this);
+    window.addEventListener("beforeunload", this.cleanupHandler);
+  }
+
+  private handleWindowClose() {
+    if (this.cleanupHandler) {
+      window.removeEventListener("beforeunload", this.cleanupHandler);
+    }
+    this.ws?.close();
+    this.ws = null;
   }
 
   private handleWebSocketMessage(data: any): void {

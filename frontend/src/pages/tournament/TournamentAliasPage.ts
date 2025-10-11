@@ -65,6 +65,9 @@ export class TournamentAliasPage {
     // case guest
     if (userType === "guest") {
       await this.backend.registerGuest(alias);
+      // need to make sure web socket connection is established even for guests so we have to manually trigger here
+      // registered users build up a connection in App before page load
+      this.websocket.initializeWebSocket();
     }
     // once guest is a "registered user we go here" or also just for reg restirred users
     const response = await this.backend.joinTournament(alias, userType);
