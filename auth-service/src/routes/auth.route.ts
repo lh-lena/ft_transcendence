@@ -26,9 +26,12 @@ const authRoutes = async (server: FastifyInstance) => {
 
     const user = await server.user.post(newUser);
 
-    await reply.setAuthCookies(user.userId);
-
-    reply.response(201, { message: 'User successfully Registered' });
+    reply.doSending({
+      code: 201,
+      message: 'User successfully Registered',
+      includeAuth: true,
+      userId: user.userId,
+    });
   });
 
   server.post('/api/login', async (req: FastifyRequest, reply: FastifyReply) => {
@@ -59,12 +62,12 @@ const authRoutes = async (server: FastifyInstance) => {
       return reply.code(200).send({ ...tfaData });
     }
 
-    await reply.setAuthCookies(user.userId);
-    const authData = reply?.authData;
-
-    reply
-      .code(201)
-      .send({ message: 'User successfully LogedIn', jwt: authData?.jwt, userId: authData?.userId });
+    reply.doSending({
+      code: 201,
+      message: 'User successfully LogedIn',
+      includeAuth: true,
+      userId: user.userId,
+    });
   });
 
   server.post('/api/logout', async (req: FastifyRequest, reply: FastifyReply) => {
@@ -104,13 +107,11 @@ const authRoutes = async (server: FastifyInstance) => {
 
     const user = await server.user.post(newGuest);
 
-    await reply.setAuthCookies(user.userId);
-    const authData = reply?.authData;
-
-    reply.code(201).send({
+    reply.doSending({
+      code: 201,
       message: 'Guest successfully LogedIn',
-      userId: authData?.userId,
-      jwt: authData?.jwt,
+      includeAuth: true,
+      userId: user.userId,
     });
   });
 

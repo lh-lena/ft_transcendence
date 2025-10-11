@@ -41,6 +41,7 @@ declare module 'fastify' {
   }
   interface FastifyReply {
     setAuthCookies(userId: string): FastifyReply;
+    doSending(options?: SendOptions): FastifyReply;
     authData?: AuthData;
   }
 }

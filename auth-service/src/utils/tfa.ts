@@ -59,40 +59,32 @@ export class tfaHandler {
     });
   }
 
-  async checkTotp(
-    tfaData: TfaVerifyType,
-    user: UserType,
-    reply: FastifyReply,
-  ): Promise<FastifyReply> {
+  async checkTotp(tfaData: TfaVerifyType, user: UserType): Promise<string> {
+    //TODO Log and throw error + proper handling
+    //
+    if (!user) {
+      return reply.status(404).send({ message: 'User not found' });
+    }
+
     if (!user.tfaSecret) {
       return reply.code(400).send({
         message: 'No TOTP secret found. Please set up TOTP 2FA.',
       });
     }
     const isValid = authenticator.check(tfaData.code, user.tfaSecret);
+
     if (!isValid) {
       return reply.code(400).send({ message: 'Invalid TOTP code. Please try again.' });
     }
-
-    const accessToken = this.server.generateAccessToken({ id: user.userId });
-    const refreshToken = this.server.generateRefreshToken({ id: user.userId });
-
-    return reply
-      .code(200)
-      .setAuthCookie('jwt', accessToken)
-      .setAuthCookie('refreshToken', refreshToken, { path: '/api' })
-      .send({
-        message: 'TOTP 2FA verification successful.',
-        jwt: accessToken,
-        userId: user.userId,
-      });
+    return 'valid';
   }
 
-  async checkBackup(
-    tfaData: TfaVerifyType,
-    user: UserType,
-    reply: FastifyReply,
-  ): Promise<FastifyReply> {
+  async checkBackup(tfaData: TfaVerifyType, user: UserType): Promise<FastifyReply> {
+    //TODO Log and throw error + proper handling
+    //
+    if (!user) {
+      return reply.status(404).send({ message: 'User not found' });
+    }
     if (!user.backupCodes) {
       return reply
         .code(400)
@@ -115,22 +107,17 @@ export class tfaHandler {
     };
 
     await apiClientBackend(config);
-
-    const accessToken = this.server.generateAccessToken({ id: user.userId });
-    const refreshToken = this.server.generateRefreshToken({ id: user.userId });
-
-    return reply
-      .code(200)
-      .setAuthCookie('jwt', accessToken)
-      .setAuthCookie('refreshToken', refreshToken, { path: '/api' })
-      .send({
-        message: 'TOTP 2FA verification successful.',
-        jwt: accessToken,
-        userId: user.userId,
-      });
   }
 
-  async setupTotp(user: UserType, reply: FastifyReply): Promise<FastifyReply> {
+  async setupTotp(
+    user: UserType,
+  ): Promise<{ otpauth: string; qrCodeDataUrl: string; codes: string }> {
+    //TODO throw error + proper handling
+
+    if (!user) {
+      return reply.status(404).send({ message: 'User not found' });
+    }
+
     if (user.tfaEnabled && user.tfaMethod === 'totp') {
       return reply.code(400).send({ message: 'TOTP 2FA is already enabled.' });
     }
@@ -155,12 +142,10 @@ export class tfaHandler {
 
     const qrCodeDataUrl = await QRCode.toDataURL(otpauth);
 
-    return reply.code(200).send({
+    return {
       otpauth,
       qrCodeDataUrl,
       codes,
-      message:
-        'TOTP 2FA setup complete. Dont lose the Backup Codes and Store the QRCode! Otherwise you wont have access to your acount!',
-    });
+    };
   }
 }
