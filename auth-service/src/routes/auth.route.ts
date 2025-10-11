@@ -26,14 +26,9 @@ const authRoutes = async (server: FastifyInstance) => {
 
     const user = await server.user.post(newUser);
 
-    const accessToken = server.generateAccessToken({ id: user.userId });
-    const refreshToken = server.generateRefreshToken({ id: user.userId });
+    await reply.setAuthCookies(user.userId);
 
-    reply
-      .code(201)
-      .setAuthCookie('jwt', accessToken)
-      .setAuthCookie('refreshToken', refreshToken, { path: '/api' })
-      .send({ message: 'successfull Registration', jwt: accessToken, userId: user.userId });
+    reply.response(201, { message: 'User successfully Registered' });
   });
 
   server.post('/api/login', async (req: FastifyRequest, reply: FastifyReply) => {
@@ -64,14 +59,12 @@ const authRoutes = async (server: FastifyInstance) => {
       return reply.code(200).send({ ...tfaData });
     }
 
-    const accessToken = server.generateAccessToken({ id: user.userId });
-    const refreshToken = server.generateRefreshToken({ id: user.userId });
+    await reply.setAuthCookies(user.userId);
+    const authData = reply?.authData;
 
     reply
       .code(201)
-      .setAuthCookie('jwt', accessToken)
-      .setAuthCookie('refreshToken', refreshToken, { path: '/api' })
-      .send({ message: 'successfull login', jwt: accessToken, userId: user.userId });
+      .send({ message: 'User successfully LogedIn', jwt: authData?.jwt, userId: authData?.userId });
   });
 
   server.post('/api/logout', async (req: FastifyRequest, reply: FastifyReply) => {
@@ -111,19 +104,18 @@ const authRoutes = async (server: FastifyInstance) => {
 
     const user = await server.user.post(newGuest);
 
-    const accessToken = server.generateAccessToken({ id: user.userId });
-    const refreshToken = server.generateRefreshToken({ id: user.userId });
+    await reply.setAuthCookies(user.userId);
+    const authData = reply?.authData;
 
-    reply
-      .code(201)
-      .setAuthCookie('jwt', accessToken)
-      .setAuthCookie('refreshToken', refreshToken, { path: '/api' })
-      .send({ message: 'successfull Guest login', jwt: accessToken, userId: user.userId });
+    reply.code(201).send({
+      message: 'Guest successfully LogedIn',
+      userId: authData?.userId,
+      jwt: authData?.jwt,
+    });
   });
 
   server.get('/api/auth/me', async (req: FastifyRequest, reply: FastifyReply) => {
     const authHeader = req.headers.authorization;
-    //console.log(authHeader);
 
     if (!authHeader) {
       return reply.code(401).send({ error: 'Authorization header missing' });
