@@ -1,14 +1,10 @@
-import { ServiceContainer, Router, Backend } from "../../services";
+import { ServiceContainer, Router, Backend, Websocket } from "../../services";
 import { Menu } from "../../components/menu";
 import { PongButton } from "../../components/pongButton";
 import { userStore } from "../../constants/backend";
 import { ProfileAvatar } from "../../components/profileAvatar";
 import { showInfo } from "../../components/toast";
-
-// replace with stuff from backend
-const demoMatchup1 = ["alex", "naledi"];
-const demoMatchup2 = ["lucas", "mo"];
-const matchUps = [demoMatchup1, demoMatchup2];
+import { TournamentData } from "../../types/tournament";
 
 export class TournamentAliasPage {
   private main: HTMLElement;
@@ -19,12 +15,14 @@ export class TournamentAliasPage {
   private pongButton: PongButton;
   private menu: Menu;
   private inputAlias: HTMLInputElement;
+  private websocket: Websocket;
 
   constructor(serviceContainer: ServiceContainer) {
     // router / services container
     this.serviceContainer = serviceContainer;
     this.router = this.serviceContainer.get<Router>("router");
     this.backend = this.serviceContainer.get<Backend>("backend");
+    this.websocket = this.serviceContainer.get<Websocket>("websocket");
 
     this.main = document.createElement("div");
     this.main.className =
@@ -50,17 +48,29 @@ export class TournamentAliasPage {
     this.main.appendChild(this.menu.getMenuElement());
   }
 
-  private handlePlay() {
+  private async handlePlay() {
     const alias = this.inputAlias.value.trim();
     if (!alias) {
       showInfo("please enter an alias");
       return;
     }
-    this.backend.joinTournament(alias);
-    this.showBracket();
+    const params = this.router.getQueryParams();
+    const userType = params.get("userType") ?? undefined;
+    // case guest`
+    if (userType === "guest") {
+      await this.backend.registerGuest(alias);
+    }
+    // once guest is a "registered user we go here" or also just for reg restirred users
+    const response = await this.backend.joinTournament(alias, userType);
+    this.showBracket(response.data.createdTournament);
   }
 
-  private showBracket(): void {
+  private async showBracket(tournamentData: TournamentData) {
+    console.log("tournamentdata: ", tournamentData);
+    for (const player of tournamentData.players) {
+      const user = await this.backend.getUserById(player.userId);
+      player.alias = user.alias;
+    }
     // hide other stuff
     this.form.remove();
     this.pongButton.unmount();
@@ -70,33 +80,31 @@ export class TournamentAliasPage {
     bracketCol.className = "flex flex-col gap-10";
     this.main.appendChild(bracketCol);
     const bracketTitle = document.createElement("h1");
-    bracketTitle.textContent = "match-ups:";
+    bracketTitle.textContent = "match-up:";
     bracketTitle.className = "text-white text-center";
     bracketCol.appendChild(bracketTitle);
 
     const bracketsRow = document.createElement("div");
     bracketsRow.className = "flex flex-row gap-20";
     bracketCol.appendChild(bracketsRow);
-    // loop over match ups
-    matchUps.forEach((matchup) => {
-      const bracket = document.createElement("div");
-      bracket.className = "flex flex-col gap-2 w-48";
-      bracketsRow.appendChild(bracket);
-      // for each matchup
-      matchup.forEach((player) => {
-        if (matchup.indexOf(player) == 1) {
-          const vsText = document.createElement("p");
-          vsText.textContent = "|";
-          vsText.className = "text-white text-center";
-          bracket.appendChild(vsText);
-        }
-        const playerDiv = this.createPlayer(player);
+    const bracket = document.createElement("div");
+    bracket.className = "flex flex-col gap-2 w-48";
+    bracketsRow.appendChild(bracket);
+    tournamentData.players.forEach((player, index) => {
+      if (index >= 2) return;
+      if (index === 1) {
+        const vsText = document.createElement("p");
+        vsText.textContent = "|";
+        vsText.className = "text-white text-center";
+        bracket.appendChild(vsText);
+      }
+      if (player.alias) {
+        const playerDiv = this.createPlayer(player.alias);
         bracket.appendChild(playerDiv);
-        if (matchUps.indexOf(matchup) == 0)
-          bracket.classList.add("animate-pulse");
-      });
-      // replace with check to see if player is you (reference check)
+      }
+      if (index === 0) bracket.classList.add("animate-pulse");
     });
+    // replace with check to see if player is you (reference check)
 
     // setTimeout(() => this.router.navigate("/vs-player"), 5000);
   }

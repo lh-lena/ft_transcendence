@@ -114,6 +114,27 @@ const backendGameRoutes = async (fastify: FastifyInstance) => {
     const gameRet: GameResponseType = ret.data;
     return reply.code(201).send(gameRet);
   });
+
+  fastify.delete('/api/game/:gameId', async (req: FastifyRequest, reply: FastifyReply) => {
+    const parsedReq = gameIdSchema.safeParse(req.params);
+
+    if (!parsedReq.success) {
+      return reply.code(400).send({ message: 'Invalid user Id' });
+    }
+
+    //TODO add user in player check
+
+    const requestId: GameIdType = parsedReq.data;
+
+    const config: AxiosRequestConfig = {
+      method: 'delete',
+      url: `/game/${requestId.gameId}`,
+    };
+
+    const ret = await apiClientBackend(config);
+
+    return reply.code(200).send({ message: 'Game deleted successfully', ret });
+  });
 };
 
 export default fp(backendGameRoutes);

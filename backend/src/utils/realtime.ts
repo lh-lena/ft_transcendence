@@ -26,7 +26,7 @@ export async function notifyPlayer(
     wsApiClient.post('/notify', {
       event: 'info',
       reciever: reciever,
-      sender: sender,
+      sender: sender || '00000000-0000-0000-0000-000000000000',
       payload: { message: message },
     });
   } catch (error) {

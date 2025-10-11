@@ -30,7 +30,7 @@ export class MenuBar {
           { label: "Local Game", href: "/local" },
           { label: "Vs AI", onclick: () => this.aiGameFlow() },
           { label: "Vs Player", onclick: () => this.joinGameFlow() },
-          { label: "Tournament", href: "/tournament-start" },
+          { label: "Tournament", onclick: () => this.joinTournamentFlow() },
         ],
       },
       // { label: "profile", href: "/profile" },
@@ -53,6 +53,12 @@ export class MenuBar {
       // hard coded medium for rn
       // TODO ADD MENU OPTION FOR DIFF LEVELS?
       aiDifficulty: "medium",
+    });
+  }
+
+  private async joinTournamentFlow() {
+    this.router.navigate("/tournament-start", {
+      userType: "registered",
     });
   }
 

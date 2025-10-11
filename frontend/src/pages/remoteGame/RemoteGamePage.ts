@@ -180,28 +180,41 @@ export class VsPlayerGamePage {
         this.gameState.pauseInitiatedByMe == true)
     ) {
       this.pauseCountdown.innerText = "game resumes in: " + message;
-      if (message == "GO!") this.pauseCountdown.innerText = message;
+      if (message == "GO!") {
+        this.pauseCountdown.innerText = message;
+        this.gameState.status = GameStatus.PLAYING;
+        this.gameState.pauseInitiatedByMe = false;
+        this.gameState.blockedPlayButton = false;
+        this.game?.showGamePieces();
+        this.hidePauseOverlay();
+        this.scoreBar.pausePlay.toggleIsPlaying(true);
+      }
       // could do a show info in here instead but looked cluttered
-    } else this.loadingOverlay.changeText(message);
+    } else {
+      this.loadingOverlay.changeText(message);
+      this.loadingOverlay.hideButton();
+      if (message == "GO!") this.loadingOverlay.hide();
+    }
   }
 
   private wsNotificationHandler(
     payload: WsServerBroadcast["notification"],
   ): void {
     const message = payload.message;
-    if (message == "Game started!" || message == "Game resumed!") {
-      this.loadingOverlay.hide();
-      // added from game resume for now
-      this.gameState.status = GameStatus.PLAYING;
-      this.gameState.pauseInitiatedByMe = false;
-      this.gameState.blockedPlayButton = false;
-      this.game?.showGamePieces();
-      if (message === "Game resumed!") {
-        this.hidePauseOverlay();
-        this.scoreBar.pausePlay.toggleIsPlaying(true);
-      }
-      this.gameStateCallback();
-    }
+    // if (message == "Game started!" || message == "Game resumed!") {
+    //   this.loadingOverlay.hide();
+    //   // added from game resume for now
+    //   this.gameState.status = GameStatus.PLAYING;
+    //   this.gameState.pauseInitiatedByMe = false;
+    //   this.gameState.blockedPlayButton = false;
+    //   this.game?.showGamePieces();
+    //   if (message === "Game resumed!") {
+    //     this.hidePauseOverlay();
+    //     this.scoreBar.pausePlay.toggleIsPlaying(true);
+    //   }
+    // this.gameStateCallback();
+
+    console.log(message);
   }
 
   private async wsGameUpdateHandler(payload: WsServerBroadcast["game_update"]) {
@@ -317,7 +330,9 @@ export class VsPlayerGamePage {
   }
 
   private quitHook() {
-    this.ws.messageGameLeave(this.gameId);
+    // old ws callback
+    // this.ws.messageGameLeave(this.gameId);
+    this.backend.deleteGame(this.gameId);
     this.unmount();
     this.router.navigate("/chat");
   }
