@@ -414,6 +414,11 @@ export class Backend {
     return response;
   }
 
+  async getTournamentById(tournamentId: string) {
+    const response = await this.api.get(`/api/tournament/${tournamentId}`);
+    return response;
+  }
+
   //leave tournament -> user gets deleted from the tournament
   async leaveTournament() {
     await this.api.post(`/api/tournament/leave/${this.getUser().userId}`);
