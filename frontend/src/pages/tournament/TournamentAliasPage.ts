@@ -18,6 +18,7 @@ export class TournamentAliasPage {
   private inputAlias: HTMLInputElement;
   private websocket: Websocket;
   private tournamentId!: string;
+  private bracketCol!: HTMLDivElement;
 
   constructor(serviceContainer: ServiceContainer) {
     // router / services container
@@ -85,11 +86,13 @@ export class TournamentAliasPage {
     payload: WsServerBroadcast["notification"],
   ) {
     // re run show bracket on notification that new player joined
-    const newTournamentData = this.backend.getTournamentById(this.tournamentId);
+    const newTournamentData = await this.backend.getTournamentById(
+      this.tournamentId,
+    );
     console.log(newTournamentData);
     console.log(payload);
-    // if (payload.message === "INFO: New Player joined the tournament")
-    //   this.showBracket()
+    if (payload.message === "INFO: New Player joined the tournament")
+      this.showBracket(newTournamentData.data);
   }
 
   private async showBracket(tournamentData: TournamentData) {
@@ -102,20 +105,22 @@ export class TournamentAliasPage {
     this.pongButton.unmount();
     this.menu.unmount();
 
-    const bracketCol = document.createElement("div");
-    bracketCol.className = "flex flex-col gap-10";
-    this.main.appendChild(bracketCol);
+    if (this.bracketCol) this.bracketCol.innerHTML = "";
+
+    this.bracketCol = document.createElement("div");
+    this.bracketCol.className = "flex flex-col gap-10";
+    this.main.appendChild(this.bracketCol);
     const bracketTitle = document.createElement("h1");
-    bracketTitle.textContent = "match-up:";
+    bracketTitle.textContent = "match-ups:";
     bracketTitle.className = "text-white text-center";
-    bracketCol.appendChild(bracketTitle);
+    this.bracketCol.appendChild(bracketTitle);
 
     tournamentData.players.forEach((player, index) => {
       // create new bracket row for every pair (even indices) or single player
       if (index % 2 === 0) {
         const bracketsRow = document.createElement("div");
         bracketsRow.className = "flex flex-row gap-20";
-        bracketCol.appendChild(bracketsRow);
+        this.bracketCol.appendChild(bracketsRow);
 
         const bracket = document.createElement("div");
         bracket.className = "flex flex-col gap-2 w-48";
