@@ -256,7 +256,7 @@ export class VsPlayerGamePage {
 
   private async wsGameEndedHandler(payload: WsServerBroadcast["game_ended"]) {
     this.gameState.status = GameStatus.GAME_OVER;
-    
+
     // set game status in ws
     this.ws.setGameStatusNotPlaying();
 
