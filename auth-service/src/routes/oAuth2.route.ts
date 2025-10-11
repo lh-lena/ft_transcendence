@@ -3,12 +3,12 @@ import fetch from 'node-fetch';
 import fp from 'fastify-plugin';
 import { AxiosRequestConfig } from 'axios';
 
-type GithubUser = {
+interface GithubUser {
   username: string;
   avatar: string;
   githubId: number;
   guest: boolean;
-};
+}
 
 const oAuth2Routes = async (server: FastifyInstance) => {
   async function regOrlogUser(githubUser: GithubUser) {
@@ -115,12 +115,9 @@ const oAuth2Routes = async (server: FastifyInstance) => {
       `);
       }
 
-      // For successful OAuth (no 2FA), set cookies and send success message
-      const accessToken = server.generateAccessToken({ id: user.userId });
-      const refreshToken = server.generateRefreshToken({ id: user.userId });
+      await reply.setAuthCookies(user.userId);
 
-      reply.setAuthCookie('jwt', accessToken);
-      reply.setAuthCookie('refreshToken', refreshToken, { path: '/api' });
+      const authData = reply?.authData;
 
       return reply.type('text/html').send(`
     <!DOCTYPE html>
@@ -131,7 +128,7 @@ const oAuth2Routes = async (server: FastifyInstance) => {
           const data = ${JSON.stringify({
             type: 'OAUTH_SUCCESS',
             userId: user.userId,
-            jwt: accessToken,
+            jwt: authData?.jwt,
             message: 'Authentication successful',
           })};
           
@@ -152,9 +149,7 @@ const oAuth2Routes = async (server: FastifyInstance) => {
       </body>
     </html>
     `);
-    } catch (error: any) {
-      console.error('OAuth callback error:', error);
-
+    } catch {
       const frontendUrl = server.config.frontendUrl;
 
       return reply.type('text/html').send(`
@@ -165,7 +160,7 @@ const oAuth2Routes = async (server: FastifyInstance) => {
         <script>
           const data = ${JSON.stringify({
             type: 'OAUTH_ERROR',
-            error: error.message || 'Authentication failed',
+            error: 'Authentication failed',
           })};
           
           try {

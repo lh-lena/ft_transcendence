@@ -5,6 +5,12 @@ import { apiClientBackend } from './utils/apiClient';
 import { userActions } from './utils/userActions';
 import { FastifyJwTNamespace } from './schemas/jwt';
 
+interface AuthData {
+  jwt: string;
+  userId: string;
+  refreshToken: string;
+}
+
 declare module 'fastify' {
   interface FastifyInstance {
     config;
@@ -35,5 +41,6 @@ declare module 'fastify' {
   }
   interface FastifyReply {
     setAuthCookies(userId: string): FastifyReply;
+    authData?: AuthData;
   }
 }

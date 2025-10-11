@@ -3,6 +3,14 @@ import { FastifyInstance, FastifyReply } from 'fastify';
 
 import fastifyCookie from '@fastify/cookie';
 
+/* AuthData Object to store auth information in the reply 
+interface AuthData {
+  jwt: string;
+  userId: string;
+  refreshToken: string;
+}
+*/
+
 const cookiePlugin = async (fastify: FastifyInstance) => {
   await fastify.register(fastifyCookie);
 
@@ -13,8 +21,6 @@ const cookiePlugin = async (fastify: FastifyInstance) => {
       sameSite: 'strict' as const,
       path: '/',
     };
-    const accessToken = fastify.generateAccessToken({ id: userId });
-    this.setCookie('jwt', accessToken, accessOptions);
 
     const refreshOptions = {
       httpOnly: true,
@@ -22,8 +28,19 @@ const cookiePlugin = async (fastify: FastifyInstance) => {
       sameSite: 'strict' as const,
       path: '/api',
     };
+
+    const accessToken = fastify.generateAccessToken({ id: userId });
     const refreshToken = fastify.generateRefreshToken({ id: userId });
+
     this.setCookie('refreshJwt', refreshToken, refreshOptions);
+    this.setCookie('jwt', accessToken, accessOptions);
+
+    this.authData = {
+      jwt: accessToken,
+      refreshToken: refreshToken,
+      userId: userId,
+    };
+
     return this;
   });
 };
