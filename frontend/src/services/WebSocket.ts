@@ -13,15 +13,20 @@ type MessageHandler<T extends keyof WsServerBroadcast> = (
   _payload: WsServerBroadcast[T],
 ) => void;
 
+export type wsGameStatus = "playing" | "not_playing";
+
 export class Websocket {
   private ws!: WebSocket | null;
   private messageHandlers: Map<string, MessageHandler<any>[]> = new Map();
+  private gameStatus!: wsGameStatus;
 
   // web socket (init on profile load?)
   public initializeWebSocket(): void {
     const wsUrl = import.meta.env.VITE_WEBSOCKET_URL;
     //TODO is not stored there no more? is this esential??
     const token = localStorage.getItem("jwt");
+
+    this.gameStatus = "not_playing";
 
     // Append token as query parameter if provided
     const urlWithToken = token
@@ -115,6 +120,18 @@ export class Websocket {
     } else {
       console.warn("WebSocket is not open. Message not sent:", { message });
     }
+  }
+
+  public setGameStatusPlaying() {
+    this.gameStatus = "playing";
+  }
+
+  public setGameStatusNotPlaying() {
+    this.gameStatus = "not_playing";
+  }
+
+  public getGameStatus(): wsGameStatus {
+    return this.gameStatus;
   }
 
   // send message functions (pre defined)

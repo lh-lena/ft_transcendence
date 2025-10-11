@@ -115,13 +115,13 @@ export class TournamentAliasPage {
     bracketTitle.className = "text-white text-center";
     this.bracketCol.appendChild(bracketTitle);
 
+    const bracketsRow = document.createElement("div");
+    bracketsRow.className = "flex flex-row gap-20";
+    this.bracketCol.appendChild(bracketsRow);
+
     tournamentData.players.forEach((player, index) => {
       // create new bracket row for every pair (even indices) or single player
       if (index % 2 === 0) {
-        const bracketsRow = document.createElement("div");
-        bracketsRow.className = "flex flex-row gap-20";
-        this.bracketCol.appendChild(bracketsRow);
-
         const bracket = document.createElement("div");
         bracket.className = "flex flex-col gap-2 w-48";
         bracketsRow.appendChild(bracket);

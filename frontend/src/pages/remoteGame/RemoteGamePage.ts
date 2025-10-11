@@ -152,6 +152,9 @@ export class VsPlayerGamePage {
 
   // this happens at start of the game
   private async wsStartGameHandler(payload: WsServerBroadcast["game_start"]) {
+    // set game status in ws to playing
+    this.ws.setGameStatusPlaying();
+
     if (this.gameType === "ai") return;
     // only for vs player and tournament
     // finds the user that is not userMe
@@ -253,6 +256,9 @@ export class VsPlayerGamePage {
 
   private async wsGameEndedHandler(payload: WsServerBroadcast["game_ended"]) {
     this.gameState.status = GameStatus.GAME_OVER;
+    
+    // set game status in ws
+    this.ws.setGameStatusNotPlaying();
 
     // game winner will be null if AI
     let winnerUser;
