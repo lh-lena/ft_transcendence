@@ -1,7 +1,7 @@
 import { GameSessionStatus, PaddleName } from '../../constants/game.constants.js';
 import { GameResult, GameSession, Player } from '../../schemas/game.schema.js';
 import { getPlayer1Username, getPlayer2Username } from './player.utils.js';
-import { UserIdType } from '../../schemas/user.schema.js';
+import { User, UserIdType } from '../../schemas/user.schema.js';
 import { ok, err, Result } from 'neverthrow';
 
 export function createGameResult(
@@ -132,10 +132,13 @@ function getLoserPlayer(game: GameSession): Player | null {
   return null;
 }
 
-function getPlayerName(player: Player): string {
+export function getPlayerName(player: Player | User): string {
   let name = player.userAlias;
   if (name === undefined || name === null) {
     name = player.username;
+  }
+  if (name === undefined || name === null) {
+    name = 'unknown';
   }
   return name;
 }
