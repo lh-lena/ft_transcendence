@@ -4,8 +4,8 @@ export const UserIdSchema = z.uuidv4();
 
 export const UserSchema = z.object({
   userId: UserIdSchema,
-  username: z.string().min(1).optional(),
-  userAlias: z.string().min(1).optional(),
+  username: z.string().min(1).optional().nullable(),
+  userAlias: z.string().min(1).optional().nullable(),
 });
 
 export const UserIdObjectSchema = z.object({
