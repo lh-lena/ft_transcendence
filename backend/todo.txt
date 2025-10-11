@@ -4,3 +4,4 @@ TODO:
 -add correcr error messages on errors -> talk to alec
 -use config in backend for realtime ip
 -set all users offline when server starts
+-make back button route
