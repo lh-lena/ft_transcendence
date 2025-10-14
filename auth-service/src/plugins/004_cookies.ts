@@ -41,6 +41,7 @@ const cookiePlugin = async (fastify: FastifyInstance) => {
       userId: userId,
     };
 
+    console.log('Auth cookies set:', this);
     return this;
   });
 };

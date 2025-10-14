@@ -71,7 +71,7 @@ const oAuth2Routes = async (server: FastifyInstance) => {
       const token = await server.githubOAuth2.getAccessTokenFromAuthorizationCodeFlow(req);
       const githubUser = await fetchGithubUser(token.token.access_token);
 
-      const frontendUrl = server.config.frontendUrl;
+      const frontendUrl = await server.config.frontendUrl;
 
       const user = await regOrlogUser(githubUser);
       if (user === null) {
@@ -115,7 +115,7 @@ const oAuth2Routes = async (server: FastifyInstance) => {
       `);
       }
 
-      await reply.setAuthCookies(user.userId);
+      reply = reply.setAuthCookies(user.userId);
 
       const authData = reply?.authData;
 
