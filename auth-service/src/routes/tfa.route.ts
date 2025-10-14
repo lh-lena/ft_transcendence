@@ -82,10 +82,6 @@ const tfaRoutes = async (server: FastifyInstance) => {
 
     const user = await server.user.getById(parseResult.data.userId);
 
-    if (!user) {
-      return reply.status(404).send({ message: 'User not found' });
-    }
-
     if (parseResult.data.type === 'totp') {
       const tfaData = await server.tfa.setupTotp(user, reply);
       reply.doSending({
