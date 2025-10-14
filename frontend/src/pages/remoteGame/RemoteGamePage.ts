@@ -21,7 +21,7 @@ export class VsPlayerGamePage {
   private scoreBar!: ScoreBar;
   private menuPauseDiv: HTMLDivElement | null = null;
   private gameContainer: HTMLElement | null = null;
-  private loadingOverlay: Loading;
+  private loadingOverlay!: Loading;
   private serviceContainer: ServiceContainer;
   private router: Router;
   private pauseCountdown!: HTMLElement;
@@ -50,7 +50,6 @@ export class VsPlayerGamePage {
     // register web socket handlers
     this.registerWebsocketHandlers();
 
-    // grab data from backend
     // get web socket before countdown
     this.loadingOverlay = new Loading("waiting for opponent", "button", () =>
       this.quitHook(),
@@ -79,9 +78,10 @@ export class VsPlayerGamePage {
         this.gameId = response.gameRet.gameId;
         break;
       }
-      case "tournament":
-        response = await this.backend.joinTournament("alias-demo");
+      case "tournament": {
+        this.gameId = params.get("gameId") || "undefined";
         break;
+      }
       case "vs-player":
       default:
         response = await this.backend.joinGame();
@@ -133,6 +133,15 @@ export class VsPlayerGamePage {
       };
       this.userOther = otherUser;
     }
+
+    // NOW handle tournament game_start after everything is initialized
+    if (this.gameType === "tournament") {
+      const gameStartPayloadStr = params.get("gameStartPayload");
+      if (gameStartPayloadStr) {
+        const gameStartPayload = JSON.parse(gameStartPayloadStr);
+        await this.wsStartGameHandler(gameStartPayload);
+      }
+    }
   }
 
   private registerWebsocketHandlers(): void {
@@ -144,8 +153,34 @@ export class VsPlayerGamePage {
     this.ws.onMessage("game_start", this.wsStartGameHandler.bind(this));
   }
 
+  // // because start game fires before we can handle it on tournament page
+  // private async tournamentStartGameHandler() {
+  //   // set game status in ws to playing
+  //   this.ws.setGameStatusPlaying();
+
+  //   const response = await this.backend.getGameById(this.gameId);
+
+  //   // Find the other player from the players array
+  //   const otherUserId = response.players.find(
+  //     (player: { userId: string }) => player.userId !== this.userMe.userId,
+  //   );
+
+  //   const otherUser = await this.backend.getUserById(otherUserId.userId);
+  //   otherUser.colormap = profilePrintToArray(otherUser.colormap);
+  //   this.gameState.playerB = {
+  //     ...otherUser,
+  //     score: 0,
+  //   };
+  //   this.userOther = otherUser;
+  //   console.log("OTHER USER: ", otherUser);
+  // }
+
   // this happens at start of the game
   private async wsStartGameHandler(payload: WsServerBroadcast["game_start"]) {
+    console.log("START GAME INITIATED!");
+    console.log("PAYLOAD", payload);
+    if (!this.gameId) this.gameId = payload.gameId;
+
     // set game status in ws to playing
     this.ws.setGameStatusPlaying();
 
@@ -165,6 +200,7 @@ export class VsPlayerGamePage {
       score: 0,
     };
     this.userOther = otherUser;
+    console.log("OTHER USER: ", otherUser);
   }
 
   private wsCountdownHandler(
@@ -382,35 +418,6 @@ export class VsPlayerGamePage {
       }
       this.gameState.previousKey = currentKey;
     }
-
-    // old pause play logic
-    // // pause play stuff
-    // // playing
-    // if (
-    //   this.gameState.status == GameStatus.PLAYING &&
-    //   this.gameState.previousStatus == GameStatus.PAUSED
-    // ) {
-    //   this.scoreBar.pausePlay.toggleIsPlaying(true);
-    //   this.gameState.previousStatus = GameStatus.PLAYING;
-    //   if (this.gameState.pauseInitiatedByMe == true) {
-    //     this.ws.messageGameResume(this.gameId);
-    //   }
-    //   // paused
-    // } else if (
-    //   this.gameState.status == GameStatus.PAUSED &&
-    //   this.gameState.previousStatus == GameStatus.PLAYING
-    // ) {
-    //   this.scoreBar.pausePlay.toggleIsPlaying(false);
-    //   this.game?.hideGamePieces();
-    //   this.showPauseOverlay();
-    //   // send game pause to ws
-    //   this.gameState.previousStatus = GameStatus.PAUSED;
-    //   if (this.gameState.pauseInitiatedByMe == true) {
-    //     this.ws.messageGamePause(this.gameId);
-    //   } else {
-    //     this.gameState.blockedPlayButton = true;
-    //   }
-    // }
   }
 
   public mount(parent: HTMLElement): void {

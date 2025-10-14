@@ -394,6 +394,11 @@ export class Backend {
     return response;
   }
 
+  async getGameById(gameId: string) {
+    const response = await this.api.get(`/api/game/${gameId}`);
+    return response;
+  }
+
   // --------Tournament API calls--------
 
   //join a tournament --> if user is loged in alias gets updated and if guest, guest account gets created. returns -> tournamentId: uuid, round: number, playerAmount: number, players: [userId: uuid], status: string(waiting, ready, finished), games: [gameSchema]

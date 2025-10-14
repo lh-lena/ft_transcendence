@@ -78,11 +78,20 @@ export class TournamentAliasPage {
       "notification",
       this.handleWsNotifications.bind(this),
     );
+    this.websocket.onMessage("game_start", this.handleWsGameStart.bind(this));
 
     this.tournamentId = response.data.tournamentId;
     console.log("tournamentId: ", this.tournamentId);
 
     this.showBracket(response.data);
+  }
+
+  private async handleWsGameStart(payload: WsServerBroadcast["game_start"]) {
+    this.router.navigate("/vs-player", {
+      gameType: "tournament",
+      gameId: payload.gameId,
+      gameStartPayload: JSON.stringify(payload),
+    });
   }
 
   private async handleWsNotifications(
@@ -190,6 +199,11 @@ export class TournamentAliasPage {
   }
 
   public unmount(): void {
+    this.websocket.offMessage(
+      "notification",
+      this.handleWsNotifications.bind(this),
+    );
+    this.websocket.offMessage("notification", this.handleWsNotifications);
     this.main.remove();
   }
 }
