@@ -107,9 +107,13 @@ const authRoutes = async (server: FastifyInstance) => {
       return reply.status(400).send({ message: parsedReq.error.issues });
     }
 
+    console.log('New Guest: ', parsedReq.data, 'Post to: ', server.user.post);
+
     const newGuest: GuestPostType = parsedReq.data;
 
     const user = await server.user.post(newGuest);
+
+    console.log('new registered User: ', user);
 
     const accessToken = server.generateAccessToken({ id: user.userId });
     const refreshToken = server.generateRefreshToken({ id: user.userId });

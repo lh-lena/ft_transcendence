@@ -17,6 +17,7 @@ export const tournamentService = {
     if (existingTournament) return existingTournament;
 
     const ret = await tournamentmaker.findAvailableTournament(data);
+    console.log(ret);
 
     return ret;
   },
@@ -24,7 +25,7 @@ export const tournamentService = {
   async getById(id: tournamentIdType): Promise<tournamentResponseType> {
     const ret = await tournamentmaker.getById(id);
 
-    if (!ret) throw new NotFoundError(`Tournament with id ${id} not found`);
+    if (!ret) throw new NotFoundError(`Tournament with id: ${id.tournamentId} not found`);
 
     return ret;
   },

@@ -62,6 +62,7 @@ export class tournamentClass {
   }
 
   async findAvailableTournament(join: tournamentCreateType): Promise<tournamentType> {
+    console.log('find tournament: ', this.activeTournaments);
     let freeTournament = this.activeTournaments.find(
       (t) =>
         t.playerAmount === join.playerAmount &&
@@ -111,6 +112,7 @@ export class tournamentClass {
       this.remove(tournament);
     } else if (tournament.games.length === 0) {
       tournament.round += 1;
+      tournament.playerAmount /= 2;
       await this.createGames(tournament);
     }
   }
