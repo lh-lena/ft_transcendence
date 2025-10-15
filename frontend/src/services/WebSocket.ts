@@ -58,8 +58,10 @@ export class Websocket {
         const data = JSON.parse(event.data);
         this.handleWebSocketMessage(data);
         if (data.event === "notification") showInfo(data.payload.message);
-        if (data.event !== "game_update")
+        if (data.event !== "game_update") {
           console.log(`${data.event}: `, data.payload.message);
+          console.log(`${JSON.stringify(data.payload)}`);
+        }
         // console.log("RECEIVED FROM WS: ", data);
       } catch (error) {
         console.error("Error parsing WebSocket message:", error);
