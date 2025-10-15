@@ -59,7 +59,7 @@ export class tfaHandler {
     });
   }
 
-  async checkTotp(tfaData: TfaVerifyType, user: UserType): Promise<string> {
+  async checkTotp(tfaData: TfaVerifyType, user: UserType, reply: FastifyReply): Promise<string> {
     //TODO Log and throw error + proper handling
     //
     if (!user) {
@@ -79,7 +79,11 @@ export class tfaHandler {
     return 'valid';
   }
 
-  async checkBackup(tfaData: TfaVerifyType, user: UserType): Promise<FastifyReply> {
+  async checkBackup(
+    tfaData: TfaVerifyType,
+    user: UserType,
+    reply: FastifyReply,
+  ): Promise<FastifyReply> {
     //TODO Log and throw error + proper handling
     //
     if (!user) {
@@ -107,11 +111,13 @@ export class tfaHandler {
     };
 
     await apiClientBackend(config);
+    return reply;
   }
 
   async setupTotp(
     user: UserType,
-  ): Promise<{ otpauth: string; qrCodeDataUrl: string; codes: string }> {
+    reply: FastifyReply,
+  ): Promise<{ otpauth: string; qrCodeDataUrl: string; codes: string[] }> {
     //TODO throw error + proper handling
 
     if (!user) {

@@ -2,16 +2,38 @@ import { FastifyRequest, FastifyReply, FastifyInstance } from 'fastify';
 import { AxiosRequestConfig } from 'axios';
 import { z } from 'zod';
 
-interface RouteConfig {
+interface RouteConfig<
+  TParams extends z.ZodSchema = z.ZodSchema,
+  TBody extends z.ZodSchema = z.ZodSchema,
+  TQuery extends z.ZodSchema = z.ZodSchema,
+  TResponse extends z.ZodSchema = z.ZodSchema,
+> {
   method: 'get' | 'post' | 'patch' | 'delete';
-  url: string | ((params: any) => string);
-  paramsSchema?: z.ZodSchema;
-  bodySchema?: z.ZodSchema;
-  querySchema?: z.ZodSchema;
-  responseSchema?: z.ZodSchema;
-  checkOwnership?: (parsedData: any, userId: string) => boolean;
-  transformRequest?: (data: any, server?: FastifyInstance) => Promise<any> | any;
-  transformResponse?: (data: any, req: FastifyRequest) => any;
+  url: string | ((params: z.infer<TParams>) => string);
+  paramsSchema?: TParams;
+  bodySchema?: TBody;
+  querySchema?: TQuery;
+  responseSchema?: TResponse;
+  selectResponseSchema?: (
+    response: unknown,
+    data: {
+      params?: z.infer<TParams>;
+      body?: z.infer<TBody>;
+      query?: z.infer<TQuery>;
+    },
+    userId: string,
+  ) => z.ZodSchema;
+  checkOwnership?: (
+    data: {
+      params?: z.infer<TParams>;
+      body?: z.infer<TBody>;
+      query?: z.infer<TQuery>;
+    },
+    userId: string,
+    server: FastifyInstance,
+  ) => Promise<boolean> | boolean;
+  transformRequest?: (data: z.infer<TBody>, server: FastifyInstance) => Promise<unknown> | unknown;
+  transformResponse?: (data: unknown, req: FastifyRequest) => unknown;
   successCode?: number;
   errorMessages?: {
     invalidParams?: string;
@@ -22,16 +44,21 @@ interface RouteConfig {
   };
 }
 
-export async function handleRoute(
+export async function handleRoute<
+  TParams extends z.ZodSchema = z.ZodSchema,
+  TBody extends z.ZodSchema = z.ZodSchema,
+  TQuery extends z.ZodSchema = z.ZodSchema,
+  TResponse extends z.ZodSchema = z.ZodSchema,
+>(
   req: FastifyRequest,
   reply: FastifyReply,
-  config: RouteConfig,
+  config: RouteConfig<TParams, TBody, TQuery, TResponse>,
   server: FastifyInstance,
 ) {
   const messages = config.errorMessages || {};
 
   // Validate params
-  let parsedParams;
+  let parsedParams: z.infer<TParams> | undefined;
   if (config.paramsSchema) {
     const result = config.paramsSchema.safeParse(req.params);
     if (!result.success) {
@@ -43,7 +70,7 @@ export async function handleRoute(
   }
 
   // Validate body
-  let parsedBody;
+  let parsedBody: z.infer<TBody> | undefined;
   if (config.bodySchema) {
     const result = config.bodySchema.safeParse(req.body);
     if (!result.success) {
@@ -55,7 +82,7 @@ export async function handleRoute(
   }
 
   // Validate query
-  let parsedQuery;
+  let parsedQuery: z.infer<TQuery> | undefined;
   if (config.querySchema) {
     const result = config.querySchema.safeParse(req.query);
     if (!result.success) {
@@ -68,8 +95,17 @@ export async function handleRoute(
 
   // Check ownership
   if (config.checkOwnership) {
-    const dataToCheck = parsedBody || parsedParams || parsedQuery;
-    if (!config.checkOwnership(dataToCheck, req.user?.id)) {
+    const isAuthorized = await config.checkOwnership(
+      {
+        params: parsedParams,
+        body: parsedBody,
+        query: parsedQuery,
+      },
+      req.user?.id,
+      server,
+    );
+
+    if (!isAuthorized) {
       return reply.code(403).send({
         message: messages.forbidden || 'Forbidden',
       });
@@ -77,10 +113,10 @@ export async function handleRoute(
   }
 
   // Build URL
-  const url = typeof config.url === 'function' ? config.url(parsedParams || {}) : config.url;
+  const url = typeof config.url === 'function' ? config.url(parsedParams!) : config.url;
 
   // Transform request data
-  let requestData = parsedBody;
+  let requestData: unknown = parsedBody;
   if (config.transformRequest && parsedBody) {
     requestData = await config.transformRequest(parsedBody, server);
   }
@@ -99,14 +135,30 @@ export async function handleRoute(
   const response = await server.api(axiosConfig);
 
   // Transform response
-  let finalResponse = response;
+  let finalResponse: unknown = response;
   if (config.transformResponse) {
     finalResponse = config.transformResponse(response, req);
   }
 
-  // Validate response
-  if (config.responseSchema) {
-    const result = config.responseSchema.safeParse(finalResponse);
+  // Select and validate response schema
+  let schemaToUse;
+
+  if (config.selectResponseSchema) {
+    schemaToUse = config.selectResponseSchema(
+      finalResponse,
+      {
+        params: parsedParams,
+        body: parsedBody,
+        query: parsedQuery,
+      },
+      req.user?.id,
+    );
+  } else {
+    schemaToUse = config.responseSchema;
+  }
+
+  if (schemaToUse) {
+    const result = schemaToUse.safeParse(finalResponse);
     if (!result.success) {
       return reply.code(500).send({
         message: messages.parseError || 'Failed to parse response data',
