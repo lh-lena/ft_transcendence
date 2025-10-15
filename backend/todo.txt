@@ -5,3 +5,6 @@ TODO:
 -use config in backend for realtime ip
 -set all users offline when server starts
 -make back button route
+-totp qr code vaishes on backupcodes download
+-guest can access protected routes after tournaments
+-oAuth not working on registerpage

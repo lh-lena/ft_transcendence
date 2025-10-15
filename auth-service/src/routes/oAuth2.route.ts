@@ -15,7 +15,7 @@ const oAuth2Routes = async (server: FastifyInstance) => {
     const githubId = githubUser.githubId.toString();
     try {
       const user = await server.user.getUser({ githubId: githubId });
-
+      console.log('user found:', user);
       if (user.online) {
         return null;
       }
@@ -117,7 +117,9 @@ const oAuth2Routes = async (server: FastifyInstance) => {
 
       reply = reply.setAuthCookies(user.userId);
 
-      const authData = reply?.authData;
+      const authData = reply.authData;
+      if (!authData) return reply.code(500).send('Authentication data missing');
+      console.log('authData:', authData);
 
       return reply.type('text/html').send(`
     <!DOCTYPE html>
@@ -128,7 +130,7 @@ const oAuth2Routes = async (server: FastifyInstance) => {
           const data = ${JSON.stringify({
             type: 'OAUTH_SUCCESS',
             userId: user.userId,
-            jwt: authData?.jwt,
+            jwt: authData.jwt,
             message: 'Authentication successful',
           })};
           

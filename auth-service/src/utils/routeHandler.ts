@@ -9,7 +9,7 @@ interface RouteConfig<
   TResponse extends z.ZodSchema = z.ZodSchema,
 > {
   method: 'get' | 'post' | 'patch' | 'delete';
-  url: string | ((params: z.infer<TParams>) => string);
+  url?: string | ((params: z.infer<TParams>) => string);
   paramsSchema?: TParams;
   bodySchema?: TBody;
   querySchema?: TQuery;
@@ -32,8 +32,23 @@ interface RouteConfig<
     userId: string,
     server: FastifyInstance,
   ) => Promise<boolean> | boolean;
-  transformRequest?: (data: z.infer<TBody>, server: FastifyInstance) => Promise<unknown> | unknown;
+  transformRequest?: (
+    data: z.infer<TBody>,
+    server: FastifyInstance,
+    req: FastifyRequest,
+  ) => Promise<unknown> | unknown;
   transformResponse?: (data: unknown, req: FastifyRequest) => unknown;
+  customHandler?: (
+    req: FastifyRequest,
+    reply: FastifyReply,
+    server: FastifyInstance,
+    parsedData: {
+      params?: z.infer<TParams>;
+      body?: z.infer<TBody>;
+      query?: z.infer<TQuery>;
+    },
+  ) => Promise<void>;
+  skipApiCall?: boolean;
   successCode?: number;
   errorMessages?: {
     invalidParams?: string;
@@ -112,27 +127,43 @@ export async function handleRoute<
     }
   }
 
+  // If there's a custom handler, use it
+  if (config.customHandler) {
+    return config.customHandler(req, reply, server, {
+      params: parsedParams,
+      body: parsedBody,
+      query: parsedQuery,
+    });
+  }
+
   // Build URL
   const url = typeof config.url === 'function' ? config.url(parsedParams!) : config.url;
+
+  if (!url) {
+    throw new Error('URL is required when not using customHandler');
+  }
 
   // Transform request data
   let requestData: unknown = parsedBody;
   if (config.transformRequest && parsedBody) {
-    requestData = await config.transformRequest(parsedBody, server);
+    requestData = await config.transformRequest(parsedBody, server, req);
   }
 
   // Prepare axios config
   const axiosConfig: AxiosRequestConfig = {
     method: config.method,
     url,
-    headers: req.headers,
   };
 
   if (requestData) axiosConfig.data = requestData;
   if (parsedQuery) axiosConfig.params = parsedQuery;
 
-  // Make API call
-  const response = await server.api(axiosConfig);
+  console.log('ready to make api call with config:', axiosConfig);
+  // Make API call (unless skipped)
+  let response: unknown;
+  if (!config.skipApiCall) {
+    response = await server.api(axiosConfig);
+  }
 
   // Transform response
   let finalResponse: unknown = response;

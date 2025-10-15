@@ -51,4 +51,16 @@ export const userActions = (server: FastifyInstance) => ({
 
     return user;
   },
+
+  async patch(userId: string, user: User.UserType) {
+    const config: AxiosRequestConfig = {
+      method: 'patch',
+      url: `/user/${userId}`,
+      data: user,
+    };
+
+    const updatedUser: User.UserType = await server.api(config);
+
+    return updatedUser;
+  },
 });

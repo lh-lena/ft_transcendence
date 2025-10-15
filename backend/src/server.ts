@@ -45,7 +45,7 @@ async function build() {
 
   // Disable default request logging to avoid duplicates
   server.addHook('onRequest', async (request) => {
-    request.log.level = 'silent';
+    request.log.level = 'debug';
   });
 
   //  server.addHook('onRoute', (routeOptions) => {

@@ -9,7 +9,7 @@ import {
   guestSchema,
 } from '../schemas/user';
 
-import type { UserIdType, UserPatchType } from '../schemas/user';
+import type { UserIdType, UserPatchType, UserUpdateType } from '../schemas/user';
 
 //Configs for userRoutes
 export const userRoutesConfig = {
@@ -59,11 +59,12 @@ export const userRoutesConfig = {
       return data.params?.userId === userId;
     },
     transformRequest: async (data: UserPatchType) => {
-      if (data.password) {
-        const password_hash = await hashPassword(data.password);
-        return { ...data, password_hash };
-      }
-      return data;
+      const { password, ...rest } = data;
+      const updateData: UserUpdateType = { ...rest };
+
+      if (password) updateData.password_hash = await hashPassword(password);
+
+      return updateData;
     },
     successCode: 201,
     errorMessages: {

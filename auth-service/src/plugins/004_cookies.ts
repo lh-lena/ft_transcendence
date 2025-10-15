@@ -32,8 +32,8 @@ const cookiePlugin = async (fastify: FastifyInstance) => {
     const accessToken = fastify.generateAccessToken({ id: userId });
     const refreshToken = fastify.generateRefreshToken({ id: userId });
 
-    this.setCookie('refreshJwt', refreshToken, refreshOptions);
-    this.setCookie('jwt', accessToken, accessOptions);
+    this.setCookie('refreshToken', refreshToken, refreshOptions);
+    this.setCookie('accessToken', accessToken, accessOptions);
 
     this.authData = {
       jwt: accessToken,
@@ -41,7 +41,6 @@ const cookiePlugin = async (fastify: FastifyInstance) => {
       userId: userId,
     };
 
-    console.log('Auth cookies set:', this);
     return this;
   });
 };

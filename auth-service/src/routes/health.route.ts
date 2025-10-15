@@ -3,10 +3,8 @@ import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { register, authServiceHealth } from '../server';
 
 const healthRoute = async (server: FastifyInstance) => {
-  // Health check endpoint
   server.get('/api/auth/health', async () => {
-    // Update metrics
-    authServiceHealth.set(1); // service is up if this endpoint responds
+    authServiceHealth.set(1);
 
     return {
       status: 'ok',
@@ -16,7 +14,6 @@ const healthRoute = async (server: FastifyInstance) => {
     };
   });
 
-  // Prometheus metrics endpoint
   server.get('/metrics', async (_request: FastifyRequest, reply: FastifyReply) => {
     try {
       const metrics = await register.metrics();

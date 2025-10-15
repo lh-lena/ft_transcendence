@@ -121,6 +121,8 @@ export const guestPostSchema = z.object({
 
 //typed
 export type UserType = z.infer<typeof userSchema>;
+export type UserRegisterType = z.infer<typeof userRegisterSchema>;
+export type UserLoginType = z.infer<typeof userLoginSchema>;
 export type UserIdType = z.infer<typeof userIdSchema>;
 export type UserQueryType = z.infer<typeof userQuerySchema>;
 export type UserPatchType = z.infer<typeof userPatchSchema>;

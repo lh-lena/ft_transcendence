@@ -31,7 +31,7 @@ export default fp(async function onRequestHook(server) {
       return;
     }
 
-    const token = req.cookies.jwt;
+    const token = req.cookies.accessToken;
     if (!token) {
       return reply.code(401).send({ error: 'Missing Authorisation Headers' });
     }
