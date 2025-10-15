@@ -4,6 +4,7 @@ export const leaderboardSchema = z.object({
   userID: z.uuid(),
   wins: z.number(),
 });
+export const leaderboardArraySchema = z.array(leaderboardSchema);
 
 export const resultPostSchema = z.object({
   gameId: z.uuid(),
