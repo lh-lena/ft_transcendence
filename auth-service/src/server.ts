@@ -71,7 +71,7 @@ const start = async () => {
   });
 
   server.register(fastifyHttpProxy, {
-    upstream: 'http://127.0.0.1:8080/api/upload',
+    upstream: `http://${server.config.backendUrl}:8080/api/upload`,
     prefix: '/api/upload',
     http2: false,
   });

@@ -110,7 +110,7 @@ export const authRoutesConfig = {
 
       return reply
         .code(200)
-        .clearCookie('jwt', { path: '/' })
+        .clearCookie('accessToken', { path: '/' })
         .clearCookie('refreshToken', { path: '/api' })
         .send({ message: 'successfull logout' });
     },
