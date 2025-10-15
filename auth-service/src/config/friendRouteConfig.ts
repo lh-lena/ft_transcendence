@@ -20,6 +20,7 @@ export const friendRoutesConfig = {
       return data.query?.userId === userId;
     },
     responseSchema: friendResponseSchema,
+    successCode: 200,
     errorMessages: {
       invalidQuery: 'Invalid query',
       forbidden: 'Forbidden',
@@ -62,6 +63,7 @@ export const friendRoutesConfig = {
 
       return friendCheck.length === 1 && friendCheck[0].userId === userId;
     },
+    successCode: 204,
     errorMessages: {
       invalidParams: 'Invalid input parameters',
       forbidden: 'Forbidden',

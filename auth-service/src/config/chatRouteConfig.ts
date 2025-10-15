@@ -18,6 +18,7 @@ export const chatRoutesConfig = {
     checkOwnership: async (data: { params?: UserIdType }, userId: string) => {
       return data.params?.userId === userId;
     },
+    successCode: 200,
     errorMessages: {
       invalidParams: 'Invalid user ID',
       forbidden: 'Forbidden: You can only see your own chats',
@@ -32,6 +33,7 @@ export const chatRoutesConfig = {
     checkOwnership: async (data: { query?: ChatQueryType }, userId: string) => {
       return data.query?.senderId === userId || data.query?.recieverId === userId;
     },
+    successCode: 200,
     errorMessages: {
       invalidQuery: 'Invalid query parameters',
       forbidden: 'Forbidden: You can only see your own chats',
@@ -46,6 +48,7 @@ export const chatRoutesConfig = {
     checkOwnership: async (data: { body?: ChatPostType }, userId: string) => {
       return data.body?.senderId === userId;
     },
+    successCode: 201,
     errorMessages: {
       invalidBody: 'Invalid chat body',
       forbidden: 'Forbidden: You can only send messages as yourself',
