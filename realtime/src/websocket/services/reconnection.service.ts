@@ -8,7 +8,7 @@ import type { GameError } from '../../utils/game.error.js';
 import type { GameSession, GameIdType } from '../../schemas/game.schema.js';
 import type { DisconnectInfo } from '../types/network.types.js';
 import { processErrorLog } from '../../utils/error.handler.js';
-import createGameValidator from '../../game/utils/game.validation.js';
+import { createGameValidator, getPlayerName } from '../../game/utils/index.js';
 import { NotificationType, GameSessionStatus } from '../../constants/game.constants.js';
 
 export default function createReconnectionService(app: FastifyInstance): ReconnectionService {
@@ -28,7 +28,8 @@ export default function createReconnectionService(app: FastifyInstance): Reconne
 
   function handlePlayerDisconnect(user: User, gameId: GameIdType): void {
     if (user === undefined || user.userId === undefined) return;
-    const { userId, userAlias } = user;
+    const { userId } = user;
+    const userAlias = getPlayerName(user);
     const respond = app.respond as RespondService;
     const gameSessionService = app.gameSessionService as GameSessionService;
     const gameStateService = app.gameStateService as GameStateService;
@@ -62,10 +63,6 @@ export default function createReconnectionService(app: FastifyInstance): Reconne
       );
       return null;
     }
-    log.debug(
-      { info },
-      `[reconnection-service] Attempting reconnection for user ${userId} in game ${info.gameId}`,
-    );
     const newConn = connectionService.getConnection(userId);
     if (newConn === undefined || newConn === null) {
       log.warn(`[reconnection-service] Connection for user ${userId} not found`);
@@ -74,9 +71,6 @@ export default function createReconnectionService(app: FastifyInstance): Reconne
     }
     const { gameId } = info;
     connectionService.updateUserGame(userId, gameId);
-    log.info(
-      `[reconnection-service] Successfully reconnecting user ${userId} (${info.username}) to game ${gameId}`,
-    );
     gameSessionService.setPlayerConnectionStatus(userId, gameId, true);
     respond.notificationToGame(
       gameId,

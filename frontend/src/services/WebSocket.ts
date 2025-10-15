@@ -13,15 +13,21 @@ type MessageHandler<T extends keyof WsServerBroadcast> = (
   _payload: WsServerBroadcast[T],
 ) => void;
 
+export type wsGameStatus = "playing" | "not_playing";
+
 export class Websocket {
   private ws!: WebSocket | null;
   private messageHandlers: Map<string, MessageHandler<any>[]> = new Map();
+  private gameStatus!: wsGameStatus;
+  private cleanupHandler?: () => void;
 
   // web socket (init on profile load?)
   public initializeWebSocket(): void {
     const wsUrl = import.meta.env.VITE_WEBSOCKET_URL;
     //TODO is not stored there no more? is this esential??
     const token = localStorage.getItem("jwt");
+
+    this.gameStatus = "not_playing";
 
     // Append token as query parameter if provided
     const urlWithToken = token
@@ -52,13 +58,27 @@ export class Websocket {
         const data = JSON.parse(event.data);
         this.handleWebSocketMessage(data);
         if (data.event === "notification") showInfo(data.payload.message);
-        if (data.event !== "game_update")
+        if (data.event !== "game_update") {
           console.log(`${data.event}: `, data.payload.message);
+          console.log(`${JSON.stringify(data.payload)}`);
+        }
         // console.log("RECEIVED FROM WS: ", data);
       } catch (error) {
         console.error("Error parsing WebSocket message:", error);
       }
     };
+
+    // define behavior when user closes window
+    this.cleanupHandler = this.handleWindowClose.bind(this);
+    window.addEventListener("beforeunload", this.cleanupHandler);
+  }
+
+  private handleWindowClose() {
+    if (this.cleanupHandler) {
+      window.removeEventListener("beforeunload", this.cleanupHandler);
+    }
+    this.ws?.close();
+    this.ws = null;
   }
 
   private handleWebSocketMessage(data: any): void {
@@ -115,6 +135,18 @@ export class Websocket {
     } else {
       console.warn("WebSocket is not open. Message not sent:", { message });
     }
+  }
+
+  public setGameStatusPlaying() {
+    this.gameStatus = "playing";
+  }
+
+  public setGameStatusNotPlaying() {
+    this.gameStatus = "not_playing";
+  }
+
+  public getGameStatus(): wsGameStatus {
+    return this.gameStatus;
   }
 
   // send message functions (pre defined)

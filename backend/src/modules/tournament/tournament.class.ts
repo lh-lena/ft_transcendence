@@ -45,6 +45,7 @@ export class tournamentClass {
   async join(tournament: tournamentType, playerId: string): Promise<tournamentType> {
     tournament.players.push({ userId: playerId });
     for (const player of tournament.players) {
+      if (player.userId === playerId) continue;
       console.log('Notifying player:', player.userId, 'about new player:', playerId);
       notifyPlayer(player.userId, `INFO: New Player joined the tournament`, playerId);
     }
@@ -61,6 +62,7 @@ export class tournamentClass {
   }
 
   async findAvailableTournament(join: tournamentCreateType): Promise<tournamentType> {
+    console.log('find tournament: ', this.activeTournaments);
     let freeTournament = this.activeTournaments.find(
       (t) =>
         t.playerAmount === join.playerAmount &&
@@ -110,6 +112,7 @@ export class tournamentClass {
       this.remove(tournament);
     } else if (tournament.games.length === 0) {
       tournament.round += 1;
+      tournament.playerAmount /= 2;
       await this.createGames(tournament);
     }
   }

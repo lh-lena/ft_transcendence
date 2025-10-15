@@ -1,10 +1,11 @@
-import { ServiceContainer, Router, Backend } from "../../services";
+import { ServiceContainer, Router, Backend, Websocket } from "../../services";
 import { Menu } from "../../components/menu";
 import { PongButton } from "../../components/pongButton";
 import { userStore } from "../../constants/backend";
 import { ProfileAvatar } from "../../components/profileAvatar";
 import { showInfo } from "../../components/toast";
 import { TournamentData } from "../../types/tournament";
+import { WsServerBroadcast } from "../../types/websocket";
 
 export class TournamentAliasPage {
   private main: HTMLElement;
@@ -15,12 +16,16 @@ export class TournamentAliasPage {
   private pongButton: PongButton;
   private menu: Menu;
   private inputAlias: HTMLInputElement;
+  private websocket: Websocket;
+  private tournamentId!: string;
+  private bracketCol!: HTMLDivElement;
 
   constructor(serviceContainer: ServiceContainer) {
     // router / services container
     this.serviceContainer = serviceContainer;
     this.router = this.serviceContainer.get<Router>("router");
     this.backend = this.serviceContainer.get<Backend>("backend");
+    this.websocket = this.serviceContainer.get<Websocket>("websocket");
 
     this.main = document.createElement("div");
     this.main.className =
@@ -52,51 +57,120 @@ export class TournamentAliasPage {
       showInfo("please enter an alias");
       return;
     }
-    const response = await this.backend.joinTournament(alias);
+
+    // get params
+    const params = this.router.getQueryParams();
+    const userType = params.get("userType") ?? undefined;
+
+    // case guest
+    if (userType === "guest") {
+      await this.backend.registerGuest(alias);
+      // need to make sure web socket connection is established even for guests so we have to manually trigger here
+      // registered users build up a connection in App before page load
+      this.websocket.initializeWebSocket();
+    }
+    // once guest is a "registered user we go here" or also just for reg restirred users
+    const response = await this.backend.joinTournament(alias, userType);
+
+    // register websocket handlers
+    this.websocket = this.serviceContainer.get<Websocket>("websocket");
+    this.websocket.onMessage(
+      "notification",
+      this.handleWsNotifications.bind(this),
+    );
+    this.websocket.onMessage("game_start", this.handleWsGameStart.bind(this));
+
+    this.tournamentId = response.data.tournamentId;
+    console.log("tournamentId: ", this.tournamentId);
+
     this.showBracket(response.data);
   }
 
+  private async handleWsGameStart(payload: WsServerBroadcast["game_start"]) {
+    this.router.navigate("/vs-player", {
+      gameType: "tournament",
+      gameId: payload.gameId,
+      gameStartPayload: JSON.stringify(payload),
+    });
+  }
+
+  private async handleWsNotifications(
+    payload: WsServerBroadcast["notification"],
+  ) {
+    // re run show bracket on notification that new player joined
+    const newTournamentData = await this.backend.getTournamentById(
+      this.tournamentId,
+    );
+    console.log(newTournamentData);
+    console.log(payload);
+    if (payload.message === "INFO: New Player joined the tournament")
+      this.showBracket(newTournamentData.data);
+  }
+
   private async showBracket(tournamentData: TournamentData) {
-    console.log(tournamentData);
     for (const player of tournamentData.players) {
       const user = await this.backend.getUserById(player.userId);
-      player.username = user.username;
+      player.alias = user.alias;
     }
     // hide other stuff
     this.form.remove();
     this.pongButton.unmount();
     this.menu.unmount();
 
-    const bracketCol = document.createElement("div");
-    bracketCol.className = "flex flex-col gap-10";
-    this.main.appendChild(bracketCol);
+    if (this.bracketCol) this.bracketCol.innerHTML = "";
+
+    this.bracketCol = document.createElement("div");
+    this.bracketCol.className = "flex flex-col gap-10";
+    this.main.appendChild(this.bracketCol);
     const bracketTitle = document.createElement("h1");
     bracketTitle.textContent = "match-ups:";
     bracketTitle.className = "text-white text-center";
-    bracketCol.appendChild(bracketTitle);
+    this.bracketCol.appendChild(bracketTitle);
 
     const bracketsRow = document.createElement("div");
     bracketsRow.className = "flex flex-row gap-20";
-    bracketCol.appendChild(bracketsRow);
-    const bracket = document.createElement("div");
-    bracket.className = "flex flex-col gap-2 w-48";
-    bracketsRow.appendChild(bracket);
-    tournamentData.players.forEach((player, index) => {
-      if (index === 1) {
-        const vsText = document.createElement("p");
-        vsText.textContent = "|";
-        vsText.className = "text-white text-center";
-        bracket.appendChild(vsText);
-      }
-      if (player.username) {
-        const playerDiv = this.createPlayer(player.username);
-        bracket.appendChild(playerDiv);
-      }
-      if (index === 0) bracket.classList.add("animate-pulse");
-    });
-    // replace with check to see if player is you (reference check)
+    this.bracketCol.appendChild(bracketsRow);
 
-    // setTimeout(() => this.router.navigate("/vs-player"), 5000);
+    tournamentData.players.forEach((player, index) => {
+      // create new bracket row for every pair (even indices) or single player
+      if (index % 2 === 0) {
+        const bracket = document.createElement("div");
+        bracket.className = "flex flex-col gap-2 w-48";
+        bracketsRow.appendChild(bracket);
+
+        // Add first player
+        if (player.alias) {
+          const playerDiv = this.createPlayer(player.alias);
+          bracket.appendChild(playerDiv);
+        }
+
+        // Check if there's a second player to pair with
+        const nextPlayer = tournamentData.players[index + 1];
+        if (nextPlayer) {
+          // Add VS separator
+          const vsText = document.createElement("p");
+          vsText.textContent = "|";
+          vsText.className = "text-white text-center";
+          bracket.appendChild(vsText);
+
+          // Add second player
+          if (nextPlayer.alias) {
+            const playerDiv = this.createPlayer(nextPlayer.alias);
+            bracket.appendChild(playerDiv);
+          }
+        }
+
+        // Add pulse animation if current user is in this bracket
+        if (
+          player.userId === this.backend.getUser().userId ||
+          nextPlayer?.userId === this.backend.getUser().userId
+        ) {
+          bracket.classList.add("animate-pulse");
+        }
+      }
+    });
+
+    // this.router.navigate("/vs-player");
   }
 
   private createPlayer(username: string): HTMLDivElement {
@@ -125,6 +199,11 @@ export class TournamentAliasPage {
   }
 
   public unmount(): void {
+    this.websocket.offMessage(
+      "notification",
+      this.handleWsNotifications.bind(this),
+    );
+    this.websocket.offMessage("notification", this.handleWsNotifications);
     this.main.remove();
   }
 }

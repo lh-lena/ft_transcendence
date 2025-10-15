@@ -54,9 +54,9 @@ const backendTournamentRoutes = async (fastify: FastifyInstance) => {
       data: newTournament,
     };
 
-    const createdTournament: TournamentType = await apiClientBackend(config);
+    const tournament: TournamentType = await apiClientBackend(config);
 
-    return reply.code(201).send({ createdTournament });
+    return reply.code(201).send(tournament);
   });
 
   fastify.post(

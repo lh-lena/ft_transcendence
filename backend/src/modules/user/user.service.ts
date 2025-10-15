@@ -2,7 +2,7 @@ import path from 'path';
 import fs from 'fs';
 
 import { userModel } from './user.crud';
-import { tournamentService } from '../tournament/tournament.service';
+//import { tournamentService } from '../tournament/tournament.service';
 import { NotFoundError, ConflictError } from '../../utils/error';
 import { Prisma, User } from '@prisma/client';
 import { userInfoType } from '../../schemas/user';
@@ -28,8 +28,9 @@ export const userService = {
       //update user
       const updated = await userModel.patch(id, data);
 
+      //TODO handle logouts better
       //leave all tournaments if user is offline
-      tournamentService.leave(updated.userId);
+      //tournamentService.leave(updated.userId);
 
       //delete guest user if it goes offline
       //if (updated.guest === true && updated.online === false) {

@@ -1,8 +1,13 @@
 import fp from 'fastify-plugin';
 import type { FastifyInstance, FastifyPluginCallback } from 'fastify';
 import swaggerUI from '@fastify/swagger-ui';
-import { UserIdJSON } from '../schemas/user.schema.js';
 import { fastifySwagger, SwaggerOptions } from '@fastify/swagger';
+import {
+  getIncomingMessages,
+  getOutgoingMessages,
+  getIncomingJSONSchemas,
+  getOutgoingJSONSchemas,
+} from '../utils/schema.utils.js';
 
 const docsPlugin: FastifyPluginCallback = async (app: FastifyInstance) => {
   app.register(fastifySwagger, {
@@ -32,7 +37,8 @@ const docsPlugin: FastifyPluginCallback = async (app: FastifyInstance) => {
       ],
       components: {
         schemas: {
-          UserIdJSON,
+          ...getIncomingJSONSchemas(),
+          ...getOutgoingJSONSchemas(),
         },
       },
       paths: {
@@ -40,7 +46,23 @@ const docsPlugin: FastifyPluginCallback = async (app: FastifyInstance) => {
           get: {
             summary: 'WebSocket Entry Point',
             description:
-              'Establishes a WebSocket connection for real-time game and chat communication',
+              `Establishes a WebSocket connection for real-time game and chat communication.\n\n` +
+              `All messages follow this base structure using JSON format:\n
+          {
+            "event": "specific_event",
+            "payload": {
+              /* event-specific data */
+            }
+          }\n` +
+              `### \`Incoming Messages\` (Client → Server)\n\n` +
+              getIncomingMessages()
+                .map((schema: any) => `- **${schema.event}** → **${schema.payload}**`)
+                .join('\n') +
+              '\n\n' +
+              `### \`Outgoing Messages\` (Server → Client)\n\n` +
+              getOutgoingMessages()
+                .map((schema: any) => `- **${schema.event}** → **${schema.payload}**`)
+                .join('\n'),
             tags: ['WebSocket'],
             parameters: [
               {
@@ -59,7 +81,7 @@ const docsPlugin: FastifyPluginCallback = async (app: FastifyInstance) => {
                 description: 'WebSocket connection established',
                 content: {
                   'application/json': {
-                    schema: { $ref: '#/components/schemas/UserIdJSON' },
+                    schema: { $ref: '#/components/schemas/ConnectedPayload' },
                   },
                 },
               },

@@ -40,8 +40,8 @@ declare module 'fastify' {
   type WSConnection = WebSocket & {
     user: {
       userId: UserIdType;
-      username: string;
-      userAlias?: string;
+      username?: string | null;
+      userAlias?: string | null;
     };
     gameId?: GameIdType | null;
     lastPing: number;

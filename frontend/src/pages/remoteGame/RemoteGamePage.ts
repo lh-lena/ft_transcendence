@@ -21,7 +21,7 @@ export class VsPlayerGamePage {
   private scoreBar!: ScoreBar;
   private menuPauseDiv: HTMLDivElement | null = null;
   private gameContainer: HTMLElement | null = null;
-  private loadingOverlay: Loading;
+  private loadingOverlay!: Loading;
   private serviceContainer: ServiceContainer;
   private router: Router;
   private pauseCountdown!: HTMLElement;
@@ -50,7 +50,6 @@ export class VsPlayerGamePage {
     // register web socket handlers
     this.registerWebsocketHandlers();
 
-    // grab data from backend
     // get web socket before countdown
     this.loadingOverlay = new Loading("waiting for opponent", "button", () =>
       this.quitHook(),
@@ -58,18 +57,14 @@ export class VsPlayerGamePage {
     this.loadingOverlay.mount(this.main);
 
     this.main.appendChild(this.loadingOverlay.getElement());
+
+    this.setupGame();
   }
 
-  public static async create(
-    serviceContainer: ServiceContainer,
-  ): Promise<VsPlayerGamePage> {
-    const instance = new VsPlayerGamePage(serviceContainer);
-
-    // get game type from url params in router
-    const router = serviceContainer.get<Router>("router");
-    const params = router.getQueryParams();
+  public async setupGame() {
+    const params = this.router.getQueryParams();
     const gameType = (params.get("gameType") as GameType) || "vs-player";
-    instance.gameType = gameType;
+    this.gameType = gameType;
 
     console.log("game type: ", gameType, "params: ", params);
 
@@ -78,32 +73,33 @@ export class VsPlayerGamePage {
     switch (gameType) {
       case "ai": {
         const aiDifficulty = params.get("aiDifficulty") || "medium";
-        response = await instance.backend.createAiGame(aiDifficulty);
+        response = await this.backend.createAiGame(aiDifficulty);
         // need to talk to moritz about this
-        instance.gameId = response.gameRet.gameId;
+        this.gameId = response.gameRet.gameId;
         break;
       }
-      case "tournament":
-        response = await instance.backend.joinTournament("alias-demo");
+      case "tournament": {
+        this.gameId = params.get("gameId") || "undefined";
         break;
+      }
       case "vs-player":
       default:
-        response = await instance.backend.joinGame();
-        instance.gameId = response.gameId;
+        response = await this.backend.joinGame();
+        this.gameId = response.gameId;
         break;
     }
-    console.log("game ID on create is: ", instance.gameId);
+    console.log("game ID on create is: ", this.gameId);
 
     // save the user (me) to remote game to use later
-    const responseUser = await instance.backend.getUser();
-    instance.userMe = responseUser;
+    const responseUser = await this.backend.getUser();
+    this.userMe = responseUser;
 
     // Initialize gameState with complete data
-    instance.gameState = {
+    this.gameState = {
       status: GameStatus.PLAYING,
       previousStatus: GameStatus.PLAYING,
       playerA: {
-        ...instance.userMe,
+        ...this.userMe,
         score: 0,
       },
       pauseInitiatedByMe: false,
@@ -115,7 +111,7 @@ export class VsPlayerGamePage {
     };
 
     // load mock AI player for AI game type
-    if (instance.gameType === "ai") {
+    if (this.gameType === "ai") {
       const { color, colorMap } = generateProfilePrint();
       const otherUser: User = {
         colormap: colorMap,
@@ -131,14 +127,21 @@ export class VsPlayerGamePage {
         twofa_secret: "",
         guest: false,
       };
-      instance.gameState.playerB = {
+      this.gameState.playerB = {
         ...otherUser,
         score: 0,
       };
-      instance.userOther = otherUser;
+      this.userOther = otherUser;
     }
 
-    return instance;
+    // NOW handle tournament game_start after everything is initialized
+    if (this.gameType === "tournament") {
+      const gameStartPayloadStr = params.get("gameStartPayload");
+      if (gameStartPayloadStr) {
+        const gameStartPayload = JSON.parse(gameStartPayloadStr);
+        await this.wsStartGameHandler(gameStartPayload);
+      }
+    }
   }
 
   private registerWebsocketHandlers(): void {
@@ -150,8 +153,37 @@ export class VsPlayerGamePage {
     this.ws.onMessage("game_start", this.wsStartGameHandler.bind(this));
   }
 
+  // // because start game fires before we can handle it on tournament page
+  // private async tournamentStartGameHandler() {
+  //   // set game status in ws to playing
+  //   this.ws.setGameStatusPlaying();
+
+  //   const response = await this.backend.getGameById(this.gameId);
+
+  //   // Find the other player from the players array
+  //   const otherUserId = response.players.find(
+  //     (player: { userId: string }) => player.userId !== this.userMe.userId,
+  //   );
+
+  //   const otherUser = await this.backend.getUserById(otherUserId.userId);
+  //   otherUser.colormap = profilePrintToArray(otherUser.colormap);
+  //   this.gameState.playerB = {
+  //     ...otherUser,
+  //     score: 0,
+  //   };
+  //   this.userOther = otherUser;
+  //   console.log("OTHER USER: ", otherUser);
+  // }
+
   // this happens at start of the game
   private async wsStartGameHandler(payload: WsServerBroadcast["game_start"]) {
+    console.log("START GAME INITIATED!");
+    console.log("PAYLOAD", payload);
+    if (!this.gameId) this.gameId = payload.gameId;
+
+    // set game status in ws to playing
+    this.ws.setGameStatusPlaying();
+
     if (this.gameType === "ai") return;
     // only for vs player and tournament
     // finds the user that is not userMe
@@ -168,6 +200,7 @@ export class VsPlayerGamePage {
       score: 0,
     };
     this.userOther = otherUser;
+    console.log("OTHER USER: ", otherUser);
   }
 
   private wsCountdownHandler(
@@ -242,6 +275,9 @@ export class VsPlayerGamePage {
       this.gameState.playerA.score,
       this.gameState.playerB.score,
     );
+    // just always make sure if we get a game update the board is showing showGamePieces
+    this.loadingOverlay.hide();
+    this.hidePauseOverlay();
   }
 
   private wsGamePauseHandler(): void {
@@ -253,6 +289,9 @@ export class VsPlayerGamePage {
 
   private async wsGameEndedHandler(payload: WsServerBroadcast["game_ended"]) {
     this.gameState.status = GameStatus.GAME_OVER;
+
+    // set game status in ws
+    this.ws.setGameStatusNotPlaying();
 
     // game winner will be null if AI
     let winnerUser;
@@ -379,35 +418,6 @@ export class VsPlayerGamePage {
       }
       this.gameState.previousKey = currentKey;
     }
-
-    // old pause play logic
-    // // pause play stuff
-    // // playing
-    // if (
-    //   this.gameState.status == GameStatus.PLAYING &&
-    //   this.gameState.previousStatus == GameStatus.PAUSED
-    // ) {
-    //   this.scoreBar.pausePlay.toggleIsPlaying(true);
-    //   this.gameState.previousStatus = GameStatus.PLAYING;
-    //   if (this.gameState.pauseInitiatedByMe == true) {
-    //     this.ws.messageGameResume(this.gameId);
-    //   }
-    //   // paused
-    // } else if (
-    //   this.gameState.status == GameStatus.PAUSED &&
-    //   this.gameState.previousStatus == GameStatus.PLAYING
-    // ) {
-    //   this.scoreBar.pausePlay.toggleIsPlaying(false);
-    //   this.game?.hideGamePieces();
-    //   this.showPauseOverlay();
-    //   // send game pause to ws
-    //   this.gameState.previousStatus = GameStatus.PAUSED;
-    //   if (this.gameState.pauseInitiatedByMe == true) {
-    //     this.ws.messageGamePause(this.gameId);
-    //   } else {
-    //     this.gameState.blockedPlayButton = true;
-    //   }
-    // }
   }
 
   public mount(parent: HTMLElement): void {
@@ -443,7 +453,7 @@ export class VsPlayerGamePage {
       this.menuEndDiv = document.createElement("div");
       this.menuEndDiv.className = "flex flex-col gap-5 items-center";
       // Create and mount menu to game container instead of main element
-      const menuItems = [{ name: "quit", link: "/chat" }];
+      const menuItems = [{ name: "back", link: "/chat" }];
       const menuEnd = new Menu(this.router, menuItems);
       let avatar = new ProfileAvatar(user.color, user.colormap, 40, 40, 2);
       this.menuEndDiv.appendChild(avatar.getElement());
