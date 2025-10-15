@@ -1,7 +1,7 @@
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import fp from 'fastify-plugin';
 import { AxiosRequestConfig } from 'axios';
-import { apiClientBackend } from '../utils/apiClient';
+import { apiClientBackend } from '../../utils/apiClient';
 
 const avatarRoute = async (fastify: FastifyInstance) => {
   fastify.get('/api/avatar/:userId', async (req: FastifyRequest, reply: FastifyReply) => {

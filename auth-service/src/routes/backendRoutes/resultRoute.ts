@@ -1,7 +1,7 @@
 import fp from 'fastify-plugin';
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
-import { handleRoute } from '../utils/routeHandler';
-import { resultRoutesConfig } from '../config/resultRouteConfig';
+import { handleRoute } from '../../utils/routeHandler';
+import { resultRoutesConfig } from '../../config/resultRouteConfig';
 
 const resultRoutes = async (server: FastifyInstance) => {
   server.get('/api/result/leaderboard', async (req: FastifyRequest, reply: FastifyReply) => {

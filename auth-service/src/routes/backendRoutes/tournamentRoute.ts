@@ -1,7 +1,7 @@
 import fp from 'fastify-plugin';
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
-import { handleRoute } from '../utils/routeHandler';
-import { tournamentRoutesConfig } from '../config/tournamentRouteConfig';
+import { handleRoute } from '../../utils/routeHandler';
+import { tournamentRoutesConfig } from '../../config/tournamentRouteConfig';
 
 const tournamentRoutes = async (server: FastifyInstance) => {
   server.get('/api/tournament/:tournamentId', async (req: FastifyRequest, reply: FastifyReply) => {

@@ -1,7 +1,7 @@
 import fp from 'fastify-plugin';
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
-import { handleRoute } from '../utils/routeHandler';
-import { gameRoutesConfig } from '../config/gameRouteConfig';
+import { handleRoute } from '../../utils/routeHandler';
+import { gameRoutesConfig } from '../../config/gameRouteConfig';
 
 const gameRoutes = async (server: FastifyInstance) => {
   server.get('/api/game/:gameId', async (req: FastifyRequest, reply: FastifyReply) => {

@@ -1,7 +1,7 @@
 import fp from 'fastify-plugin';
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
-import { handleRoute } from '../utils/routeHandler';
-import { blockedRoutesConfig } from '../config/blockedRouteConfig';
+import { handleRoute } from '../../utils/routeHandler';
+import { blockedRoutesConfig } from '../../config/blockedRouteConfig';
 
 const blockedRoutes = async (server: FastifyInstance) => {
   server.get('/api/blocked', async (req: FastifyRequest, reply: FastifyReply) => {

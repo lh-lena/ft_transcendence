@@ -12,7 +12,7 @@ axiosRetry(backendApi, {
     return retryCount * 1000;
   },
   retryCondition: (error) => {
-    return axiosRetry.isNetworkOrIdempotentRequestError(error) || error.response?.status === 400;
+    return axiosRetry.isNetworkOrIdempotentRequestError(error);
   },
 });
 

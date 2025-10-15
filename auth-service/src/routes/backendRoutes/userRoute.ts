@@ -1,7 +1,7 @@
 import fp from 'fastify-plugin';
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
-import { handleRoute } from '../utils/routeHandler';
-import { userRoutesConfig } from '../config/userRouteConfig';
+import { handleRoute } from '../../utils/routeHandler';
+import { userRoutesConfig } from '../../config/userRouteConfig';
 
 const userRoutes = async (server: FastifyInstance) => {
   server.get('/api/user', async (req: FastifyRequest, reply: FastifyReply) => {

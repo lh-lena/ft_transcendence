@@ -1,4 +1,4 @@
-import { hashPassword } from '../auth/passwords';
+import { hashPassword } from '../utils/passwords';
 import {
   userIdSchema,
   userQuerySchema,

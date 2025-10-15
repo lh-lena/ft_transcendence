@@ -1,5 +1,5 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
-import { hashPassword, verifyPassword } from '../auth/passwords';
+import { hashPassword, verifyPassword } from '../utils/passwords';
 import { AxiosRequestConfig } from 'axios';
 import {
   userRegisterSchema,

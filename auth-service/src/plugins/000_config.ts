@@ -1,8 +1,17 @@
 import { FastifyInstance } from 'fastify';
 import fp from 'fastify-plugin';
 
+/**
+ * Configuration Plugin
+ *
+ * Loads and validates environment variables required for the auth service.
+ * Must be loaded first as other plugins depend on fastify.config
+ *
+ * @decorates {object} config - Configuration object containing secrets, URLs, and server settings
+ * @throws {Error} If required environment variables are missing
+ */
 const configPlugin = async (fastify: FastifyInstance) => {
-  //set secrets in docker-compose.yml
+  // Validate JWT secrets
   const accessSecret = process.env.ACCESS_TOKEN_SECRET;
   const refreshSecret = process.env.REFRESH_TOKEN_SECRET;
   if (!accessSecret || !refreshSecret) {
@@ -12,30 +21,43 @@ const configPlugin = async (fastify: FastifyInstance) => {
   const oauthClientId = process.env.GITHUB_CLIENT_ID;
   const oauthSecretSt = process.env.GITHUB_CLIENT_SECRET;
   if (!oauthClientId || !oauthSecretSt) {
-    throw new Error('OAuth secrets are not defined in enviormanet variables');
+    throw new Error('OAuth secrets are not defined in environment variables');
   }
 
   const frontendUrl = process.env.FRONTEND_URL;
   const backendUrl = process.env.BACKEND_URL;
   const realtimeUrl = process.env.REALTIME_URL;
-  console.log('realtimeUrl', realtimeUrl, process.env.REALTIME_URL);
-  console.log('backendUrl', backendUrl, process.env.BACKEND_URL);
   if (!frontendUrl || !backendUrl || !realtimeUrl) {
     throw new Error('Service URLs are not defined in environment variables');
   }
 
-  //TODO add proper logging
-  let port = Number(process.env.PORT);
-  if (!port) {
-    console.warn('Using default port: 8082');
-    port = 8082;
+  const nodeEnv = process.env.NODE_ENV || 'development';
+  if (!['development', 'production', 'test'].includes(nodeEnv)) {
+    fastify.log.warn(`Invalid NODE_ENV: ${nodeEnv}, defaulting to development`);
   }
 
-  let host = process.env.HOST;
-  if (!host) {
-    console.warn('Using default host: 0.0.0.0');
-    host = '0.0.0.0';
+  const port = Number(process.env.PORT);
+  if (!port) {
+    throw new Error('Host is not defined in environment variables');
   }
+
+  const host = process.env.HOST;
+  if (!host) {
+    throw new Error('Host is not defined in environment variables');
+  }
+
+  /**
+   * Configuration object exposed via fastify.config
+   * @property {string} accessSecret - JWT access token secret
+   * @property {string} refreshSecret - JWT refresh token secret
+   * @property {string} oauthClientId - GitHub OAuth client ID
+   * @property {string} oauthSecretSt - GitHub OAuth client secret
+   * @property {number} port - Server port
+   * @property {string} host - Server host
+   * @property {string} frontendUrl - Frontend service URL
+   * @property {string} backendUrl - Backend service URL
+   * @property {string} realtimeUrl - Realtime service URL
+   */
 
   const config = {
     accessSecret,
@@ -47,9 +69,14 @@ const configPlugin = async (fastify: FastifyInstance) => {
     frontendUrl,
     backendUrl,
     realtimeUrl,
+    nodeEnv,
   };
 
   fastify.decorate('config', config);
+  fastify.log.info('Configuration loaded successfully');
 };
 
-export default fp(configPlugin);
+export default fp(configPlugin, {
+  name: 'config',
+  fastify: '5.x',
+});

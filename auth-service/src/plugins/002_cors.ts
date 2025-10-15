@@ -2,15 +2,33 @@ import { FastifyInstance } from 'fastify';
 import fp from 'fastify-plugin';
 import cors from '@fastify/cors';
 
+/**
+ * CORS Configuration Plugin
+ *
+ * Configures Cross-Origin Resource Sharing to allow requests from
+ * frontend and realtime services. Includes debug endpoint in non-production.
+ *
+ * @requires config - Depends on config plugin for allowed origins
+ * @throws {Error} If origin is not in allowedOrigins list
+ */
 const corsPlugin = async (fastify: FastifyInstance) => {
+  // Define allowed origins from service URLs
   const allowedOrigins = [fastify.config.frontendUrl, fastify.config.realtimeUrl];
 
+  /**
+   * Validates incoming request origin against allowed list
+   * @param origin - Request origin header value
+   * @param cb - Callback to approve/reject the request
+   */
   await fastify.register(cors, {
     origin: (origin, cb) => {
+      // Allow requests with no origin (e.g., mobile apps, Postman)
       if (!origin) return cb(null, true);
+
       if (allowedOrigins.includes(origin)) return cb(null, true);
 
-      console.log(`❌ CORS REJECTED: ${origin} - ${new Date().toISOString()}`);
+      // Log rejected CORS attempts for security monitoring
+      fastify.log.warn(`CORS REJECTED: ${origin} - ${new Date().toISOString()}`);
 
       cb(new Error('Not allowed by CORS'), false);
     },
@@ -45,18 +63,11 @@ const corsPlugin = async (fastify: FastifyInstance) => {
 
     fastify.log.info('CORS debug endpoint available at /api/debug/cors');
   }
-
-  // Startup logging
-  console.log('\n🌐 CORS Plugin Initialized');
-  console.log('────────────────────────────');
-  allowedOrigins.forEach((origin, index) => {
-    if (origin) {
-      console.log(`${index + 1}. ${origin}`);
-    } else {
-      console.log(`${index + 1}. ⚠️  ORIGIN NOT SET`);
-    }
-  });
-  console.log('────────────────────────────\n');
+  fastify.log.info('CORS configuration loaded');
 };
 
-export default fp(corsPlugin);
+export default fp(corsPlugin, {
+  name: 'cors',
+  dependencies: ['config'],
+  fastify: '5.x',
+});
