@@ -46,7 +46,7 @@ const cookiePlugin = async (fastify: FastifyInstance) => {
     const accessOptions = {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict' as const,
+      sameSite: 'lax' as const,
       path: '/',
       maxAge: 15 * 60,
     };
@@ -55,7 +55,7 @@ const cookiePlugin = async (fastify: FastifyInstance) => {
     const refreshOptions = {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict' as const,
+      sameSite: 'lax' as const,
       path: '/api/auth/refresh',
       maxAge: 7 * 24 * 60 * 60,
     };

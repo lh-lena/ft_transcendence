@@ -1,10 +1,9 @@
 import fp from 'fastify-plugin';
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
-import { register, authServiceHealth } from '../server';
 
 const healthRoute = async (server: FastifyInstance) => {
   server.get('/api/auth/health', async () => {
-    authServiceHealth.set(1);
+    //server.metrics.authServiceHealth.set(1);
 
     return {
       status: 'ok',
@@ -16,8 +15,8 @@ const healthRoute = async (server: FastifyInstance) => {
 
   server.get('/metrics', async (_request: FastifyRequest, reply: FastifyReply) => {
     try {
-      const metrics = await register.metrics();
-      reply.header('Content-Type', register.contentType).code(200).send(metrics);
+      const metrics = await server.metrics.register.metrics();
+      reply.header('Content-Type', server.metrics.register.contentType).code(200).send(metrics);
     } catch (err) {
       server.log.error('Error generating metrics:');
       reply.code(500).send({ error: 'Failed to generate metrics' });
