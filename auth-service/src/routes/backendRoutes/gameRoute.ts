@@ -1,24 +1,93 @@
+/**
+ * Game Lobby Routes
+ *
+ * Manages game lobbies and matchmaking:
+ * - View game details
+ * - Create new game lobbies
+ * - Join existing games
+ * - Delete/cancel games
+ *
+ * Game lifecycle:
+ * 1. User creates game lobby with settings
+ * 2. Other players join the lobby
+ * 3. Game starts when lobby is full or host starts
+ * 4. Results are recorded after completion
+ *
+ * @module routes/gameRoute
+ */
 import fp from 'fastify-plugin';
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
-import { handleRoute } from '../../utils/routeHandler';
 import { gameRoutesConfig } from '../../config/gameRouteConfig';
 
 const gameRoutes = async (server: FastifyInstance) => {
+  /**
+   * GET /api/game/:gameId
+   * Retrieves game lobby details
+   *
+   * Returns:
+   * - Game settings (map, difficulty, mode)
+   * - Current players
+   * - Game status
+   *
+   * @param gameId - Unique game identifier
+   * @returns Game object with full details
+   * @returns 404 - Game not found
+   */
   server.get('/api/game/:gameId', async (req: FastifyRequest, reply: FastifyReply) => {
-    return handleRoute(req, reply, gameRoutesConfig.getGame, server);
+    return server.routeHandler(req, reply, gameRoutesConfig.getGame, server);
   });
 
+  /**
+   * POST /api/game
+   * Creates a new game lobby
+   *
+   * @requires Authentication
+   * @body userId - Must match authenticated user ID (host)
+   * @body settings - Game configuration
+   * @returns 201 - Game created successfully
+   */
   server.post('/api/game', async (req: FastifyRequest, reply: FastifyReply) => {
-    return handleRoute(req, reply, gameRoutesConfig.createGame, server);
+    return server.routeHandler(req, reply, gameRoutesConfig.createGame, server);
   });
 
+  /**
+   * POST /api/game/join
+   * Joins an existing game lobby
+   *
+   * Validation:
+   * - Game must be in 'waiting' state
+   * - Lobby must not be full
+   * - User must not be already in game
+   *
+   * @requires Authentication
+   * @body userId - Must match authenticated user ID
+   * @body gameId - Game to join
+   * @returns 200 - Successfully joined game
+   * @returns 409 - Game full or already started
+   */
   server.post('/api/game/join', async (req: FastifyRequest, reply: FastifyReply) => {
-    return handleRoute(req, reply, gameRoutesConfig.joinGame, server);
+    return server.routeHandler(req, reply, gameRoutesConfig.joinGame, server);
   });
 
+  /**
+   * DELETE /api/game/:gameId
+   * Deletes a game lobby
+   *
+   * Cannot delete games that have already started
+   * All players are notified of cancellation
+   *
+   * @requires Authentication & Host
+   * @param gameId - Game to delete
+   * @returns 204 - Game deleted successfully
+   * @returns 403 - Not the game host
+   * @returns 409 - Game already started
+   */
   server.delete('/api/game/:gameId', async (req: FastifyRequest, reply: FastifyReply) => {
-    return handleRoute(req, reply, gameRoutesConfig.deleteGame, server);
+    return server.routeHandler(req, reply, gameRoutesConfig.deleteGame, server);
   });
 };
 
-export default fp(gameRoutes);
+export default fp(gameRoutes, {
+  name: 'game-routes',
+  dependencies: ['route-handler', 'auth-middleware'],
+});

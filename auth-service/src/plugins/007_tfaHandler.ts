@@ -29,7 +29,7 @@ const tfaHandlerPlugin = async (fastify: FastifyInstance) => {
 };
 
 export default fp(tfaHandlerPlugin, {
-  name: 'tfa-handler',
+  name: 'tfa-plugin',
   dependencies: ['api-client'],
   fastify: '5.x',
 });

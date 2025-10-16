@@ -150,6 +150,17 @@ const start = async () => {
     });
     server.log.info('Plugins loaded successfully');
 
+    // ------------ Auto-load Hooks ------------
+
+    /**
+     * Load lifecycle hooks (onRequest, preHandler, etc.)
+     * These apply to all routes
+     */
+    await server.register(AutoLoad, {
+      dir: path.join(__dirname, 'hooks'),
+    });
+    server.log.info('Hooks loaded successfully');
+
     // ------------ Auto-load Routes ------------
 
     /**
@@ -163,17 +174,6 @@ const start = async () => {
       },
     });
     server.log.info('Routes loaded successfully');
-
-    // ------------ Auto-load Hooks ------------
-
-    /**
-     * Load lifecycle hooks (onRequest, preHandler, etc.)
-     * These apply to all routes
-     */
-    await server.register(AutoLoad, {
-      dir: path.join(__dirname, 'hooks'),
-    });
-    server.log.info('Hooks loaded successfully');
 
     // ------------ HTTP Proxy for File Uploads ------------
 

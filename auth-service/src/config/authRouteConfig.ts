@@ -207,9 +207,13 @@ export const authRoutesConfig = {
         return reply.code(401).send({ error: 'Token missing' });
       }
 
-      const jwtReturn = await server.verifyAccessToken(token);
+      try {
+        const jwtReturn = await server.verifyAccessToken(token);
 
-      return reply.code(200).send({ userId: jwtReturn.id });
+        return reply.code(200).send({ userId: jwtReturn.id });
+      } catch {
+        return reply.code(401).send({ error: 'Token expired' });
+      }
     },
     skipApiCall: true,
   },

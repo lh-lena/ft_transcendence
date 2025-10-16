@@ -59,7 +59,7 @@ interface RouteConfig<
   };
 }
 
-export async function handleRoute<
+export async function routeHandler<
   TParams extends z.ZodSchema = z.ZodSchema,
   TBody extends z.ZodSchema = z.ZodSchema,
   TQuery extends z.ZodSchema = z.ZodSchema,

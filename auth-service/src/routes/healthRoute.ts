@@ -1,3 +1,17 @@
+/**
+ * Health Check & Metrics Routes
+ *
+ * Provides endpoints for monitoring service health and metrics:
+ * - Service health check for uptime monitoring
+ * - Prometheus metrics endpoint for observability
+ *
+ * These endpoints are typically called by:
+ * - Kubernetes liveness/readiness probes
+ * - Load balancers for health checks
+ * - Monitoring systems (Prometheus, Grafana, etc.)
+ *
+ * @module routes/healthRoute
+ */
 import fp from 'fastify-plugin';
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 

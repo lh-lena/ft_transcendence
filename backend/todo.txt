@@ -14,3 +14,4 @@ TODO:
 -chat after own message not updated
 -refresh tokens!?!?!?!?!
 -no notification when not mutual friends
+-check ginormus chat messages

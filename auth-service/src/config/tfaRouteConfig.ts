@@ -21,6 +21,7 @@ export const tfaRoutesConfig = {
     method: 'post' as const,
     customHandler: async (req: FastifyRequest, reply: FastifyReply, server: FastifyInstance) => {
       const refreshToken = req.cookies.refreshToken;
+      server.log.debug({ refreshToken, cookies: req.cookies }, 'Refresh token:');
 
       if (!refreshToken) {
         return reply.status(400).send({ message: 'No refresh token provided' });
@@ -36,12 +37,11 @@ export const tfaRoutesConfig = {
 
         server.log.debug({ userId: payload.id }, 'Access token refreshed successfully');
 
-        await reply.setAuthCookies(payload);
-
         return reply.doSending({
           code: 200,
           message: 'Access tokens refreshed',
-          authData: true,
+          inlcudeAuth: true,
+          userId: payload.id,
         });
       } catch (error) {
         server.log.warn({ error }, 'Refresh token verification failed');

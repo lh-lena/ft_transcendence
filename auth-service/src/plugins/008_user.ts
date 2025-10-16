@@ -25,7 +25,7 @@ const userActionsPlugin = async (fastify: FastifyInstance) => {
 };
 
 export default fp(userActionsPlugin, {
-  name: 'user-actions',
+  name: 'user-plugin',
   dependencies: ['api-client'],
   fastify: '5.x',
 });

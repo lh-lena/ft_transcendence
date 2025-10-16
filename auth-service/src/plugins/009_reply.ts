@@ -92,7 +92,7 @@ const replyPlugin = async (fastify: FastifyInstance) => {
 };
 
 export default fp(replyPlugin, {
-  name: 'reply-helpers',
+  name: 'reply-plugin',
   dependencies: ['cookies', 'jwt'],
   fastify: '5.x',
 });

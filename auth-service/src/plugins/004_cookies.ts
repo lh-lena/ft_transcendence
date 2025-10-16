@@ -24,7 +24,6 @@ const cookiePlugin = async (fastify: FastifyInstance) => {
   await fastify.register(fastifyCookie);
 
   /**
-   * ⚠️ SECURITY CONSIDERATIONS:
    * - httpOnly prevents JavaScript access (XSS protection)
    * - secure ensures HTTPS-only transmission (in production)
    * - sameSite: 'lax' balances security with OAuth compatibility
@@ -51,28 +50,20 @@ const cookiePlugin = async (fastify: FastifyInstance) => {
       maxAge: 15 * 60,
     };
 
-    // Refresh token options: restricted to auth endpoints only
     const refreshOptions = {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax' as const,
-      path: '/api/auth/refresh',
+      path: '/api/refresh',
       maxAge: 7 * 24 * 60 * 60,
     };
 
-    // Generate tokens using JWT plugin methods
     const accessToken = fastify.generateAccessToken({ id: userId });
     const refreshToken = fastify.generateRefreshToken({ id: userId });
 
-    /*
-     * Set cookies in the response
-     * - refreshToken: long-lived, httpOnly, secure, path=/api/auth
-     * - accessToken: short-lived, httpOnly, secure, path=/
-     */
     this.setCookie('refreshToken', refreshToken, refreshOptions);
     this.setCookie('accessToken', accessToken, accessOptions);
 
-    //set authData for immediate use in response
     this.authData = {
       jwt: accessToken,
       refreshToken: refreshToken,

@@ -2,6 +2,8 @@ import 'fastify';
 import { OAuth2Namespace } from '@fastify/oauth2';
 import { tfaHandler } from './utils/tfa';
 import { userActions } from './utils/userActions';
+import { apiClientBackend } from './utils/apiClient';
+import { routeHandler } from './utils/routeHandler';
 import { FastifyJwTNamespace } from './schemas/jwt';
 
 interface AuthData {
@@ -19,7 +21,8 @@ declare module 'fastify' {
       refresh: FastifyJwTNamespace;
     };
     githubOAuth2: OAuth2Namespace;
-    api: <T = any>(config: AxiosRequestConfig) => Promise<T>;
+    api: apiClientBackend;
+    routeHandler: routeHandler;
     tfa: tfaHandler;
     user: userActions;
     updateServiceHealth;

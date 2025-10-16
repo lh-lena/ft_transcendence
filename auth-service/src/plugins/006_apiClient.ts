@@ -1,6 +1,6 @@
 import { FastifyInstance } from 'fastify';
 import fp from 'fastify-plugin';
-import { apiClientBackend } from '../utils/apiClient.js';
+import { apiClientBackend } from '../utils/apiClient';
 
 /**
  * Backend API Client Plugin
