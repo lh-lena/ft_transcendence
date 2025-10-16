@@ -72,7 +72,6 @@ export async function routeHandler<
 ) {
   const messages = config.errorMessages || {};
 
-  // Validate params
   let parsedParams: z.infer<TParams> | undefined;
   if (config.paramsSchema) {
     const result = config.paramsSchema.safeParse(req.params);
@@ -84,7 +83,6 @@ export async function routeHandler<
     parsedParams = result.data;
   }
 
-  // Validate body
   let parsedBody: z.infer<TBody> | undefined;
   if (config.bodySchema) {
     const result = config.bodySchema.safeParse(req.body);
@@ -96,7 +94,6 @@ export async function routeHandler<
     parsedBody = result.data;
   }
 
-  // Validate query
   let parsedQuery: z.infer<TQuery> | undefined;
   if (config.querySchema) {
     const result = config.querySchema.safeParse(req.query);
@@ -108,7 +105,6 @@ export async function routeHandler<
     parsedQuery = result.data;
   }
 
-  // Check ownership
   if (config.checkOwnership) {
     const isAuthorized = await config.checkOwnership(
       {
@@ -127,7 +123,6 @@ export async function routeHandler<
     }
   }
 
-  // If there's a custom handler, use it
   if (config.customHandler) {
     return config.customHandler(req, reply, server, {
       params: parsedParams,
@@ -136,20 +131,17 @@ export async function routeHandler<
     });
   }
 
-  // Build URL
   const url = typeof config.url === 'function' ? config.url(parsedParams!) : config.url;
 
   if (!url) {
     throw new Error('URL is required when not using customHandler');
   }
 
-  // Transform request data
   let requestData: unknown = parsedBody;
   if (config.transformRequest && parsedBody) {
     requestData = await config.transformRequest(parsedBody, server, req);
   }
 
-  // Prepare axios config
   const axiosConfig: AxiosRequestConfig = {
     method: config.method,
     url,
@@ -158,20 +150,16 @@ export async function routeHandler<
   if (requestData) axiosConfig.data = requestData;
   if (parsedQuery) axiosConfig.params = parsedQuery;
 
-  console.log('ready to make api call with config:', axiosConfig);
-  // Make API call (unless skipped)
   let response: unknown;
   if (!config.skipApiCall) {
     response = await server.api(axiosConfig);
   }
 
-  // Transform response
   let finalResponse: unknown = response;
   if (config.transformResponse) {
     finalResponse = config.transformResponse(response, req);
   }
 
-  // Select and validate response schema
   let schemaToUse;
 
   if (config.selectResponseSchema) {

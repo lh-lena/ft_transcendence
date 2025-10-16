@@ -145,7 +145,7 @@ export const authRoutesConfig = {
       return reply
         .code(200)
         .clearCookie('accessToken', { path: '/' })
-        .clearCookie('refreshToken', { path: '/api/auth' })
+        .clearCookie('refreshToken', { path: '/api/refresh' })
         .send({ message: 'Successfully logged out' });
     },
     skipApiCall: true,

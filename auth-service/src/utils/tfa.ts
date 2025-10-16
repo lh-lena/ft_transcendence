@@ -1,10 +1,10 @@
-// src/routes/2fa.ts
-import { FastifyInstance } from 'fastify';
-import { v4 as uuidv4 } from 'uuid';
-import { sha256 } from './twofa';
-import { authenticator } from 'otplib';
 import QRCode from 'qrcode';
 import crypto from 'crypto';
+
+import { FastifyInstance } from 'fastify';
+import { v4 as uuidv4 } from 'uuid';
+import { sha256 } from './passwords';
+import { authenticator } from 'otplib';
 import type { TfaSessionType, TfaVerifyType } from '../schemas/tfa';
 import type { UserType } from '../schemas/user';
 
@@ -94,13 +94,12 @@ export class tfaHandler {
     const codesToHash = codes.map(sha256);
     const codesString = codesToHash.join(',');
 
-    const patched = this.server.user.patch(user.userId, {
+    await this.server.user.patch(user.userId, {
       tfaEnabled: true,
       tfaMethod: 'totp',
       tfaSecret: secret,
       backupCodes: codesString,
     });
-    console.log('Patched user with TOTP setup:', patched);
 
     const qrCodeDataUrl = await QRCode.toDataURL(otpauth);
 

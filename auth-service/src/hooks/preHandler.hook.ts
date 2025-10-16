@@ -69,7 +69,7 @@ function isPublicRoute(routePath: string): boolean {
 const failedAttempts = new Map<string, { count: number; resetAt: number }>();
 
 const maxFailedAttempts = 10;
-const lockoutTime = 15 * 60 * 1000;
+const lockoutTime = 15 * 60; // + *1000
 
 /**
  * Checks if IP is rate limited due to too many failed auth attempts

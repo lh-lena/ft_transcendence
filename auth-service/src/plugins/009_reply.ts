@@ -54,7 +54,6 @@ const replyPlugin = async (fastify: FastifyInstance) => {
   function doSending(this: FastifyReply, options: SendOptions = {}): FastifyReply {
     const { code = 200, data = {}, message, includeAuth = false, userId } = options;
 
-    // Validate HTTP status code
     if (code < 100 || code > 599) {
       fastify.log.error(`Invalid HTTP status code: ${code}`);
       this.code(500);
@@ -62,15 +61,12 @@ const replyPlugin = async (fastify: FastifyInstance) => {
       this.code(code);
     }
 
-    // Build response object with timestamp
     const response: ResponseData = { ...data, timestamp: new Date().toISOString() };
 
-    // Add optional message
     if (message) {
       response.message = message;
     }
 
-    // Include authentication tokens if requested
     if (includeAuth && userId) {
       this.setAuthCookies(userId);
       if (this.authData) {
@@ -79,9 +75,10 @@ const replyPlugin = async (fastify: FastifyInstance) => {
         response.userId = authData.userId;
       }
     } else if (includeAuth && !userId) {
-      // Warn if auth was requested but userId missing
       fastify.log.warn('includeAuth requested but userId not provided');
     }
+
+    fastify.log.debug(`Sending response: ${JSON.stringify(response)}`);
 
     return this.send(response);
   }

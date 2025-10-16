@@ -40,7 +40,7 @@ export const tfaRoutesConfig = {
         return reply.doSending({
           code: 200,
           message: 'Access tokens refreshed',
-          inlcudeAuth: true,
+          includeAuth: true,
           userId: payload.id,
         });
       } catch (error) {

@@ -16,14 +16,7 @@ axiosRetry(backendApi, {
   },
 });
 
-export async function apiClientBackend<T = any>(config: AxiosRequestConfig): Promise<T> {
-  try {
-    const response = await backendApi.request<T>(config);
-    return response.data;
-  } catch (err: any) {
-    if (axios.isAxiosError(err)) {
-      console.error('API request to ', config.url, 'failed: ', err.message);
-    }
-    throw err;
-  }
+export async function apiClientBackend<T = unknown>(config: AxiosRequestConfig): Promise<T> {
+  const response = await backendApi.request<T>(config);
+  return response.data;
 }

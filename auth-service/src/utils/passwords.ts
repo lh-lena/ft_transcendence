@@ -1,4 +1,5 @@
 import argon2 from 'argon2';
+import crypto from 'crypto';
 
 const HASH_OPTIONS = {
   type: argon2.argon2id,
@@ -13,4 +14,8 @@ export async function hashPassword(password: string): Promise<string> {
 
 export async function verifyPassword(hash: string, password: string): Promise<boolean> {
   return await argon2.verify(hash, password);
+}
+
+export function sha256(input: string) {
+  return crypto.createHash('sha256').update(input).digest('hex');
 }
