@@ -11,7 +11,7 @@ import { showError } from "../components/toast";
 
 export class Backend {
   private user!: User;
-  private refreshTries: number = 0;
+  private refreshed: boolean = false;
 
   private api = axios.create({
     baseURL: import.meta.env.VITE_AUTH_URL,
@@ -29,37 +29,43 @@ export class Backend {
     this.api.interceptors.response.use(
       (response) => {
         console.log("API Response:", response.data);
-        this.refreshTries = 0;
         return response;
       },
       async (error) => {
         const originalRequest = error.config;
-        console.log("og request", originalRequest);
 
         //if 401 try retry
-        if (error.response?.status === 401 && this.refreshTries < 1) {
+        if (error.response?.status === 401 && !this.refreshed) {
           try {
-            this.refreshTries++;
+            this.refreshed = true;
             await this.refreshToken();
-            await this.api(originalRequest);
+            this.refreshed = false;
+            return await this.api(originalRequest);
           } catch {
-            console.log("Refresh token failed, logging out!");
+            showError("Error: Refresh token failed, logging out!");
             localStorage.removeItem("user");
             document.cookie = "jwt=";
             document.cookie = "refreshToken=";
+            //TODO move to login page
             return;
           }
-        } else if (error.response?.status === 401) {
-          this.refreshTries++;
+        }
+        if (this.refreshed) {
+          showError("Error: Refresh token failed, logging out!");
+          localStorage.removeItem("user");
           document.cookie = "jwt=";
           document.cookie = "refreshToken=";
-          console.log("Refresh token failed, logging out!");
-          localStorage.removeItem("user");
+          //TODO move to login page
           return;
         }
 
         // handle the rest of the errors
-        console.error("API Error:", error.response?.data || error.message);
+        console.error(
+          "API Error:",
+          error.response?.data || error.message,
+          "With request: ",
+          error.config,
+        );
         showError("Error: " + (error.response?.data?.message || error.message));
         return;
       },
@@ -92,6 +98,8 @@ export class Backend {
 
   async refreshToken() {
     const response = await this.api.post("/api/refresh");
+    localStorage.setItem("jwt", response.data.jwt);
+
     return response;
   }
 
