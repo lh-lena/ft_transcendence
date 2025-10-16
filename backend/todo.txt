@@ -8,3 +8,9 @@ TODO:
 -totp qr code vaishes on backupcodes download
 -guest can access protected routes after tournaments
 -oAuth not working on registerpage
+-profile picture fetching doesnt work
+-update profile pictures after setting
+-game still runs after one disconnect
+-chat after own message not updated
+-refresh tokens!?!?!?!?!
+-no notification when not mutual friends

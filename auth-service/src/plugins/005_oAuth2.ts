@@ -14,6 +14,9 @@ import oauthPlugin from '@fastify/oauth2';
 const oAuth2Plugin = async (fastify: FastifyInstance) => {
   const { oauthClientId, oauthSecretSt, authUrl } = fastify.config;
 
+  const callbackUrl = `${authUrl}/api/oauth/callback`;
+  fastify.log.info(`Registering OAuth with callback: ${callbackUrl}`);
+
   /**
    * Register GitHub OAuth2 provider
    * Initiates OAuth flow at /api/oauth
@@ -31,7 +34,7 @@ const oAuth2Plugin = async (fastify: FastifyInstance) => {
         auth: oauthPlugin.GITHUB_CONFIGURATION, // Uses GitHub's OAuth endpoints
       },
       startRedirectPath: '/api/oauth',
-      callbackUri: `${authUrl}/api/oauth/callback`,
+      callbackUri: callbackUrl,
     });
   } catch (error) {
     fastify.log.error('Failed to register OAuth2 plugin');

@@ -53,9 +53,6 @@ export const userService = {
   async getQuery(query?: Prisma.UserWhereInput): Promise<User[]> {
     const ret = query ? await userModel.findBy(query) : await userModel.findAll();
 
-    if (ret.length === 0) {
-      throw new NotFoundError('No user found');
-    }
     return ret;
   },
 

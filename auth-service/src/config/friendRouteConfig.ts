@@ -9,9 +9,19 @@ import {
 } from '../schemas/friend';
 import type { FriendIdType, FriendQueryType, FriendPostType } from '../schemas/friend';
 
-//Configs for friendRoutes
+/**
+ * Friend Relationship Route Configuration
+ * Manages friend connections between users
+ * All operations require ownership verification to prevent unauthorized relationship manipulation
+ */
 export const friendRoutesConfig = {
-  //get friend by query
+  /**
+   * Get Friend Relationships
+   * Retrieves friend list for a user
+   * @requires Authentication
+   * @param query.userId - Must match authenticated user ID
+   * @returns Array of friend relationships
+   */
   getFriend: {
     method: 'get' as const,
     url: '/friend',
@@ -27,11 +37,20 @@ export const friendRoutesConfig = {
     },
   },
 
+  /**
+   * Create Friend Relationship
+   * Sends or accepts a friend request
+   * @requires Authentication
+   * @param body.userId - Must match authenticated user ID
+   * @param body.friendId - User ID to befriend
+   * @returns 201 - Friend relationship created
+   */
   createFriend: {
     method: 'post' as const,
     url: '/friend',
     bodySchema: friendPostSchema,
     checkOwnership: (data: { body?: FriendPostType }, userId: string) => {
+      if (data.body?.userId === data.body?.friendUserId) return false;
       return data.body?.userId === userId;
     },
     responseSchema: friendResponseSchema,
@@ -42,6 +61,13 @@ export const friendRoutesConfig = {
     },
   },
 
+  /**
+   * Remove Friend Relationship
+   * Deletes an existing friendship
+   * @requires Authentication & Ownership
+   * @param friendId - ID of the friendship to remove
+   * @returns 204 - Friendship removed successfully
+   */
   deleteFriend: {
     method: 'delete' as const,
     url: (params: FriendIdType) => `/friend/${params.friendId}`,

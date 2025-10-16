@@ -3,9 +3,20 @@ import { AxiosRequestConfig } from 'axios';
 
 import { gameIdSchema, gamePostSchema, gameJoinSchema, gameResponseSchema } from '../schemas/game';
 
-import type { GameIdType, GamePostType, GameJoinType } from '../schemas/game';
+import type { GameType, GameIdType, GamePostType, GameJoinType } from '../schemas/game';
 
+/**
+ * Game Route Configuration
+ * Manages game lobbies and matchmaking
+ * Handles game creation, joining, and deletion
+ */
 export const gameRoutesConfig = {
+  /**
+   * Get Game Details
+   * Retrieves information about a specific game
+   * @param gameId - Unique game identifier
+   * @returns Game object with players, status, settings, etc.
+   */
   getGame: {
     method: 'get' as const,
     url: (params: GameIdType) => `/game/${params.gameId}`,
@@ -17,6 +28,14 @@ export const gameRoutesConfig = {
     },
   },
 
+  /**
+   * Create Game
+   * Creates a new game lobby
+   * @requires Authentication
+   * @param body.userId - Must match authenticated user ID (game creator)
+   * @param body.settings - Game configuration
+   * @returns 201 - Game created successfully
+   */
   createGame: {
     method: 'post' as const,
     url: `/game`,
@@ -32,6 +51,14 @@ export const gameRoutesConfig = {
     },
   },
 
+  /**
+   * Join Game
+   * Adds authenticated user to an existing game lobby
+   * @requires Authentication
+   * @param body.userId - Must match authenticated user ID
+   * @param body.gameId - Game to join
+   * @returns 200 - Successfully joined game
+   */
   joinGame: {
     method: 'post' as const,
     url: `/game/join`,
@@ -40,13 +67,20 @@ export const gameRoutesConfig = {
     checkOwnership: async (data: { body?: GameJoinType }, userId: string) => {
       return data.body?.userId === userId;
     },
-    successCode: 201,
+    successCode: 200,
     errorMessages: {
       invalidBody: 'Invalid game join Data',
       forbidden: 'Forbidden',
     },
   },
 
+  /**
+   * Delete Game
+   * Removes a game lobby (only creator can delete)
+   * @requires Authentication & Ownership
+   * @param gameId - Game to delete
+   * @returns 204 - Game deleted successfully
+   */
   deleteGame: {
     method: 'delete' as const,
     url: (params: GameIdType) => `/game/${params.gameId}`,
@@ -56,17 +90,29 @@ export const gameRoutesConfig = {
       userId: string,
       server: FastifyInstance,
     ) => {
-      if (!data.params?.gameId) return false;
+      if (!data.params?.gameId) {
+        server.log.warn('Missing gameId in delete request');
+        return false;
+      }
 
-      const config: AxiosRequestConfig = {
-        method: 'get',
-        url: '/game',
-        params: { gameId: data.params.gameId },
-      };
+      try {
+        const config: AxiosRequestConfig = {
+          method: 'get',
+          url: `/game/${data.params.gameId}`, // Use URL param instead of query
+        };
 
-      const gameCheck = await server.api(config);
+        const gameCheck: GameType = await server.api(config);
 
-      return gameCheck.userId === userId;
+        if (!gameCheck) {
+          server.log.warn({ gameId: data.params.gameId }, 'Game not found');
+          return false;
+        }
+
+        return gameCheck.players.some((p) => p.userId === userId);
+      } catch (error) {
+        server.log.error({ error, gameId: data.params.gameId }, 'Failed to verify game ownership');
+        return false;
+      }
     },
     successCode: 204,
     errorMessages: {

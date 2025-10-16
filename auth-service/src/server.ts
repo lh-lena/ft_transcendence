@@ -17,6 +17,7 @@ import fastifyCsrf from '@fastify/csrf-protection';
 import fastifyHttpProxy from '@fastify/http-proxy';
 import AutoLoad from '@fastify/autoload';
 import path from 'path';
+import { LoggerOptions } from 'pino';
 import { fileURLToPath } from 'url';
 
 // ESM dirname compatibility
@@ -31,21 +32,20 @@ const __dirname = path.dirname(__filename);
 const isProduction = process.env.NODE_ENV === 'production';
 const isDevelopment = process.env.NODE_ENV === 'development';
 
-const loggerConfig = isProduction
+const loggerConfig: LoggerOptions = isProduction
   ? {
-      level: 'info', // Production: info, warn, error only
+      level: 'info',
       redact: {
         paths: ['req.headers.authorization', 'req.headers.cookie', 'res.headers["set-cookie"]'],
-        remove: true, // Remove sensitive data completely
+        remove: true,
       },
       serializers: {
-        req: (req: any) => ({
+        req: (req) => ({
           method: req.method,
           url: req.url,
           remoteAddress: req.ip,
-          // Don't log full headers in production
         }),
-        res: (res: any) => ({
+        res: (res) => ({
           statusCode: res.statusCode,
         }),
       },
@@ -53,7 +53,7 @@ const loggerConfig = isProduction
   : {
       level: isDevelopment ? 'debug' : 'info',
       transport: {
-        target: 'pino-pretty', // Pretty logs for development
+        target: 'pino-pretty',
         options: {
           colorize: true,
           translateTime: 'HH:MM:ss Z',
@@ -65,14 +65,17 @@ const loggerConfig = isProduction
 
 /**
  * Initialize Fastify server instance
- * Configured with production-grade logging and security settings
  */
 export const server = Fastify({
   logger: loggerConfig,
-  requestIdLogLabel: 'requestId', // Track requests across logs
+  requestIdLogLabel: 'requestId',
   disableRequestLogging: false,
-  requestIdHeader: 'x-request-id', // Support external request ID propagation
-  trustProxy: isProduction, // Trust X-Forwarded-* headers in production
+  //needed for req.ip for logging
+  requestIdHeader: 'x-request-id',
+  trustProxy: isProduction,
+  bodyLimit: 1048576,
+  connectionTimeout: 10000,
+  keepAliveTimeout: 5000,
 });
 
 /**
@@ -84,7 +87,6 @@ export const server = Fastify({
  * @param reply - Fastify reply object
  */
 server.setErrorHandler((error, request, reply) => {
-  // Log error with request context for debugging
   server.log.error(
     {
       err: error,
@@ -95,27 +97,27 @@ server.setErrorHandler((error, request, reply) => {
     'Request error occurred',
   );
 
-  // Extract error details safely
-  const statusCode = (error as any).statusCode || (error as any).status || 500;
+  let statusCode = 500;
 
-  const errorMessage = (error as any).message || 'Internal Server Error';
+  if ('statusCode' in error && typeof error.statusCode === 'number') statusCode = error.statusCode;
+  else if ('status' in error && typeof error.status === 'number') statusCode = error.status;
 
-  // Don't expose internal error details in production
+  const errorMessage = error.message || 'Internal Server Error';
+
   const responseMessage =
     isProduction && statusCode === 500 ? 'Internal Server Error' : errorMessage;
 
-  // Send standardized error response
+  const data = 'data' in error ? error.data : null;
+
   reply.status(statusCode).send({
     success: false,
     message: responseMessage,
-    data: (error as any).data || null,
-    // Include request ID for client-side debugging
+    data,
     requestId: request.id,
   });
 });
 
 /**
- * Server lifecycle and plugin registration
  * Loads plugins, routes, and hooks in correct order
  */
 const start = async () => {
@@ -126,11 +128,10 @@ const start = async () => {
 
     /**
      * CSRF Protection
-     * Protects against Cross-Site Request Forgery attacks
      * Requires session plugin for token storage
      */
     await server.register(fastifyCsrf, {
-      sessionPlugin: '@fastify/cookie', // Use cookies for CSRF tokens
+      sessionPlugin: '@fastify/cookie',
     });
     server.log.info('CSRF protection enabled');
 
@@ -144,7 +145,7 @@ const start = async () => {
     await server.register(AutoLoad, {
       dir: path.join(__dirname, 'plugins'),
       options: {
-        prefix: '', // No route prefix for plugins
+        prefix: '',
       },
     });
     server.log.info('Plugins loaded successfully');
@@ -158,7 +159,7 @@ const start = async () => {
     await server.register(AutoLoad, {
       dir: path.join(__dirname, 'routes'),
       options: {
-        prefix: '/api', // All routes prefixed with /api
+        prefix: '/api',
       },
     });
     server.log.info('Routes loaded successfully');
@@ -188,7 +189,7 @@ const start = async () => {
       rewritePrefix: '/api/upload',
       http2: false,
     });
-    server.log.info(`Upload proxy configured: ${backendHost}:8080`);
+    server.log.info(`proxy for upload configured: ${backendHost}:8080`);
 
     // ------------ Health Check Endpoint ------------
 
@@ -207,11 +208,9 @@ const start = async () => {
      * Validates database connections, external services, etc.
      */
     server.get('/ready', async () => {
-      // Check if critical dependencies are available
       const checks = {
         server: true,
         config: !!server.config,
-        // Add more checks as needed (database, cache, etc.)
       };
 
       const isReady = Object.values(checks).every(Boolean);
@@ -238,7 +237,6 @@ const start = async () => {
       host: server.config.host,
     });
 
-    // Update service health metric (from metrics plugin)
     server.updateServiceHealth(true);
 
     server.log.info(
@@ -251,15 +249,12 @@ const start = async () => {
       'Auth service started successfully',
     );
   } catch (err) {
-    // Log startup failure
     server.log.fatal(err, 'Failed to start auth service');
 
-    // Update metrics before exit
     if (server.updateServiceHealth) {
       server.updateServiceHealth(false);
     }
 
-    // Exit with error code
     process.exit(1);
   }
 };
@@ -267,19 +262,17 @@ const start = async () => {
 // ------------ Graceful Shutdown Handlers ------------
 
 /**
- * Handle SIGTERM (Docker/Kubernetes shutdown signal)
+ * Handle SIGTERM
  * Performs graceful shutdown to finish in-flight requests
  */
 process.on('SIGTERM', async () => {
   server.log.info('SIGTERM received, starting graceful shutdown...');
 
-  // Update metrics to indicate service is shutting down
   if (server.updateServiceHealth) {
     server.updateServiceHealth(false);
   }
 
   try {
-    // Close server (stops accepting new connections, waits for existing)
     await server.close();
     server.log.info('Server closed successfully');
     process.exit(0);
@@ -312,7 +305,6 @@ process.on('SIGINT', async () => {
 
 /**
  * Handle uncaught exceptions
- * Last resort error handler - should rarely trigger if code is correct
  */
 process.on('uncaughtException', (err) => {
   server.log.fatal(err, 'Uncaught exception - forcing shutdown');
@@ -321,7 +313,6 @@ process.on('uncaughtException', (err) => {
     server.updateServiceHealth(false);
   }
 
-  // Force exit after logging (don't wait for graceful shutdown)
   process.exit(1);
 });
 
@@ -332,7 +323,6 @@ process.on('uncaughtException', (err) => {
 process.on('unhandledRejection', (reason, promise) => {
   server.log.error({ reason, promise }, 'Unhandled promise rejection');
 
-  // In production, exit on unhandled rejection (fail-fast)
   if (isProduction) {
     server.log.fatal('Exiting due to unhandled rejection in production');
     process.exit(1);

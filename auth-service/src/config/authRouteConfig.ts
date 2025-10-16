@@ -9,7 +9,17 @@ import {
 } from '../schemas/user';
 import type { UserType, UserRegisterType, UserLoginType, GuestPostType } from '../schemas/user';
 
+/**
+ * Authentication route configurations
+ * Handles user registration, login, logout, and guest access
+ */
 export const authRoutesConfig = {
+  //TODO add rate limiting
+  /**
+   * User Registration
+   * Creates a new user account with hashed password
+   * @returns 201 - User created with auth tokens
+   */
   register: {
     method: 'post' as const,
     bodySchema: userRegisterSchema,
@@ -30,7 +40,7 @@ export const authRoutesConfig = {
 
       reply.doSending({
         code: 201,
-        message: 'User successfully Registered',
+        message: 'User successfully registered',
         includeAuth: true,
         userId: user.userId,
       });
@@ -41,6 +51,14 @@ export const authRoutesConfig = {
     },
   },
 
+  /**
+   * User Login
+   * Authenticates user credentials and handles 2FA if enabled
+   * @returns 200 - 2FA challenge if enabled
+   * @returns 201 - Login successful with auth tokens
+   * @returns 401 - Invalid credentials
+   * @returns 403 - User already logged in
+   */
   login: {
     method: 'post' as const,
     bodySchema: userLoginSchema,
@@ -54,19 +72,16 @@ export const authRoutesConfig = {
         return reply.status(400).send({ message: 'Invalid login data' });
       }
       const user: UserType = await server.user.getUser({ email: parsedData.body.email });
+      const password_hash = user?.password_hash || '$2b$10$dummyhashtomakethisthingsecure';
 
-      if (!user || !user.password_hash) {
+      const valid = await verifyPassword(password_hash, parsedData.body.password);
+
+      if (!user || !user.password_hash || !valid) {
         return reply.status(401).send({ message: 'Invalid credentials' });
       }
 
       if (user.online) {
         return reply.status(403).send({ message: 'User already logged in' });
-      }
-
-      const valid = await verifyPassword(user.password_hash, parsedData.body.password);
-
-      if (!valid) {
-        return reply.status(401).send({ message: 'Invalid credentials' });
       }
 
       if (user.tfaEnabled) {
@@ -87,36 +102,60 @@ export const authRoutesConfig = {
     },
   },
 
+  /**
+   * User Logout
+   * Invalidates tokens and updates user online status
+   * @requires Authentication
+   * @returns 200 - Logout successful
+   */
   logout: {
     method: 'post' as const,
     customHandler: async (req: FastifyRequest, reply: FastifyReply, server: FastifyInstance) => {
       const refreshToken = req.cookies.refreshToken;
 
       if (refreshToken) {
+        try {
+          const config: AxiosRequestConfig = {
+            method: 'post',
+            url: '/blacklist',
+            data: { token: refreshToken },
+          };
+          await server.api(config);
+        } catch (error) {
+          server.log.warn(
+            { error, token: refreshToken },
+            'Failed to blacklist token during logout',
+          );
+        }
+      }
+      try {
         const config: AxiosRequestConfig = {
-          method: 'post',
-          url: '/blacklist',
-          data: { token: refreshToken },
+          method: 'patch',
+          url: `/user/${req.user.id}`,
+          data: { online: false },
         };
         await server.api(config);
+      } catch (error) {
+        server.log.warn(
+          { error, userId: req.user.id },
+          'Failed to update online status during logout',
+        );
       }
-
-      const config: AxiosRequestConfig = {
-        method: 'patch',
-        url: `/user/${req.user.id}`,
-        data: { online: false },
-      };
-      await server.api(config);
 
       return reply
         .code(200)
         .clearCookie('accessToken', { path: '/' })
-        .clearCookie('refreshToken', { path: '/api' })
-        .send({ message: 'successfull logout' });
+        .clearCookie('refreshToken', { path: '/api/auth' })
+        .send({ message: 'Successfully logged out' });
     },
     skipApiCall: true,
   },
 
+  /**
+   * Guest Login
+   * Creates temporary guest account for anonymous users
+   * @returns 201 - Guest created with limited auth tokens
+   */
   guestLogin: {
     method: 'post' as const,
     bodySchema: guestPostSchema,
@@ -146,6 +185,13 @@ export const authRoutesConfig = {
     },
   },
 
+  /**
+   * Verify Authentication
+   * Validates access token and returns user ID
+   * @requires Authorization header with Bearer token
+   * @returns 200 - Token valid with user ID
+   * @returns 401 - Invalid or missing token
+   */
   authMe: {
     method: 'get' as const,
     customHandler: async (req: FastifyRequest, reply: FastifyReply, server: FastifyInstance) => {
