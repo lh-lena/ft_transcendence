@@ -96,8 +96,8 @@ export class VsPlayerGamePage {
 
     // Initialize gameState with complete data
     this.gameState = {
-      status: GameStatus.PLAYING,
-      previousStatus: GameStatus.PLAYING,
+      status: GameStatus.WAITING,
+      previousStatus: GameStatus.WAITING,
       playerA: {
         ...this.userMe,
         score: 0,
@@ -181,9 +181,6 @@ export class VsPlayerGamePage {
     console.log("PAYLOAD", payload);
     if (!this.gameId) this.gameId = payload.gameId;
 
-    // set game status in ws to playing
-    this.ws.setGameStatusPlaying();
-
     if (this.gameType === "ai") return;
     // only for vs player and tournament
     // finds the user that is not userMe
@@ -226,7 +223,10 @@ export class VsPlayerGamePage {
     } else {
       this.loadingOverlay.changeText(message);
       this.loadingOverlay.hideButton();
-      if (message == "GO!") this.loadingOverlay.hide();
+      if (message == "GO!") {
+        this.loadingOverlay.hide();
+        this.gameState.status = GameStatus.PLAYING;
+      }
     }
   }
 
@@ -426,7 +426,14 @@ export class VsPlayerGamePage {
 
   public unmount(): void {
     // Send leave message before cleaning up handlers
-    if (this.gameId) {
+    if (this.gameState.status === GameStatus.WAITING)
+      // backend leave (delete)
+      this.backend.deleteGame(this.gameId);
+    else if (
+      // web socket leave
+      this.gameState.status === GameStatus.PLAYING ||
+      this.gameState.status === GameStatus.PAUSED
+    ) {
       this.ws.messageGameLeave(this.gameId);
     }
     // clean up WebSocket handlers to prevent memory leaks and duplicate handlers
