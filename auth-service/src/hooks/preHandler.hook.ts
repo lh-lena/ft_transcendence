@@ -1,6 +1,5 @@
 /**
  * Authentication PreHandler Hook
- *
  * Enforces authentication on protected routes:
  * - Validates access tokens from cookies
  * - Attaches decoded user info to request object
@@ -47,7 +46,13 @@ const publicRoutes = {
   ],
 };
 
+const guestRoutes = {
+  tournament: ['/api/tournament', '/api/tournament/:tournamentId', '/api/tournament/leave/:userId'],
+  user: ['/api/user/:userId'],
+};
+
 const publicRoutesOne = Object.values(publicRoutes).flat();
+const guestRoutesOne = Object.values(guestRoutes).flat();
 
 /**
  * Checks if a route is public (doesn't require authentication)
@@ -57,6 +62,20 @@ const publicRoutesOne = Object.values(publicRoutes).flat();
  */
 function isPublicRoute(routePath: string): boolean {
   if (publicRoutesOne.includes(routePath)) {
+    return true;
+  }
+
+  return false;
+}
+
+/**
+ * Checks if a route is guest (guest only allowed here)
+ *
+ * @param routePath - Route path from request
+ * @returns true if route is allowed for guests, false if authentication required
+ */
+function isGuestRoute(routePath: string): boolean {
+  if (guestRoutesOne.includes(routePath)) {
     return true;
   }
 
@@ -164,6 +183,25 @@ export default fp(
       try {
         const decoded: JwTReturnType = await server.verifyAccessToken(token);
 
+        if (decoded.role === 'guest' && isGuestRoute(routePath) === false) {
+          recordFailedAttempt(req.ip);
+
+          server.log.warn(
+            {
+              route: routePath,
+              method: req.method,
+              ip: req.ip,
+              role: decoded.role,
+            },
+            `${decoded.role} user(${decoded.id} tried to access protected Route`,
+          );
+
+          return reply.code(401).send({
+            error: 'Authentication required',
+            message: 'Guest users are not allowed to access this route',
+          });
+        }
+
         req.user = decoded;
 
         clearFailedAttempts(req.ip);
@@ -171,6 +209,7 @@ export default fp(
         server.log.debug(
           {
             userId: decoded.id,
+            userRole: decoded.role,
             route: routePath,
           },
           'User authenticated successfully',

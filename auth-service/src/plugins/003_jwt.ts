@@ -44,7 +44,7 @@ const jwtPlugin = async (fastify: FastifyInstance) => {
    * @param payload.id - User's unique identifier
    * @returns Signed JWT access token string
    */
-  fastify.decorate('generateAccessToken', (payload: { id: string }) => {
+  fastify.decorate('generateAccessToken', (payload: { id: string; role: string }) => {
     return fastify.jwt.access.sign(payload);
   });
 
@@ -79,7 +79,7 @@ const jwtPlugin = async (fastify: FastifyInstance) => {
    * @param payload.id - User's unique identifier
    * @returns Signed JWT refresh token string
    */
-  fastify.decorate('generateRefreshToken', (payload: { id: string }) => {
+  fastify.decorate('generateRefreshToken', (payload: { id: string; role: string }) => {
     return fastify.jwt.refresh.sign(payload);
   });
 

@@ -11,6 +11,7 @@ export const refreshTokenSchema = z.object({
 
 export const JwTReturnSchema = z.object({
   id: z.uuid(),
+  role: z.string(),
   iat: z.number(),
   exp: z.number(),
 });

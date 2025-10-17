@@ -8,8 +8,14 @@ import { FastifyJwTNamespace } from './schemas/jwt';
 
 interface AuthData {
   jwt: string;
-  userId: string;
   refreshToken: string;
+  userId: string;
+  role: string;
+}
+
+interface AuthCookies {
+  id: string;
+  role: string;
 }
 
 declare module 'fastify' {
@@ -35,14 +41,14 @@ declare module 'fastify' {
   interface FastifyRequest {
     user: {
       id: string;
+      role: string;
       iat: number;
       exp: number;
-      role?: string;
     };
     startTime: number;
   }
   interface FastifyReply {
-    setAuthCookies(userId: string): FastifyReply;
+    setAuthCookies(data: AuthCookies): FastifyReply;
     doSending(options?: SendOptions): FastifyReply;
     authData?: AuthData;
   }

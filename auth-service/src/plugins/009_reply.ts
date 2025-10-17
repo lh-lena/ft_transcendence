@@ -9,6 +9,7 @@ interface SendOptions {
   message?: string;
   includeAuth?: boolean;
   userId?: string;
+  role?: string;
 }
 
 interface ResponseData {
@@ -16,6 +17,7 @@ interface ResponseData {
   timestamp: string;
   jwt?: string;
   userId?: string;
+  role?: string;
   [key: string]: unknown;
 }
 
@@ -52,7 +54,7 @@ const replyPlugin = async (fastify: FastifyInstance) => {
    * });
    */
   function doSending(this: FastifyReply, options: SendOptions = {}): FastifyReply {
-    const { code = 200, data = {}, message, includeAuth = false, userId } = options;
+    const { code = 200, data = {}, message, includeAuth = false, userId, role } = options;
 
     if (code < 100 || code > 599) {
       fastify.log.error(`Invalid HTTP status code: ${code}`);
@@ -67,8 +69,8 @@ const replyPlugin = async (fastify: FastifyInstance) => {
       response.message = message;
     }
 
-    if (includeAuth && userId) {
-      this.setAuthCookies(userId);
+    if (includeAuth && userId && role) {
+      this.setAuthCookies({ id: userId, role });
       if (this.authData) {
         const authData = this.authData;
         response.jwt = authData.jwt;
