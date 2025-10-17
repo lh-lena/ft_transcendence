@@ -107,6 +107,7 @@ export const tfaRoutesConfig = {
           message: '2FA verification successfull',
           includeAuth: true,
           userId: user.userId,
+          role: 'user',
         });
       }
       server.log.warn(
