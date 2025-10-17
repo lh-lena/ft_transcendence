@@ -225,7 +225,7 @@ const oAuth2Routes = async (server: FastifyInstance) => {
         );
       }
 
-      reply = await reply.setAuthCookies(user.userId);
+      reply = await reply.setAuthCookies({ id: user.userId, role: 'user' });
 
       const authData = reply.authData;
 

@@ -6,8 +6,9 @@ import fastifyCookie from '@fastify/cookie';
 /* AuthData Object to store auth information in the reply 
 interface AuthData {
   jwt: string;
-  userId: string;
   refreshToken: string;
+  userId: string;
+  role: string;
 }
 */
 
@@ -40,7 +41,7 @@ const cookiePlugin = async (fastify: FastifyInstance) => {
    * @param userId - Authenticated user's unique identifier
    * @returns FastifyReply for chaining
    */
-  fastify.decorateReply('setAuthCookies', function (this: FastifyReply, userId: string) {
+  fastify.decorateReply('setAuthCookies', function (this: FastifyReply, data) {
     // Access token options: available to all routes
     const accessOptions = {
       httpOnly: true,
@@ -58,8 +59,8 @@ const cookiePlugin = async (fastify: FastifyInstance) => {
       maxAge: 7 * 24 * 60 * 60,
     };
 
-    const accessToken = fastify.generateAccessToken({ id: userId });
-    const refreshToken = fastify.generateRefreshToken({ id: userId });
+    const accessToken = fastify.generateAccessToken({ id: data.id, role: data.role });
+    const refreshToken = fastify.generateRefreshToken({ id: data.id, role: data.role });
 
     this.setCookie('refreshToken', refreshToken, refreshOptions);
     this.setCookie('accessToken', accessToken, accessOptions);
@@ -67,7 +68,8 @@ const cookiePlugin = async (fastify: FastifyInstance) => {
     this.authData = {
       jwt: accessToken,
       refreshToken: refreshToken,
-      userId: userId,
+      userId: data.id,
+      role: data.role,
     };
 
     return this;

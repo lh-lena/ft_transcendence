@@ -43,6 +43,7 @@ export const authRoutesConfig = {
         message: 'User successfully registered',
         includeAuth: true,
         userId: user.userId,
+        role: 'user',
       });
     },
     skipApiCall: true,
@@ -94,6 +95,7 @@ export const authRoutesConfig = {
         message: 'User successfully LogedIn',
         includeAuth: true,
         userId: user.userId,
+        role: 'user',
       });
     },
     skipApiCall: true,
@@ -177,6 +179,7 @@ export const authRoutesConfig = {
         message: 'Guest successfully LogedIn',
         includeAuth: true,
         userId: user.userId,
+        role: 'guest',
       });
     },
     skipApiCall: true,

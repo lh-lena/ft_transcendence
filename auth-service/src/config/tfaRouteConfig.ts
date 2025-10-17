@@ -42,6 +42,7 @@ export const tfaRoutesConfig = {
           message: 'Access tokens refreshed',
           includeAuth: true,
           userId: payload.id,
+          role: payload.role,
         });
       } catch (error) {
         server.log.warn({ error }, 'Refresh token verification failed');
