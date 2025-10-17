@@ -201,6 +201,7 @@ export class Websocket {
       payload: { gameId: gameId },
     };
     this.sendMessage(game_leave);
+    console.log("sent message tho");
   }
 
   public messageGamePause(gameId: string): void {

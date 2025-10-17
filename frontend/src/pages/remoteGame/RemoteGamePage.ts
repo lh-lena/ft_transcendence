@@ -50,6 +50,9 @@ export class VsPlayerGamePage {
     // register web socket handlers
     this.registerWebsocketHandlers();
 
+    this.handleBackButton = this.handleBackButton.bind(this);
+    window.addEventListener("popstate", this.handleBackButton);
+
     // get web socket before countdown
     this.loadingOverlay = new Loading("waiting for opponent", "button", () =>
       this.quitHook(),
@@ -59,6 +62,15 @@ export class VsPlayerGamePage {
     this.main.appendChild(this.loadingOverlay.getElement());
 
     this.setupGame();
+  }
+
+  public async handleBackButton(event: PopStateEvent) {
+    event.preventDefault();
+    if (this.gameState.status === GameStatus.WAITING)
+      this.backend.deleteGame(this.gameId);
+    else if (this.gameState.status === GameStatus.PLAYING) {
+      this.ws.messageGameLeave(this.gameId);
+    }
   }
 
   public async setupGame() {
@@ -96,8 +108,8 @@ export class VsPlayerGamePage {
 
     // Initialize gameState with complete data
     this.gameState = {
-      status: GameStatus.PLAYING,
-      previousStatus: GameStatus.PLAYING,
+      status: GameStatus.WAITING,
+      previousStatus: GameStatus.WAITING,
       playerA: {
         ...this.userMe,
         score: 0,
@@ -181,9 +193,6 @@ export class VsPlayerGamePage {
     console.log("PAYLOAD", payload);
     if (!this.gameId) this.gameId = payload.gameId;
 
-    // set game status in ws to playing
-    this.ws.setGameStatusPlaying();
-
     if (this.gameType === "ai") return;
     // only for vs player and tournament
     // finds the user that is not userMe
@@ -226,7 +235,10 @@ export class VsPlayerGamePage {
     } else {
       this.loadingOverlay.changeText(message);
       this.loadingOverlay.hideButton();
-      if (message == "GO!") this.loadingOverlay.hide();
+      if (message == "GO!") {
+        this.loadingOverlay.hide();
+        this.gameState.status = GameStatus.PLAYING;
+      }
     }
   }
 

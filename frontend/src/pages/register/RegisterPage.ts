@@ -10,9 +10,10 @@ import validator from "validator";
 import { showError, showInfo } from "../../components/toast";
 
 // using for dev
-const demoUsername = `${Date.now().toString().slice(-6)}`;
-const demoPassword = `demo${Math.random().toString(36).slice(-8)}`;
-const demoEmail = `demo${Date.now()}@example.com`;
+const uuid = crypto.randomUUID().split("-")[0]; // First segment of UUID
+const demoUsername = uuid.slice(0, 6);
+const demoPassword = crypto.randomUUID().replace(/-/g, "").slice(0, 12);
+const demoEmail = `test-${uuid}@example.com`;
 
 export class RegisterPage {
   private main: HTMLElement;

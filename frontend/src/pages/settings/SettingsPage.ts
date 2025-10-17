@@ -308,6 +308,18 @@ export class SettingsPage {
       this.downloadRecoveryKeys(response.data.codes);
     recoveryCode2FAButton.innerText = "backup keys";
     this.twoFAMenu.appendChild(recoveryCode2FAButton);
+
+    const back2FAbutton = document.createElement("button");
+    back2FAbutton.className = "btn";
+    back2FAbutton.onclick = () => this.clear2FAMenu();
+    back2FAbutton.innerText = "back";
+    this.twoFAMenu.appendChild(back2FAbutton);
+  }
+
+  private async clear2FAMenu() {
+    this.twoFAMenu.remove();
+    this.window.getPane().appendChild(this.buttonRow);
+    this.window.getPane().appendChild(this.settingsPanel);
   }
 
   private async downloadRecoveryKeys(recoveryCodes: string[]) {
@@ -321,9 +333,6 @@ export class SettingsPage {
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
-    this.twoFAMenu.remove();
-    this.window.getPane().appendChild(this.buttonRow);
-    this.window.getPane().appendChild(this.settingsPanel);
   }
 
   private toggleTOTPVerifyCode(): void {
