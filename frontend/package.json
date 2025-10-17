@@ -30,6 +30,7 @@
     "autoprefixer": "^10.4.16",
     "axios": "^1.11.0",
     "chart.js": "^4.5.0",
+    "http-status-codes": "^2.3.0",
     "openai": "^5.10.1",
     "postcss": "^8.4.31",
     "qrcode": "^1.5.4",

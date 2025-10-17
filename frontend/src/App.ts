@@ -1,5 +1,5 @@
 // services
-import { ServiceContainer, Router, Websocket, Backend, Auth } from "./services";
+import { ServiceContainer, Router, Websocket, Backend } from "./services";
 
 // pages
 import { HomePage } from "./pages/home";
@@ -11,6 +11,7 @@ import { ChatPage } from "./pages/chat";
 import { VsPlayerGamePage } from "./pages/remoteGame";
 import { TournamentAliasPage } from "./pages/tournament";
 import { protectedRoutes } from "./constants/routes";
+import { EventBus } from "./services/EventBus";
 
 // single source of truth for pages and routes
 const PAGE_ROUTES = {
@@ -35,11 +36,14 @@ export class App {
   private currentPage: PageInstance;
   private websocket: Websocket;
   private backend: Backend;
+  private eventBus: EventBus;
 
   constructor() {
     // full screen div for app
     this.container = document.createElement("div");
     this.container.className = "w-full h-screen";
+
+    this.eventBus = new EventBus();
 
     // init state needs to be null
     this.currentPage = null;
@@ -48,12 +52,17 @@ export class App {
     this.serviceContainer = ServiceContainer.getInstance();
     this.serviceContainer.register("router", new Router());
     this.serviceContainer.register("websocket", new Websocket());
-    this.serviceContainer.register("backend", new Backend());
-    this.serviceContainer.register("auth", new Auth());
+    this.serviceContainer.register("backend", new Backend(this.eventBus));
 
     // save web socket
     this.websocket = this.serviceContainer.get<Websocket>("websocket");
     this.backend = this.serviceContainer.get<Backend>("backend");
+
+    // event bus
+    // listen for logout events
+    this.eventBus.on("auth:logout", () => {
+      this.router.navigate("/");
+    });
 
     // grab route from service container
     this.router = this.serviceContainer.get<Router>("router");
