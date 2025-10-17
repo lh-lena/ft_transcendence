@@ -16,7 +16,7 @@ import { Leaderboard } from "../../types/leaderboard";
 import { profilePrintToArray } from "../../utils/profilePrintFunctions";
 import { User } from "../../types";
 import { ReceivedChatMessage } from "../../types/websocket";
-import { showSuccess } from "../../components/toast";
+import { showError, showSuccess } from "../../components/toast";
 import { userWinsLosses } from "../../types/backend";
 
 export class ChatPage {
@@ -753,9 +753,14 @@ export class ChatPage {
 
   private async sendHook(user: User, message: string) {
     if (message.trim() === "") return; // don't send empty messages
+    if (message.length > 200) {
+      showError("only messages up to 200 characters permitted");
+      return;
+    }
     await this.websocket.sendChatMessage(user, message);
-    // wait 300 miliseconds after updating database
-    await new Promise((resolve) => setTimeout(resolve, 300));
+    // wait 700 miliseconds after updating database
+    // testing bump up to 700
+    await new Promise((resolve) => setTimeout(resolve, 1270));
     await this.populateChatPanel(user);
     this.inputMessage.value = ""; // clear the input after sending
   }

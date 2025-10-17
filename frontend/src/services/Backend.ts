@@ -1,5 +1,7 @@
 import axios from "axios";
+import { EventBus } from "./EventBus";
 import { User, UserLogin, UserRegistration } from "../types";
+import { getReasonPhrase } from "http-status-codes";
 
 // utils
 import {
@@ -7,11 +9,12 @@ import {
   profilePrintToArray,
   profilePrintToString,
 } from "../utils/profilePrintFunctions";
-import { showError } from "../components/toast";
+import { showError, showSuccess } from "../components/toast";
 
 export class Backend {
   private user!: User;
   private refreshed: boolean = false;
+  private eventBus: EventBus;
 
   private api = axios.create({
     baseURL: import.meta.env.VITE_AUTH_URL,
@@ -19,7 +22,8 @@ export class Backend {
     withCredentials: true,
   });
 
-  constructor() {
+  constructor(eventBus: EventBus) {
+    this.eventBus = eventBus;
     this.setupInterceptors();
     this.loadUserFromStorage();
   }
@@ -46,7 +50,8 @@ export class Backend {
             localStorage.removeItem("user");
             document.cookie = "jwt=";
             document.cookie = "refreshToken=";
-            //TODO move to login page
+            // push logout to event bus
+            this.eventBus.emit("auth:logout");
             return;
           }
         } else if (error.response?.status && this.refreshed) {
@@ -65,7 +70,7 @@ export class Backend {
           "With request: ",
           error.config,
         );
-        showError("Error: " + (error.response?.data?.message || error.message));
+        showError(getReasonPhrase(error.response?.status).toLowerCase());
         return;
       },
     );
@@ -348,6 +353,11 @@ export class Backend {
       },
     );
 
+    if (response2.status === 200 || response2.status === 201)
+      showSuccess(
+        "profile picture updated! please log out and back in to see changes",
+      );
+
     return response2.data;
   }
 
@@ -473,8 +483,6 @@ export class Backend {
     }
 
     localStorage.removeItem("user");
-    //TODO how to navigate in here
-    //this.router.navigate("/");
 
     return;
   }

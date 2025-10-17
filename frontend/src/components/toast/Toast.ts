@@ -50,13 +50,13 @@ export class Toast {
     if (title) {
       const titleElement = document.createElement("h1");
       titleElement.className = "dialog-text";
-      titleElement.textContent = title;
+      titleElement.textContent = title.toLowerCase();
       content.appendChild(titleElement);
     }
 
     const messageElement = document.createElement("p");
     messageElement.className = "dialog-text";
-    messageElement.textContent = message;
+    messageElement.textContent = message.toLowerCase();
     content.appendChild(messageElement);
 
     toast.appendChild(content);
@@ -109,6 +109,8 @@ export class Toast {
 class ToastManager {
   private container: HTMLElement;
   private toasts: Toast[] = [];
+  private recentToasts: Map<string, number> = new Map();
+  private dedupeWindow: number = 3000; // 3 seconds default
 
   constructor() {
     this.container = this.createContainer();
@@ -172,7 +174,44 @@ class ToastManager {
     document.head.appendChild(styles);
   }
 
-  public show(options: ToastOptions): Toast {
+  private getToastKey(options: ToastOptions): string {
+    return `${options.type || "info"}:${options.title || ""}:${options.message}`;
+  }
+
+  private isDuplicate(options: ToastOptions): boolean {
+    const key = this.getToastKey(options);
+    const lastShown = this.recentToasts.get(key);
+
+    if (lastShown && Date.now() - lastShown < this.dedupeWindow) {
+      return true;
+    }
+
+    return false;
+  }
+
+  private recordToast(options: ToastOptions): void {
+    const key = this.getToastKey(options);
+    this.recentToasts.set(key, Date.now());
+
+    // Clean up old entries
+    setTimeout(() => {
+      const timestamp = this.recentToasts.get(key);
+      if (timestamp && Date.now() - timestamp >= this.dedupeWindow) {
+        this.recentToasts.delete(key);
+      }
+    }, this.dedupeWindow);
+  }
+
+  public setDedupeWindow(milliseconds: number): void {
+    this.dedupeWindow = milliseconds;
+  }
+
+  public show(options: ToastOptions): Toast | null {
+    if (this.isDuplicate(options)) {
+      return null; // Duplicate toast, don't show
+    }
+
+    this.recordToast(options);
     const toast = new Toast(options);
     this.toasts.push(toast);
     this.container.appendChild(toast.getElement());
@@ -196,19 +235,35 @@ class ToastManager {
   }
 
   // Convenience methods
-  public info(message: string, title?: string, duration?: number): Toast {
+  public info(
+    message: string,
+    title?: string,
+    duration?: number,
+  ): Toast | null {
     return this.show({ message, title, duration, type: "info" });
   }
 
-  public success(message: string, title?: string, duration?: number): Toast {
+  public success(
+    message: string,
+    title?: string,
+    duration?: number,
+  ): Toast | null {
     return this.show({ message, title, duration, type: "success" });
   }
 
-  public warning(message: string, title?: string, duration?: number): Toast {
+  public warning(
+    message: string,
+    title?: string,
+    duration?: number,
+  ): Toast | null {
     return this.show({ message, title, duration, type: "warning" });
   }
 
-  public error(message: string, title?: string, duration?: number): Toast {
+  public error(
+    message: string,
+    title?: string,
+    duration?: number,
+  ): Toast | null {
     return this.show({ message, title, duration, type: "error" });
   }
 }
@@ -217,26 +272,26 @@ class ToastManager {
 export const toastManager = new ToastManager();
 
 // Export convenience functions
-export const showToast = (options: ToastOptions): Toast =>
+export const showToast = (options: ToastOptions): Toast | null =>
   toastManager.show(options);
 export const showInfo = (
   message: string,
   title?: string,
   duration?: number,
-): Toast => toastManager.info(message, title, duration);
+): Toast | null => toastManager.info(message, title, duration);
 export const showSuccess = (
   message: string,
   title?: string,
   duration?: number,
-): Toast => toastManager.success(message, title, duration);
+): Toast | null => toastManager.success(message, title, duration);
 export const showWarning = (
   message: string,
   title?: string,
   duration?: number,
-): Toast => toastManager.warning(message, title, duration);
+): Toast | null => toastManager.warning(message, title, duration);
 export const showError = (
   message: string,
   title?: string,
   duration?: number,
-): Toast => toastManager.error(message, title, duration);
+): Toast | null => toastManager.error(message, title, duration);
 export const clearToasts = (): void => toastManager.clear();
