@@ -50,9 +50,6 @@ export class VsPlayerGamePage {
     // register web socket handlers
     this.registerWebsocketHandlers();
 
-    this.handleBackButton = this.handleBackButton.bind(this);
-    window.addEventListener("popstate", this.handleBackButton);
-
     // get web socket before countdown
     this.loadingOverlay = new Loading("waiting for opponent", "button", () =>
       this.quitHook(),
@@ -62,15 +59,6 @@ export class VsPlayerGamePage {
     this.main.appendChild(this.loadingOverlay.getElement());
 
     this.setupGame();
-  }
-
-  public async handleBackButton(event: PopStateEvent) {
-    event.preventDefault();
-    if (this.gameState.status === GameStatus.WAITING)
-      this.backend.deleteGame(this.gameId);
-    else if (this.gameState.status === GameStatus.PLAYING) {
-      this.ws.messageGameLeave(this.gameId);
-    }
   }
 
   public async setupGame() {
@@ -438,10 +426,16 @@ export class VsPlayerGamePage {
 
   public unmount(): void {
     // Send leave message before cleaning up handlers
-    // dont send game leave here because
-    // if (this.gameId) {
-    //   this.ws.messageGameLeave(this.gameId);
-    // }
+    if (this.gameState.status === GameStatus.WAITING)
+      // backend leave (delete)
+      this.backend.deleteGame(this.gameId);
+    else if (
+      // web socket leave
+      this.gameState.status === GameStatus.PLAYING ||
+      this.gameState.status === GameStatus.PAUSED
+    ) {
+      this.ws.messageGameLeave(this.gameId);
+    }
     // clean up WebSocket handlers to prevent memory leaks and duplicate handlers
     this.ws.clearHandlers("countdown_update");
     this.ws.clearHandlers("notification");
