@@ -1,10 +1,6 @@
 TODO:
--sometimes games doesnt get send to ws when ready but frontend gets it -> cannot reproduce
 -test user already logged in -> set everyone offline on shutdown?
 -add correcr error messages on errors -> talk to alec
--use config in backend for realtime ip
--set all users offline when server starts
--make back button route
 -totp qr code vaishes on backupcodes download
 -guest can access protected routes after tournaments
 -oAuth not working on registerpage
@@ -12,6 +8,5 @@ TODO:
 -update profile pictures after setting
 -game still runs after one disconnect
 -chat after own message not updated
--refresh tokens!?!?!?!?!
 -no notification when not mutual friends
 -check ginormus chat messages
