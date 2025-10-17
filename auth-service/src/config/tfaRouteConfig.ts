@@ -99,12 +99,16 @@ export const tfaRoutesConfig = {
         return reply.code(400).send({ message: 'Invalid 2FA type' });
       }
 
-      if (result === 'valid') {
+      if (result === 'valid' || result === 'valid_low_codes') {
         server.log.info({ userId: user.userId }, '2FA verification successful');
+        const message =
+          result === 'valid_low_codes'
+            ? '2FA verification successfull, but not a lot backupcodes left'
+            : '2FA verification successfull';
 
         return reply.doSending({
           code: 200,
-          message: '2FA verification successfull',
+          message,
           includeAuth: true,
           userId: user.userId,
           role: 'user',
