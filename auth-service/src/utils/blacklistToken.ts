@@ -8,6 +8,6 @@ export async function isBlacklistedToken(token: string): Promise<boolean> {
     params: { token: token },
   };
 
-  const res = await apiClientBackend(config);
+  const res: { blacklisted: boolean } = await apiClientBackend(config);
   return res.blacklisted;
 }

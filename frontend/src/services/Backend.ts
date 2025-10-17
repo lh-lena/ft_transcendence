@@ -49,8 +49,7 @@ export class Backend {
             //TODO move to login page
             return;
           }
-        }
-        if (this.refreshed) {
+        } else if (error.response?.status && this.refreshed) {
           showError("Error: Refresh token failed, logging out!");
           localStorage.removeItem("user");
           document.cookie = "jwt=";
