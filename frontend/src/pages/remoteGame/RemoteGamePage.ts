@@ -426,9 +426,10 @@ export class VsPlayerGamePage {
 
   public unmount(): void {
     // Send leave message before cleaning up handlers
-    if (this.gameId) {
-      this.ws.messageGameLeave(this.gameId);
-    }
+    // dont send game leave here because
+    // if (this.gameId) {
+    //   this.ws.messageGameLeave(this.gameId);
+    // }
     // clean up WebSocket handlers to prevent memory leaks and duplicate handlers
     this.ws.clearHandlers("countdown_update");
     this.ws.clearHandlers("notification");
