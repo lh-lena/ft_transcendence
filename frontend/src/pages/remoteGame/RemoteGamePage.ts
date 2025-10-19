@@ -86,7 +86,7 @@ export class VsPlayerGamePage {
         const aiDifficulty = params.get("aiDifficulty") || "medium";
         response = await this.backend.createAiGame(aiDifficulty);
         // need to talk to moritz about this
-        this.gameId = response.gameRet.gameId;
+        this.gameId = response.gameId;
         break;
       }
       case "tournament": {
