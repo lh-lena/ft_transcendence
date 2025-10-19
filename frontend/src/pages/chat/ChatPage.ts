@@ -1,4 +1,4 @@
-import { ServiceContainer, Backend, Websocket } from "../../services";
+import { ServiceContainer, Backend, Websocket, Router } from "../../services";
 import { Window } from "../../components/window";
 import {
   CANVAS_DEFAULTS,
@@ -53,12 +53,14 @@ export class ChatPage {
   private websocket: Websocket;
   private currentChatHistory!: ChatHistory;
   private messageNotificationTimeout?: number;
+  private router: Router;
 
   constructor(serviceContainer: ServiceContainer) {
     // router / services container
     this.serviceContainer = serviceContainer;
     this.backend = this.serviceContainer.get<Backend>("backend");
     this.websocket = this.serviceContainer.get<Websocket>("websocket");
+    this.router = this.serviceContainer.get<Router>("router");
   }
 
   public static async create(
@@ -752,6 +754,17 @@ export class ChatPage {
   }
 
   private async sendHook(user: User, message: string) {
+    // invite case
+    if (this.inputBox.contains(this.sendInvite)) {
+      const response = await this.backend.joinGame();
+      console.log(response);
+      this.router.navigate("/vs-player", {
+        gameType: "remote",
+        source: "invite",
+        gameId: response.gameId,
+      });
+    }
+
     if (message.trim() === "") return; // don't send empty messages
     if (message.length > 200) {
       showError("only messages up to 200 characters permitted");

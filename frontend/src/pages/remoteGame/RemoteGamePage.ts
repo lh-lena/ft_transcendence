@@ -51,9 +51,7 @@ export class VsPlayerGamePage {
     this.registerWebsocketHandlers();
 
     // get web socket before countdown
-    this.loadingOverlay = new Loading("waiting for opponent", "button", () =>
-      this.quitHook(),
-    );
+    this.loadingOverlay = new Loading("waiting for opponent");
     this.loadingOverlay.mount(this.main);
 
     this.main.appendChild(this.loadingOverlay.getElement());
@@ -97,8 +95,11 @@ export class VsPlayerGamePage {
       }
       case "vs-player":
       default:
-        response = await this.backend.joinGame();
-        this.gameId = response.gameId;
+        // we initiate game flow with backend if we arent arriving through an invite
+        if (params.get("source") !== "invite") {
+          response = await this.backend.joinGame();
+          this.gameId = response.gameId;
+        }
         break;
     }
     console.log("game ID on create is: ", this.gameId);
