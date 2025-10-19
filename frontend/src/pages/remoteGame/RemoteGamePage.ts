@@ -41,7 +41,7 @@ export class VsPlayerGamePage {
     this.ws = this.serviceContainer.get<Websocket>("websocket");
     this.backend = this.serviceContainer.get<Backend>("backend");
 
-    // check which player is meant to be where
+    window.addEventListener("beforeunload", this.handleWindowClose.bind(this));
 
     this.main = document.createElement("div");
     this.main.className =
@@ -59,6 +59,19 @@ export class VsPlayerGamePage {
     this.main.appendChild(this.loadingOverlay.getElement());
 
     this.setupGame();
+  }
+
+  // add event as args in case you want to confirm user wants to close window
+  private handleWindowClose() {
+    // Clean up WebSocket connections
+    if (this.gameState.status === GameStatus.WAITING) {
+      this.backend.deleteGame(this.gameId);
+    } else if (
+      this.gameState.status === GameStatus.PLAYING ||
+      this.gameState.status === GameStatus.PAUSED
+    ) {
+      this.ws.messageGameLeave(this.gameId);
+    }
   }
 
   public async setupGame() {
@@ -448,7 +461,6 @@ export class VsPlayerGamePage {
       this.game.unmount();
       this.game = null;
     }
-    // Fix: Call unmount method properly
     this.loadingOverlay.unmount();
     this.main.remove();
   }
