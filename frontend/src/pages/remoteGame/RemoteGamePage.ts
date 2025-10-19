@@ -99,9 +99,14 @@ export class VsPlayerGamePage {
         if (params.get("source") !== "invite") {
           response = await this.backend.joinGame();
           this.gameId = response.gameId;
+        } else if (params.get("source") === "invite") {
+          const gameId = params.get("gameId");
+          if (gameId) this.gameId = gameId;
         }
         break;
     }
+
+    // debug
     console.log("game ID on create is: ", this.gameId);
 
     // save the user (me) to remote game to use later
