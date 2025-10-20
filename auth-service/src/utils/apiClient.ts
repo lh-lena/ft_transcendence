@@ -48,17 +48,6 @@ const retryConfig: IAxiosRetryConfig = {
   retryCondition: (error: AxiosError) => {
     return axiosRetry.isNetworkOrIdempotentRequestError(error);
   },
-
-  /**
-   * Called before each retry attempt
-   * Useful for logging retry attempts
-   */
-  onRetry: (retryCount: number, error: AxiosError, requestConfig: AxiosRequestConfig) => {
-    console.warn(
-      `[API Client] Retry attempt ${retryCount} for ${requestConfig.method?.toUpperCase()} ${requestConfig.url}`,
-      error.message,
-    );
-  },
 };
 
 axiosRetry(backendApi, retryConfig);
@@ -101,13 +90,6 @@ export async function apiClientBackend<T = unknown>(config: AxiosRequestConfig):
   } catch (error) {
     if (axios.isAxiosError(error)) {
       const axiosError = error as AxiosError;
-
-      console.error('[API Client] Request failed:', {
-        method: config.method?.toUpperCase(),
-        url: config.url,
-        status: axiosError.response?.status,
-        message: axiosError.message,
-      });
 
       if (axiosError.code === 'ECONNREFUSED') {
         throw new Error(

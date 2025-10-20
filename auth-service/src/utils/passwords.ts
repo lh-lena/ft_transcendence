@@ -67,7 +67,6 @@ export async function hashPassword(password: string): Promise<string> {
     const hash = await argon2.hash(password, HASH_OPTIONS);
     return hash;
   } catch (error) {
-    console.error('[Password] Hashing failed:', error);
     throw new Error('Failed to hash password');
   }
 }
@@ -105,7 +104,6 @@ export async function verifyPassword(hash: string, password: string): Promise<bo
     const isValid = await argon2.verify(hash, password);
     return isValid;
   } catch (error) {
-    console.error('[Password] Verification failed:', error);
     return false;
   }
 }
