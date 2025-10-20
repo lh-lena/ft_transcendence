@@ -1,4 +1,4 @@
-import { ServiceContainer, Backend, Websocket } from "../../services";
+import { ServiceContainer, Backend, Websocket, Router } from "../../services";
 import { Window } from "../../components/window";
 import {
   CANVAS_DEFAULTS,
@@ -53,12 +53,14 @@ export class ChatPage {
   private websocket: Websocket;
   private currentChatHistory!: ChatHistory;
   private messageNotificationTimeout?: number;
+  private router: Router;
 
   constructor(serviceContainer: ServiceContainer) {
     // router / services container
     this.serviceContainer = serviceContainer;
     this.backend = this.serviceContainer.get<Backend>("backend");
     this.websocket = this.serviceContainer.get<Websocket>("websocket");
+    this.router = this.serviceContainer.get<Router>("router");
   }
 
   public static async create(
@@ -356,7 +358,21 @@ export class ChatPage {
       const messageBox = document.createElement("div");
       messageBox.className = "standard-dialog flex items-center self-start";
       const messageText = document.createElement("h1");
-      messageText.textContent = message.message;
+      let isInvitation = false;
+      let parsedMessage: any = null;
+
+      // Try to parse as JSON, fall back to regular message if it fails
+      try {
+        parsedMessage = JSON.parse(message.message);
+        if (parsedMessage && parsedMessage.type === "invite") {
+          isInvitation = true;
+        }
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      } catch (e) {
+        // console.log(e);
+      }
+
+      messageText.textContent = isInvitation ? `game invite` : message.message;
       if (message.senderId == this.backend.getUser().userId) {
         messageBox.classList.add("!self-end");
         messageBox.classList.add("bg-black");
@@ -364,6 +380,14 @@ export class ChatPage {
       }
       messageBox.appendChild(messageText);
       messages.appendChild(messageBox);
+      if (isInvitation && parsedMessage && parsedMessage.gameId) {
+        messageBox.classList.add("w-60");
+        const joinGameBtn = document.createElement("button");
+        joinGameBtn.className = "btn ml-auto";
+        joinGameBtn.innerText = "join";
+        joinGameBtn.onclick = () => this.joinGameButton(parsedMessage.gameId);
+        messageBox.appendChild(joinGameBtn);
+      }
     });
 
     // scroll to bottom after DOM has updated
@@ -394,6 +418,14 @@ export class ChatPage {
     this.inputBox.appendChild(this.sendButton);
     this.bottomBar = this.inputBox;
     this.chatPanel.appendChild(this.bottomBar);
+  }
+
+  private async joinGameButton(gameId: string) {
+    await this.backend.joinGame(gameId);
+    this.router.navigate("/vs-player", {
+      source: "invite",
+      gameId: gameId,
+    });
   }
 
   private async populateFriends() {
@@ -752,6 +784,23 @@ export class ChatPage {
   }
 
   private async sendHook(user: User, message: string) {
+    // invite case
+    if (this.inputBox.contains(this.sendInvite)) {
+      const response = await this.backend.joinGame();
+      const inviteMessage = {
+        type: "invite",
+        username: this.backend.getUser().username,
+        gameId: response.gameId,
+      };
+      message = JSON.stringify(inviteMessage);
+      await this.websocket.sendChatMessage(user, message);
+      this.router.navigate("/vs-player", {
+        gameType: "remote",
+        source: "invite",
+        gameId: response.gameId,
+      });
+    }
+
     if (message.trim() === "") return; // don't send empty messages
     if (message.length > 200) {
       showError("only messages up to 200 characters permitted");

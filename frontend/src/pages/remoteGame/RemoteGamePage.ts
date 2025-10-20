@@ -41,7 +41,7 @@ export class VsPlayerGamePage {
     this.ws = this.serviceContainer.get<Websocket>("websocket");
     this.backend = this.serviceContainer.get<Backend>("backend");
 
-    // check which player is meant to be where
+    window.addEventListener("beforeunload", this.handleWindowClose.bind(this));
 
     this.main = document.createElement("div");
     this.main.className =
@@ -51,14 +51,25 @@ export class VsPlayerGamePage {
     this.registerWebsocketHandlers();
 
     // get web socket before countdown
-    this.loadingOverlay = new Loading("waiting for opponent", "button", () =>
-      this.quitHook(),
-    );
+    this.loadingOverlay = new Loading("waiting for opponent");
     this.loadingOverlay.mount(this.main);
 
     this.main.appendChild(this.loadingOverlay.getElement());
 
     this.setupGame();
+  }
+
+  // add event as args in case you want to confirm user wants to close window
+  private handleWindowClose() {
+    // Clean up WebSocket connections
+    if (this.gameState.status === GameStatus.WAITING) {
+      this.backend.deleteGame(this.gameId);
+    } else if (
+      this.gameState.status === GameStatus.PLAYING ||
+      this.gameState.status === GameStatus.PAUSED
+    ) {
+      this.ws.messageGameLeave(this.gameId);
+    }
   }
 
   public async setupGame() {
@@ -75,7 +86,7 @@ export class VsPlayerGamePage {
         const aiDifficulty = params.get("aiDifficulty") || "medium";
         response = await this.backend.createAiGame(aiDifficulty);
         // need to talk to moritz about this
-        this.gameId = response.gameRet.gameId;
+        this.gameId = response.gameId;
         break;
       }
       case "tournament": {
@@ -84,10 +95,18 @@ export class VsPlayerGamePage {
       }
       case "vs-player":
       default:
-        response = await this.backend.joinGame();
-        this.gameId = response.gameId;
+        // we initiate game flow with backend if we arent arriving through an invite
+        if (params.get("source") !== "invite") {
+          response = await this.backend.joinGame();
+          this.gameId = response.gameId;
+        } else if (params.get("source") === "invite") {
+          const gameId = params.get("gameId");
+          if (gameId) this.gameId = gameId;
+        }
         break;
     }
+
+    // debug
     console.log("game ID on create is: ", this.gameId);
 
     // save the user (me) to remote game to use later
@@ -448,7 +467,6 @@ export class VsPlayerGamePage {
       this.game.unmount();
       this.game = null;
     }
-    // Fix: Call unmount method properly
     this.loadingOverlay.unmount();
     this.main.remove();
   }

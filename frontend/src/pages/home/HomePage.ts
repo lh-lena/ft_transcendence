@@ -14,6 +14,8 @@ export class HomePage {
     this.serviceContainer = serviceContainer;
     this.router = this.serviceContainer.get<Router>("router");
 
+    // DON'T call checkIfLoggedIn here - it causes infinite loop
+
     this.main = document.createElement("div");
     this.main.className =
       "flex flex-col gap-5 w-full min-h-full justify-center items-center bg-[#0400FF]";
@@ -36,6 +38,7 @@ export class HomePage {
   }
 
   public mount(parent: HTMLElement): void {
+    // Check auth status when mounting, not in constructor
     this.menu.mount(this.main);
     parent.appendChild(this.main);
   }
