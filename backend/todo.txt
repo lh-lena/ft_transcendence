@@ -1,12 +1,5 @@
 TODO:
 -test user already logged in -> set everyone offline on shutdown?
 -add correcr error messages on errors -> talk to alec
--totp qr code vaishes on backupcodes download
--guest can access protected routes after tournaments
--oAuth not working on registerpage
--profile picture fetching doesnt work
--update profile pictures after setting
 -game still runs after one disconnect
--chat after own message not updated
--no notification when not mutual friends
--check ginormus chat messages
+-check in frontend backend interceptor message for inavlid token -> 

@@ -20,10 +20,8 @@ import axiosRetry, { IAxiosRetryConfig } from 'axios-retry';
  */
 const backendApi: AxiosInstance = axios.create({
   baseURL: process.env.BACKEND_URL ? `${process.env.BACKEND_URL}/api` : 'http://backend:8080/api',
-  timeout: 5000, // 5 second timeout
-  headers: {
-    'Content-Type': 'application/json',
-  },
+  timeout: 5000,
+
   validateStatus: (status) => status < 500,
 });
 
