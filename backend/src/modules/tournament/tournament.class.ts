@@ -56,6 +56,12 @@ export class tournamentClass {
     const tournament = await this.getByUser(userId);
     if (tournament) {
       tournament.players = tournament.players.filter((p) => p.userId !== userId);
+
+      for (const player of tournament.players) {
+        if (player.userId === userId) continue;
+        console.log('Notifying player:', player.userId, 'about new player:', userId);
+        notifyPlayer(player.userId, `INFO: New Player joined the tournament`, userId);
+      }
       return true;
     }
     return false;

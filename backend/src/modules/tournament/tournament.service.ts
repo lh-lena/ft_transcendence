@@ -11,10 +11,7 @@ const tournamentmaker = new tournamentClass();
 
 export const tournamentService = {
   async create(data: tournamentCreateType): Promise<tournamentResponseType> {
-    const existingTournament = await tournamentmaker.getByUser(data.userId);
-    console.log(existingTournament);
-
-    if (existingTournament) return existingTournament;
+    await tournamentmaker.leave(data.userId);
 
     const ret = await tournamentmaker.findAvailableTournament(data);
     console.log(ret);

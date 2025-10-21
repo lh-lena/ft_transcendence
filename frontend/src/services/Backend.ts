@@ -55,7 +55,6 @@ export class Backend {
             return;
           }
         } else if (error.response?.status && this.refreshed) {
-          showError("Error: Refresh token failed, logging out!");
           localStorage.removeItem("user");
           document.cookie = "jwt=";
           document.cookie = "refreshToken=";
@@ -402,7 +401,7 @@ export class Backend {
       visibility: "private",
     });
 
-    return response;
+    return response.data;
   }
 
   //delete game eg on ingame quit or on waiting screen

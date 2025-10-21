@@ -98,7 +98,7 @@ export const gameRoutesConfig = {
       try {
         const config: AxiosRequestConfig = {
           method: 'get',
-          url: `/game/${data.params.gameId}`, // Use URL param instead of query
+          url: `/game/${data.params.gameId}`,
         };
 
         const gameCheck: GameType = await server.api(config);
@@ -117,7 +117,7 @@ export const gameRoutesConfig = {
     successCode: 204,
     errorMessages: {
       invalidParams: 'Invalid game ID',
-      forbidden: 'Forbidden: Only delete one of your games',
+      forbidden: '',
     },
   },
 };
