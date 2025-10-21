@@ -103,7 +103,7 @@ export class SettingsPage {
     this.populateSettingsPanel(securitySettings);
 
     this.window = new Window({
-      title: "Settings",
+      title: "settings",
       width: CANVAS_DEFAULTS.width,
       height: CANVAS_DEFAULTS.height,
       className: "",
