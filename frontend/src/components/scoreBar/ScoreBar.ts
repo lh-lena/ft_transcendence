@@ -33,6 +33,8 @@ export class ScoreBar {
       undefined,
       undefined,
       undefined,
+      gameState.playerA.avatar ? "image" : undefined,
+      gameState.playerA.userId,
     ).getElement();
     this.playerLeftContainer.appendChild(profileA);
     this.scoreA = document.createElement("h1");
@@ -69,12 +71,15 @@ export class ScoreBar {
     this.scoreB.className = "text-white";
     this.playerRightContainer.appendChild(this.scoreB);
     if (this.gameState.playerB) {
+      const playerB = this.gameState.playerB;
       const profileB = new ProfileAvatar(
-        this.gameState.playerB.color,
-        this.gameState.playerB.colormap,
+        playerB.color,
+        playerB.colormap,
         undefined,
         undefined,
         undefined,
+        playerB.avatar ? "image" : undefined,
+        playerB.userId,
         //TODO need this in gameState
         //this.gameState.playerB.avatar ? "image" : undefined,
         //this.gameState.playerB.userId,

@@ -32,6 +32,8 @@ export interface Player {
   score: number;
   color: string;
   colormap: string[];
+  userId: string;
+  avatar: string | null;
 }
 
 export interface GameState {

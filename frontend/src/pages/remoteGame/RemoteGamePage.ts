@@ -190,7 +190,7 @@ export class VsPlayerGamePage {
       }
     }
 
-    // NOW handle tournament game_start after everything is initialized
+    // tournament game_start after everything is initialized
     if (this.gameType === "tournament") {
       const gameStartPayloadStr = params.get("gameStartPayload");
       if (gameStartPayloadStr) {

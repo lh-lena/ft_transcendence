@@ -3,6 +3,7 @@ import { PongGame } from "../../game";
 import { Countdown } from "../../components/countdown";
 import { GameState, GameStatus } from "../../types";
 import { ScoreBar } from "../../components/scoreBar";
+import { Backend } from "../../services";
 
 import { Menu } from "../../components/menu";
 
@@ -10,26 +11,33 @@ import { Menu } from "../../components/menu";
 import { userStore, userStore2 } from "../../constants/backend";
 
 export class LocalGamePage {
-  private element: HTMLElement;
+  private element!: HTMLElement;
   private serviceContainer: ServiceContainer;
   private router: Router;
   private game: PongGame | null = null;
-  private gameState: GameState;
-  private countdown: Countdown;
+  private gameState!: GameState;
+  private countdown!: Countdown;
   private scoreBar!: ScoreBar;
   private menu: Menu | null = null;
   private gameContainer: HTMLElement | null = null;
+  private backend: Backend;
 
   // TODO create function on local
   // populate user B as user we fetch from backend (real user)
 
   constructor(serviceContainer: ServiceContainer) {
+    this.element = document.createElement("div");
+    this.element.className =
+      "sys-window flex flex-col gap-1 w-full min-h-full items-center justify-center bg-[#0400FF]";
     // router / services container
     this.serviceContainer = serviceContainer;
     this.router = this.serviceContainer.get<Router>("router");
+    this.backend = this.serviceContainer.get<Backend>("backend");
 
-    // for player A
+    this.setupGame();
+  }
 
+  private async setupGame() {
     this.gameState = {
       status: GameStatus.PLAYING,
       previousStatus: GameStatus.PLAYING,
@@ -48,10 +56,6 @@ export class LocalGamePage {
       previousKey: "",
       wsPaddleSequence: 0,
     };
-
-    this.element = document.createElement("div");
-    this.element.className =
-      "sys-window flex flex-col gap-1 w-full min-h-full items-center justify-center bg-[#0400FF]";
 
     // Initialize Countdown
     this.countdown = new Countdown();
