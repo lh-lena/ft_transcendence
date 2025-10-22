@@ -21,7 +21,7 @@ import type {
 } from '../types/game.types.js';
 import createGameValidator from '../utils/game.validation.js';
 import type { EnvironmentConfig } from '../../config/config.js';
-import { addAIPlayerToGame, createPlayerFromUser } from '../utils/player.utils.js';
+import { addAIPlayerToGame, createPlayerFromUser, getUserDisplayName } from '../utils/player.utils.js';
 import { AuthService } from '../../auth/auth.types.js';
 
 export default function createGameService(app: FastifyInstance): GameService {
@@ -127,6 +127,7 @@ export default function createGameService(app: FastifyInstance): GameService {
     const respond = app.respond as RespondService;
     const gameStateService = app.gameStateService as GameStateService;
     const { userId } = user;
+    const name = getUserDisplayName(user);
     processDebugLog(
       app,
       'game-service',
@@ -139,7 +140,7 @@ export default function createGameService(app: FastifyInstance): GameService {
       if (isPaused === true) {
         respond.gamePaused(
           gameId,
-          `game paused by user ${user.userAlias} for ${config.websocket.pauseTimeout / 1000}s`,
+          `game paused by user ${name} for ${config.websocket.pauseTimeout / 1000}s`,
         );
       }
     } catch (error: unknown) {
@@ -147,7 +148,7 @@ export default function createGameService(app: FastifyInstance): GameService {
         app,
         user,
         'game-service',
-        `failed to pause game for user ${user.userAlias}`,
+        `failed to pause game for user ${name}`,
         error,
       );
     }
@@ -158,10 +159,11 @@ export default function createGameService(app: FastifyInstance): GameService {
     const respond = app.respond as RespondService;
     const gameStateService = app.gameStateService as GameStateService;
     const { userId } = user;
+    const name = getUserDisplayName(user);
     processDebugLog(
       app,
       'game-service',
-      `Handling game resume for ${user.userAlias} in game ${gameId}`,
+      `Handling game resume for ${user.userId} in game ${gameId}`,
     );
     try {
       const game = validator.getValidGameCheckPlayer(gameId, userId);
@@ -169,14 +171,15 @@ export default function createGameService(app: FastifyInstance): GameService {
       respond.notificationToGame(
         gameId,
         NotificationType.INFO,
-        `game resumed successfully by ${user.userAlias}`,
+        `game resumed successfully by ${name}`,
+        [user.userId]
       );
     } catch (error: unknown) {
       processGameError(
         app,
         user,
         'game-service',
-        `Failed to resume game for ${user.userAlias}:`,
+        `Failed to resume game for ${name}:`,
         error,
       );
     }
@@ -215,6 +218,7 @@ export default function createGameService(app: FastifyInstance): GameService {
     const respond = app.respond as RespondService;
     const gameStateService = app.gameStateService as GameStateService;
     const { userId } = user;
+    const name = getUserDisplayName(user);
     processDebugLog(
       app,
       'game-service',
@@ -235,14 +239,13 @@ export default function createGameService(app: FastifyInstance): GameService {
         respond.notificationToGame(
           gameId,
           NotificationType.INFO,
-          ` ${user.userAlias} left the game before it started`,
+          ` ${name} left the game before it started`,
+          [user.userId]
         );
         await gameStateService.endGame(game, GameSessionStatus.CANCELLED);
       } else {
         respond.notificationToGame(
-          gameId,
-          NotificationType.INFO,
-          ` ${user.userAlias} left the game`,
+          gameId, NotificationType.INFO, ` ${name} left the game`, [user.userId],
         );
         await gameStateService.endGame(game, GameSessionStatus.CANCELLED, user.userId);
       }
