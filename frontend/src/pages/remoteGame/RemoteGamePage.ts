@@ -371,7 +371,14 @@ export class VsPlayerGamePage {
     );
     // implement actual winning logic here based on winning user id. not score. this is only temporary for now (while backend isnt synced)
 
-    const winner = winnerUser.username ? winnerUser.username : "AI";
+    // need to check if there is a winnerUser.alias, then winnerUser.username then if not we use AI as fallback
+    // should i do this with a switch statement?
+    const winner =
+      winnerUser.alias && winnerUser.alias !== ""
+        ? winnerUser.alias
+        : winnerUser.username && winnerUser.username !== ""
+          ? winnerUser.username
+          : "AI";
     this.endResultText.innerText = `Winner: ${winner}`;
   }
 

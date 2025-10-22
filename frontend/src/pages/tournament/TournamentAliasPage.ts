@@ -199,6 +199,7 @@ export class TournamentAliasPage {
   }
 
   public unmount(): void {
+    this.backend.leaveTournament();
     this.websocket.offMessage(
       "notification",
       this.handleWsNotifications.bind(this),
