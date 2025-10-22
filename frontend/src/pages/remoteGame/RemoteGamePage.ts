@@ -422,10 +422,7 @@ export class VsPlayerGamePage {
   }
 
   private quitHook() {
-    // old ws callback
-    // this.ws.messageGameLeave(this.gameId);
     this.backend.deleteGame(this.gameId);
-    this.unmount();
     this.router.navigate("/chat");
   }
 
