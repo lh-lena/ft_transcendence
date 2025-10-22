@@ -28,6 +28,9 @@ export default function createRespondService(app: FastifyInstance): RespondServi
       return false;
     }
     const message = { event, payload };
+    if (event !== 'game_update') { // TODO: remove after testing
+        log.fatal(`WS: ${event}`);
+      }
     try {
       const messageStr = JSON.stringify(message);
       conn.send(messageStr);

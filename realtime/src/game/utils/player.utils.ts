@@ -31,6 +31,17 @@ export function addAIPlayerToGame(
   game.players.push(player);
 }
 
+export function getUserDisplayName(user: User): string {
+  let name = user.userAlias;
+  if (name === undefined || name === null) {
+    name = user.username;
+  }
+  if (name === undefined || name === null) {
+    name = 'unknown';
+  }
+  return name;
+}
+
 export function getPlayer1Username(game: GameSession): string {
   let player1Username = game.players[0]?.userAlias;
   if (player1Username === undefined || player1Username === null) {

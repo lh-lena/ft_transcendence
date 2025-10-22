@@ -26,20 +26,6 @@ const plugin: FastifyPluginCallback = (app: FastifyInstance): void => {
   app.decorate('gameService', gameService);
 
   app.eventBus.on(
-    GAME_EVENTS.START,
-    ({ user, payload }: { user: User; payload: ClientEventPayload<GAME_EVENTS.START> }) => {
-      gameService.handleStartGame(user, payload.gameId).catch((err: unknown) => {
-        processErrorLog(
-          app,
-          'game-plugin',
-          `Failed to handle game start from user ${user.userId}: `,
-          err,
-        );
-      });
-    },
-  );
-
-  app.eventBus.on(
     GAME_EVENTS.UPDATE,
     ({ user, payload }: { user: User; payload: ClientEventPayload<GAME_EVENTS.UPDATE> }) => {
       gameService.handlePlayerInput(user, payload);
