@@ -80,9 +80,6 @@ export class ScoreBar {
         undefined,
         playerB.avatar ? "image" : undefined,
         playerB.userId,
-        //TODO need this in gameState
-        //this.gameState.playerB.avatar ? "image" : undefined,
-        //this.gameState.playerB.userId,
       ).getElement();
       this.playerRightContainer.appendChild(profileB);
     }

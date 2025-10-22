@@ -44,11 +44,15 @@ export class LocalGamePage {
       blockedPlayButton: false,
       playerA: {
         ...userStore,
+        avatar: null,
+        userId: "lol",
         score: 0,
       },
       playerB: {
         ...userStore2,
         score: 0,
+        avatar: null,
+        userId: "lol",
       },
       pauseInitiatedByMe: false,
       activeKey: "",
