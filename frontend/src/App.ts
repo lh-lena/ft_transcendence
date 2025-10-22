@@ -93,7 +93,7 @@ export class App {
 
     // we always connect back to web socket before we load a page
     if (protectedRoutes.includes(currentRoute)) {
-      this.websocket.initializeWebSocket();
+      await this.websocket.initializeWebSocket();
       this.backend.handleWsConnect();
     }
 
