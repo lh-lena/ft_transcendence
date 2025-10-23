@@ -323,7 +323,7 @@ export class ChatPage {
 
     // window
     const windowComponent = new Window({
-      title: "Chat",
+      title: "chat",
       width: CANVAS_DEFAULTS.width,
       height: CANVAS_DEFAULTS.height,
       className: "",

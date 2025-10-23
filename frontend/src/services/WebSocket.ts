@@ -22,7 +22,7 @@ export class Websocket {
   private cleanupHandler?: () => void;
 
   // web socket (init on profile load?)
-  public initializeWebSocket(): void {
+  public async initializeWebSocket() {
     const wsUrl = import.meta.env.VITE_WEBSOCKET_URL;
     //TODO is not stored there no more? is this esential??
     const token = localStorage.getItem("jwt");
@@ -201,7 +201,7 @@ export class Websocket {
       payload: { gameId: gameId },
     };
     this.sendMessage(game_leave);
-    console.log("sent message tho");
+    console.log("sent game leave");
   }
 
   public messageGamePause(gameId: string): void {

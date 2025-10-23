@@ -153,9 +153,46 @@ export class VsPlayerGamePage {
         score: 0,
       };
       this.userOther = otherUser;
+
+      // Initialize game immediately for AI mode
+      this.gameState.activePaddle = "paddleA";
+      this.initializeGame();
     }
 
-    // NOW handle tournament game_start after everything is initialized
+    // For vs-player, try to get existing game state on refresh
+    if (this.gameType === "vs-player" && this.gameId) {
+      try {
+        const response = await this.backend.getGameById(this.gameId);
+        const gameData = response.data;
+        // If game exists and has started, initialize it
+        if (gameData && gameData.players && gameData.players.length === 2) {
+          const otherUserId = gameData.players.find(
+            (player: { userId: string }) =>
+              player.userId !== this.userMe.userId,
+          );
+
+          if (otherUserId) {
+            const otherUser = await this.backend.getUserById(
+              otherUserId.userId,
+            );
+            otherUser.colormap = profilePrintToArray(otherUser.colormap);
+            this.gameState.playerB = {
+              ...otherUser,
+              score: 0,
+            };
+            this.userOther = otherUser;
+
+            // Set active paddle and initialize game
+            this.gameState.activePaddle = "paddleA";
+            this.initializeGame();
+          }
+        }
+      } catch (error) {
+        console.log("Could not fetch existing game data on refresh:", error);
+      }
+    }
+
+    // tournament game_start after everything is initialized
     if (this.gameType === "tournament") {
       const gameStartPayloadStr = params.get("gameStartPayload");
       if (gameStartPayloadStr) {
@@ -274,12 +311,10 @@ export class VsPlayerGamePage {
 
   private async wsGameUpdateHandler(payload: WsServerBroadcast["game_update"]) {
     this.game?.updateGameStateFromServer(payload);
-    // check to make sure everythig it set right
     if (!this.gameState.playerB) return;
     if (!this.userOther) return;
     if (!this.gameState.activePaddle) {
       this.gameState.activePaddle = payload.activePaddle;
-      // change paddle pos to paddleB if we aren't A
       if (this.gameState.activePaddle != "paddleA") {
         [this.gameState.playerA, this.gameState.playerB] = [
           this.gameState.playerB,
@@ -288,16 +323,15 @@ export class VsPlayerGamePage {
       }
       this.initializeGame();
     }
-    // score stuff
     this.gameState.playerA.score = payload.paddleA.score;
     this.gameState.playerB.score = payload.paddleB.score;
-    // this.gameStateCallback();
-    // need to refresh / change this when actual user ids exist
-    this.scoreBar.updateScores(
-      this.gameState.playerA.score,
-      this.gameState.playerB.score,
-    );
-    // just always make sure if we get a game update the board is showing showGamePieces
+    // Add null check for scoreBar:
+    if (this.scoreBar) {
+      this.scoreBar.updateScores(
+        this.gameState.playerA.score,
+        this.gameState.playerB.score,
+      );
+    }
     this.loadingOverlay.hide();
     this.hidePauseOverlay();
   }
@@ -395,10 +429,7 @@ export class VsPlayerGamePage {
   }
 
   private quitHook() {
-    // old ws callback
-    // this.ws.messageGameLeave(this.gameId);
     this.backend.deleteGame(this.gameId);
-    this.unmount();
     this.router.navigate("/chat");
   }
 
