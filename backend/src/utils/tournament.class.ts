@@ -349,6 +349,8 @@ export class tournamentClass {
 
     tournament.players = tournament.players.filter((p) => p.userId !== loserId.userId);
 
+    this.server.services.user.update(loserId, { alias: null });
+
     this.server.log.info(
       {
         tournamentId: tournament.tournamentId,
