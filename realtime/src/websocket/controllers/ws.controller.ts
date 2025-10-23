@@ -33,6 +33,7 @@ export const handleWSConnection = (
 
 function initializeConnection(ws: WSConnection, user: User): void {
   if (user === undefined || user.userId === undefined) return;
+
   ws.user = user;
   ws.gameId = null;
   ws.lastPing = Date.now();
@@ -59,7 +60,7 @@ function setupEventListeners(ws: WSConnection, app: FastifyInstance): void {
       }
       const { event, payload } = validationResult.data;
       if (event !== 'game_update') { // TODO: remove after testing
-        log.fatal(`USER SENT EVENT: ${event}`);
+        log.fatal(`USER: ${event}`);
       }
       app.eventBus.emit(event, { user, payload });
     } catch (error: unknown) {
@@ -74,7 +75,7 @@ function setupEventListeners(ws: WSConnection, app: FastifyInstance): void {
   ws.on('close', (code: number, reason: Buffer) => {
     if (String(reason) !== WSStatusCode.REPLACED.reason) {
       log.debug(
-        `[websocket-service] Handling closing connection for user ${userId} ${ws.user.username}. ${code}: ${reason.toString()}`,
+        `[websocket-service] Handling closing connection for user ${userId}. ${code}: ${reason.toString()}`,
       );
       connectionService.removeConnection(ws);
     }

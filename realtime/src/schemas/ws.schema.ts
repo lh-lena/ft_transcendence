@@ -77,10 +77,6 @@ export const ErrorPayloadSchema = z
 
 export const WsClientMessageSchema = z.discriminatedUnion('event', [
   z.object({
-    event: z.literal(GAME_EVENTS.START),
-    payload: GameIdPayloadSchema,
-  }),
-  z.object({
     event: z.literal(GAME_EVENTS.LEAVE),
     payload: GameIdPayloadSchema,
   }),

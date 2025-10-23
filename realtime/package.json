@@ -9,7 +9,7 @@
     "build-ts": "tsc -p tsconfig.json",
     "watch-ts": "tsc -w -p tsconfig.json",
     "build": "npm run clean && npm run build-ts",
-    "serve-dev": "nodemon --env-file=.env.example dist/server.js",
+    "serve-dev": "nodemon --env-file=.env dist/server.js",
     "lint": "eslint . --ext .ts,.tsx",
     "format:check": "prettier --check .",
     "format:write": "prettier --write \"src/**/*.{ts,tsx}\"",
