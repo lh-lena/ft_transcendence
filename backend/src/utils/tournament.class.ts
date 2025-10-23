@@ -283,7 +283,7 @@ export class tournamentClass {
       tournament.status = 'ready';
 
       for (const player of tournament.players) {
-        this.server.realtime.notifyPlayer(player.userId, 'INFO: Tournament starts soon');
+        this.server.realtime.notifyPlayer(player.userId, `INFO: Tournament starts soon`);
       }
 
       await this.createGames(tournament);
@@ -293,9 +293,35 @@ export class tournamentClass {
           tournamentId: tournament.tournamentId,
           playerAmount: tournament.playerAmount,
         },
-        'Tournament started',
+        `Tournament ${tournament.tournamentId} started`,
       );
     }
+  }
+
+  /**
+   * Start tournament when full
+   *
+   * Creates initial bracket games and notifies players.
+   *
+   * @param tournament - Tournament to start
+   */
+  private async startRound(tournament: tournamentType): Promise<void> {
+    for (const player of tournament.players) {
+      this.server.realtime.notifyPlayer(
+        player.userId,
+        `INFO: Tournament round: ${tournament.round} starts soon`,
+      );
+    }
+
+    await this.createGames(tournament);
+
+    this.server.log.info(
+      {
+        tournamentId: tournament.tournamentId,
+        playerAmount: tournament.playerAmount,
+      },
+      `Tournament ${tournament.tournamentId} round ${tournament.round} started`,
+    );
   }
 
   /**
@@ -351,7 +377,7 @@ export class tournamentClass {
       return;
     }
 
-    if (tournament.games.length === 0 && tournament.players.length > 1) {
+    if (tournament.games.length === 0) {
       tournament.round += 1;
       tournament.playerAmount = tournament.players.length;
 
@@ -364,7 +390,7 @@ export class tournamentClass {
         'Tournament advancing to next round',
       );
 
-      await this.createGames(tournament);
+      this.startRound(tournament);
     }
   }
 

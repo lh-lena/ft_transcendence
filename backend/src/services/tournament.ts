@@ -49,8 +49,7 @@ export const createTournamentService = (server: FastifyInstance, gameService: Ga
      * @returns Tournament that was joined
      */
     async create(data: tournamentCreateType): Promise<tournamentResponseType> {
-      const { userId } = data;
-      await tournamentManager.leave({ userId: userId });
+      //await tournamentManager.leave({ userId: userId });
 
       const tournament = await tournamentManager.findAvailableTournament(data);
 
