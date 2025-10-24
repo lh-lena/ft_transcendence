@@ -234,7 +234,7 @@ export default function createGameService(app: FastifyInstance): GameService {
           ` ${name} left the game before it started`,
           [user.userId],
         );
-        await gameStateService.endGame(game, GameSessionStatus.CANCELLED);
+        await gameStateService.endGame(game, GameSessionStatus.CANCELLED_SERVER_ERROR);
       } else {
         respond.notificationToGame(gameId, NotificationType.INFO, ` ${name} left the game`, [
           user.userId,
