@@ -1,34 +1,73 @@
 import fp from 'fastify-plugin';
 import { FastifyInstance } from 'fastify';
 
-import { healthRefSchemas } from '../modules/health/health.schema';
-import { responseRefSchemas } from '../modules/response/response.schema';
-import { userRefSchemas } from '../modules/user/user.schema';
-import { gameRefSchemas } from '../modules/game/game.schema';
-import { resultRefSchemas } from '../modules/result/result.schema';
-import { friendRefSchemas } from '../modules/friend/friend.schema';
-import { blockedRefSchemas } from '../modules/blocked/blocked.schema';
-import { tournamentRefSchemas } from '../modules/tournament/tournament.schema';
-import { chatRefSchemas } from '../modules/chat/chat.schema';
+import { healthSchemas } from '../schemas/health';
+import { responseSchemas } from '../schemas/response';
+import { userSchemas } from '../schemas/user';
+import { gameSchemas } from '../schemas/game';
+import { resultSchemas } from '../schemas/result';
+import { friendSchemas } from '../schemas/friend';
+import { blockedSchemas } from '../schemas/blocked';
+import { tournamentSchemas } from '../schemas/tournament';
+import { chatSchemas } from '../schemas/chat';
+
+import { zodSchemasToJSONSchemas } from '../schemas/schemaHelper';
+
+const CONVERTED_SCHEMAS = [
+  ...Object.values(zodSchemasToJSONSchemas(healthSchemas)),
+  ...Object.values(zodSchemasToJSONSchemas(responseSchemas)),
+  ...Object.values(zodSchemasToJSONSchemas(userSchemas)),
+  ...Object.values(zodSchemasToJSONSchemas(gameSchemas)),
+  ...Object.values(zodSchemasToJSONSchemas(resultSchemas)),
+  ...Object.values(zodSchemasToJSONSchemas(friendSchemas)),
+  ...Object.values(zodSchemasToJSONSchemas(blockedSchemas)),
+  ...Object.values(zodSchemasToJSONSchemas(tournamentSchemas)),
+  ...Object.values(zodSchemasToJSONSchemas(chatSchemas)),
+];
 
 const schemaPlugin = async (server: FastifyInstance) => {
-  const schemaList = [
-    ...Object.values(healthRefSchemas),
-    ...Object.values(responseRefSchemas),
-    ...Object.values(userRefSchemas),
-    ...Object.values(gameRefSchemas),
-    ...Object.values(resultRefSchemas),
-    ...Object.values(friendRefSchemas),
-    ...Object.values(blockedRefSchemas),
-    ...Object.values(tournamentRefSchemas),
-    ...Object.values(chatRefSchemas),
-  ];
+  const isDev = server.config.NODE_ENV === 'development';
 
-  for (const schema of schemaList) {
-    // console.log(`Registering schema: ${schema.$id}`);
-    // console.log(schema);
-    server.addSchema(schema);
+  let registeredCount = 0;
+
+  const errors: Array<{ schemaId: string; error: unknown }> = [];
+
+  for (const schema of CONVERTED_SCHEMAS) {
+    try {
+      if (isDev) {
+        server.log.debug({ schemaId: schema.$id }, `Registering schema: ${schema.$id}`);
+      }
+
+      server.addSchema(schema);
+      registeredCount++;
+    } catch (error) {
+      errors.push({ schemaId: schema.$id!, error });
+    }
   }
+
+  if (errors.length > 0) {
+    server.log.error(
+      {
+        failed: errors.length,
+        total: CONVERTED_SCHEMAS.length,
+        failedSchemas: errors.map((e) => e.schemaId),
+      },
+      'Some schemas failed to register',
+    );
+    throw new Error(`Failed to register ${errors.length} schema(s)`);
+  }
+
+  server.log.info(
+    {
+      count: registeredCount,
+      total: CONVERTED_SCHEMAS.length,
+    },
+    `Successfully registered all ${registeredCount} schemas`,
+  );
 };
 
-export default fp(schemaPlugin);
+export default fp(schemaPlugin, {
+  name: 'schemas',
+  fastify: '5.x',
+  dependencies: ['config'],
+});

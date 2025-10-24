@@ -28,6 +28,7 @@ export type User = {
   updatedAt: string;
   email: string;
   username: string;
+  alias: string;
   password_hash: string;
   tfaEnabled: boolean;
   twofa_secret: string;

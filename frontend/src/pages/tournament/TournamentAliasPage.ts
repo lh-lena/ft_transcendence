@@ -27,6 +27,8 @@ export class TournamentAliasPage {
     this.backend = this.serviceContainer.get<Backend>("backend");
     this.websocket = this.serviceContainer.get<Websocket>("websocket");
 
+    window.addEventListener("beforeunload", this.quitHook.bind(this));
+
     this.main = document.createElement("div");
     this.main.className =
       "flex flex-col gap-5 text-xl w-full min-h-full justify-center items-center bg-[#0400FF]";
@@ -192,6 +194,12 @@ export class TournamentAliasPage {
     contact.appendChild(contactAvatar);
     contact.appendChild(contactName);
     return contact;
+  }
+
+  private quitHook() {
+    this.backend.leaveTournament();
+    this.unmount();
+    this.router.navigate("/chat");
   }
 
   public mount(parent: HTMLElement): void {

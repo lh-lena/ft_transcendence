@@ -62,7 +62,7 @@ model Friendship {
 
   createdAt DateTime @default(now())
 
-  @@unique([userId, friendId])
+  @@unique([userId, friendUserId])
 }
 
 model Blocked {
@@ -73,7 +73,7 @@ model Blocked {
   blockedUserId  String
   createdAt  DateTime @default(now())
 
-  @@unique([userId, blockedId])
+  @@unique([userId, blockedUserId])
   }
 
 model Result {

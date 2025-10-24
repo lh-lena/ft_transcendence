@@ -24,11 +24,6 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-/**
- * Configure logger based on environment
- * Production: JSON logs for structured logging aggregators
- * Development: Pretty-printed logs with pino-pretty
- */
 const isProduction = process.env.NODE_ENV === 'production';
 const isDevelopment = process.env.NODE_ENV === 'development';
 
@@ -70,7 +65,7 @@ export const server = Fastify({
   logger: loggerConfig,
   requestIdLogLabel: 'requestId',
   disableRequestLogging: false,
-  //needed for req.ip for logging
+  genReqId: (req) => req.headers['x-request-id']?.toString() || crypto.randomUUID(),
   requestIdHeader: 'x-request-id',
   trustProxy: isProduction,
   bodyLimit: 1048576,
@@ -135,52 +130,25 @@ const start = async () => {
     });
     server.log.info('CSRF protection enabled');
 
-    // ------------ Auto-load Configuration Plugins ------------
+    // ------------ Auto-load Plugins ------------
 
-    /**
-     * Load configuration and setup plugins first
-     * These must load before routes/hooks that depend on them
-     * Files are loaded in alphabetical order (000_, 001_, etc.)
-     */
-    await server.register(AutoLoad, {
-      dir: path.join(__dirname, 'plugins'),
-      options: {
-        prefix: '',
-      },
-    });
-    server.log.info('Plugins loaded successfully');
+    await server.register(AutoLoad, { dir: path.join(__dirname, 'plugins') });
+    server.log.info({ pluginDir: path.join(__dirname, 'plugins') }, 'Plugins loaded');
 
     // ------------ Auto-load Hooks ------------
 
-    /**
-     * Load lifecycle hooks (onRequest, preHandler, etc.)
-     * These apply to all routes
-     */
     await server.register(AutoLoad, {
       dir: path.join(__dirname, 'hooks'),
     });
-    server.log.info('Hooks loaded successfully');
+    server.log.info({ hookDir: path.join(__dirname, 'hooks') }, 'Hooks loaded');
 
     // ------------ Auto-load Routes ------------
 
-    /**
-     * Load API routes
-     * Routes have access to all loaded plugins
-     */
-    await server.register(AutoLoad, {
-      dir: path.join(__dirname, 'routes'),
-      options: {
-        prefix: '/api',
-      },
-    });
-    server.log.info('Routes loaded successfully');
+    await server.register(AutoLoad, { dir: path.join(__dirname, 'routes') });
+    server.log.info({ routeDir: path.join(__dirname, 'routes') }, 'Routes loaded');
 
     // ------------ HTTP Proxy for File Uploads ------------
 
-    /**
-     * Proxy file upload requests to backend service
-     * Avoids handling multipart/form-data in auth service
-     */
     const backendHost = server.config.backendUrl.replace(/^https?:\/\//, '');
 
     await server.register(fastifyHttpProxy, {
@@ -202,29 +170,6 @@ const start = async () => {
       timestamp: new Date().toISOString(),
       uptime: process.uptime(),
     }));
-
-    /**
-     * Readiness probe - checks if service is ready to accept traffic
-     * Validates database connections, external services, etc.
-     */
-    server.get('/ready', async () => {
-      const checks = {
-        server: true,
-        config: !!server.config,
-      };
-
-      const isReady = Object.values(checks).every(Boolean);
-
-      if (!isReady) {
-        throw { statusCode: 503, message: 'Service not ready', data: checks };
-      }
-
-      return {
-        status: 'ready',
-        timestamp: new Date().toISOString(),
-        checks,
-      };
-    });
 
     // ------------ Start Listening ------------
 
