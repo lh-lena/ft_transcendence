@@ -12,7 +12,6 @@
  *
  * @module routes/friendRoute
  */
-import fp from 'fastify-plugin';
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { friendRoutesConfig } from '../../config/friendRouteConfig';
 
@@ -63,7 +62,4 @@ const friendRoutes = async (server: FastifyInstance) => {
   });
 };
 
-export default fp(friendRoutes, {
-  name: 'friend-routes',
-  dependencies: ['route-handler', 'auth-middleware'],
-});
+export default friendRoutes;

@@ -12,24 +12,19 @@ import oauthPlugin from '@fastify/oauth2';
  * @decorates {object} githubOAuth2 - OAuth2 client for GitHub authentication
  */
 const oAuth2Plugin = async (fastify: FastifyInstance) => {
-  const { oauthClientId, oauthSecretSt, authUrl } = fastify.config;
+  const { OAUTH_CLIENT_ID, OAUTH_SECRET, AUTH_URL } = fastify.config;
 
-  const callbackUrl = `${authUrl}/api/oauth/callback`;
+  const callbackUrl = `${AUTH_URL}/api/oauth/callback`;
   fastify.log.info(`Registering OAuth with callback: ${callbackUrl}`);
 
-  /**
-   * Register GitHub OAuth2 provider
-   * Initiates OAuth flow at /api/oauth
-   * Handles callback at /api/oauth/callback
-   */
   try {
     await fastify.register(oauthPlugin, {
       name: 'githubOAuth2',
       scope: ['user:email', 'read:user'], // GitHub user profile and email access
       credentials: {
         client: {
-          id: oauthClientId,
-          secret: oauthSecretSt,
+          id: OAUTH_CLIENT_ID,
+          secret: OAUTH_SECRET,
         },
         auth: oauthPlugin.GITHUB_CONFIGURATION, // Uses GitHub's OAuth endpoints
       },

@@ -1,156 +1,23 @@
 /**
  * OAuth2 GitHub Integration Routes
  *
- * Handles GitHub OAuth authentication flow:
- * . User authorizes on GitHub
- * . GitHub redirects to /api/oauth/callback with auth code
- * . This service exchanges code for access token
- * . Fetches user profile from GitHub API
- * . Creates or logs in user
- * . Returns auth tokens via postMessage to opener window
- *
- * Features:
- * - Auto-registration for new GitHub users
- * - Avatar download and storage
- * - 2FA integration
- * - Popup window communication
- *
  * @module routes/oAuth2Route
- */ import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
-import fetch from 'node-fetch';
-import fp from 'fastify-plugin';
-import { AxiosRequestConfig } from 'axios';
-
-/**
- * GitHub user data structure
  */
-interface GithubUser {
-  username: string;
-  avatar: string;
-  githubId: number;
-  guest: boolean;
-}
+import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
+import { fetchGithubUser, regOrlogUser } from '../../utils/oAuth';
 
 const oAuth2Routes = async (server: FastifyInstance) => {
-  /**
-   * Registers or logs in a user from GitHub OAuth
-   * @param githubUser - GitHub user profile data
-   * @returns User object or null if already logged in
-   */
-  async function regOrlogUser(githubUser: GithubUser) {
-    const githubId = githubUser.githubId.toString();
-    try {
-      const user = await server.user.getUser({ githubId: githubId });
-
-      server.log.info({ githubId, userId: user.userId }, 'Existing GitHub user found');
-
-      if (user.online) {
-        server.log.warn({ githubId, userId: user.userId }, 'User already logged in');
-        return null;
-      }
-
-      return user;
-    } catch {
-      server.log.info({ githubId }, 'Creating new user from GitHub OAuth');
-
-      let path;
-
-      if (githubUser.avatar) {
-        try {
-          const config: AxiosRequestConfig = {
-            method: 'post',
-            url: `/upload/github`,
-            data: {
-              githubAvatarUrl: githubUser.avatar,
-            },
-          };
-
-          const response = await server.api(config);
-
-          if (response.success) {
-            path = response.storedName;
-            server.log.debug({ githubId, path }, 'GitHub avatar downloaded successfully');
-          }
-        } catch (avatarError) {
-          server.log.warn(
-            { err: avatarError, githubId },
-            'Failed to download GitHub avatar, continuing with default',
-          );
-        }
-      }
-
-      const newUser = await server.user.post({
-        ...githubUser,
-        githubId: githubId,
-        color: '#dff41a',
-        colormap: 'neutral',
-        avatar: path,
-      });
-
-      server.log.info({ userId: newUser.userId, githubId }, 'New user created from GitHub OAuth');
-
-      return newUser;
-    }
-  }
-
-  /**
-   * Fetches user profile from GitHub API
-   * @param accessToken - GitHub OAuth access token
-   * @returns GitHub user profile data
-   * @throws Error if GitHub API request fails
-   */
-  async function fetchGithubUser(accessToken: string) {
-    server.log.debug('Fetching user profile from GitHub API');
-
-    const userRes = await fetch('https://api.github.com/user', {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        Accept: 'application/vnd.github+json',
-      },
-    });
-
-    if (!userRes.ok) {
-      const errorText = await userRes.text();
-      server.log.error({ status: userRes.status, error: errorText }, 'GitHub API request failed');
-      throw new Error(`GitHub API error: ${userRes.status}`);
-    }
-    const user = (await userRes.json()) as {
-      login: string;
-      avatar_url: string;
-      id: number;
-      email?: string;
-    };
-
-    server.log.debug({ githubId: user.id, username: user.login }, 'GitHub user profile fetched');
-
-    return {
-      username: user.login,
-      avatar: user.avatar_url,
-      githubId: user.id,
-      guest: false,
-      email: user.email,
-    };
-  }
-
   /**
    * GET /api/oauth/callback
    * GitHub OAuth callback endpoint
    * Exchanges authorization code for access token and completes login
    *
-   * Flow:
-   * 1. Exchange code for GitHub access token
-   * 2. Fetch user profile from GitHub
-   * 3. Create or login user in our system
-   * 4. Handle 2FA if enabled
-   * 5. Send result to popup opener window
-   * 6. Close popup window
-   *
    * @public
    * @query code - Authorization code from GitHub
    * @query state - CSRF protection state parameter
    */
-  server.get('/api/oauth/callback', async (req: FastifyRequest, reply: FastifyReply) => {
-    const frontendUrl = await server.config.frontendUrl;
+  server.get('/callback', async (req: FastifyRequest, reply: FastifyReply) => {
+    const frontendUrl = await server.config.FRONTEND_URL;
 
     try {
       server.log.info('Handling OAuth callback');
@@ -159,9 +26,9 @@ const oAuth2Routes = async (server: FastifyInstance) => {
 
       server.log.debug('OAuth token received:');
 
-      const githubUser = await fetchGithubUser(token.token.access_token);
+      const githubUser = await fetchGithubUser(server, token.token.access_token);
 
-      const user = await regOrlogUser(githubUser);
+      const user = await regOrlogUser(server, githubUser);
 
       if (user === null) {
         server.log.warn(
@@ -408,7 +275,4 @@ function generateOAuthResponseHTML(frontendUrl: string, data: Record<string, unk
   `;
 }
 
-export default fp(oAuth2Routes, {
-  name: 'oauth2-routes',
-  dependencies: ['github-oauth', 'user-plugin', 'tfa-plugin'],
-});
+export default oAuth2Routes;

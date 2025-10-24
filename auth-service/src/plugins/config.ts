@@ -4,13 +4,6 @@
  * Loads and validates environment variables.
  * Makes configuration available throughout the application.
  *
- * Features:
- * - Type-safe environment variables
- * - Validation on startup
- * - Default values
- * - Runtime configuration access
- * - SQLite and PostgreSQL support
- *
  * @module plugins/config
  */
 
@@ -20,7 +13,7 @@ import fastifyEnv from '@fastify/env';
 
 const schema = {
   type: 'object',
-  required: ['DATABASE_URL'],
+  required: ['ACCESS_SECRET', 'REFRESH_SECRET', 'OAUTH_CLIENT_ID', 'OAUTH_SECRET'],
   properties: {
     NODE_ENV: {
       type: 'string',
@@ -28,7 +21,7 @@ const schema = {
     },
     PORT: {
       type: 'integer',
-      default: 8080,
+      default: 8082,
       minimum: 1,
       maximum: 65535,
     },
@@ -40,66 +33,39 @@ const schema = {
       type: 'integer',
       default: 30000,
     },
-    DATABASE_URL: {
+    ACCESS_SECRET: {
       type: 'string',
     },
-    DATABASE_TYPE: {
+    REFRESH_SECRET: {
       type: 'string',
-      default: 'sqlite',
     },
-    AVATAR_DIR: {
+    OATH_CLIENT_ID: {
       type: 'string',
-      default: './public/avatars',
     },
-    MAX_FILE_SIZE: {
-      type: 'integer',
-      default: 10485760, // 10MB
-    },
-    MAX_FILES: {
-      type: 'integer',
-      default: 1,
-    },
-    MAX_FIELD_SIZE: {
-      type: 'integer',
-      default: 1048576, // 1MB
-    },
-    MAX_FIELDS: {
-      type: 'integer',
-      default: 10,
-    },
-    UPLOAD_DIR: {
+    OAUTH_SECRET: {
       type: 'string',
-      default: './public/avatars',
     },
-    REALTIME_IP: {
+    FRONTEND_URL: {
       type: 'string',
-      default: 'realtime',
+      default: 'http://localhost:3000',
     },
-    REALTIME_PORT: {
+    REALTIME_URL: {
       type: 'string',
-      default: '8081',
+      default: 'http://realtime:8081',
     },
-    REALTIME_TIMEOUT: {
-      type: 'integer',
-      default: 5000,
+    BACKEND_URL: {
+      type: 'string',
+      default: 'http://backend:8080',
     },
-    REALTIME_RETRY_ATTEMPTS: {
-      type: 'integer',
-      default: 3,
-    },
-    LEADERBOARD_SIZE: {
-      type: 'integer',
-      default: 8,
-    },
-    ENABLE_SWAGGER: {
-      type: 'boolean',
-      default: false,
+    AUTH_URL: {
+      type: 'string',
+      default: 'http://localhost:8082',
     },
     ENABLE_METRICS: {
       type: 'boolean',
       default: false,
     },
-    SLOW_REQUEST_THRESHOLD: {
+    SLOW_REQUEST_TIME: {
       type: 'integer',
       default: 1000,
     },
@@ -117,15 +83,7 @@ const configPlugin: FastifyPluginAsync = async (server) => {
     dotenv: true,
     data: process.env,
   });
-
-  server.log.info(
-    {
-      environment: server.config.NODE_ENV,
-      port: server.config.PORT,
-      database: server.config.DATABASE_TYPE,
-    },
-    'Configuration loaded',
-  );
+  server.log.info('Configuration loaded successfully');
 };
 
 export default fp(configPlugin, {

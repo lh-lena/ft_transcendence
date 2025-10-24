@@ -11,7 +11,6 @@
  *
  * @module routes/resultRoute
  */
-import fp from 'fastify-plugin';
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { resultRoutesConfig } from '../../config/resultRouteConfig';
 
@@ -70,7 +69,4 @@ const resultRoutes = async (server: FastifyInstance) => {
   });
 };
 
-export default fp(resultRoutes, {
-  name: 'result-routes',
-  dependencies: ['route-handler', 'auth-middleware'],
-});
+export default resultRoutes;

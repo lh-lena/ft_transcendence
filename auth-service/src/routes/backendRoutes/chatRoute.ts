@@ -11,7 +11,6 @@
  *
  * @module routes/chatRoute
  */
-import fp from 'fastify-plugin';
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { chatRoutesConfig } from '../../config/chatRouteConfig';
 
@@ -68,7 +67,4 @@ const chatRoutes = async (server: FastifyInstance) => {
   });
 };
 
-export default fp(chatRoutes, {
-  name: 'chat-routes',
-  dependencies: ['route-handler', 'auth-middleware'],
-});
+export default chatRoutes;

@@ -12,7 +12,6 @@
  *
  * @module routes/tournamentRoute
  */
-import fp from 'fastify-plugin';
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { tournamentRoutesConfig } from '../../config/tournamentRouteConfig';
 
@@ -61,7 +60,4 @@ const tournamentRoutes = async (server: FastifyInstance) => {
   });
 };
 
-export default fp(tournamentRoutes, {
-  name: 'tournament-routes',
-  dependencies: ['route-handler', 'auth-middleware'],
-});
+export default tournamentRoutes;

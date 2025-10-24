@@ -15,7 +15,6 @@
  *
  * @module routes/gameRoute
  */
-import fp from 'fastify-plugin';
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { gameRoutesConfig } from '../../config/gameRouteConfig';
 
@@ -87,7 +86,4 @@ const gameRoutes = async (server: FastifyInstance) => {
   });
 };
 
-export default fp(gameRoutes, {
-  name: 'game-routes',
-  dependencies: ['route-handler', 'auth-middleware'],
-});
+export default gameRoutes;

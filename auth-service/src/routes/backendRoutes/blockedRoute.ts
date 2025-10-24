@@ -11,7 +11,6 @@
  *
  * @module routes/blockedRoute
  */
-import fp from 'fastify-plugin';
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { blockedRoutesConfig } from '../../config/blockedRouteConfig';
 
@@ -58,7 +57,4 @@ const blockedRoutes = async (server: FastifyInstance) => {
   });
 };
 
-export default fp(blockedRoutes, {
-  name: 'blocked-routes',
-  dependencies: ['route-handler', 'auth-middleware'],
-});
+export default blockedRoutes;

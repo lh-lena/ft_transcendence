@@ -15,7 +15,6 @@
  * @module routes/tfaRoute
  */
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
-import fp from 'fastify-plugin';
 import { tfaRoutesConfig } from '../config/tfaRouteConfig';
 
 const tfaRoutes = async (server: FastifyInstance) => {
@@ -30,7 +29,7 @@ const tfaRoutes = async (server: FastifyInstance) => {
    * @returns 200 - New access token
    * @returns 401 - Invalid or blacklisted refresh token
    */
-  server.post('/api/refresh', async (req: FastifyRequest, reply: FastifyReply) => {
+  server.post('/refresh', async (req: FastifyRequest, reply: FastifyReply) => {
     return server.routeHandler(req, reply, tfaRoutesConfig.refresh, server);
   });
 
@@ -49,7 +48,7 @@ const tfaRoutes = async (server: FastifyInstance) => {
    * @returns 200 - 2FA verified, authentication complete
    * @returns 400 - Invalid code or expired session
    */
-  server.post('/api/verify', async (req: FastifyRequest, reply: FastifyReply) => {
+  server.post('/verify', async (req: FastifyRequest, reply: FastifyReply) => {
     return server.routeHandler(req, reply, tfaRoutesConfig.verify, server);
   });
 
@@ -70,12 +69,9 @@ const tfaRoutes = async (server: FastifyInstance) => {
    * @returns 200 - Setup data (QR code, secret, backup codes)
    * @returns 400 - 2FA already enabled or invalid request
    */
-  server.post('/api/tfaSetup', async (req: FastifyRequest, reply: FastifyReply) => {
+  server.post('/tfaSetup', async (req: FastifyRequest, reply: FastifyReply) => {
     return server.routeHandler(req, reply, tfaRoutesConfig.setup, server);
   });
 };
 
-export default fp(tfaRoutes, {
-  name: 'tfa-routes',
-  dependencies: ['tfa-plugin', 'user-plugin'],
-});
+export default tfaRoutes;

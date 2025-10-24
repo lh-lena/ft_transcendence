@@ -13,7 +13,6 @@
  * @module routes/avatarRoute
  */
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
-import fp from 'fastify-plugin';
 import { AxiosRequestConfig } from 'axios';
 
 const avatarRoute = async (fastify: FastifyInstance) => {
@@ -81,7 +80,4 @@ const avatarRoute = async (fastify: FastifyInstance) => {
   });
 };
 
-export default fp(avatarRoute, {
-  name: 'avatar-routes',
-  dependencies: ['api-client'],
-});
+export default avatarRoute;

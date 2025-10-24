@@ -17,7 +17,6 @@
  * @module routes/authRoute
  */
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
-import fp from 'fastify-plugin';
 import { authRoutesConfig } from '../config/authRouteConfig';
 
 const authRoutes = async (server: FastifyInstance) => {
@@ -75,4 +74,4 @@ const authRoutes = async (server: FastifyInstance) => {
   });
 };
 
-export default fp(authRoutes);
+export default authRoutes;

@@ -14,7 +14,6 @@
  *
  * @module routes/userRoute
  */
-import fp from 'fastify-plugin';
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { userRoutesConfig } from '../../config/userRouteConfig';
 
@@ -98,7 +97,4 @@ const userRoutes = async (server: FastifyInstance) => {
   });
 };
 
-export default fp(userRoutes, {
-  name: 'user-routes',
-  dependencies: ['route-handler', 'auth-middleware'],
-});
+export default userRoutes;
