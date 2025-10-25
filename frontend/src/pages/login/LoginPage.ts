@@ -2,7 +2,6 @@ import { ServiceContainer, Router, Backend } from "../../services";
 import { Menu } from "../../components/menu";
 import { PongButton } from "../../components/pongButton";
 import { UserLogin } from "../../types";
-import validator from "validator";
 import { showError, showInfo } from "../../components/toast";
 
 export class LoginPage {

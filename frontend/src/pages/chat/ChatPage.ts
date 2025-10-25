@@ -17,7 +17,7 @@ import { profilePrintToArray } from "../../utils/profilePrintFunctions";
 import { User } from "../../types";
 import { ReceivedChatMessage } from "../../types/websocket";
 import { showError, showSuccess } from "../../components/toast";
-import { userWinsLosses } from "../../types/backend";
+import { MatchHistoryData, userWinsLosses } from "../../types/backend";
 
 export class ChatPage {
   // jesus christ this is an ugly piece of shieeet
@@ -54,6 +54,8 @@ export class ChatPage {
   private currentChatHistory!: ChatHistory;
   private messageNotificationTimeout?: number;
   private router: Router;
+  private matchHistoryData!: MatchHistoryData;
+  private historyPanel!: HTMLDivElement;
 
   constructor(serviceContainer: ServiceContainer) {
     // router / services container
@@ -90,10 +92,9 @@ export class ChatPage {
     }
     instance.leaderboardData = initLeaderboardData;
     // fetch match results data
-    // const initMatchResultData = await instance.backend.getMatchHistory(
-    //   instance.backend.getUser().userId,
-    // );
-    // console.log(initMatchResultData);
+    instance.matchHistoryData = await instance.backend.getMatchHistory(
+      instance.backend.getUser().userId,
+    );
 
     // friends fetch
     const initFriendsList: FriendsList =
@@ -189,6 +190,20 @@ export class ChatPage {
     clickableLeaderboardbutton.onclick = () => this.toggleLeaderboardPanel();
     this.contacts.appendChild(clickableLeaderboardbutton);
 
+    // History BUTTON
+    const clickableHistoryButton = document.createElement("a");
+    const addHistoryButton = document.createElement("div");
+    clickableHistoryButton.style.cursor = "pointer";
+    clickableHistoryButton.className = "w-full";
+    addHistoryButton.className =
+      "standard-dialog w-full text-center items-center mb-2";
+    const addHistoryButtonText = document.createElement("h1");
+    addHistoryButtonText.textContent = "history";
+    addHistoryButton.appendChild(addHistoryButtonText);
+    clickableHistoryButton.appendChild(addHistoryButton);
+    clickableHistoryButton.onclick = () => this.toggleHistoryPanel();
+    this.contacts.appendChild(clickableHistoryButton);
+
     // FRIENDS ICON: adds seperation to collumn
     const friendsHeaderRow = document.createElement("div");
     friendsHeaderRow.className =
@@ -269,6 +284,51 @@ export class ChatPage {
         resultBox.appendChild(userScore);
         leaderboardResults.appendChild(resultBox);
       });
+    }
+
+    // HISTORYPANEL
+    this.historyPanel = document.createElement("div");
+    this.historyPanel.className =
+      "flex-1 w-4/5 h-96 standard-dialog flex flex-col gap-2";
+    const historyTitle = document.createElement("h1");
+    historyTitle.textContent = "history";
+    this.historyPanel.appendChild(historyTitle);
+    const historyResults = document.createElement("div");
+    historyResults.className =
+      "flex flex-col gap-2 p-2 w-full my-3 overflow-y-auto";
+    this.historyPanel.appendChild(historyResults);
+    // You can populate historyResults with match history data later
+    if (this.matchHistoryData.length > 0) {
+      for (const match of this.matchHistoryData) {
+        const resultBox = document.createElement("div");
+        resultBox.className =
+          "flex flex-row standard-dialog w-full justify-between";
+
+        if (match.winnerId === this.backend.getUser().userId)
+          resultBox.classList.add("bg-green-200");
+
+        // Winner username
+        const winnerUser = await this.backend.fetchUserById(match.winnerId);
+        const winnerUsername = winnerUser.data.username;
+
+        // Date
+        const date = document.createElement("h1");
+        date.textContent = new Date(match.finishedAt).toLocaleDateString();
+        resultBox.appendChild(date);
+
+        // Winner
+        const winner = document.createElement("h1");
+        winner.textContent = `winner: ${winnerUsername}`;
+        winner.className = "truncate flex-1 min-w-0 ml-8";
+        resultBox.appendChild(winner);
+
+        // Score
+        const score = document.createElement("h1");
+        score.textContent = `score: ${match.winnerScore} - ${match.loserScore}`;
+        resultBox.appendChild(score);
+
+        historyResults.appendChild(resultBox);
+      }
     }
 
     // CHATPANEL
@@ -591,6 +651,11 @@ export class ChatPage {
   // leaderboard panel: left panel type
   private toggleLeaderboardPanel(): void {
     this.replaceLeftPanel(this.leaderboardPanel);
+  }
+
+  // leaderboard panel: left panel type
+  private toggleHistoryPanel(): void {
+    this.replaceLeftPanel(this.historyPanel);
   }
 
   // chat panel: left panel type
