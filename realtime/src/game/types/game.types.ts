@@ -14,7 +14,7 @@ import type { User, UserIdObject, UserIdType } from '../../schemas/user.schema.j
 export interface GameService {
   initializeGameSession(data: BackendStartGame): Promise<boolean>;
   handlePlayerInput: (user: User, payload: ClientEventPayload<GAME_EVENTS.UPDATE>) => void;
-  handleStartGame: (user: User, payload: ClientEventPayload<GAME_EVENTS.READY>) => void;
+  handleStartGame: (user: User, payload: ClientEventPayload<GAME_EVENTS.CLIENT_READY>) => void;
   handleGameLeave: (user: User, gameId: GameIdType) => Promise<void>;
   handleGamePause: (user: User, gameId: GameIdType) => void;
   handleGameResume: (user: User, gameId: GameIdType) => void;

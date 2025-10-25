@@ -3,6 +3,7 @@ import { ResponseSchema } from '../../schemas/response.schema.js';
 import { GameStartRequestSchema, BackendStartGame } from '../../schemas/game.schema.js';
 import { processErrorLog } from '../../utils/error.handler.js';
 import { GameService } from '../../game/types/game.types.js';
+import { RespondService } from '../../websocket/types/ws.types.js';
 
 export const setupGameRoutes = (app: FastifyInstance): void => {
   app.post('/game/start', {
@@ -28,6 +29,8 @@ export const setupGameRoutes = (app: FastifyInstance): void => {
             message: 'Failed to initialize game session',
           });
         }
+        const respond = app.respond as RespondService;
+        respond.gameReady(requestBody.gameId);
         return reply.code(200).send({ success: true });
       } catch (error: unknown) {
         processErrorLog(app, 'game-routes', 'Error processing game start request:', error);

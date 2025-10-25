@@ -79,7 +79,8 @@ export enum Direction {
 }
 
 export enum GAME_EVENTS {
-  READY = 'client_ready',
+  CLIENT_READY = 'client_ready',
+  GAME_READY = 'game_ready',
   START = 'game_start',
   UPDATE = 'game_update',
   LEAVE = 'game_leave',

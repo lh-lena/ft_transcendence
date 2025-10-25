@@ -26,8 +26,8 @@ const plugin: FastifyPluginCallback = (app: FastifyInstance): void => {
   app.decorate('gameService', gameService);
 
   app.eventBus.on(
-    GAME_EVENTS.READY,
-    ({ user, payload }: { user: User; payload: ClientEventPayload<GAME_EVENTS.READY> }) => {
+    GAME_EVENTS.CLIENT_READY,
+    ({ user, payload }: { user: User; payload: ClientEventPayload<GAME_EVENTS.CLIENT_READY> }) => {
       gameService.handleStartGame(user, payload);
     },
   );

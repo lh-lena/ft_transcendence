@@ -98,7 +98,7 @@ export default function createGameService(app: FastifyInstance): GameService {
     return gameStartData;
   }
 
-  function handleStartGame(user: User, payload: ClientEventPayload<GAME_EVENTS.READY>): void {
+  function handleStartGame(user: User, payload: ClientEventPayload<GAME_EVENTS.CLIENT_READY>): void {
     if (user === undefined || user === null) return;
     const { gameId } = payload;
     const gameSessionService = app.gameSessionService as GameSessionService;
