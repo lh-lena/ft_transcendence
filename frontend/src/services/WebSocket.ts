@@ -167,6 +167,14 @@ export class Websocket {
     this.sendMessage(gameStartMessage);
   }
 
+  public messageClientReady(gameID: string): void {
+    const clientReadyMessage: ClientMessageInterface<"client_ready"> = {
+      event: "client_ready",
+      payload: { gameId: gameID, timestamp: Date.now() },
+    };
+    this.sendMessage(clientReadyMessage);
+  }
+
   public async sendChatMessage(user: User, message: string) {
     console.log("WebSocket state:", this.ws?.readyState);
     const chatMessage: ClientMessageInterface<"chat_message"> = {

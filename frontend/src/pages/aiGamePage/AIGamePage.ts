@@ -24,6 +24,7 @@ export class AIGamePage extends GamePage {
   public async initializeBackend(): Promise<void> {
     const response = await this.backend.createAiGame("medium");
     this.gameId = response.gameId;
+    this.ws.messageClientReady(this.gameId);
   }
 
   public intializeGameState(): void {
