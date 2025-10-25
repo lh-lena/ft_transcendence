@@ -46,7 +46,6 @@ export class Backend {
             this.refreshed = false;
             return await this.api(originalRequest);
           } catch {
-            showError("Error: Refresh token failed, logging out!");
             localStorage.removeItem("user");
             document.cookie = "jwt=";
             document.cookie = "refreshToken=";
@@ -110,6 +109,7 @@ export class Backend {
   async checkAuth(): Promise<string | null> {
     try {
       const token = localStorage.getItem("jwt");
+      console.log(token);
 
       const userId = await this.api.get("/api/auth/me", {
         headers: {
@@ -330,6 +330,13 @@ export class Backend {
     return response;
   }
 
+  async changeUsernameById(userId: string, newUsername: string) {
+    const response = await this.api.patch(`/api/user/${userId}`, {
+      username: newUsername,
+    });
+    return response;
+  }
+
   async deleteAcc() {
     await this.api.delete(`/api/user/${this.getUser().userId}`);
     this.logout();
@@ -482,6 +489,9 @@ export class Backend {
     }
 
     localStorage.removeItem("user");
+    localStorage.removeItem("jwt");
+
+    await new Promise((resolve) => setTimeout(resolve, 1000)); // <-- block for 1 second
 
     return;
   }

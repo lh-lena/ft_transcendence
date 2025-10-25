@@ -5,7 +5,7 @@ export interface UserProfile {
 }
 
 export type UserRegistration = {
-  email: string;
+  email?: string;
   username: string;
   password: string;
   tfaEnabled?: string;

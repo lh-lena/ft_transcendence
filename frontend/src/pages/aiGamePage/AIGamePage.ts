@@ -6,7 +6,6 @@ import { ServiceContainer } from "../../services";
 
 // types
 import { GameStatus } from "../../types";
-import { User } from "../../types";
 
 // functions
 import { generateProfilePrint } from "../../utils/profilePrintFunctions";
@@ -30,7 +29,7 @@ export class AIGamePage extends GamePage {
   public intializeGameState(): void {
     // user for AI (AI user, i make up a bunch of attributes)
     const { color, colorMap } = generateProfilePrint();
-    const AIUser: User = {
+    const AIUser = {
       colormap: colorMap,
       color: color,
       userId: "ai69",

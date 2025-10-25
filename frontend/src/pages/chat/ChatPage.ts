@@ -90,10 +90,10 @@ export class ChatPage {
     }
     instance.leaderboardData = initLeaderboardData;
     // fetch match results data
-    const initMatchResultData = await instance.backend.getMatchHistory(
-      instance.backend.getUser().userId,
-    );
-    console.log(initMatchResultData);
+    // const initMatchResultData = await instance.backend.getMatchHistory(
+    //   instance.backend.getUser().userId,
+    // );
+    // console.log(initMatchResultData);
 
     // friends fetch
     const initFriendsList: FriendsList =
@@ -789,6 +789,7 @@ export class ChatPage {
     });
   }
 
+  // user in this case is the friend they are sending it to
   private async sendHook(user: User, message: string) {
     // invite case
     if (this.inputBox.contains(this.sendInvite)) {
@@ -814,11 +815,34 @@ export class ChatPage {
       return;
     }
     await this.websocket.sendChatMessage(user, message);
-    // wait 700 miliseconds after updating database
-    // testing bump up to 700
-    await new Promise((resolve) => setTimeout(resolve, 1270));
+    await this.checkBackendForOurSentMessage(message, user); // <- blocking function
     await this.populateChatPanel(user);
     this.inputMessage.value = ""; // clear the input after sending
+  }
+
+  private async checkBackendForOurSentMessage(
+    latestMessage: string,
+    otherUser: User,
+  ): Promise<boolean> {
+    const start = Date.now();
+    const timeoutMs = 2000;
+    while (Date.now() - start < timeoutMs) {
+      // somehow wait here and block the populate chat panel from going through until we know the message is contained in backend (check every 50 ms)
+      const response = await this.backend.fetchChatHistoryByIds(
+        this.backend.getUser().userId,
+        otherUser.userId,
+      );
+      const lastMsg = response[response.length - 1];
+      if (
+        lastMsg &&
+        lastMsg.message === latestMessage &&
+        lastMsg.senderId === this.backend.getUser().userId
+      )
+        return true;
+      await new Promise((resolve) => setTimeout(resolve, 50)); // wait 50ms
+    }
+
+    return false;
   }
 
   private async handleChatIncomingMessage(payload: ReceivedChatMessage) {
