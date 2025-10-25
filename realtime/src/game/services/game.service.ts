@@ -21,7 +21,11 @@ import type {
 } from '../types/game.types.js';
 import createGameValidator from '../utils/game.validation.js';
 import type { EnvironmentConfig } from '../../config/config.js';
-import { addAIPlayerToGame, createPlayerFromUser, getUserDisplayName } from '../utils/player.utils.js';
+import {
+  addAIPlayerToGame,
+  createPlayerFromUser,
+  getUserDisplayName,
+} from '../utils/player.utils.js';
 import { AuthService } from '../../auth/auth.types.js';
 
 export default function createGameService(app: FastifyInstance): GameService {
@@ -144,13 +148,7 @@ export default function createGameService(app: FastifyInstance): GameService {
         );
       }
     } catch (error: unknown) {
-      processGameError(
-        app,
-        user,
-        'game-service',
-        `failed to pause game for user ${name}`,
-        error,
-      );
+      processGameError(app, user, 'game-service', `failed to pause game for user ${name}`, error);
     }
   }
 
@@ -172,16 +170,10 @@ export default function createGameService(app: FastifyInstance): GameService {
         gameId,
         NotificationType.INFO,
         `game resumed successfully by ${name}`,
-        [user.userId]
+        [user.userId],
       );
     } catch (error: unknown) {
-      processGameError(
-        app,
-        user,
-        'game-service',
-        `Failed to resume game for ${name}:`,
-        error,
-      );
+      processGameError(app, user, 'game-service', `Failed to resume game for ${name}:`, error);
     }
   }
 
@@ -240,13 +232,13 @@ export default function createGameService(app: FastifyInstance): GameService {
           gameId,
           NotificationType.INFO,
           ` ${name} left the game before it started`,
-          [user.userId]
+          [user.userId],
         );
-        await gameStateService.endGame(game, GameSessionStatus.CANCELLED);
+        await gameStateService.endGame(game, GameSessionStatus.CANCELLED_SERVER_ERROR);
       } else {
-        respond.notificationToGame(
-          gameId, NotificationType.INFO, ` ${name} left the game`, [user.userId],
-        );
+        respond.notificationToGame(gameId, NotificationType.INFO, ` ${name} left the game`, [
+          user.userId,
+        ]);
         await gameStateService.endGame(game, GameSessionStatus.CANCELLED, user.userId);
       }
     } catch (error: unknown) {
