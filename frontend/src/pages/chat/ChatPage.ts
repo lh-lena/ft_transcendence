@@ -89,6 +89,12 @@ export class ChatPage {
       element.avatar = userResponse.data.avatar;
     }
     instance.leaderboardData = initLeaderboardData;
+    // fetch match results data
+    const initMatchResultData = await instance.backend.getMatchHistory(
+      instance.backend.getUser().userId,
+    );
+    console.log(initMatchResultData);
+
     // friends fetch
     const initFriendsList: FriendsList =
       await instance.backend.fetchFriendsById(

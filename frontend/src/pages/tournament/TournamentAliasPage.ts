@@ -1,4 +1,4 @@
-import { ServiceContainer, Router, Backend, Websocket } from "../../services";
+import { ServiceContainer, Router, Backend } from "../../services";
 import { Menu } from "../../components/menu";
 import { PongButton } from "../../components/pongButton";
 import { userStore } from "../../constants/backend";
@@ -16,7 +16,6 @@ export class TournamentAliasPage {
   private pongButton: PongButton;
   private menu: Menu;
   private inputAlias: HTMLInputElement;
-  private websocket: Websocket;
   private tournamentId!: string;
   private bracketCol!: HTMLDivElement;
 
@@ -25,7 +24,6 @@ export class TournamentAliasPage {
     this.serviceContainer = serviceContainer;
     this.router = this.serviceContainer.get<Router>("router");
     this.backend = this.serviceContainer.get<Backend>("backend");
-    this.websocket = this.serviceContainer.get<Websocket>("websocket");
 
     this.main = document.createElement("div");
     this.main.className =
@@ -65,27 +63,21 @@ export class TournamentAliasPage {
     // case guest
     if (userType === "guest") {
       await this.backend.registerGuest(alias);
-      // need to make sure web socket connection is established even for guests so we have to manually trigger here
-      // registered users build up a connection in App before page load
-      this.websocket.initializeWebSocket();
     }
+
     // once guest is a "registered user we go here" or also just for reg restirred users
     const response = await this.backend.joinTournament(alias, userType);
 
-    // register websocket handlers
-    this.websocket = this.serviceContainer.get<Websocket>("websocket");
-    this.websocket.onMessage(
-      "notification",
-      this.handleWsNotifications.bind(this),
-    );
-    this.websocket.onMessage("game_start", this.handleWsGameStart.bind(this));
-
     this.tournamentId = response.data.tournamentId;
-    console.log("tournamentId: ", this.tournamentId);
 
-    this.showBracket(response.data);
+    // this.showBracket(response.data);
+    this.router.navigate("/vs-player", {
+      gameType: "tournament",
+      tournamentId: this.tournamentId,
+    });
   }
 
+  // MOVE
   private async handleWsGameStart(payload: WsServerBroadcast["game_start"]) {
     this.router.navigate("/vs-player", {
       gameType: "tournament",
@@ -94,6 +86,7 @@ export class TournamentAliasPage {
     });
   }
 
+  // MOVE
   private async handleWsNotifications(
     payload: WsServerBroadcast["notification"],
   ) {
@@ -107,6 +100,7 @@ export class TournamentAliasPage {
       this.showBracket(newTournamentData.data);
   }
 
+  // MOVE
   private async showBracket(tournamentData: TournamentData) {
     for (const player of tournamentData.players) {
       const user = await this.backend.getUserById(player.userId);
@@ -173,6 +167,7 @@ export class TournamentAliasPage {
     // this.router.navigate("/vs-player");
   }
 
+  // MOVE
   private createPlayer(username: string): HTMLDivElement {
     const contact = document.createElement("div");
     contact.className =
@@ -199,12 +194,6 @@ export class TournamentAliasPage {
   }
 
   public unmount(): void {
-    this.backend.leaveTournament();
-    this.websocket.offMessage(
-      "notification",
-      this.handleWsNotifications.bind(this),
-    );
-    this.websocket.offMessage("notification", this.handleWsNotifications);
     this.main.remove();
   }
 }

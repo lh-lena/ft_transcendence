@@ -48,12 +48,7 @@ export class MenuBar {
 
   private aiGameFlow() {
     // navigate with game type parameter
-    this.router.navigate("/vs-player", {
-      gameType: "ai",
-      // hard coded medium for rn
-      // TODO ADD MENU OPTION FOR DIFF LEVELS?
-      aiDifficulty: "medium",
-    });
+    this.router.navigate("/ai-game");
   }
 
   private async joinTournamentFlow() {

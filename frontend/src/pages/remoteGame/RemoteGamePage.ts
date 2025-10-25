@@ -41,8 +41,8 @@ export class VsPlayerGamePage {
     this.ws = this.serviceContainer.get<Websocket>("websocket");
     this.backend = this.serviceContainer.get<Backend>("backend");
 
+    // scaffolding
     window.addEventListener("beforeunload", this.handleWindowClose.bind(this));
-
     this.main = document.createElement("div");
     this.main.className =
       "sys-window flex flex-col gap-1 w-full min-h-full items-center justify-center bg-[#0400FF]";
@@ -50,9 +50,11 @@ export class VsPlayerGamePage {
     // register web socket handlers
     this.registerWebsocketHandlers();
 
-    // get web socket before countdown
+    // loading overlay
     this.loadingOverlay = new Loading("waiting for opponent");
     this.loadingOverlay.mount(this.main);
+    // if tournament then bracket overlay
+    // this.ShowTournamentOverlay();
 
     this.main.appendChild(this.loadingOverlay.getElement());
 
@@ -73,8 +75,9 @@ export class VsPlayerGamePage {
   }
 
   public async setupGame() {
+    // load params from url
     const params = this.router.getQueryParams();
-    const gameType = (params.get("gameType") as GameType) || "vs-player";
+    const gameType = params.get("gameType") as GameType;
     this.gameType = gameType;
 
     console.log("game type: ", gameType, "params: ", params);
@@ -85,12 +88,11 @@ export class VsPlayerGamePage {
       case "ai": {
         const aiDifficulty = params.get("aiDifficulty") || "medium";
         response = await this.backend.createAiGame(aiDifficulty);
-        // need to talk to moritz about this
         this.gameId = response.gameId;
         break;
       }
       case "tournament": {
-        this.gameId = params.get("gameId") || "undefined";
+        // game id needs to be set here
         break;
       }
       case "vs-player":
@@ -127,7 +129,7 @@ export class VsPlayerGamePage {
       previousKey: "",
       activePaddle: undefined,
       wsPaddleSequence: 0,
-    };
+    } as any; // helps supress es lint errors while im making this page obsolete
 
     // load mock AI player for AI game type
     if (this.gameType === "ai") {
@@ -208,28 +210,6 @@ export class VsPlayerGamePage {
     this.ws.onMessage("game_ended", this.wsGameEndedHandler.bind(this));
     this.ws.onMessage("game_start", this.wsStartGameHandler.bind(this));
   }
-
-  // // because start game fires before we can handle it on tournament page
-  // private async tournamentStartGameHandler() {
-  //   // set game status in ws to playing
-  //   this.ws.setGameStatusPlaying();
-
-  //   const response = await this.backend.getGameById(this.gameId);
-
-  //   // Find the other player from the players array
-  //   const otherUserId = response.players.find(
-  //     (player: { userId: string }) => player.userId !== this.userMe.userId,
-  //   );
-
-  //   const otherUser = await this.backend.getUserById(otherUserId.userId);
-  //   otherUser.colormap = profilePrintToArray(otherUser.colormap);
-  //   this.gameState.playerB = {
-  //     ...otherUser,
-  //     score: 0,
-  //   };
-  //   this.userOther = otherUser;
-  //   console.log("OTHER USER: ", otherUser);
-  // }
 
   // this happens at start of the game
   private async wsStartGameHandler(payload: WsServerBroadcast["game_start"]) {

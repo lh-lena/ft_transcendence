@@ -453,7 +453,7 @@ export class Backend {
 
   // Match-related API calls
   async getMatchHistory(userId: string) {
-    const response = await this.api.get(`/api/users/${userId}/matches`);
+    const response = await this.api.get(`/api/result/${userId}`);
     return response.data;
   }
 
@@ -537,14 +537,6 @@ export class Backend {
   //TODO add to websokcet handler -> when connection brakes to stop refresh loop
   handleWsConnectionLoss() {
     //this.stopPeriodicRefreshToken();
-  }
-
-  //TODO add to websocket handler -> checks if still authentictaed and if start refresh
-  async handleWsConnect() {
-    //const isAuth = await this.checkAuth();
-    //if (isAuth && this.user) {
-    //  this.startPeriodicRefreshToken();
-    //}
   }
 
   private loadUserFromStorage() {
