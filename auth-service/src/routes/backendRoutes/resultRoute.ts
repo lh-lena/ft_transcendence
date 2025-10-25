@@ -29,7 +29,7 @@ const resultRoutes = async (server: FastifyInstance) => {
    * @public - No authentication required
    * @returns Array of top players
    */
-  server.get('/api/result/leaderboard', async (req: FastifyRequest, reply: FastifyReply) => {
+  server.get('/result/leaderboard', async (req: FastifyRequest, reply: FastifyReply) => {
     return server.routeHandler(req, reply, resultRoutesConfig.getLeaderboard, server);
   });
 
@@ -44,7 +44,7 @@ const resultRoutes = async (server: FastifyInstance) => {
    * @returns User statistics object
    * @returns 404 - User not found or no games played
    */
-  server.get('/api/result/stats/:userId', async (req: FastifyRequest, reply: FastifyReply) => {
+  server.get('/result/stats/:userId', async (req: FastifyRequest, reply: FastifyReply) => {
     return server.routeHandler(req, reply, resultRoutesConfig.getStats, server);
   });
 
@@ -64,7 +64,7 @@ const resultRoutes = async (server: FastifyInstance) => {
    * @query loserId - Optional: filter by loser
    * @returns Array of game result objects
    */
-  server.get('/api/result', async (req: FastifyRequest, reply: FastifyReply) => {
+  server.get('/result', async (req: FastifyRequest, reply: FastifyReply) => {
     return server.routeHandler(req, reply, resultRoutesConfig.getResult, server);
   });
 };

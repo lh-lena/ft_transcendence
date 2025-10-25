@@ -29,7 +29,7 @@ const avatarRoute = async (fastify: FastifyInstance) => {
    *
    * @public - No authentication required (avatars are public)
    */
-  fastify.get('/api/avatar/:userId', async (req: FastifyRequest, reply: FastifyReply) => {
+  fastify.get('/avatar/:userId', async (req: FastifyRequest, reply: FastifyReply) => {
     const { userId } = req.params as { userId: string };
 
     if (!userId || typeof userId !== 'string' || userId.includes('..') || userId.includes('/')) {

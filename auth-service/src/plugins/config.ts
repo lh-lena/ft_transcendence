@@ -39,7 +39,7 @@ const schema = {
     REFRESH_SECRET: {
       type: 'string',
     },
-    OATH_CLIENT_ID: {
+    OAUTH_CLIENT_ID: {
       type: 'string',
     },
     OAUTH_SECRET: {

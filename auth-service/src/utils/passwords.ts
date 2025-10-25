@@ -96,6 +96,8 @@ export async function verifyPassword(hash: string, password: string): Promise<bo
     throw new Error('Password must be a non-empty string');
   }
 
+  console.log('Verifying password against hash:', hash);
+  console.log('Password input', password);
   if (!hash.startsWith('$argon2')) {
     throw new Error('Invalid hash format (not an Argon2 hash)');
   }

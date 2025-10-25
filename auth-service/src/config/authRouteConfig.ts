@@ -73,7 +73,9 @@ export const authRoutesConfig = {
         return reply.status(400).send({ message: 'Invalid login data' });
       }
       const user: UserType = await server.user.getUser({ email: parsedData.body.email });
-      const password_hash = user?.password_hash || '$2b$10$dummyhashtomakethisthingsecure';
+      const password_hash =
+        user?.password_hash ||
+        '$argon2id$v=19$m=65536,t=2,p=1$aGVsbG93b3JsZHNhbHQxMjM$7t+JdPKbdXcK9x9PSvvOT2fBKJdUFhGP8s5f1CLnLxM';
 
       const valid = await verifyPassword(password_hash, parsedData.body.password);
 

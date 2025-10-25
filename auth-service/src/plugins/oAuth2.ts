@@ -20,13 +20,13 @@ const oAuth2Plugin = async (fastify: FastifyInstance) => {
   try {
     await fastify.register(oauthPlugin, {
       name: 'githubOAuth2',
-      scope: ['user:email', 'read:user'], // GitHub user profile and email access
+      scope: ['read:user'],
       credentials: {
         client: {
           id: OAUTH_CLIENT_ID,
           secret: OAUTH_SECRET,
         },
-        auth: oauthPlugin.GITHUB_CONFIGURATION, // Uses GitHub's OAuth endpoints
+        auth: oauthPlugin.GITHUB_CONFIGURATION,
       },
       startRedirectPath: '/api/oauth',
       callbackUri: callbackUrl,

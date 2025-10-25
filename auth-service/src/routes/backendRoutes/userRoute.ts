@@ -31,7 +31,7 @@ const userRoutes = async (server: FastifyInstance) => {
    * @query everything else
    * @returns Array of user info objects
    */
-  server.get('/api/user', async (req: FastifyRequest, reply: FastifyReply) => {
+  server.get('/user', async (req: FastifyRequest, reply: FastifyReply) => {
     return server.routeHandler(req, reply, userRoutesConfig.getUsers, server);
   });
 
@@ -49,7 +49,7 @@ const userRoutes = async (server: FastifyInstance) => {
    * @returns 404 - User not found
    */
 
-  server.get('/api/user/:userId', async (req: FastifyRequest, reply: FastifyReply) => {
+  server.get('/user/:userId', async (req: FastifyRequest, reply: FastifyReply) => {
     return server.routeHandler(req, reply, userRoutesConfig.getUser, server);
   });
 
@@ -74,7 +74,7 @@ const userRoutes = async (server: FastifyInstance) => {
    * @returns 200 - Updated user profile
    * @returns 409 - Username or email already taken
    */
-  server.patch('/api/user/:userId', async (req: FastifyRequest, reply: FastifyReply) => {
+  server.patch('/user/:userId', async (req: FastifyRequest, reply: FastifyReply) => {
     return server.routeHandler(req, reply, userRoutesConfig.updateUser, server);
   });
 
@@ -92,7 +92,7 @@ const userRoutes = async (server: FastifyInstance) => {
    * @param userId - Must match authenticated user ID
    * @returns 204 - Account deleted successfully
    */
-  server.delete('/api/user/:userId', async (req: FastifyRequest, reply: FastifyReply) => {
+  server.delete('/user/:userId', async (req: FastifyRequest, reply: FastifyReply) => {
     return server.routeHandler(req, reply, userRoutesConfig.deleteUser, server);
   });
 };

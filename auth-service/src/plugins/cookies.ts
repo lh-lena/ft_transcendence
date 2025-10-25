@@ -25,14 +25,6 @@ const cookiePlugin = async (fastify: FastifyInstance) => {
   await fastify.register(fastifyCookie);
 
   /**
-   * - httpOnly prevents JavaScript access (XSS protection)
-   * - secure ensures HTTPS-only transmission (in production)
-   * - sameSite: 'lax' balances security with OAuth compatibility
-   * - Different paths limit refresh token exposure
-   * - maxAge aligns with JWT expiration times
-   */
-
-  /**
    * Sets authentication cookies for a user session
    * Creates both access token (15min, path: /) and refresh token (7d, path: /api)
    * Also populates reply.authData for immediate use in response
@@ -45,7 +37,7 @@ const cookiePlugin = async (fastify: FastifyInstance) => {
     // Access token options: available to all routes
     const accessOptions = {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: fastify.config.NODE_ENV === 'production',
       sameSite: 'lax' as const,
       path: '/',
       maxAge: 15 * 60,
@@ -53,7 +45,7 @@ const cookiePlugin = async (fastify: FastifyInstance) => {
 
     const refreshOptions = {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: fastify.config.NODE_ENV === 'production',
       sameSite: 'lax' as const,
       path: '/api/refresh',
       maxAge: 7 * 24 * 60 * 60,
@@ -79,6 +71,6 @@ const cookiePlugin = async (fastify: FastifyInstance) => {
 
 export default fp(cookiePlugin, {
   name: 'cookies',
-  dependencies: ['jwt'],
+  dependencies: ['jwt', 'config'],
   fastify: '5.x',
 });

@@ -32,7 +32,7 @@ const gameRoutes = async (server: FastifyInstance) => {
    * @returns Game object with full details
    * @returns 404 - Game not found
    */
-  server.get('/api/game/:gameId', async (req: FastifyRequest, reply: FastifyReply) => {
+  server.get('/game/:gameId', async (req: FastifyRequest, reply: FastifyReply) => {
     return server.routeHandler(req, reply, gameRoutesConfig.getGame, server);
   });
 
@@ -45,7 +45,7 @@ const gameRoutes = async (server: FastifyInstance) => {
    * @body settings - Game configuration
    * @returns 201 - Game created successfully
    */
-  server.post('/api/game', async (req: FastifyRequest, reply: FastifyReply) => {
+  server.post('/game', async (req: FastifyRequest, reply: FastifyReply) => {
     return server.routeHandler(req, reply, gameRoutesConfig.createGame, server);
   });
 
@@ -64,7 +64,7 @@ const gameRoutes = async (server: FastifyInstance) => {
    * @returns 200 - Successfully joined game
    * @returns 409 - Game full or already started
    */
-  server.post('/api/game/join', async (req: FastifyRequest, reply: FastifyReply) => {
+  server.post('/game/join', async (req: FastifyRequest, reply: FastifyReply) => {
     return server.routeHandler(req, reply, gameRoutesConfig.joinGame, server);
   });
 
@@ -81,7 +81,7 @@ const gameRoutes = async (server: FastifyInstance) => {
    * @returns 403 - Not the game host
    * @returns 409 - Game already started
    */
-  server.delete('/api/game/:gameId', async (req: FastifyRequest, reply: FastifyReply) => {
+  server.delete('/game/:gameId', async (req: FastifyRequest, reply: FastifyReply) => {
     return server.routeHandler(req, reply, gameRoutesConfig.deleteGame, server);
   });
 };

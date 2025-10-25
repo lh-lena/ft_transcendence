@@ -93,8 +93,10 @@ const oAuth2Routes = async (server: FastifyInstance) => {
       }
 
       reply = await reply.setAuthCookies({ id: user.userId, role: 'user' });
+      server.log.debug({ reply }, 'reply generated after OAuth login');
 
       const authData = reply.authData;
+      server.log.debug({ authData }, 'Auth data generated after OAuth login');
 
       if (!authData) {
         server.log.error({ userId: user.userId }, 'Failed to generate auth data');
