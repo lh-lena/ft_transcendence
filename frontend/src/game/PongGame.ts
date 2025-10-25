@@ -183,6 +183,7 @@ export class PongGame {
 
   private updateGameState(dt: number): void {
     // if game is paused return
+    // commenting this out for now
     if (this.gameState.status !== GameStatus.PLAYING) {
       return;
     }
@@ -344,6 +345,10 @@ export class PongGame {
   public mount(parent: HTMLElement): void {
     // Append the window element instead of just the canvas
     parent.appendChild(this.windowElement);
+  }
+
+  public getElement(): HTMLDivElement {
+    return this.windowElement;
   }
 
   public unmount(): void {
