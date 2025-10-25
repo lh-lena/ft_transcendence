@@ -33,8 +33,7 @@ const cookiePlugin = async (fastify: FastifyInstance) => {
    * @param userId - Authenticated user's unique identifier
    * @returns FastifyReply for chaining
    */
-  fastify.decorateReply('setAuthCookies', function (this: FastifyReply, data) {
-    // Access token options: available to all routes
+  fastify.decorateReply('setAuthCookies', function (this: FastifyReply, data): FastifyReply {
     const accessOptions = {
       httpOnly: true,
       secure: fastify.config.NODE_ENV === 'production',
@@ -63,6 +62,8 @@ const cookiePlugin = async (fastify: FastifyInstance) => {
       userId: data.id,
       role: data.role,
     };
+
+    fastify.log.debug(this.authData, `Set auth cookies and object for user ${data.id}`);
 
     return this;
   });
