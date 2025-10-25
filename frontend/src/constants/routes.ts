@@ -4,5 +4,6 @@ export const protectedRoutes = [
   "/settings",
   "/local",
   "/vs-player",
+  "/aiGamePage",
   // "/tournament-start",
 ];

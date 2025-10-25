@@ -10,7 +10,13 @@ import { SettingsPage } from "./pages/settings";
 import { ChatPage } from "./pages/chat";
 import { VsPlayerGamePage } from "./pages/remoteGame";
 import { TournamentAliasPage } from "./pages/tournament";
+import { GamePage } from "./pages/gamePage";
+import { AIGamePage } from "./pages/aiGamePage";
+
+// routes
 import { protectedRoutes } from "./constants/routes";
+
+// eventbus
 import { EventBus } from "./services/EventBus";
 
 // single source of truth for pages and routes
@@ -23,6 +29,8 @@ const PAGE_ROUTES = {
   "/chat": ChatPage, // -> main page now (home when logged in)
   "/vs-player": VsPlayerGamePage,
   "/tournament-start": TournamentAliasPage,
+  "/game-page": GamePage,
+  "/ai-game": AIGamePage,
 } as const;
 
 // type magic
@@ -89,12 +97,20 @@ export class App {
     // create a new web socket connection across each page reload
     // only if in logged in area
 
-    const currentRoute = this.router.getCurrentRoute();
+    let currentRoute = this.router.getCurrentRoute();
+
+    // // try to get user id / check if user was logged in
+    // if (currentRoute === "/") {
+    //   const response = await this.backend.checkAuth();
+    //   console.log(response);
+    //   if (response !== null) {
+    //     PageClass = ChatPage;
+    //   }
+    // }
 
     // we always connect back to web socket before we load a page
     if (protectedRoutes.includes(currentRoute)) {
       await this.websocket.initializeWebSocket();
-      this.backend.handleWsConnect();
     }
 
     // handle ChatPage's async initialization

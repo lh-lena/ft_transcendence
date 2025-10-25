@@ -24,6 +24,12 @@ let securitySettings: settingList = [
     type: "button",
     // define on click in constructor
   },
+  {
+    label: "username",
+    value: "change",
+    type: "button",
+    // define on click in constructor
+  },
 ];
 
 const profileSettings: settingList = [
@@ -48,6 +54,7 @@ export class SettingsPage {
   private serviceContainer: ServiceContainer;
   private router: Router;
   private backend: Backend;
+  private inputUsernameDiv!: HTMLDivElement;
 
   constructor(serviceContainer: ServiceContainer) {
     // router / services container
@@ -94,6 +101,8 @@ export class SettingsPage {
     // using optional chaining (!) because we are sure it exists other wise we would write more defensively
     securitySettings.find((setting) => setting.label === "password")!.onClick =
       () => this.changePassword();
+    securitySettings.find((setting) => setting.label === "username")!.onClick =
+      () => this.changeUsername();
     securitySettings.find((setting) => setting.label === "2FA")!.onClick = () =>
       this.toggle2FASettings();
     profileSettings.find((setting) => setting.label === "delete")!.onClick =
@@ -243,6 +252,56 @@ export class SettingsPage {
       this.window.getPane().appendChild(this.buttonRow);
       this.window.getPane().appendChild(this.settingsPanel);
     }
+  }
+
+  private changeUsername(): void {
+    // hide main settings
+    if (this.window.getElement().contains(this.settingsPanel)) {
+      this.settingsPanel.remove();
+      this.buttonRow.remove();
+
+      // new username stuff
+      this.inputUsernameDiv = document.createElement("div");
+      this.inputUsernameDiv.className = "flex h-full pt-4 flex-col gap-5 w-36";
+      this.window.getPane().appendChild(this.inputUsernameDiv);
+      const inputUsernameTitle = document.createElement("p");
+      inputUsernameTitle.textContent = "new username:";
+      inputUsernameTitle.className = "font-bold text-center";
+      this.inputUsernameDiv.appendChild(inputUsernameTitle);
+      const inputUsernameFirst = document.createElement("input");
+      inputUsernameFirst.type = "text";
+      inputUsernameFirst.id = "text_username";
+      inputUsernameFirst.placeholder = "username";
+      inputUsernameFirst.style.paddingLeft = "0.5em";
+      this.inputUsernameDiv.appendChild(inputUsernameFirst);
+      const inputUsernameButton = document.createElement("button");
+      inputUsernameButton.className = "btn";
+      inputUsernameButton.onclick = () => {
+        const username = (inputUsernameFirst as HTMLInputElement).value;
+        if (username.length === 0) {
+          showInfo("username must be at least 1 character!");
+          return;
+        } else if (username.length > 16) {
+          showInfo("username must be smaller than 17 characters!");
+          return;
+        }
+        this.sendChangeUsernameHook(username);
+      };
+      inputUsernameButton.innerText = "change";
+      this.inputUsernameDiv.appendChild(inputUsernameButton);
+    } // show
+    else {
+      this.inputUsernameDiv.remove();
+      this.window.getPane().appendChild(this.buttonRow);
+      this.window.getPane().appendChild(this.settingsPanel);
+    }
+  }
+
+  private async sendChangeUsernameHook(newUsername: string) {
+    this.backend.changeUsernameById(this.backend.getUser().userId, newUsername);
+    this.inputUsernameDiv.remove();
+    this.window.getPane().appendChild(this.buttonRow);
+    this.window.getPane().appendChild(this.settingsPanel);
   }
 
   private async sendChangePasswordHook(newPassword: string) {
