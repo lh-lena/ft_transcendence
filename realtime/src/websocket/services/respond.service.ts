@@ -61,7 +61,7 @@ export default function createRespondService(app: FastifyInstance): RespondServi
     players.forEach((p) => {
       if (
         p.isAI !== true &&
-        game.isConnected.get(p.userId) === true &&
+        game.playersReady.includes(p.userId) &&
         !excludeUsers.includes(p.userId)
       ) {
         userIds.push(p.userId);

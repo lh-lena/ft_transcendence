@@ -19,7 +19,6 @@ import type {
 import type { EnvironmentConfig } from '../../config/config.js';
 import {
   createGameResult,
-  broadcastGameUpdate,
   assignPaddleToPlayers,
   getUserIdObjectArray,
   createGameValidator,
@@ -138,7 +137,7 @@ export default function createGameStateService(app: FastifyInstance): GameStateS
         pauseTimeouts.delete(gameId);
       }
       game.players.forEach((player) => {
-        if (game.isConnected.get(player.userId) === true) {
+        if (validator.isPlayerInGame(game.players, player.userId)) {
           connectionService.updateUserGame(player.userId, null);
         }
       });
@@ -206,11 +205,9 @@ export default function createGameStateService(app: FastifyInstance): GameStateS
     }
     const { gameId } = game;
     const pausedState = pausedGames.get(gameId) as PausedGameState;
-    const respond = app.respond as RespondService;
     validator.validateResumingGame(pausedState, game, resumeByPlayerId);
     stopAutoResume(gameId);
     updateGameToActive(game);
-    broadcastGameUpdate(respond, game.players, game.gameState);
     const gameLoopService = app.gameLoopService as GameLoopService;
     gameLoopService.startCountdownSequence(game, 'Game resumed!', PONG_CONFIG.COUNTDOWN);
   }

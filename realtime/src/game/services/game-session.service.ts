@@ -32,7 +32,8 @@ export default function createGameSessionService(app: FastifyInstance): GameSess
 
     const newGame: GameSession = {
       ...gameData,
-      isConnected: new Map(),
+      // isConnected: new Map(), // rm
+      playersReady: [],
       gameState: initializeGameState(gameId),
       status: GameSessionStatus.PENDING,
       gameLoopInterval: undefined,
@@ -61,25 +62,39 @@ export default function createGameSessionService(app: FastifyInstance): GameSess
     return removed;
   }
 
-  function setPlayerConnectionStatus(
-    userId: UserIdType,
-    gameId: GameIdType,
-    connected: boolean,
-  ): void {
+  // TDDO: rm
+  // function setPlayerConnectionStatus(
+  //   userId: UserIdType,
+  //   gameId: GameIdType,
+  //   connected: boolean,
+  // ): void {
+  //   const gameSession = gameSessions.get(gameId);
+  //   if (gameSession === undefined || gameSession === null) {
+  //     throw new Error(`Game session ${gameId} not found`);
+  //   }
+  //   if (connected) {
+  //     gameSession.isConnected.set(userId, connected);
+  //   } else {
+  //     gameSession.isConnected.delete(userId);
+  //   }
+  //   processDebugLog(
+  //     app,
+  //     'game-session',
+  //     `Player ${userId} in the game ${gameId} is ${connected ? 'connected' : 'disconnected'}`,
+  //   );
+  // }
+
+  function setPlayerReadyStatus(userId: UserIdType, gameId: GameIdType, ready: boolean): void {
     const gameSession = gameSessions.get(gameId);
     if (gameSession === undefined || gameSession === null) {
       throw new Error(`Game session ${gameId} not found`);
     }
-    if (connected) {
-      gameSession.isConnected.set(userId, connected);
+    if (ready) {
+      gameSession.playersReady.push(userId);
     } else {
-      gameSession.isConnected.delete(userId);
+      gameSession.playersReady.splice(gameSession.playersReady.indexOf(userId), 1);
     }
-    processDebugLog(
-      app,
-      'game-session',
-      `Player ${userId} in the game ${gameId} is ${connected ? 'connected' : 'disconnected'}`,
-    );
+    processDebugLog(app, 'game-session', `Player is ready: ID ${userId}, Game ID ${gameId}`);
   }
 
   function updateGameSession(gameId: GameIdType, updates: Partial<GameSession>): boolean {
@@ -124,7 +139,8 @@ export default function createGameSessionService(app: FastifyInstance): GameSess
     createGameSession,
     removeGameSession,
     storeGameSession,
-    setPlayerConnectionStatus,
+    // setPlayerConnectionStatus,
+    setPlayerReadyStatus,
     updateGameSession,
     shutdown,
   };

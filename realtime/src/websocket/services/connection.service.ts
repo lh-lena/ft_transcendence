@@ -9,10 +9,7 @@ import type { NETWORK_QUALITY } from '../../constants/network.constants.js';
 import { NotificationType } from '../../constants/game.constants.js';
 import { WSStatusCode } from '../../constants/status.constants.js';
 import { processErrorLog, processDebugLog } from '../../utils/error.handler.js';
-import type { GameSessionService, GameStateService } from '../../game/types/game.types.js';
-import createGameValidator from '../../game/utils/game.validation.js';
-import type { UserIdType } from '../../schemas/user.schema.js';
-import type { GameIdType } from '../../schemas/game.schema.js';
+import type { UserIdType, GameIdType } from '../../schemas/index.js';
 import { metricsService } from '../../metrics/metrics.service.js';
 
 export default function createConnectionService(app: FastifyInstance): ConnectionService {
@@ -26,7 +23,6 @@ export default function createConnectionService(app: FastifyInstance): Connectio
     handleHeartbeatTimeout,
     updateConnectionQuality,
   );
-  const validator = createGameValidator(app);
   const HEARTBEAT_INTERVAL = config.websocket.heartbeatInterval;
   const MAX_CONNECTIONS = config.websocket.maxConnections;
 
@@ -95,9 +91,7 @@ export default function createConnectionService(app: FastifyInstance): Connectio
     const { userId } = oldConn.user;
 
     log.info(`[connection-service] Replacing existing connection for user ${userId}`);
-
     heartbeatService.stopHeartbeat(oldConn);
-
     const gameId: GameIdType | null | undefined = oldConn.gameId;
     if (gameId !== undefined && gameId !== null) {
       newConn.gameId = gameId;
@@ -105,7 +99,6 @@ export default function createConnectionService(app: FastifyInstance): Connectio
     }
     userConnections.remove(userId);
     oldConn.close(WSStatusCode.REPLACED.code, WSStatusCode.REPLACED.reason);
-    log.debug(`[connection-service] Old connection for user ${userId} removed during replacement`);
   }
 
   function removeConnection(conn: WSConnection): void {
@@ -117,7 +110,6 @@ export default function createConnectionService(app: FastifyInstance): Connectio
     processUserOnline(userId, false).catch((error: unknown) => {
       processErrorLog(app, 'connection-service', 'Error processing user status:', error);
     });
-
     if (gameId !== undefined && gameId !== null) {
       reconnectionService.handlePlayerDisconnect(conn.user, gameId);
     }
@@ -151,7 +143,7 @@ export default function createConnectionService(app: FastifyInstance): Connectio
   }
 
   function reconnectPlayer(userId: UserIdType): void {
-    const gameSessionService = app.gameSessionService as GameSessionService;
+    // const gameSessionService = app.gameSessionService as GameSessionService;
     const disconnectInfo = reconnectionService.handlePlayerReconnection(userId);
     if (disconnectInfo === undefined) {
       log.warn(`[connection-service] No disconnect info found for user ${userId}`);
@@ -160,7 +152,7 @@ export default function createConnectionService(app: FastifyInstance): Connectio
 
     const { gameId } = disconnectInfo as { gameId: GameIdType };
     updateUserGame(userId, gameId);
-    gameSessionService.setPlayerConnectionStatus(userId, gameId, true);
+    // gameSessionService.setPlayerConnectionStatus(userId, gameId, true); // rm
 
     const respond = app.respond as RespondService;
     respond.connected(userId);
@@ -175,18 +167,18 @@ export default function createConnectionService(app: FastifyInstance): Connectio
     );
 
     log.info(`[connection-service] User ${userId} reconnected to game ${gameId}`);
-    try {
-      const gameStateService = app.gameStateService as GameStateService;
-      const gameSession = validator.getValidGameCheckPlayer(gameId, userId);
-      gameStateService.resumeGame(gameSession);
-    } catch (error: unknown) {
-      processDebugLog(
-        app,
-        'connection-service',
-        `Failed to resume game ${gameId} for user ${userId}: `,
-        error,
-      );
-    }
+    // try {
+    //   const gameStateService = app.gameStateService as GameStateService;
+    //   const gameSession = validator.getValidGameCheckPlayer(gameId, userId);
+    //   gameStateService.resumeGame(gameSession);
+    // } catch (error: unknown) {
+    //   processDebugLog(
+    //     app,
+    //     'connection-service',
+    //     `Failed to resume game ${gameId} for user ${userId}: `,
+    //     error,
+    //   );
+    // }
   }
 
   function getConnection(userId: UserIdType): WSConnection | undefined {
@@ -201,7 +193,7 @@ export default function createConnectionService(app: FastifyInstance): Connectio
       return;
     }
     conn.gameId = gameId;
-    log.debug(`[connection-service] User ${userId} assigned to game ${gameId}`);
+    processDebugLog(app, 'connection-service', `User ${userId} game updated to ${gameId}`);
   }
 
   async function notifyShutdown(): Promise<void> {
@@ -213,9 +205,9 @@ export default function createConnectionService(app: FastifyInstance): Connectio
       try {
         if (conn !== undefined && conn.readyState === WebSocket.OPEN) {
           respond.notification(userId, NotificationType.INFO, WSStatusCode.GOING_AWAY.reason);
-          log.debug(`[connection-service] Notified user ${userId} of shutdown`);
+          processDebugLog(app, 'connection-service', `Notified user ${userId} of shutdown`);
         } else {
-          log.warn(
+          log.info(
             `[connection-service] Skipped user ${userId} - connection not open or already removed`,
           );
         }

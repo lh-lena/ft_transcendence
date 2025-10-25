@@ -8,17 +8,13 @@ import type {
   GameIdType,
   StartGame,
   BackendStartGame,
+  ClientEventPayload,
 } from '../../schemas/index.js';
-import { GameSessionStatus, NotificationType } from '../../constants/index.js';
-import { processDebugLog, processGameError, processErrorLog } from '../../utils/index.js';
+import { GAME_EVENTS, GameSessionStatus, NotificationType } from '../../constants/index.js';
+import { processDebugLog, processGameError } from '../../utils/index.js';
 import { GameError } from '../../utils/game.error.js';
 import type { RespondService, ConnectionService } from '../../websocket/types/ws.types.js';
-import type {
-  GameSessionService,
-  GameDataService,
-  GameStateService,
-  GameService,
-} from '../types/game.types.js';
+import type { GameSessionService, GameStateService, GameService } from '../types/game.types.js';
 import createGameValidator from '../utils/game.validation.js';
 import type { EnvironmentConfig } from '../../config/config.js';
 import {
@@ -57,35 +53,11 @@ export default function createGameService(app: FastifyInstance): GameService {
     return userConnection.gameId;
   }
 
-  async function handleStartGame(
-    arg1: User | BackendStartGame,
-    arg2?: GameIdType,
-  ): Promise<boolean> {
-    const gameDataService = app.gameDataService as GameDataService;
-    const gameStateService = app.gameStateService as GameStateService;
-    try {
-      let backendGameData: BackendStartGame;
-      if (arg2 !== undefined) {
-        const gameId = arg2 as GameIdType;
-        backendGameData = await gameDataService.fetchGameData(gameId);
-      } else {
-        backendGameData = arg1 as BackendStartGame;
-      }
-      const gameSession = await initializeGameSession(backendGameData);
-      if (gameSession === null) return false;
-      gameStateService.startGame(gameSession);
-      return true;
-    } catch (error: unknown) {
-      processErrorLog(app, 'game-service', `Failed to initialize game session`, error);
-      return false;
-    }
-  }
-
-  async function initializeGameSession(data: BackendStartGame): Promise<GameSession | null> {
+  async function initializeGameSession(data: BackendStartGame): Promise<boolean> {
     const gameSessionService = app.gameSessionService as GameSessionService;
-    if (data === undefined || data === null) return null;
+    if (data === undefined || data === null) return false;
     const gameStartData = await transformAndValidateGameData(data);
-    if (gameStartData === null) return null;
+    if (gameStartData === null) return false;
     const gameSession = gameSessionService.createGameSession(
       data.gameId,
       gameStartData,
@@ -93,18 +65,18 @@ export default function createGameService(app: FastifyInstance): GameService {
     addAIPlayerToGame(gameSession, data.mode, data.aiDifficulty);
     gameSessionService.storeGameSession(gameSession);
     syncUserConnectionStatus(gameStartData.players, data.gameId);
-    return gameSession;
+    return true;
   }
 
   function syncUserConnectionStatus(players: Player[], gameId: GameIdType): void {
     const connectionService = app.connectionService as ConnectionService;
-    const gameSessionService = app.gameSessionService as GameSessionService;
+    // const gameSessionService = app.gameSessionService as GameSessionService;
 
     for (const player of players) {
       if (player.isAI) continue;
       const connection = connectionService.getConnection(player.userId);
       if (connection === undefined) continue;
-      gameSessionService.setPlayerConnectionStatus(player.userId, gameId, true);
+      // gameSessionService.setPlayerConnectionStatus(player.userId, gameId, true);
       connectionService.updateUserGame(player.userId, gameId);
     }
   }
@@ -124,6 +96,22 @@ export default function createGameService(app: FastifyInstance): GameService {
       aiDifficulty: data.aiDifficulty,
     };
     return gameStartData;
+  }
+
+  function handleStartGame(user: User, payload: ClientEventPayload<GAME_EVENTS.READY>): void {
+    if (user === undefined || user === null) return;
+    const { gameId } = payload;
+    const gameSessionService = app.gameSessionService as GameSessionService;
+    gameSessionService.setPlayerReadyStatus(user.userId, gameId, true);
+    const gameSession = gameSessionService.getGameSession(gameId) as GameSession;
+    const gameStateService = app.gameStateService as GameStateService;
+    if (gameSession.status === GameSessionStatus.PENDING) {
+      gameStateService.startGame(gameSession);
+      return;
+    }
+    if (gameSession.status === GameSessionStatus.PAUSED) {
+      gameStateService.resumeGame(gameSession, user.userId);
+    }
   }
 
   function handleGamePause(user: User, gameId: GameIdType): void {
@@ -258,5 +246,6 @@ export default function createGameService(app: FastifyInstance): GameService {
     handleGameResume,
     handlePlayerInput,
     handleGameLeave,
+    initializeGameSession,
   };
 }

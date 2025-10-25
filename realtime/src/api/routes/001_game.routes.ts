@@ -2,6 +2,7 @@ import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { ResponseSchema } from '../../schemas/response.schema.js';
 import { GameStartRequestSchema, BackendStartGame } from '../../schemas/game.schema.js';
 import { processErrorLog } from '../../utils/error.handler.js';
+import { GameService } from '../../game/types/game.types.js';
 
 export const setupGameRoutes = (app: FastifyInstance): void => {
   app.post('/game/start', {
@@ -18,12 +19,13 @@ export const setupGameRoutes = (app: FastifyInstance): void => {
     handler: async (request: FastifyRequest, reply: FastifyReply) => {
       try {
         const requestBody = request.body as BackendStartGame;
+        const gameService = app.gameService as GameService;
 
-        const gameSession = await app.gameService.handleStartGame(requestBody);
-        if (!gameSession) {
+        const result = await gameService.initializeGameSession(requestBody);
+        if (!result) {
           return reply.code(400).send({
             success: false,
-            message: 'Failed to start game',
+            message: 'Failed to initialize game session',
           });
         }
         return reply.code(200).send({ success: true });
@@ -37,4 +39,3 @@ export const setupGameRoutes = (app: FastifyInstance): void => {
     },
   });
 };
-// If you want to reuse schemas via $ref, first app.addSchema({ $id: 'GameStateSchema', ... }) and then reference with $ref: 'GameStateSchema#'.

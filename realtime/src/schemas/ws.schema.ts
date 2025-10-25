@@ -12,6 +12,13 @@ export const GameIdPayloadSchema = z
   })
   .meta({ $id: 'GameIdPayload' });
 
+export const ClientReadySchema = z
+  .object({
+    gameId: GameIdSchema,
+    timestamp: z.number().int(),
+  })
+  .meta({ $id: 'ClientReadyPayload' });
+
 export const GameLeavePayloadSchema = z
   .object({
     gameId: GameIdSchema,
@@ -76,6 +83,10 @@ export const ErrorPayloadSchema = z
   .meta({ $id: 'ErrorPayload' });
 
 export const WsClientMessageSchema = z.discriminatedUnion('event', [
+  z.object({
+    event: z.literal(GAME_EVENTS.READY),
+    payload: ClientReadySchema,
+  }),
   z.object({
     event: z.literal(GAME_EVENTS.LEAVE),
     payload: GameIdPayloadSchema,

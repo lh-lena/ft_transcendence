@@ -40,7 +40,6 @@ export interface ReconnectionService {
   handlePlayerReconnection: (userId: UserIdType) => DisconnectInfo | undefined;
   handlePlayerDisconnect: (user: User, gameId: GameIdType) => void;
   hasDisconnectData: (userId: UserIdType) => boolean;
-  attemptReconnection: (userId: UserIdType) => GameIdType | null;
   cleanup: (userId?: UserIdType) => void;
 }
 

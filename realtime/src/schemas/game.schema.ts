@@ -86,7 +86,8 @@ export const GameSessionSchema = z.object({
   gameId: GameIdSchema,
   mode: z.enum(GameMode),
   players: z.array(PlayerSchema),
-  isConnected: z.map(UserIdSchema, z.boolean()),
+  // isConnected: z.map(UserIdSchema, z.boolean()), // rm
+  playersReady: z.array(UserIdSchema),
   status: z.enum(GameSessionStatus),
   startedAt: z.string().optional(),
   finishedAt: z.string().optional(),
