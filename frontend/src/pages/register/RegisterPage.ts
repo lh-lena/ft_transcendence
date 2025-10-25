@@ -1,4 +1,4 @@
-import { ServiceContainer, Router, Backend, Websocket } from "../../services";
+import { ServiceContainer, Router, Backend } from "../../services";
 import { Menu } from "../../components/menu";
 import { PongButton } from "../../components/pongButton";
 import { UserRegistration } from "../../types";
@@ -6,14 +6,12 @@ import {
   generateProfilePrint,
   profilePrintToString,
 } from "../../utils/profilePrintFunctions";
-import validator from "validator";
 import { showError, showInfo } from "../../components/toast";
 
 // using for dev
 const uuid = crypto.randomUUID().split("-")[0]; // First segment of UUID
 const demoUsername = uuid.slice(0, 6);
 const demoPassword = crypto.randomUUID().replace(/-/g, "").slice(0, 12);
-const demoEmail = `test-${uuid}@example.com`;
 
 export class RegisterPage {
   private main: HTMLElement;
@@ -23,7 +21,6 @@ export class RegisterPage {
   private serviceContainer: ServiceContainer;
   private router: Router;
   private backend: Backend;
-  private websocket: Websocket;
 
   constructor(serviceContainer: ServiceContainer) {
     // router / services container
@@ -31,7 +28,6 @@ export class RegisterPage {
     this.router = this.serviceContainer.get<Router>("router");
     // this.auth = this.serviceContainer.get<Auth>("auth");
     this.backend = this.serviceContainer.get<Backend>("backend");
-    this.websocket = this.serviceContainer.get<Websocket>("websocket");
 
     this.main = document.createElement("div");
     this.main.className =
@@ -42,7 +38,7 @@ export class RegisterPage {
 
     const firstMenu = [
       {
-        name: "email",
+        name: "username",
         onClick: () => this.toggleRegisterMenu(),
       },
       {
@@ -91,8 +87,6 @@ export class RegisterPage {
     const username = (
       document.getElementById("text_username") as HTMLInputElement
     ).value;
-    const email = (document.getElementById("text_email") as HTMLInputElement)
-      .value;
     const password = (
       document.getElementById("text_password") as HTMLInputElement
     ).value;
@@ -103,10 +97,6 @@ export class RegisterPage {
     // basic validation -> add more
     if (username.length > 6) {
       showInfo("username must be smaller than 6 characters");
-      return;
-    }
-    if (!validator.isEmail(email)) {
-      showInfo("invalid email detected");
       return;
     }
     if (password != passwordConfirm) {
@@ -122,7 +112,6 @@ export class RegisterPage {
     const { color, colorMap } = generateProfilePrint();
 
     const userRegistrationData: UserRegistration = {
-      email: email,
       username: username,
       password: password, // You might want to hash this on the backend
       tfaEnabled: "false", // Default values for now
@@ -152,16 +141,6 @@ export class RegisterPage {
     inputName.value = demoUsername;
     inputName.style.paddingLeft = "0.5em"; // Add left padding
     form.appendChild(inputName);
-
-    // email input
-    const inputEmail = document.createElement("input");
-    inputEmail.type = "email";
-    inputEmail.id = "text_email";
-    inputEmail.placeholder = "email";
-    // dev
-    inputEmail.value = demoEmail;
-    inputEmail.style.paddingLeft = "0.5em"; // Add left padding
-    form.appendChild(inputEmail);
 
     // password input
     const inputPassword = document.createElement("input");
@@ -199,19 +178,19 @@ export class RegisterPage {
     form.className = "flex flex-col gap-3 w-48";
     this.main.appendChild(form);
 
-    // email input
-    const inputEmail = document.createElement("input");
-    inputEmail.type = "email";
-    inputEmail.id = "text_email";
-    inputEmail.placeholder = "code";
-    inputEmail.style.paddingLeft = "0.5em";
-    form.appendChild(inputEmail);
+    // code input
+    const inputCode = document.createElement("input");
+    inputCode.type = "code";
+    inputCode.id = "text_code";
+    inputCode.placeholder = "code";
+    inputCode.style.paddingLeft = "0.5em";
+    form.appendChild(inputCode);
 
     const verificationButton = document.createElement("button");
     verificationButton.className = "btn w-36 mx-auto mt-4";
     verificationButton.onclick = (e) => {
       e.preventDefault();
-      const code = inputEmail.value;
+      const code = inputCode.value;
       this.verify2FACode(userId, code, sessionId);
     };
     verificationButton.innerText = "verify";

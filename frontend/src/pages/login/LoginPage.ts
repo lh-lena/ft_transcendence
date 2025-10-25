@@ -1,4 +1,4 @@
-import { ServiceContainer, Router, Backend, Websocket } from "../../services";
+import { ServiceContainer, Router, Backend } from "../../services";
 import { Menu } from "../../components/menu";
 import { PongButton } from "../../components/pongButton";
 import { UserLogin } from "../../types";
@@ -14,14 +14,12 @@ export class LoginPage {
   private router: Router;
   private loginForm!: HTMLElement;
   private backend: Backend;
-  private websocket: Websocket;
 
   constructor(serviceContainer: ServiceContainer) {
     // router / services container
     this.serviceContainer = serviceContainer;
     this.router = this.serviceContainer.get<Router>("router");
     this.backend = this.serviceContainer.get<Backend>("backend");
-    this.websocket = this.serviceContainer.get<Websocket>("websocket");
 
     this.main = document.createElement("div");
     this.main.className =
@@ -32,7 +30,7 @@ export class LoginPage {
 
     const firstMenu = [
       {
-        name: "email",
+        name: "username",
         onClick: () => this.toggleLoginMenu(),
       },
       {
@@ -85,12 +83,12 @@ export class LoginPage {
     this.main.appendChild(this.loginForm);
 
     // email input
-    const inputEmail = document.createElement("input");
-    inputEmail.type = "email";
-    inputEmail.id = "text_email";
-    inputEmail.placeholder = "email";
-    inputEmail.style.paddingLeft = "0.5em";
-    this.loginForm.appendChild(inputEmail);
+    const inputUsername = document.createElement("input");
+    inputUsername.type = "email";
+    inputUsername.id = "text_username";
+    inputUsername.placeholder = "username";
+    inputUsername.style.paddingLeft = "0.5em";
+    this.loginForm.appendChild(inputUsername);
 
     // password input
     const inputPassword = document.createElement("input");
@@ -111,23 +109,19 @@ export class LoginPage {
   }
 
   private async attemptLogin() {
-    const emailInput = document.getElementById(
-      "text_email",
+    const usernameInput = document.getElementById(
+      "text_username",
     ) as HTMLInputElement;
     const passwordInput = document.getElementById(
       "text_password",
     ) as HTMLInputElement;
 
-    const email = emailInput?.value;
+    const username = usernameInput?.value;
     const password = passwordInput?.value;
 
     // Basic validation
-    if (!email) {
-      showError("please provide an email");
-      return;
-    }
-    if (!validator.isEmail(email)) {
-      showInfo("please provide a valid email");
+    if (!username) {
+      showError("please provide a username");
       return;
     }
     if (!password) {
@@ -136,7 +130,7 @@ export class LoginPage {
     }
 
     const userLoginData: UserLogin = {
-      email: email,
+      username: username,
       password: password,
     };
 
