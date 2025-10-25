@@ -8,13 +8,12 @@
  * - Delete account
  *
  * Privacy levels:
- * - Own profile: Full data including email, settings
+ * - Own profile: Full data
  * - Other users: Public data only (username, avatar, stats)
  * - Guests: Minimal data (username, avatar)
  *
  * @module routes/userRoute
  */
-import fp from 'fastify-plugin';
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { userRoutesConfig } from '../../config/userRouteConfig';
 
@@ -32,7 +31,7 @@ const userRoutes = async (server: FastifyInstance) => {
    * @query everything else
    * @returns Array of user info objects
    */
-  server.get('/api/user', async (req: FastifyRequest, reply: FastifyReply) => {
+  server.get('/user', async (req: FastifyRequest, reply: FastifyReply) => {
     return server.routeHandler(req, reply, userRoutesConfig.getUsers, server);
   });
 
@@ -41,8 +40,8 @@ const userRoutes = async (server: FastifyInstance) => {
    * Retrieves specific user profile
    *
    * Response varies by relationship:
-   * - Own profile: Full data (email, settings, statistics)
-   * - Other user: Public data (username, avatar, stats)
+   * - Own profile: Full data
+   * - Other user: Public data
    * - Guest account: Minimal data
    *
    * @param userId - User ID to retrieve
@@ -50,7 +49,7 @@ const userRoutes = async (server: FastifyInstance) => {
    * @returns 404 - User not found
    */
 
-  server.get('/api/user/:userId', async (req: FastifyRequest, reply: FastifyReply) => {
+  server.get('/user/:userId', async (req: FastifyRequest, reply: FastifyReply) => {
     return server.routeHandler(req, reply, userRoutesConfig.getUser, server);
   });
 
@@ -60,7 +59,6 @@ const userRoutes = async (server: FastifyInstance) => {
    *
    * Updatable fields:
    * - Username (must be unique)
-   * - Email (must be unique, may trigger verification)
    * - Password (automatically hashed)
    * - Avatar
    *
@@ -73,9 +71,9 @@ const userRoutes = async (server: FastifyInstance) => {
    * @param userId - Must match authenticated user ID
    * @body Partial user object with fields to update
    * @returns 200 - Updated user profile
-   * @returns 409 - Username or email already taken
+   * @returns 409 - Username already taken
    */
-  server.patch('/api/user/:userId', async (req: FastifyRequest, reply: FastifyReply) => {
+  server.patch('/user/:userId', async (req: FastifyRequest, reply: FastifyReply) => {
     return server.routeHandler(req, reply, userRoutesConfig.updateUser, server);
   });
 
@@ -93,12 +91,9 @@ const userRoutes = async (server: FastifyInstance) => {
    * @param userId - Must match authenticated user ID
    * @returns 204 - Account deleted successfully
    */
-  server.delete('/api/user/:userId', async (req: FastifyRequest, reply: FastifyReply) => {
+  server.delete('/user/:userId', async (req: FastifyRequest, reply: FastifyReply) => {
     return server.routeHandler(req, reply, userRoutesConfig.deleteUser, server);
   });
 };
 
-export default fp(userRoutes, {
-  name: 'user-routes',
-  dependencies: ['route-handler', 'auth-middleware'],
-});
+export default userRoutes;

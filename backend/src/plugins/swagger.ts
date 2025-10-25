@@ -84,13 +84,7 @@ const swaggerPlugin = async (server: FastifyInstance) => {
     transformSpecificationClone: true,
   });
 
-  server.log.info(
-    {
-      route: '/api/docs',
-      environment: NODE_ENV,
-    },
-    'Swagger UI available at /api/docs',
-  );
+  server.log.info('Swagger UI available at /api/docs');
 
   if (!isDev) {
     server.log.warn(

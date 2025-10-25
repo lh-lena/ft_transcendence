@@ -11,7 +11,6 @@
  *
  * @module routes/blockedRoute
  */
-import fp from 'fastify-plugin';
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { blockedRoutesConfig } from '../../config/blockedRouteConfig';
 
@@ -24,7 +23,7 @@ const blockedRoutes = async (server: FastifyInstance) => {
    * @query userId - Must match authenticated user ID
    * @returns Array of blocked user relationships
    */
-  server.get('/api/blocked', async (req: FastifyRequest, reply: FastifyReply) => {
+  server.get('/blocked', async (req: FastifyRequest, reply: FastifyReply) => {
     return server.routeHandler(req, reply, blockedRoutesConfig.getBlocked, server);
   });
 
@@ -41,7 +40,7 @@ const blockedRoutes = async (server: FastifyInstance) => {
    * @body blockedUserId - User to block
    * @returns 201 - Block created successfully
    */
-  server.post('/api/blocked', async (req: FastifyRequest, reply: FastifyReply) => {
+  server.post('/blocked', async (req: FastifyRequest, reply: FastifyReply) => {
     return server.routeHandler(req, reply, blockedRoutesConfig.createBlocked, server);
   });
 
@@ -53,12 +52,9 @@ const blockedRoutes = async (server: FastifyInstance) => {
    * @param blockedId - Block relationship ID to remove
    * @returns 204 - Block removed successfully
    */
-  server.delete('/api/blocked/:blockedId', async (req: FastifyRequest, reply: FastifyReply) => {
+  server.delete('/blocked/:blockedId', async (req: FastifyRequest, reply: FastifyReply) => {
     return server.routeHandler(req, reply, blockedRoutesConfig.deleteBlocked, server);
   });
 };
 
-export default fp(blockedRoutes, {
-  name: 'blocked-routes',
-  dependencies: ['route-handler', 'auth-middleware'],
-});
+export default blockedRoutes;

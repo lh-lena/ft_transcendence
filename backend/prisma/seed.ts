@@ -22,7 +22,6 @@ async function main() {
     users.push(
       await prisma.user.create({
         data: {
-          email: faker.internet.email(),
           username,
           alias: username,
           guest: faker.datatype.boolean(),

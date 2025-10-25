@@ -5,18 +5,6 @@
  * - Attaches decoded user info to request object
  * - Bypasses authentication for public routes
  *
- * Public routes (no authentication required):
- * - Health checks and metrics
- * - OAuth callback endpoints
- * - Registration and login
- * - Token refresh
- * - Guest login
- *
- * Protected routes:
- * - All other API endpoints require valid access token
- * - Token must be present in accessToken cookie
- * - Token is verified using JWT plugin
- *
  * @module hooks/preHandlerHook
  */
 import fp from 'fastify-plugin';
@@ -29,13 +17,10 @@ import type { JwTReturnType } from '../schemas/jwt';
  * Organized by category for easier maintenance
  */
 const publicRoutes = {
-  // Health and monitoring
-  health: ['/api/auth/health', '/metrics'],
+  health: ['/api/health', '/api/metrics'],
 
-  // OAuth flows
   oauth: ['/api/oauth', '/api/oauth/callback'],
 
-  // Authentication
   auth: [
     '/api/register',
     '/api/login',
@@ -249,6 +234,6 @@ export default fp(
   },
   {
     name: 'auth-middleware',
-    dependencies: ['jwt', 'cookies'],
+    dependencies: ['jwt', 'cookies', 'sanitaize'],
   },
 );

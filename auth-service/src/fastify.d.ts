@@ -1,4 +1,5 @@
 import 'fastify';
+import { Config } from '../schemas/config';
 import { OAuth2Namespace } from '@fastify/oauth2';
 import { tfaHandler } from './utils/tfa';
 import { userActions } from './utils/userActions';
@@ -20,7 +21,7 @@ interface AuthCookies {
 
 declare module 'fastify' {
   interface FastifyInstance {
-    config;
+    config: Config;
     metrics;
     jwt: {
       access: FastifyJwTNamespace;
@@ -48,6 +49,7 @@ declare module 'fastify' {
     startTime: number;
   }
   interface FastifyReply {
+    refreshCsrfToken(): Promise<string>;
     setAuthCookies(data: AuthCookies): FastifyReply;
     doSending(options?: SendOptions): FastifyReply;
     authData?: AuthData;

@@ -100,8 +100,6 @@ export class RealtimeService {
         return Promise.reject(error);
       },
     );
-
-    this.server.log.info(this.config, 'Real-time service initialized');
   }
 
   /**

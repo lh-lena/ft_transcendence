@@ -1,12 +1,5 @@
 /**
  * Environment Configuration Schema
- *
- * This schema defines all environment variables with:
- * - Type validation
- * - Default values
- * - Required/optional flags
- * - Format validation
- *
  * @module config/schema
  */
 

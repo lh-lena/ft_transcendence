@@ -52,15 +52,7 @@ const multipartPlugin = async (server: FastifyInstance) => {
     sharedSchemaId: '#multipartFile',
   });
 
-  server.log.info(
-    {
-      maxFileSize: `${(MAX_FILE_SIZE / 1024 / 1024).toFixed(2)}MB`,
-      maxFiles: MAX_FILES,
-      maxFields: MAX_FIELDS,
-      maxFieldSize: `${(MAX_FIELD_SIZE / 1024).toFixed(2)}KB`,
-    },
-    'Multipart plugin registered with security limits',
-  );
+  server.log.info('Multipart plugin registered with security limits');
 
   server.decorate('validateFileType', (mimetype: string, allowedTypes: string[]): boolean => {
     return allowedTypes.some((type) => {

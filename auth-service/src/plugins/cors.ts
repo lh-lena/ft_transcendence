@@ -12,22 +12,14 @@ import cors from '@fastify/cors';
  * @throws {Error} If origin is not in allowedOrigins list
  */
 const corsPlugin = async (fastify: FastifyInstance) => {
-  // Define allowed origins from service URLs
-  const allowedOrigins = [fastify.config.frontendUrl, fastify.config.realtimeUrl];
+  const allowedOrigins = [fastify.config.FRONTEND_URL, fastify.config.REALTIME_URL];
 
-  /**
-   * Validates incoming request origin against allowed list
-   * @param origin - Request origin header value
-   * @param cb - Callback to approve/reject the request
-   */
   await fastify.register(cors, {
     origin: (origin, cb) => {
-      // Allow requests with no origin (e.g., mobile apps, Postman)
       if (!origin) return cb(null, true);
 
       if (allowedOrigins.includes(origin)) return cb(null, true);
 
-      // Log rejected CORS attempts for security monitoring
       fastify.log.warn(`CORS REJECTED: ${origin} - ${new Date().toISOString()}`);
 
       cb(new Error('Not allowed by CORS'), false);
@@ -37,7 +29,6 @@ const corsPlugin = async (fastify: FastifyInstance) => {
     allowedHeaders: ['Content-Type', 'Authorization'],
   });
 
-  // Development-only endpoint to check CORS config
   if (process.env.NODE_ENV !== 'production') {
     fastify.get('/api/debug/cors', async (request, _) => {
       return {

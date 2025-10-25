@@ -12,7 +12,6 @@
  *
  * @module routes/tournamentRoute
  */
-import fp from 'fastify-plugin';
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { tournamentRoutesConfig } from '../../config/tournamentRouteConfig';
 
@@ -31,7 +30,7 @@ const tournamentRoutes = async (server: FastifyInstance) => {
    * @returns Tournament object with bracket data
    * @returns 404 - Tournament not found
    */
-  server.get('/api/tournament/:tournamentId', async (req: FastifyRequest, reply: FastifyReply) => {
+  server.get('/tournament/:tournamentId', async (req: FastifyRequest, reply: FastifyReply) => {
     return server.routeHandler(req, reply, tournamentRoutesConfig.getTournament, server);
   });
 
@@ -43,7 +42,7 @@ const tournamentRoutes = async (server: FastifyInstance) => {
    * @body Tournament configuration
    * @returns 201 - Tournament created successfully
    */
-  server.post('/api/tournament', async (req: FastifyRequest, reply: FastifyReply) => {
+  server.post('/tournament', async (req: FastifyRequest, reply: FastifyReply) => {
     return server.routeHandler(req, reply, tournamentRoutesConfig.joinTournament, server);
   });
 
@@ -56,12 +55,9 @@ const tournamentRoutes = async (server: FastifyInstance) => {
    * @returns 200 - Successfully left tournament
    * @returns 409 - Tournament already started
    */
-  server.post('/api/tournament/leave/:userId', async (req: FastifyRequest, reply: FastifyReply) => {
+  server.post('/tournament/leave/:userId', async (req: FastifyRequest, reply: FastifyReply) => {
     return server.routeHandler(req, reply, tournamentRoutesConfig.leaveTournament, server);
   });
 };
 
-export default fp(tournamentRoutes, {
-  name: 'tournament-routes',
-  dependencies: ['route-handler', 'auth-middleware'],
-});
+export default tournamentRoutes;

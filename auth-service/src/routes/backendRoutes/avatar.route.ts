@@ -13,7 +13,6 @@
  * @module routes/avatarRoute
  */
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
-import fp from 'fastify-plugin';
 import { AxiosRequestConfig } from 'axios';
 
 const avatarRoute = async (fastify: FastifyInstance) => {
@@ -30,7 +29,7 @@ const avatarRoute = async (fastify: FastifyInstance) => {
    *
    * @public - No authentication required (avatars are public)
    */
-  fastify.get('/api/avatar/:userId', async (req: FastifyRequest, reply: FastifyReply) => {
+  fastify.get('/avatar/:userId', async (req: FastifyRequest, reply: FastifyReply) => {
     const { userId } = req.params as { userId: string };
 
     if (!userId || typeof userId !== 'string' || userId.includes('..') || userId.includes('/')) {
@@ -81,7 +80,4 @@ const avatarRoute = async (fastify: FastifyInstance) => {
   });
 };
 
-export default fp(avatarRoute, {
-  name: 'avatar-routes',
-  dependencies: ['api-client'],
-});
+export default avatarRoute;

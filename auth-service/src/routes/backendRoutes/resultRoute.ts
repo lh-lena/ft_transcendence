@@ -11,7 +11,6 @@
  *
  * @module routes/resultRoute
  */
-import fp from 'fastify-plugin';
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { resultRoutesConfig } from '../../config/resultRouteConfig';
 
@@ -30,7 +29,7 @@ const resultRoutes = async (server: FastifyInstance) => {
    * @public - No authentication required
    * @returns Array of top players
    */
-  server.get('/api/result/leaderboard', async (req: FastifyRequest, reply: FastifyReply) => {
+  server.get('/result/leaderboard', async (req: FastifyRequest, reply: FastifyReply) => {
     return server.routeHandler(req, reply, resultRoutesConfig.getLeaderboard, server);
   });
 
@@ -45,8 +44,23 @@ const resultRoutes = async (server: FastifyInstance) => {
    * @returns User statistics object
    * @returns 404 - User not found or no games played
    */
-  server.get('/api/result/stats/:userId', async (req: FastifyRequest, reply: FastifyReply) => {
+  server.get('/result/stats/:userId', async (req: FastifyRequest, reply: FastifyReply) => {
     return server.routeHandler(req, reply, resultRoutesConfig.getStats, server);
+  });
+
+  /**
+   * GET /api/result/:userId
+   * Retrieves match history for one user
+   *
+   * Filters:
+   * - userId
+   *
+   * @requires Authentication for private matches
+   * @param userId
+   * @returns Array of game result objects
+   */
+  server.get('/result/:userId', async (req: FastifyRequest, reply: FastifyReply) => {
+    return server.routeHandler(req, reply, resultRoutesConfig.getResultById, server);
   });
 
   /**
@@ -65,12 +79,9 @@ const resultRoutes = async (server: FastifyInstance) => {
    * @query loserId - Optional: filter by loser
    * @returns Array of game result objects
    */
-  server.get('/api/result', async (req: FastifyRequest, reply: FastifyReply) => {
+  server.get('/result', async (req: FastifyRequest, reply: FastifyReply) => {
     return server.routeHandler(req, reply, resultRoutesConfig.getResult, server);
   });
 };
 
-export default fp(resultRoutes, {
-  name: 'result-routes',
-  dependencies: ['route-handler', 'auth-middleware'],
-});
+export default resultRoutes;

@@ -16,14 +16,13 @@ import { Prisma } from '@prisma/client';
 import type { FastifyInstance } from 'fastify';
 import { GameService } from './game';
 import { TournamentService } from './tournament';
-import { NotFoundError } from '../utils/error';
 
 import type {
   resultCreateType,
-  resultIdType,
   resultWinsLosesType,
   leaderboardType,
   resultResponseType,
+  resultResponseArrayType,
 } from '../schemas/result';
 import type { userIdType } from '../schemas/user';
 
@@ -157,23 +156,27 @@ export const createResultService = (
   },
 
   /**
-   * Get result by ID
+   * Get result by userID
    *
-   * @param id - Result ID
+   * @param id - Result userID
    * @returns Result with game played data
    * @throws NotFoundError if result doesn't exist
    */
-  async getById(id: resultIdType): Promise<resultResponseType> {
-    const result = await server.prisma.result.findUnique({
-      where: id,
-      include: { gamePlayed: true },
+  async getResultById(id: userIdType): Promise<resultResponseArrayType> {
+    const results = await server.prisma.result.findMany({
+      where: {
+        gamePlayed: {
+          some: {
+            userId: id.userId,
+          },
+        },
+      },
+      include: {
+        gamePlayed: true,
+      },
     });
 
-    if (!result) {
-      throw new NotFoundError(`Result with ID ${id.resultId} not found`);
-    }
-
-    return transformResultResponse(result);
+    return results.map((result) => transformResultResponse(result));
   },
 
   /**

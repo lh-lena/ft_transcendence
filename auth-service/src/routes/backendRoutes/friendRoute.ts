@@ -12,7 +12,6 @@
  *
  * @module routes/friendRoute
  */
-import fp from 'fastify-plugin';
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { friendRoutesConfig } from '../../config/friendRouteConfig';
 
@@ -26,7 +25,7 @@ const friendRoutes = async (server: FastifyInstance) => {
    * @query status - Optional: 'accepted', 'pending', 'sent'
    * @returns Array of friend relationships
    */
-  server.get('/api/friend', async (req: FastifyRequest, reply: FastifyReply) => {
+  server.get('/friend', async (req: FastifyRequest, reply: FastifyReply) => {
     return server.routeHandler(req, reply, friendRoutesConfig.getFriend, server);
   });
 
@@ -43,7 +42,7 @@ const friendRoutes = async (server: FastifyInstance) => {
    * @returns 201 - Friend request sent or accepted
    * @returns 409 - Already friends or request pending
    */
-  server.post('/api/friend', async (req: FastifyRequest, reply: FastifyReply) => {
+  server.post('/friend', async (req: FastifyRequest, reply: FastifyReply) => {
     return server.routeHandler(req, reply, friendRoutesConfig.createFriend, server);
   });
 
@@ -58,12 +57,9 @@ const friendRoutes = async (server: FastifyInstance) => {
    * @param friendId - Friendship ID to remove
    * @returns 204 - Friendship removed successfully
    */
-  server.delete('/api/friend/:friendId', async (req: FastifyRequest, reply: FastifyReply) => {
+  server.delete('/friend/:friendId', async (req: FastifyRequest, reply: FastifyReply) => {
     return server.routeHandler(req, reply, friendRoutesConfig.deleteFriend, server);
   });
 };
 
-export default fp(friendRoutes, {
-  name: 'friend-routes',
-  dependencies: ['route-handler', 'auth-middleware'],
-});
+export default friendRoutes;

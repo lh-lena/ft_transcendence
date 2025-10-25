@@ -180,7 +180,7 @@ const crudRoutes =
      * POST Create Route
      *
      * Creates a new resource.
-     * Example: POST /api/users with body { name: "John", email: "john@example.com" }
+     * Example: POST /api/users with body { name: "John", password_hash: "..." }
      */
     if (routes.includes('create') && hasMethod(service, 'create')) {
       server.post(basePath, {
