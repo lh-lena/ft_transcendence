@@ -49,6 +49,21 @@ const resultRoutes = async (server: FastifyInstance) => {
   });
 
   /**
+   * GET /api/result/:userId
+   * Retrieves match history for one user
+   *
+   * Filters:
+   * - userId
+   *
+   * @requires Authentication for private matches
+   * @param userId
+   * @returns Array of game result objects
+   */
+  server.get('/result/:userId', async (req: FastifyRequest, reply: FastifyReply) => {
+    return server.routeHandler(req, reply, resultRoutesConfig.getResultById, server);
+  });
+
+  /**
    * GET /api/result
    * Retrieves match history
    *

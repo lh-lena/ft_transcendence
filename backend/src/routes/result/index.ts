@@ -27,6 +27,29 @@ const resultRoutes = async (server: FastifyInstance) => {
   });
 
   /**
+   * Player Results Endpoint
+   */
+  server.get('/:userId', {
+    schema: {
+      summary: 'Gets results by user ID',
+      description: 'Endpoint to get results for a player',
+      tags: ['result'],
+      params: { $ref: 'userId' },
+      response: {
+        200: { $ref: 'resultResponseArray' },
+        404: { $ref: 'NotFound' },
+        500: { $ref: 'InternalError' },
+      },
+    },
+    handler: async (request: FastifyRequest, reply: FastifyReply) => {
+      const params = request.params as userIdType;
+      const results = await server.services.result.getResultById({ userId: params.userId });
+
+      return reply.code(200).send(results);
+    },
+  });
+
+  /**
    * Player Statistics Endpoint
    */
   server.get('/stats/:userId', {

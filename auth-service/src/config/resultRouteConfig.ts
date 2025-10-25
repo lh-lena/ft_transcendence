@@ -39,6 +39,28 @@ export const resultRoutesConfig = {
   },
 
   /**
+   * Get Game Results by userId
+   * Retrieves results for games the user participated in
+   * @requires Authentication
+   * @param param.userId
+   * @returns Array of game results
+   */
+  getResultById: {
+    method: 'get' as const,
+    url: (params: UserIdType) => `/result/${params.userId}`,
+    paramsSchema: userIdSchema,
+    responseSchema: resultResponseArraySchema,
+    checkOwnership: async (data: { params?: UserIdType }, userId: string) => {
+      return data.params?.userId === userId;
+    },
+    successCode: 200,
+    errorMessages: {
+      invalidParams: 'Invalid userId',
+      forbidden: 'Forbidde: You can only access your own results',
+    },
+  },
+
+  /**
    * Get Game Results
    * Retrieves results for games the user participated in
    * @requires Authentication
