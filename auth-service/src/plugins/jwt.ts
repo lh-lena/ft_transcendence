@@ -18,16 +18,15 @@ import type { JwTReturnType } from '../schemas/jwt';
  * @throws {Error} If JWT namespaces fail to load or token payload is invalid
  */
 const jwtPlugin = async (fastify: FastifyInstance) => {
-  // Register access token namespace with 15-minute expiration
   await fastify.register(jwt, {
-    secret: fastify.config.accessSecret,
+    secret: fastify.config.ACCESS_SECRET,
     namespace: 'access',
     sign: { expiresIn: '15m' },
   });
 
   // Register refresh token namespace with 7-day expiration
   await fastify.register(jwt, {
-    secret: fastify.config.refreshSecret,
+    secret: fastify.config.REFRESH_SECRET,
     namespace: 'refresh',
     sign: { expiresIn: '7d' },
   });

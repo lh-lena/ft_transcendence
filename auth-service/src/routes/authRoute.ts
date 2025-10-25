@@ -2,7 +2,7 @@
  * Authentication Routes
  *
  * Handles user authentication flows including:
- * - User registration with email/password
+ * - User registration with username/password
  * - User login with credential verification
  * - User logout with token invalidation
  * - Guest login for anonymous access
@@ -17,7 +17,6 @@
  * @module routes/authRoute
  */
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
-import fp from 'fastify-plugin';
 import { authRoutesConfig } from '../config/authRouteConfig';
 
 const authRoutes = async (server: FastifyInstance) => {
@@ -25,10 +24,10 @@ const authRoutes = async (server: FastifyInstance) => {
 
   /**
    * POST /api/register
-   * Creates new user account with email and password
+   * Creates new user account with username and password
    * @public
    */
-  server.post('/api/register', async (req: FastifyRequest, reply: FastifyReply) => {
+  server.post('/register', async (req: FastifyRequest, reply: FastifyReply) => {
     return server.routeHandler(req, reply, authRoutesConfig.register, server);
   });
 
@@ -38,7 +37,7 @@ const authRoutes = async (server: FastifyInstance) => {
    * Returns 2FA challenge if enabled, otherwise returns auth tokens
    * @public
    */
-  server.post('/api/login', async (req: FastifyRequest, reply: FastifyReply) => {
+  server.post('/login', async (req: FastifyRequest, reply: FastifyReply) => {
     return server.routeHandler(req, reply, authRoutesConfig.login, server);
   });
 
@@ -48,7 +47,7 @@ const authRoutes = async (server: FastifyInstance) => {
    * Guest accounts have limited permissions and expire after session
    * @public
    */
-  server.post('/api/logout', async (req: FastifyRequest, reply: FastifyReply) => {
+  server.post('/logout', async (req: FastifyRequest, reply: FastifyReply) => {
     return server.routeHandler(req, reply, authRoutesConfig.logout, server);
   });
 
@@ -60,7 +59,7 @@ const authRoutes = async (server: FastifyInstance) => {
    * Blacklists refresh token and updates user online status
    * @requires Authentication
    */
-  server.post('/api/guest/login', async (req: FastifyRequest, reply: FastifyReply) => {
+  server.post('/guest/login', async (req: FastifyRequest, reply: FastifyReply) => {
     return server.routeHandler(req, reply, authRoutesConfig.guestLogin, server);
   });
 
@@ -70,9 +69,9 @@ const authRoutes = async (server: FastifyInstance) => {
    * Used by frontend to check authentication status
    * @requires Authorization header with Bearer token
    */
-  server.get('/api/auth/me', async (req: FastifyRequest, reply: FastifyReply) => {
+  server.get('/auth/me', async (req: FastifyRequest, reply: FastifyReply) => {
     return server.routeHandler(req, reply, authRoutesConfig.authMe, server);
   });
 };
 
-export default fp(authRoutes);
+export default authRoutes;

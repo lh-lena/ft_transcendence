@@ -11,7 +11,6 @@
  *
  * @module routes/chatRoute
  */
-import fp from 'fastify-plugin';
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { chatRoutesConfig } from '../../config/chatRouteConfig';
 
@@ -28,7 +27,7 @@ const chatRoutes = async (server: FastifyInstance) => {
    * @param userId - Must match authenticated user ID
    * @returns Array of chat overview objects
    */
-  server.get('/api/chat/overview/:userId', async (req: FastifyRequest, reply: FastifyReply) => {
+  server.get('/chat/overview/:userId', async (req: FastifyRequest, reply: FastifyReply) => {
     return server.routeHandler(req, reply, chatRoutesConfig.getOverview, server);
   });
 
@@ -41,7 +40,7 @@ const chatRoutes = async (server: FastifyInstance) => {
    * @query receiverId - Other participant's user ID
    * @returns Array of chat messages
    */
-  server.get('/api/chat', async (req: FastifyRequest, reply: FastifyReply) => {
+  server.get('/chat', async (req: FastifyRequest, reply: FastifyReply) => {
     return server.routeHandler(req, reply, chatRoutesConfig.getChats, server);
   });
 
@@ -63,12 +62,9 @@ const chatRoutes = async (server: FastifyInstance) => {
    * @returns 201 - Message sent successfully
    * @returns 403 - User is blocked or doesn't exist
    */
-  server.post('/api/chat', async (req: FastifyRequest, reply: FastifyReply) => {
+  server.post('/chat', async (req: FastifyRequest, reply: FastifyReply) => {
     return server.routeHandler(req, reply, chatRoutesConfig.createChat, server);
   });
 };
 
-export default fp(chatRoutes, {
-  name: 'chat-routes',
-  dependencies: ['route-handler', 'auth-middleware'],
-});
+export default chatRoutes;

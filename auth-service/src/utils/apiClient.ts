@@ -75,7 +75,7 @@ axiosRetry(backendApi, retryConfig);
  * const newUser = await apiClientBackend<User>({
  *   method: 'POST',
  *   url: '/user',
- *   data: { username: 'john', email: 'john@example.com' }
+ *   data: { username: 'john', }
  * });
  */
 export async function apiClientBackend<T = unknown>(config: AxiosRequestConfig): Promise<T> {

@@ -88,12 +88,12 @@ export const server = Fastify({
  * Loads plugins and routes in correct order
  */
 const start = async () => {
-  server.log.info('Starting backend service...');
   try {
+    server.log.info('Starting backend service...');
     // ------------ Auto-load Plugins ------------
 
     await server.register(autoLoad, { dir: path.join(__dirname, 'plugins') });
-    server.log.info({ pluginDir: path.join(__dirname, 'plugins') }, 'Plugins loaded');
+    server.log.info('Plugins loaded');
 
     // ------------ Auto-load Hooks ------------
 
@@ -104,7 +104,7 @@ const start = async () => {
       dirNameRoutePrefix: true,
       options: { prefix: '/api' },
     });
-    server.log.info({ routeDir: path.join(__dirname, 'routes') }, 'Routes loaded');
+    server.log.info('Routes loaded');
 
     // ------------ Log Routes ------------
 
@@ -112,7 +112,7 @@ const start = async () => {
       server.log.info('Registered routes:');
       server.log.info(
         server.printRoutes({
-          commonPrefix: true,
+          commonPrefix: false,
           includeHooks: false,
         }),
       );
@@ -139,7 +139,7 @@ const start = async () => {
   }
 };
 
-// ------------ Gracefull Shutdown ------------
+// ------------ Gracefull Shutdown Handler------------
 
 /**
  * Graceful shutdown helper
@@ -178,7 +178,7 @@ process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
 process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 
 // ------------ Handle uncaught Errors ------------
-//
+
 process.on('uncaughtException', (err) => {
   server.log.fatal({ err }, 'Uncaught exception - forcing shutdown');
   process.exit(1);

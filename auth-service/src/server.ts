@@ -13,8 +13,6 @@
  */
 
 import Fastify from 'fastify';
-import fastifyCsrf from '@fastify/csrf-protection';
-import fastifyHttpProxy from '@fastify/http-proxy';
 import AutoLoad from '@fastify/autoload';
 import path from 'path';
 import { LoggerOptions } from 'pino';
@@ -43,6 +41,12 @@ const loggerConfig: LoggerOptions = isProduction
         res: (res) => ({
           statusCode: res.statusCode,
         }),
+        err: (err) => ({
+          type: err.type,
+          message: err.message?.replace(/\\n/g, '\n').replace(/\\t/g, '\t'),
+          stack: err.stack,
+          target: err.meta?.target,
+        }),
       },
     }
   : {
@@ -55,6 +59,14 @@ const loggerConfig: LoggerOptions = isProduction
           ignore: 'pid,hostname',
           singleLine: false,
         },
+      },
+      serializers: {
+        err: (err) => ({
+          type: err.type,
+          message: err.message?.replace(/\\n/g, '\n').replace(/\\t/g, '\t'),
+          stack: err.stack,
+          target: err.meta?.target,
+        }),
       },
     };
 
@@ -74,61 +86,12 @@ export const server = Fastify({
 });
 
 /**
- * Global error handler
- * Standardizes error responses and ensures proper logging
- *
- * @param error - Error object thrown in route handlers
- * @param request - Fastify request object
- * @param reply - Fastify reply object
- */
-server.setErrorHandler((error, request, reply) => {
-  server.log.error(
-    {
-      err: error,
-      requestId: request.id,
-      url: request.url,
-      method: request.method,
-    },
-    'Request error occurred',
-  );
-
-  let statusCode = 500;
-
-  if ('statusCode' in error && typeof error.statusCode === 'number') statusCode = error.statusCode;
-  else if ('status' in error && typeof error.status === 'number') statusCode = error.status;
-
-  const errorMessage = error.message || 'Internal Server Error';
-
-  const responseMessage =
-    isProduction && statusCode === 500 ? 'Internal Server Error' : errorMessage;
-
-  const data = 'data' in error ? error.data : null;
-
-  reply.status(statusCode).send({
-    success: false,
-    message: responseMessage,
-    data,
-    requestId: request.id,
-  });
-});
-
-/**
- * Loads plugins, routes, and hooks in correct order
+ * Server lifecycle and plugin registration
+ * Loads plugins and routes in correct order
  */
 const start = async () => {
   try {
     server.log.info('Starting auth service...');
-
-    // ------------ Core Security Plugins ------------
-
-    /**
-     * CSRF Protection
-     * Requires session plugin for token storage
-     */
-    await server.register(fastifyCsrf, {
-      sessionPlugin: '@fastify/cookie',
-    });
-    server.log.info('CSRF protection enabled');
 
     // ------------ Auto-load Plugins ------------
 
@@ -144,57 +107,50 @@ const start = async () => {
 
     // ------------ Auto-load Routes ------------
 
-    await server.register(AutoLoad, { dir: path.join(__dirname, 'routes') });
+    await server.register(AutoLoad, {
+      dir: path.join(__dirname, 'routes'),
+      dirNameRoutePrefix: true,
+      options: { prefix: '/api' },
+      ignorePattern: /backendRoutes/,
+    });
+
+    await server.register(AutoLoad, {
+      dir: path.join(__dirname, 'routes/backendRoutes'),
+      options: { prefix: '/api' },
+    });
     server.log.info({ routeDir: path.join(__dirname, 'routes') }, 'Routes loaded');
 
-    // ------------ HTTP Proxy for File Uploads ------------
+    // ------------ Log Routes ------------
 
-    const backendHost = server.config.backendUrl.replace(/^https?:\/\//, '');
-
-    await server.register(fastifyHttpProxy, {
-      upstream: server.config.backendUrl,
-      prefix: '/api/upload',
-      rewritePrefix: '/api/upload',
-      http2: false,
-    });
-    server.log.info(`proxy for upload configured: ${backendHost}:8080`);
-
-    // ------------ Health Check Endpoint ------------
-
-    /**
-     * Liveness probe for container orchestration (Kubernetes, Docker Compose)
-     * Returns 200 if server is running
-     */
-    server.get('/health', async () => ({
-      status: 'healthy',
-      timestamp: new Date().toISOString(),
-      uptime: process.uptime(),
-    }));
+    if (server.config.NODE_ENV !== 'production') {
+      server.log.info('Registered routes:');
+      server.log.info(
+        server.printRoutes({
+          commonPrefix: false,
+          includeHooks: false,
+        }),
+      );
+    }
 
     // ------------ Start Listening ------------
 
-    /**
-     * Start HTTP server
-     * Uses host and port from config plugin (loaded from env vars)
-     */
     await server.listen({
-      port: server.config.port,
-      host: server.config.host,
+      port: server.config.PORT,
+      host: server.config.HOST,
     });
 
     server.updateServiceHealth(true);
 
     server.log.info(
       {
-        port: server.config.port,
-        host: server.config.host,
-        environment: process.env.NODE_ENV || 'development',
-        nodeVersion: process.version,
+        port: server.config.PORT,
+        host: server.config.HOST,
+        environment: process.env.NODE_ENV,
       },
       'Auth service started successfully',
     );
   } catch (err) {
-    server.log.fatal(err, 'Failed to start auth service');
+    server.log.fatal({ err }, 'Failed to start auth service');
 
     if (server.updateServiceHealth) {
       server.updateServiceHealth(false);
@@ -207,72 +163,67 @@ const start = async () => {
 // ------------ Graceful Shutdown Handlers ------------
 
 /**
- * Handle SIGTERM
- * Performs graceful shutdown to finish in-flight requests
+ * Graceful shutdown helper
+ *
+ * Closes server and waits for in-flight requests with timeout.
+ *
+ * @param signal - Signal name (SIGTERM, SIGINT, etc.)
+ * @returns Promise that resolves when shutdown complete
  */
-process.on('SIGTERM', async () => {
-  server.log.info('SIGTERM received, starting graceful shutdown...');
+async function gracefulShutdown(signal: string): Promise<void> {
+  server.log.info({ signal }, 'Shutdown signal received, starting shutdown...');
 
-  if (server.updateServiceHealth) {
-    server.updateServiceHealth(false);
-  }
+  const shutdownTimer = setTimeout(() => {
+    server.log.error(
+      { timeout: server.config.SHUTDOWN_TIMEOUT },
+      'Graceful shutdown timeout exceeded, forcing exit',
+    );
+    process.exit(1);
+  }, server.config.SHUTDOWN_TIMEOUT);
 
   try {
     await server.close();
+    clearTimeout(shutdownTimer);
     server.log.info('Server closed successfully');
     process.exit(0);
   } catch (err) {
-    server.log.error(err, 'Error during graceful shutdown');
+    clearTimeout(shutdownTimer);
+    server.log.error({ err }, 'Error during shutdown');
     process.exit(1);
   }
-});
+}
+// ------------ Gracefull Shutdown ------------
 
-/**
- * Handle SIGINT (Ctrl+C in terminal)
- * Same graceful shutdown as SIGTERM
- */
-process.on('SIGINT', async () => {
-  server.log.info('SIGINT received, starting graceful shutdown...');
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 
-  if (server.updateServiceHealth) {
-    server.updateServiceHealth(false);
-  }
+// ------------ Handle uncaught Errors ------------
 
-  try {
-    await server.close();
-    server.log.info('Server closed successfully');
-    process.exit(0);
-  } catch (err) {
-    server.log.error(err, 'Error during graceful shutdown');
-    process.exit(1);
-  }
-});
-
-/**
- * Handle uncaught exceptions
- */
 process.on('uncaughtException', (err) => {
-  server.log.fatal(err, 'Uncaught exception - forcing shutdown');
-
-  if (server.updateServiceHealth) {
-    server.updateServiceHealth(false);
-  }
-
+  server.log.fatal({ err }, 'Uncaught exception - forcing shutdown');
   process.exit(1);
 });
 
-/**
- * Handle unhandled promise rejections
- * Catches async errors that weren't caught in try/catch
- */
 process.on('unhandledRejection', (reason, promise) => {
-  server.log.error({ reason, promise }, 'Unhandled promise rejection');
+  server.log.error({ reason, promise }, 'Unhandled rejection');
 
-  if (isProduction) {
+  if (server.config.NODE_ENV === 'production') {
     server.log.fatal('Exiting due to unhandled rejection in production');
     process.exit(1);
   }
 });
 
-// ------------ Start the Server ------------
+process.on('warning', (warning) => {
+  server.log.warn(
+    {
+      name: warning.name,
+      message: warning.message,
+      stack: warning.stack,
+    },
+    'Process warning',
+  );
+});
+
+// ------------ START ------------
+
 start();

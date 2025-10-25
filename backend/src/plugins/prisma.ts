@@ -84,7 +84,6 @@ const prismaPlugin: FastifyPluginAsync = async (server: FastifyInstance) => {
   });
 
   try {
-    server.log.info('Connecting to database...');
     await prisma.$connect();
 
     const connectionTimeout = setTimeout(() => {
@@ -94,12 +93,7 @@ const prismaPlugin: FastifyPluginAsync = async (server: FastifyInstance) => {
     await prisma.$queryRaw`SELECT 1`;
     clearTimeout(connectionTimeout);
 
-    server.log.info(
-      {
-        type: server.config.DATABASE_TYPE,
-      },
-      'Database connected successfully',
-    );
+    server.log.info('Database connected successfully');
   } catch (error) {
     server.log.error({ error }, 'Failed to connect to database');
     await prisma.$disconnect();

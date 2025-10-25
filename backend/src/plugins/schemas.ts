@@ -57,13 +57,7 @@ const schemaPlugin = async (server: FastifyInstance) => {
     throw new Error(`Failed to register ${errors.length} schema(s)`);
   }
 
-  server.log.info(
-    {
-      count: registeredCount,
-      total: CONVERTED_SCHEMAS.length,
-    },
-    `Successfully registered all ${registeredCount} schemas`,
-  );
+  server.log.info(`Successfully registered ${registeredCount} schemas`);
 };
 
 export default fp(schemaPlugin, {

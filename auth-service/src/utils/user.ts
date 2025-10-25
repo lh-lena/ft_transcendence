@@ -30,7 +30,6 @@ export const userActions = (server: FastifyInstance) => ({
    * @example
    * const user = await fastify.user.post({
    *   username: 'john_doe',
-   *   email: 'john@example.com',
    *   passwordHash: hashedPassword,
    * });
    */
@@ -45,7 +44,6 @@ export const userActions = (server: FastifyInstance) => ({
       server.log.info(
         {
           username: newUser.username,
-          email: newUser.email,
         },
         'Creating new user',
       );
@@ -217,7 +215,6 @@ export const userActions = (server: FastifyInstance) => ({
    *
    * @example
    * const updatedUser = await fastify.user.patch(userId, {
-   *   email: 'newemail@example.com',
    *   tfaEnabled: true,
    * });
    */
