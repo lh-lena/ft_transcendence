@@ -18,7 +18,6 @@ model User {
   userId         String       @id @default(uuid())
   githubId       String?
 
-  email          String?       @unique
   username       String?       @unique
   alias          String?     
   guest          Boolean      @default(false)

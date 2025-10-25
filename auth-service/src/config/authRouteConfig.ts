@@ -72,7 +72,7 @@ export const authRoutesConfig = {
       if (!parsedData.body) {
         return reply.status(400).send({ message: 'Invalid login data' });
       }
-      const user: UserType = await server.user.getUser({ email: parsedData.body.email });
+      const user: UserType = await server.user.getUser({ username: parsedData.body.username });
       const password_hash =
         user?.password_hash ||
         '$argon2id$v=19$m=65536,t=2,p=1$aGVsbG93b3JsZHNhbHQxMjM$7t+JdPKbdXcK9x9PSvvOT2fBKJdUFhGP8s5f1CLnLxM';

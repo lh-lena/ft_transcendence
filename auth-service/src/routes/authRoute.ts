@@ -2,7 +2,7 @@
  * Authentication Routes
  *
  * Handles user authentication flows including:
- * - User registration with email/password
+ * - User registration with username/password
  * - User login with credential verification
  * - User logout with token invalidation
  * - Guest login for anonymous access
@@ -24,7 +24,7 @@ const authRoutes = async (server: FastifyInstance) => {
 
   /**
    * POST /api/register
-   * Creates new user account with email and password
+   * Creates new user account with username and password
    * @public
    */
   server.post('/register', async (req: FastifyRequest, reply: FastifyReply) => {

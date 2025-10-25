@@ -8,7 +8,6 @@ export const userSchema = z.object({
   createdAt: dtString.optional(),
   updatedAt: dtString.optional(),
 
-  email: z.email().nullable(),
   username: z.string(),
   alias: z.string().nullable().optional(),
 
@@ -49,7 +48,6 @@ export const userQuerySchema = userSchema
     createdAt: true,
     updatedAt: true,
 
-    email: true,
     username: true,
     alias: true,
   })
@@ -57,7 +55,6 @@ export const userQuerySchema = userSchema
 
 export const userRegisterSchema = userSchema
   .pick({
-    email: true,
     username: true,
     alias: true,
     guest: true,
@@ -69,7 +66,6 @@ export const userRegisterSchema = userSchema
   });
 
 export const userPostSchema = userSchema.pick({
-  email: true,
   username: true,
   alias: true,
   password_hash: true,
@@ -80,13 +76,14 @@ export const userPostSchema = userSchema.pick({
 });
 
 export const userLoginSchema = userSchema
-  .pick({ email: true })
+  .pick({
+    username: true,
+  })
   .extend({ password: z.string().min(8) });
 
 export const userPatchSchema = z.object({
   username: z.string().min(1).max(6).optional(),
   alias: z.string().nullable().optional(),
-  email: z.email().optional(),
   password: z.string().min(8).optional(),
   avatar: z.string().nullable().optional(),
 });
@@ -107,7 +104,6 @@ export const userResponseSchema = userSchema.omit({
 export const userInfoResponseSchema = userResponseSchema.omit({
   createdAt: true,
   updatedAt: true,
-  email: true,
   guest: true,
 });
 export const userInfoResponseArraySchema = z.array(userInfoResponseSchema);

@@ -6,7 +6,6 @@
  *
  * Usage:
  * throw new NotFoundError('User not found');
- * throw new ValidationError('Invalid email format');
  *
  * @module utils/error
  */
@@ -34,7 +33,6 @@ export class NotFoundError extends Error {
  * Used when input validation fails.
  *
  * @example
- * throw new ValidationError('Invalid email format');
  * throw new ValidationError('Missing required field: name');
  */
 export class ValidationError extends Error {
@@ -52,7 +50,6 @@ export class ValidationError extends Error {
  *
  * @example
  * throw new ConflictError('User already exists');
- * throw new ConflictError('Email already registered');
  */
 export class ConflictError extends Error {
   constructor(message: string = 'Resource already exists') {

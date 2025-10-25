@@ -13,4 +13,4 @@ export const dtString = z
 //define game status
 export const status = z.enum(['waiting', 'ready', 'playing', 'finished']);
 //define tfa types
-export const tfaType = z.enum(['totp', 'email', 'backup']);
+export const tfaType = z.enum(['totp', 'backup']);

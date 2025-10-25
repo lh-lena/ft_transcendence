@@ -89,7 +89,6 @@ export async function fetchGithubUser(server: FastifyInstance, accessToken: stri
     login: string;
     avatar_url: string;
     id: number;
-    email?: string;
   };
 
   server.log.debug({ githubId: user.id, username: user.login }, 'GitHub user profile fetched');
@@ -99,6 +98,5 @@ export async function fetchGithubUser(server: FastifyInstance, accessToken: stri
     avatar: user.avatar_url,
     githubId: user.id,
     guest: false,
-    email: user.email,
   };
 }

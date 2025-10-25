@@ -2,7 +2,6 @@
 CREATE TABLE "User" (
     "userId" TEXT NOT NULL PRIMARY KEY,
     "githubId" TEXT,
-    "email" TEXT,
     "username" TEXT,
     "alias" TEXT,
     "guest" BOOLEAN NOT NULL DEFAULT false,
@@ -77,9 +76,6 @@ CREATE TABLE "BlackList" (
     "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     "token" TEXT NOT NULL
 );
-
--- CreateIndex
-CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "User_username_key" ON "User"("username");

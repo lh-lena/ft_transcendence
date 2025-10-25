@@ -24,7 +24,7 @@ export const userRoutesConfig = {
    * @returns Full profile if own user, limited info if other user, guest schema if guest
    *
    * Response varies based on:
-   * - Own profile: Full user data including email, settings
+   * - Own profile: Full user data
    * - Other user: Public info only (username, avatar, stats)
    * - Guest: Minimal guest data
    */
@@ -54,7 +54,7 @@ export const userRoutesConfig = {
 
   /**
    * Search/List Users
-   * Queries users with filters (username, email, online status, etc.)
+   * Queries users with filters (username, online status, etc.)
    * @param query - Search filters
    * @returns Array of user info (public data only)
    */
@@ -74,12 +74,11 @@ export const userRoutesConfig = {
    * Modifies user account information
    * @requires Authentication & Ownership
    * @param userId - Must match authenticated user ID
-   * @param body - Fields to update (username, email, password, avatar, etc.)
+   * @param body - Fields to update (username,  password, avatar, etc.)
    * @returns 200 - Updated user profile
    *
    * Security notes:
    * - Password is automatically hashed before storage
-   * - Email changes may trigger verification
    * - Cannot modify userId or createdAt
    */
   updateUser: {

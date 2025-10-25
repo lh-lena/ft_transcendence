@@ -8,7 +8,7 @@
  * - Delete account
  *
  * Privacy levels:
- * - Own profile: Full data including email, settings
+ * - Own profile: Full data
  * - Other users: Public data only (username, avatar, stats)
  * - Guests: Minimal data (username, avatar)
  *
@@ -40,8 +40,8 @@ const userRoutes = async (server: FastifyInstance) => {
    * Retrieves specific user profile
    *
    * Response varies by relationship:
-   * - Own profile: Full data (email, settings, statistics)
-   * - Other user: Public data (username, avatar, stats)
+   * - Own profile: Full data
+   * - Other user: Public data
    * - Guest account: Minimal data
    *
    * @param userId - User ID to retrieve
@@ -59,7 +59,6 @@ const userRoutes = async (server: FastifyInstance) => {
    *
    * Updatable fields:
    * - Username (must be unique)
-   * - Email (must be unique, may trigger verification)
    * - Password (automatically hashed)
    * - Avatar
    *
@@ -72,7 +71,7 @@ const userRoutes = async (server: FastifyInstance) => {
    * @param userId - Must match authenticated user ID
    * @body Partial user object with fields to update
    * @returns 200 - Updated user profile
-   * @returns 409 - Username or email already taken
+   * @returns 409 - Username already taken
    */
   server.patch('/user/:userId', async (req: FastifyRequest, reply: FastifyReply) => {
     return server.routeHandler(req, reply, userRoutesConfig.updateUser, server);
