@@ -48,20 +48,10 @@ const oAuth2Routes = async (server: FastifyInstance) => {
 
       server.log.debug({ tokenResponse }, 'OAuth token response received');
 
-      if (!tokenResponse.token || tokenResponse.token.error) {
-        const errorMsg =
-          tokenResponse.token?.error_description ||
-          tokenResponse.token?.error ||
-          'Token exchange failed';
+      if (!tokenResponse.token) {
+        const errorMsg = 'Token exchange failed';
 
-        server.log.error(
-          {
-            error: tokenResponse.token?.error,
-            description: tokenResponse.token?.error_description,
-            uri: tokenResponse.token?.error_uri,
-          },
-          'GitHub token exchange failed',
-        );
+        server.log.error('GitHub token exchange failed');
 
         return reply.type('text/html').send(
           generateOAuthResponseHTML(frontendUrl, {
