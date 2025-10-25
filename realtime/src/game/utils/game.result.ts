@@ -75,8 +75,8 @@ function reformatCancelledResult(
     winner = game.players.find((p) => p.userId !== leftPlayerId) || null;
     loserId = leftPlayerId;
   } else {
-    winner = getWinnerPlayer(game);
-    loserId = null;
+    winner = game.players[0] as Player;
+    loserId = game.players[1].userId as UserIdType;
   }
 
   const winnerName = winner ? getPlayerName(winner) : 'none';

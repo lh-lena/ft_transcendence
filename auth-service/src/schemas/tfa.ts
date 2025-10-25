@@ -6,6 +6,7 @@ export const tfaSession = z.object({
   userId: z.uuid(),
   type: tfaType.nullable(),
   create: dtString.default(() => new Date().toISOString()),
+  attempts: z.number().default(0),
 });
 
 export const tfaVerifySchema = tfaSession

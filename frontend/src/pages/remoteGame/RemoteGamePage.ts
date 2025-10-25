@@ -121,6 +121,7 @@ export class VsPlayerGamePage {
       previousStatus: GameStatus.WAITING,
       playerA: {
         ...this.userMe,
+        username: responseUser.alias ? this.userMe.alias : this.userMe.username,
         score: 0,
       },
       pauseInitiatedByMe: false,
@@ -139,6 +140,7 @@ export class VsPlayerGamePage {
         color: color,
         userId: "ai69",
         username: "AI",
+        alias: "AI",
         createdAt: "",
         updatedAt: "",
         email: "",
@@ -230,6 +232,7 @@ export class VsPlayerGamePage {
     otherUser.colormap = profilePrintToArray(otherUser.colormap);
     this.gameState.playerB = {
       ...otherUser,
+      username: otherUser.alias ? otherUser.alias : otherUser.username,
       score: 0,
     };
     this.userOther = otherUser;
@@ -328,8 +331,12 @@ export class VsPlayerGamePage {
 
     // game winner will be null if AI
     let winnerUser;
+    console.log(payload);
     if (payload.winnerId) {
       winnerUser = await this.backend.getUserById(payload.winnerId);
+      winnerUser.username = winnerUser.alias
+        ? winnerUser.alias
+        : winnerUser.username;
       winnerUser.colormap = profilePrintToArray(winnerUser.colormap);
     } else {
       // AI case

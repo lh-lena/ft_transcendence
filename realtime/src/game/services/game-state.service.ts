@@ -246,8 +246,8 @@ export default function createGameStateService(app: FastifyInstance): GameStateS
       return;
     }
     respond.gameEnded(gameId, result.value);
-    await processGameResult(result.value);
     cleanupGameResources(game);
+    await processGameResult(result.value);
     processDebugLog(app, 'game-state', `Game ${gameId} ended. Status: ${status}`);
   }
 
@@ -255,8 +255,14 @@ export default function createGameStateService(app: FastifyInstance): GameStateS
     const gameDataService = app.gameDataService as GameDataService;
     const { mode, gameId } = result;
     if (mode === GameMode.PVB_AI || result.status === GameSessionStatus.CANCELLED_SERVER_ERROR) {
+      processDebugLog(
+        app,
+        'game-state',
+        `Deleting game data from DB. Mode: ${mode}, Status: ${result.status}`,
+      );
       await gameDataService.deleteAIGame(gameId);
     } else {
+      processDebugLog(app, 'game-state', 'Sending game result to the DB');
       await gameDataService.sendGameResult(result);
     }
   }

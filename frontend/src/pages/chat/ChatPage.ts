@@ -792,7 +792,8 @@ export class ChatPage {
   private async sendHook(user: User, message: string) {
     // invite case
     if (this.inputBox.contains(this.sendInvite)) {
-      const response = await this.backend.joinGame();
+      const userId = this.backend.getUser().userId;
+      const response = await this.backend.createPrivateGame(userId);
       const inviteMessage = {
         type: "invite",
         username: this.backend.getUser().username,
