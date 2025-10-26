@@ -166,7 +166,10 @@ export default function createGameService(app: FastifyInstance): GameService {
   }
 
   function handlePlayerInput(user: User, action: PlayerInput): void {
-    if (user === undefined || user === null) return;
+    if (user === undefined || user === null) {
+      processDebugLog(app, 'game-service', `Ignoring player input - user is undefined`);
+      return;
+    }
     const { userId } = user;
     try {
       const { gameId } = action;

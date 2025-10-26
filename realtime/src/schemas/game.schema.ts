@@ -9,7 +9,7 @@ export const PaddleNameSchema = z.enum(PaddleName);
 
 export const PlayerSchema = UserSchema.extend({
   sequence: z.number().default(0).optional(),
-  isAI: z.boolean().optional().default(false),
+  // isAI: z.boolean().optional().default(false),
   aiDifficulty: z.enum(AIDifficulty).optional(),
   paddle: PaddleNameSchema.optional(),
 });
@@ -58,6 +58,7 @@ const PaddleSchema = z.object({
   speed: z.number().int().positive(),
   direction: z.enum(Direction),
   isAI: z.boolean().optional().default(false),
+  userId: UserIdSchema.optional(),
 });
 
 const BallSchema = z.object({
@@ -69,8 +70,7 @@ const BallSchema = z.object({
   size: z.number().int().positive(),
 });
 
-export const GameStateSchema = z
-  .object({
+export const GameStateSchema = z.object({
     gameId: GameIdSchema,
     ball: BallSchema,
     paddleA: PaddleSchema,

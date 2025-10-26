@@ -58,7 +58,7 @@ export default function createGameValidator(app: FastifyInstance): GameValidator
       throw new GameError(`game ${gameId} not found`);
     }
     if (!isExpectedPlayer(game.players, userId)) {
-      throw new GameError(`you are not in game ${gameId}`);
+      throw new GameError(`not in the game ${gameId}`);
     }
     return game;
   }
