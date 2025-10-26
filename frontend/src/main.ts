@@ -1,22 +1,24 @@
 // frontend/src/main.ts
-import './style.css';
+import "./style.css";
+import { App } from "./App";
 
-// Basic frontend boilerplate - Frontend dev will implement SPA logic
-document.getElementById('app')!.innerHTML = `
-  <div class="container">
-    <h1>ft_transcendence Frontend</h1>
-    <p>✅ Vanilla TypeScript + Vite running on port 3000</p>
-    <p>✅ Ready for Tailwind CSS</p>
-    <div id="status">Checking backend connection...</div>
-  </div>
-`;
+// Wait for stylesheets to load before mounting the app
+window.addEventListener("load", () => {
+  const app = new App();
+  app.mount(document.body);
+});
 
-// Simple connectivity test
-fetch('http://localhost:8080/api/health')
-  .then(res => res.json())
-  .then(data => {
-    document.getElementById('status')!.innerHTML = '✅ Backend connected';
-  })
-  .catch(() => {
-    document.getElementById('status')!.innerHTML = '❌ Backend not connected';
-  });
+// Or use DOMContentLoaded if you don't need images/resources
+// document.addEventListener('DOMContentLoaded', () => {
+//   const app = new App();
+//   app.mount(document.body);
+// });
+
+// Simple connectivity test for CI/CD (runs in background, does not impact app)
+(async function connectivityTest() {
+  try {
+    await fetch("http://localhost:8080/api/health");
+  } catch (e) {
+    console.log(e);
+  }
+})();

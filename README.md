@@ -77,17 +77,58 @@ graph TB
 
 ## 🚀 Quick Start
 
+### For Development (Local Machine)
 ```bash
 # Clone the repository
 git clone https://github.com/korberlin/ft_transcendence.git
 cd ft_transcendence
 
-# Start all services with Docker
-docker-compose up -d
+# Setup environment variables
+cp .env.example .env
+cp auth-service/.env.example auth-service/.env
+# Edit .env files with your credentials
 
-# Access the application
-# https://localhost:443
+# Generate SSL certificates and start services
+make dev
+
+# Access the application at https://localhost:443
 ```
+
+### For Production/Evaluation (42 Campus)
+```bash
+# Clone the repository
+git clone https://github.com/korberlin/ft_transcendence.git
+cd ft_transcendence
+
+# Setup environment variables
+cp .env.example .env
+cp auth-service/.env.example auth-service/.env
+# Edit .env files with your credentials
+
+# Generate SSL certificates
+./scripts/generate-ssl.sh
+
+# Start all services (campus-safe, no bind-mounts)
+make all
+
+# Access the application at https://localhost:443
+```
+
+### Docker Deployment Modes
+
+**Development Mode (`make dev`):**
+- Uses `docker-compose.yml`
+- Employs bind-mount volumes for hot-reload
+- Fast development iteration
+- **Not campus-safe** (requires root Docker access)
+
+**Production Mode (`make all`):**
+- Uses `docker-compose.prod.yml`
+- Uses named Docker volumes (campus-safe)
+- Compatible with rootless Docker environments
+- **Recommended for evaluation**
+
+> ℹ️ **Why two modes?** Campus computers run Docker in rootless mode for security. Bind-mounts (direct host directory mounting) can fail due to UID/permission mismatches. Named volumes are Docker-managed and work in both environments.
 
 ## 📁 Project Structure
 

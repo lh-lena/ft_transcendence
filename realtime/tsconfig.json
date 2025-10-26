@@ -1,22 +1,31 @@
+/* To learn more about Typescript configuration file: https://www.typescriptlang.org/docs/handbook/tsconfig-json.html. */
+
 {
   "compilerOptions": {
     "target": "ES2022",
     "module": "ES2022",
-    "lib": ["ES2022"],
     "moduleResolution": "node",
-    "esModuleInterop": true,
+    "lib": ["ES2022"],
     "allowSyntheticDefaultImports": true,
+    "outDir": "./dist",
+    "rootDir": "./src",
     "strict": true,
-    "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
     "declaration": true,
     "declarationMap": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "noImplicitAny": true,
     "sourceMap": true,
-    "outDir": "./dist",
-    "rootDir": "./src"
+    "baseUrl": "./",
+    "paths": {
+      "*": ["node_modules/*", "src/*"]
+    },
+    "typeRoots": ["./node_modules/@types", "./src/types", "./src/schemas"]
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "src/types/**/*"],
+  "exclude": ["node_modules", "dist", "tmp"],
   "ts-node": {
     "esm": true
   }

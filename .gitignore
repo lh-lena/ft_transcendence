@@ -1,5 +1,4 @@
-# Logs
-logs
+# Logs logs
 *.log
 npm-debug.log*
 yarn-debug.log*
@@ -78,6 +77,8 @@ web_modules/
 .env.test.local
 .env.production.local
 .env.local
+test-workflow.sh
+project.txt
 
 # parcel-bundler cache (https://parceljs.org/)
 .cache
@@ -122,6 +123,9 @@ dist
 # DynamoDB Local files
 .dynamodb/
 
+db.sqlite
+backend/public/*
+
 # TernJS port file
 .tern-port
 
@@ -134,3 +138,10 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+
+# for MacOS
+.DS_Store
+**/.DS_Store
+
+# database
+./data/*
