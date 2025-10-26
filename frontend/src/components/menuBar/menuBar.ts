@@ -59,9 +59,7 @@ export class MenuBar {
 
   private async joinGameFlow() {
     // navigate with game type parameter
-    this.router.navigate("/vs-player", {
-      gameType: "vs-player",
-    });
+    this.router.navigate("/vs-player-game");
   }
 
   private logoutFlow() {

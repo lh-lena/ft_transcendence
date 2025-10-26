@@ -12,12 +12,10 @@ import { generateProfilePrint } from "../../utils/profilePrintFunctions";
 
 export class AIGamePage extends GamePage {
   constructor(serviceContainer: ServiceContainer) {
-    console.log("AIpage instance created");
     // call to template / parent we inherit from
     super(serviceContainer);
 
     // make initial call to backend
-    // probs put an if in here to check if we already have a game running?
     this.initializeBackend();
     this.intializeGameState();
   }
