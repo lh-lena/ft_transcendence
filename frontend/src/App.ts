@@ -99,15 +99,6 @@ export class App {
 
     let currentRoute = this.router.getCurrentRoute();
 
-    // // try to get user id / check if user was logged in
-    // if (currentRoute === "/") {
-    //   const response = await this.backend.checkAuth();
-    //   console.log(response);
-    //   if (response !== null) {
-    //     PageClass = ChatPage;
-    //   }
-    // }
-
     // we always connect back to web socket before we load a page
     if (protectedRoutes.includes(currentRoute)) {
       await this.websocket.initializeWebSocket();

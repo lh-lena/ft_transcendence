@@ -34,7 +34,21 @@ export class GamePage {
   // params
   protected params: URLSearchParams;
 
+  // web socket config
+  // set once we recieve gameReady from ws
+  protected wsGameReady: boolean = false;
+
+  // web socket handlers
+  private boundWsCountdownHandler = this.wsCountdownHandler.bind(this);
+  private boundWsNotificationHandler = this.wsNotificationHandler.bind(this);
+  private boundWsGameUpdateHandler = this.wsGameUpdateHandler.bind(this);
+  private boundWsGamePauseHandler = this.wsGamePauseHandler.bind(this);
+  private boundWsGameEndedHandler = this.wsGameEndedHandler.bind(this);
+  private boundWsStartGameHandler = this.wsStartGameHandler.bind(this);
+  private boundWsGameReadyHandler = this.wsGameReadyHandler.bind(this);
+
   constructor(serviceContainer: ServiceContainer) {
+    console.log("GamePage instance created");
     // services init
     this.ws = serviceContainer.get<Websocket>("websocket");
     this.router = serviceContainer.get<Router>("router");
@@ -91,6 +105,7 @@ export class GamePage {
   // gameState handler (callback function)
   public gameStateCallback() {
     const currentKey = this.gameState.activeKey;
+    console.log("game id on send", this.gameId);
     if (currentKey != this.gameState.previousKey) {
       // key event handling
       if (currentKey == "KEY_UP") {
@@ -128,26 +143,28 @@ export class GamePage {
 
   // register websocket handlers
   public registerWebsocketHandlers(): void {
-    this.ws.onMessage("countdown_update", this.wsCountdownHandler.bind(this));
-    this.ws.onMessage("notification", this.wsNotificationHandler.bind(this));
-    this.ws.onMessage("game_update", this.wsGameUpdateHandler.bind(this));
-    this.ws.onMessage("game_pause", this.wsGamePauseHandler.bind(this));
-    this.ws.onMessage("game_ended", this.wsGameEndedHandler.bind(this));
-    this.ws.onMessage("game_start", this.wsStartGameHandler.bind(this));
+    this.ws.onMessage("countdown_update", this.boundWsCountdownHandler);
+    this.ws.onMessage("notification", this.boundWsNotificationHandler);
+    this.ws.onMessage("game_update", this.boundWsGameUpdateHandler);
+    this.ws.onMessage("game_pause", this.boundWsGamePauseHandler);
+    this.ws.onMessage("game_ended", this.boundWsGameEndedHandler);
+    this.ws.onMessage("game_start", this.boundWsStartGameHandler);
+    this.ws.onMessage("game_ready", this.boundWsGameReadyHandler);
+
   }
 
-  public wsCountdownHandler(
+  public async wsCountdownHandler(
     payload: WsServerBroadcast["countdown_update"],
-  ): void {
+  ) {
     if (payload.countdown) {
       // any time we see a countdown payload we change loading text to show it
       this.loadingOverlay.changeText(payload.countdown.toString());
     }
   }
 
-  public wsNotificationHandler(
+  public async wsNotificationHandler(
     payload: WsServerBroadcast["notification"],
-  ): void {
+  ) {
     console.log(payload);
   }
 
@@ -193,17 +210,22 @@ export class GamePage {
     );
   }
 
-  public wsGamePauseHandler(): void {
+  public async wsGamePauseHandler() {
     this.gameState.status = GameStatus.PAUSED;
     this.scoreBar.pausePlay.toggleIsPlaying(false);
   }
 
-  public wsGameEndedHandler(payload: WsServerBroadcast["game_ended"]) {
+  public async wsGameEndedHandler(payload: WsServerBroadcast["game_ended"]) {
     this.gameState.status = GameStatus.GAME_OVER;
     console.log(payload);
   }
 
-  public wsStartGameHandler(payload: WsServerBroadcast["game_start"]) {
+  public async wsGameReadyHandler() {
+    this.wsGameReady = true;
+    console.log("Game ready!");
+  }
+
+  public async wsStartGameHandler(payload: WsServerBroadcast["game_start"]) {
     console.log(payload);
 
     // here we create a new game -> should only run once on start
@@ -223,15 +245,34 @@ export class GamePage {
     );
   }
 
+  // poll the web socket for being ready to start the game
+  public async pollWebsocketForGameReady(): Promise<boolean> {
+    const timeout = 5000; // 5 seconds
+    const interval = 100; // check every 100ms
+    let elapsed = 0;
+
+    return new Promise((resolve) => {
+      const poll = () => {
+        if (this.wsGameReady) {
+          resolve(true);
+        } else if (elapsed >= timeout) {
+          // Optionally, you can call unmount or handle exit here
+          resolve(false);
+        } else {
+          elapsed += interval;
+          setTimeout(poll, interval);
+        }
+      };
+      poll();
+    });
+  }
+
   // mount / unmount
   public mount(parent: HTMLElement): void {
     parent.appendChild(this.main);
   }
 
   public unmount() {
-    // Remove DOM
-    this.main.remove();
-
     // cleanup in backend or websocket depending on game state
     // cleanup during waiting screen
     if (this.gameState.status === GameStatus.WAITING) {
@@ -241,11 +282,15 @@ export class GamePage {
     }
 
     // Unregister WebSocket handlers (example, depends on your ws API)
-    this.ws.offMessage("countdown_update", this.wsCountdownHandler.bind(this));
-    this.ws.offMessage("notification", this.wsNotificationHandler.bind(this));
-    this.ws.offMessage("game_update", this.wsGameUpdateHandler.bind(this));
-    this.ws.offMessage("game_pause", this.wsGamePauseHandler.bind(this));
-    this.ws.offMessage("game_ended", this.wsGameEndedHandler.bind(this));
-    this.ws.offMessage("game_start", this.wsStartGameHandler.bind(this));
+    this.ws.offMessage("countdown_update", this.boundWsCountdownHandler);
+    this.ws.offMessage("notification", this.boundWsNotificationHandler);
+    this.ws.offMessage("game_update", this.boundWsGameUpdateHandler);
+    this.ws.offMessage("game_pause", this.boundWsGamePauseHandler);
+    this.ws.offMessage("game_ended", this.boundWsGameEndedHandler);
+    this.ws.offMessage("game_start", this.boundWsStartGameHandler);
+    this.ws.offMessage("game_ready", this.boundWsGameReadyHandler);
+
+    // Remove DOM
+    this.main.remove();
   }
 }

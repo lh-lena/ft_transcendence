@@ -12,6 +12,7 @@ import { generateProfilePrint } from "../../utils/profilePrintFunctions";
 
 export class AIGamePage extends GamePage {
   constructor(serviceContainer: ServiceContainer) {
+    console.log("AIpage instance created");
     // call to template / parent we inherit from
     super(serviceContainer);
 
@@ -24,7 +25,10 @@ export class AIGamePage extends GamePage {
   public async initializeBackend(): Promise<void> {
     const response = await this.backend.createAiGame("medium");
     this.gameId = response.gameId;
-    this.ws.messageClientReady(this.gameId);
+    console.log("backend game id", response.gameId, this.gameId);
+    // if we resolve poll function to true then we let the web socket know we are ready
+    if (await this.pollWebsocketForGameReady())
+      this.ws.messageClientReady(this.gameId);
   }
 
   public intializeGameState(): void {
