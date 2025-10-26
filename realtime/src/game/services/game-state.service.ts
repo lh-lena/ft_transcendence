@@ -129,7 +129,6 @@ export default function createGameStateService(app: FastifyInstance): GameStateS
       return;
     }
     const { gameId } = game;
-    processDebugLog(app, 'game-state', `Cleaning up resources for game ${gameId}`);
     try {
       const pauseTimeout = pauseTimeouts.get(gameId);
       if (pauseTimeout) {
@@ -137,7 +136,7 @@ export default function createGameStateService(app: FastifyInstance): GameStateS
         pauseTimeouts.delete(gameId);
       }
       game.players.forEach((player) => {
-        if (validator.isPlayerInGame(game.players, player.userId)) {
+        if (validator.isPlayerInGame(game.players, player.userId) && player.isAI === false) {
           connectionService.updateUserGame(player.userId, null);
         }
       });
@@ -158,7 +157,6 @@ export default function createGameStateService(app: FastifyInstance): GameStateS
     resetGameState(game.gameState);
     assignPaddleToPlayers(game);
     respond.gameStarted(game.gameId, getUserIdObjectArray(game.players));
-    // broadcastGameUpdate(respond, game.players, game.gameState); // rm ??
     gameLoopService.startCountdownSequence(game, 'Game started!', PONG_CONFIG.COUNTDOWN);
   }
 

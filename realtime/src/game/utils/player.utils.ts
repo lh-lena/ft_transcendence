@@ -21,8 +21,9 @@ export function addAIPlayerToGame(
   if (mode !== GameMode.PVB_AI) {
     return;
   }
+  const aiId = `AI_${game.gameId}_${Date.now()}`;
   const player: Player = {
-    userId: null as unknown as UserIdType,
+    userId: aiId as unknown as UserIdType,
     userAlias: 'AI Bot',
     username: 'AI Bot',
     isAI: true,
@@ -66,7 +67,7 @@ export function assignPaddleToPlayers(game: GameSession): void {
   game.players.forEach((player: Player, index: number) => {
     const paddleName = index === 0 ? PaddleName.PADDLE_A : PaddleName.PADDLE_B;
     player.paddle = paddleName;
-
+    gameState[paddleName].userId = player.userId;
     if (isAIPlayer(player)) {
       const paddle = paddleName === PaddleName.PADDLE_A ? gameState.paddleA : gameState.paddleB;
       paddle.isAI = true;

@@ -1,13 +1,14 @@
 import type { FastifyInstance } from 'fastify';
 import type { AIService } from './ai.types.js';
 import type { GameIdType, GameState } from '../schemas/game.schema.js';
-import { AIDifficulty } from '../constants/index.js';
+import { AIDifficulty, GAME_EVENTS } from '../constants/index.js';
 import { getAIPaddle } from '../game/utils/player.utils.js';
 import createAIStateManager from './ai-state.manager.js';
 import type { EnvironmentConfig } from '../config/config.js';
 import createAIPredictionEngine from './ai-prediction.engine.js';
 import createAIMovementController from './ai-movement.controller.js';
 import type { aiState } from '../schemas/ai.schema.js';
+import { User } from '../schemas/index.js';
 
 export default function createAIService(app: FastifyInstance): AIService {
   const { log } = app;
@@ -59,10 +60,29 @@ export default function createAIService(app: FastifyInstance): AIService {
     }
 
     const aiState = aiStateManager.getAIState(gameId);
-    if (aiState === undefined) return;
+    if (aiState === undefined) {
+      log.warn(`[ai-service] No AI state found for game ${gameId}`);
+      return;
+    }
 
+    const aiUserId = aiPaddle.userId;
+    if (aiUserId === undefined) {
+      log.warn(`[ai-service] AI paddle in game ${gameId} has no associated userId`);
+      return;
+    }
     const direction = aiMovementController.updateDirection(aiState, aiPaddle);
-    aiPaddle.direction = direction;
+    const payload = {
+      gameId,
+      direction,
+      sequence: aiState.lastProcessedSequence++,
+    };
+    const user: User = {
+      userId: aiUserId,
+      username: 'AI Bot',
+      userAlias: 'AI Bot',
+      isAI: true,
+    };
+    app.eventBus.emit(GAME_EVENTS.UPDATE, { user, payload });
   }
 
   function resetTimeAccumulator(): number {
