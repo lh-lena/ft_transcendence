@@ -933,5 +933,6 @@ export class ChatPage {
 
   public unmount(): void {
     this.container.remove();
+    this.websocket.offMessage("chat_message", this.handleChatIncomingMessage);
   }
 }

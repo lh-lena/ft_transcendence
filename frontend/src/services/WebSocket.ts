@@ -222,6 +222,7 @@ export class Websocket {
   }
 
   public messageGamePause(gameId: string): void {
+    console.log("sending game pause");
     const game_pause: ClientMessageInterface<"game_pause"> = {
       event: "game_pause",
       payload: { gameId: gameId },

@@ -1,19 +1,30 @@
 // components
 import { Loading } from "../../components/loading";
 import { ScoreBar } from "../../components/scoreBar";
+import { Menu } from "../../components/menu";
+import { ProfileAvatar } from "../../components/profileAvatar";
 
 // types
 import { GameState, GameStatus } from "../../types";
 import { Direction, WsServerBroadcast } from "../../types/websocket";
+import { User } from "../../types";
 
 // services
 import { Backend, Router, ServiceContainer, Websocket } from "../../services";
 import { PongGame } from "../../game";
+import { showInfo } from "../../components/toast";
+
+// functions
+import { profilePrintToArray } from "../../utils/profilePrintFunctions";
 
 export class GamePage {
   // HTML Elements
   protected main!: HTMLElement;
   protected gameContainer!: HTMLElement;
+  protected menuPauseDiv: HTMLDivElement | null = null;
+  protected pauseCountdown!: HTMLElement;
+  protected menuEndDiv!: HTMLDivElement;
+  protected endResultText!: HTMLElement;
 
   // components
   protected loadingOverlay!: Loading;
@@ -150,7 +161,6 @@ export class GamePage {
     this.ws.onMessage("game_ended", this.boundWsGameEndedHandler);
     this.ws.onMessage("game_start", this.boundWsStartGameHandler);
     this.ws.onMessage("game_ready", this.boundWsGameReadyHandler);
-
   }
 
   public async wsCountdownHandler(
@@ -159,6 +169,9 @@ export class GamePage {
     if (payload.countdown) {
       // any time we see a countdown payload we change loading text to show it
       this.loadingOverlay.changeText(payload.countdown.toString());
+      // if we are currently paused -> we show it as a notification to user
+      if (this.gameState.status === GameStatus.PAUSED)
+        showInfo(`game resumes in: ${payload.countdown.toString()}`);
     }
   }
 
@@ -171,6 +184,9 @@ export class GamePage {
   private async wsGameUpdateHandler(payload: WsServerBroadcast["game_update"]) {
     // any time we get a game update handler we need to show the game
     // console.log(payload);
+
+    // hide pause overlay -> game update sent after pause -> we unpause in line below
+    if (this.gameState.status === GameStatus.PAUSED) this.hidePauseOverlay();
 
     // set game state for game engine to know whats up
     this.gameState.status = GameStatus.PLAYING;
@@ -213,11 +229,32 @@ export class GamePage {
   public async wsGamePauseHandler() {
     this.gameState.status = GameStatus.PAUSED;
     this.scoreBar.pausePlay.toggleIsPlaying(false);
+    this.showPauseOverlay();
   }
 
   public async wsGameEndedHandler(payload: WsServerBroadcast["game_ended"]) {
     this.gameState.status = GameStatus.GAME_OVER;
     console.log(payload);
+
+    // old logic from remote game -> would handle individually in each page type but i think makes sense act to keep it here
+    // AI is the only case where we use have null as a winner ID
+    let winnerUser;
+    console.log(payload);
+    if (payload.winnerId) {
+      winnerUser = await this.backend.getUserById(payload.winnerId);
+      winnerUser.username = winnerUser.alias
+        ? winnerUser.alias
+        : winnerUser.username;
+      winnerUser.colormap = profilePrintToArray(winnerUser.colormap);
+    } else {
+      // AI case
+      winnerUser =
+        this.gameState.playerA.username === "AI"
+          ? this.gameState.playerA
+          : this.gameState.playerB;
+    }
+
+    this.showEndGameOverlay(winnerUser);
   }
 
   public async wsGameReadyHandler() {
@@ -265,6 +302,71 @@ export class GamePage {
       };
       poll();
     });
+  }
+
+  // pause overlay
+  public showPauseOverlay(): void {
+    this.game?.hideGamePieces();
+    if (this.gameContainer && !this.menuPauseDiv) {
+      this.menuPauseDiv = document.createElement("div");
+      this.menuPauseDiv.className = "flex flex-col gap-5";
+      // Create and mount menu to game container instead of main element
+      const menuItems = [{ name: "quit", link: "/chat" }];
+      const menuPause = new Menu(this.router, menuItems);
+      this.pauseCountdown = document.createElement("h1");
+      this.pauseCountdown.innerText = "paused";
+      this.pauseCountdown.className = "text-white text text-center";
+      this.menuPauseDiv.appendChild(this.pauseCountdown);
+      menuPause.mount(this.menuPauseDiv);
+      this.gameContainer.appendChild(this.menuPauseDiv);
+      // Add overlay styling to menu element
+      this.menuPauseDiv.style.position = "absolute";
+      this.menuPauseDiv.style.top = "50%";
+      this.menuPauseDiv.style.left = "50%";
+      this.menuPauseDiv.style.transform = "translate(-50%, -50%)";
+      this.menuPauseDiv.style.zIndex = "1000";
+    }
+  }
+
+  private hidePauseOverlay(): void {
+    this.game?.showGamePieces();
+    // Unmount menu before removing overlay
+    if (this.menuPauseDiv) {
+      this.gameContainer?.removeChild(this.menuPauseDiv);
+      this.menuPauseDiv = null;
+    }
+  }
+
+  private async showEndGameOverlay(winningUser: User) {
+    this.game?.hideGamePieces();
+    this.scoreBar.clear();
+    if (this.gameContainer && !this.menuPauseDiv) {
+      this.menuEndDiv = document.createElement("div");
+      this.menuEndDiv.className = "flex flex-col gap-5 items-center";
+      // Create and mount menu to game container instead of main element
+      const menuItems = [{ name: "back", link: "/chat" }];
+      const menuEnd = new Menu(this.router, menuItems);
+      let avatar = new ProfileAvatar(
+        winningUser.color,
+        winningUser.colormap,
+        40,
+        40,
+        2,
+      );
+      this.menuEndDiv.appendChild(avatar.getElement());
+      this.endResultText = document.createElement("h1");
+      this.endResultText.textContent = `${winningUser.username} wins`;
+      this.endResultText.className = "text-white text text-center";
+      this.menuEndDiv.appendChild(this.endResultText);
+      menuEnd.mount(this.menuEndDiv);
+      this.gameContainer.appendChild(this.menuEndDiv);
+      // Add overlay styling to menu element
+      this.menuEndDiv.style.position = "absolute";
+      this.menuEndDiv.style.top = "50%";
+      this.menuEndDiv.style.left = "50%";
+      this.menuEndDiv.style.transform = "translate(-50%, -50%)";
+      this.menuEndDiv.style.zIndex = "1000";
+    }
   }
 
   // mount / unmount
