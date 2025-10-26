@@ -12,7 +12,7 @@ import { User } from "../../types";
 // services
 import { Backend, Router, ServiceContainer, Websocket } from "../../services";
 import { PongGame } from "../../game";
-import { showInfo } from "../../components/toast";
+import { showError, showInfo } from "../../components/toast";
 
 // functions
 import { profilePrintToArray } from "../../utils/profilePrintFunctions";
@@ -284,7 +284,7 @@ export class GamePage {
 
   // poll the web socket for being ready to start the game
   public async pollWebsocketForGameReady(): Promise<boolean> {
-    const timeout = 5000; // 5 seconds
+    const timeout = 5000 * 3; // 5 seconds * 3 -> 15 seconds
     const interval = 100; // check every 100ms
     let elapsed = 0;
 
@@ -293,7 +293,7 @@ export class GamePage {
         if (this.wsGameReady) {
           resolve(true);
         } else if (elapsed >= timeout) {
-          // Optionally, you can call unmount or handle exit here
+          showError("dropping connection. timed out");
           resolve(false);
         } else {
           elapsed += interval;

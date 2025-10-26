@@ -27,6 +27,7 @@ export class AIGamePage extends GamePage {
     // if we resolve poll function to true then we let the web socket know we are ready
     if (await this.pollWebsocketForGameReady())
       this.ws.messageClientReady(this.gameId);
+    else this.router.navigate("/chat");
   }
 
   public intializeGameState(): void {
