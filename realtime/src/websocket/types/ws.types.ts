@@ -7,6 +7,7 @@ import type { ChatMessageBroadcast } from '../../schemas/chat.schema.js';
 
 export interface RespondService {
   connected: (userId: UserIdType) => boolean;
+  gameReady: (gameId: GameIdType) => boolean;
   gameStarted: (gameId: GameIdType, players: UserIdObject[]) => boolean;
   gameUpdate: (userId: UserIdType, gameState: GameState) => boolean;
   gameEnded: (gameId: GameIdType, result: GameResult) => boolean;
@@ -40,7 +41,6 @@ export interface ReconnectionService {
   handlePlayerReconnection: (userId: UserIdType) => DisconnectInfo | undefined;
   handlePlayerDisconnect: (user: User, gameId: GameIdType) => void;
   hasDisconnectData: (userId: UserIdType) => boolean;
-  attemptReconnection: (userId: UserIdType) => GameIdType | null;
   cleanup: (userId?: UserIdType) => void;
 }
 

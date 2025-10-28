@@ -12,9 +12,9 @@ import type { PausedGameState } from '../../websocket/types/network.types.js';
 import type { User, UserIdObject, UserIdType } from '../../schemas/user.schema.js';
 
 export interface GameService {
-  handleStartGame(user: User, gameId: GameIdType): Promise<boolean>;
-  handleStartGame(data: BackendStartGame): Promise<boolean>;
+  initializeGameSession(data: BackendStartGame): Promise<boolean>;
   handlePlayerInput: (user: User, payload: ClientEventPayload<GAME_EVENTS.UPDATE>) => void;
+  handleStartGame: (user: User, payload: ClientEventPayload<GAME_EVENTS.CLIENT_READY>) => void;
   handleGameLeave: (user: User, gameId: GameIdType) => Promise<void>;
   handleGamePause: (user: User, gameId: GameIdType) => void;
   handleGameResume: (user: User, gameId: GameIdType) => void;
@@ -40,7 +40,8 @@ export interface GameSessionService {
   storeGameSession: (game: GameSession) => void;
   updateGameSession: (gameId: GameIdType, updates: Partial<GameSession>) => boolean;
   removeGameSession: (gameId: GameIdType) => void;
-  setPlayerConnectionStatus: (userId: UserIdType, gameId: GameIdType, connected: boolean) => void;
+  // setPlayerConnectionStatus: (userId: UserIdType, gameId: GameIdType, connected: boolean) => void; // rm
+  setPlayerReadyStatus: (userId: UserIdType, gameId: GameIdType, ready: boolean) => void;
   shutdown: () => Promise<void>;
 }
 
@@ -68,7 +69,7 @@ export interface GameValidator {
   isExpectedPlayer: (players: Player[], userId: UserIdType) => boolean;
   isExpectedUserId: (players: UserIdObject[], userId: UserIdType) => boolean;
   isPlayerInGame: (players: Player[], userId: UserIdType) => boolean;
-  allPlayersConnected: (game: GameSession) => boolean;
+  allPlayersReady: (game: GameSession) => boolean;
   gameReadyToStart: (game: GameSession) => boolean;
   isGameFull: (game: GameSession) => void;
 }

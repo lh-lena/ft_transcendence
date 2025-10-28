@@ -29,6 +29,7 @@ export const aiStateSchema = z.object({
   timeAccumulator: z.number(),
   difficulty: z.enum(AIDifficulty),
   config: aiConfigSchema,
+  lastProcessedSequence: z.number().min(0),
 });
 
 export type aiState = z.infer<typeof aiStateSchema>;

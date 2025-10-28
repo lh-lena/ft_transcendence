@@ -111,6 +111,7 @@ export interface WsClientMessage {
   game_resume: { gameId: string };
   chat_message: ChatMessage;
   notification: NotificationPayload;
+  client_ready: { gameId: string; timestamp: number };
 }
 
 export interface WsServerBroadcast {
@@ -124,6 +125,7 @@ export interface WsServerBroadcast {
   chat_message: ReceivedChatMessage;
   notification: NotificationPayload;
   error: { message: string };
+  game_ready: { game_id: string };
 }
 
 // Add this generic interface after WsEventPayload

@@ -19,7 +19,6 @@ import type {
 import type { EnvironmentConfig } from '../../config/config.js';
 import {
   createGameResult,
-  broadcastGameUpdate,
   assignPaddleToPlayers,
   getUserIdObjectArray,
   createGameValidator,
@@ -130,7 +129,6 @@ export default function createGameStateService(app: FastifyInstance): GameStateS
       return;
     }
     const { gameId } = game;
-    processDebugLog(app, 'game-state', `Cleaning up resources for game ${gameId}`);
     try {
       const pauseTimeout = pauseTimeouts.get(gameId);
       if (pauseTimeout) {
@@ -138,7 +136,7 @@ export default function createGameStateService(app: FastifyInstance): GameStateS
         pauseTimeouts.delete(gameId);
       }
       game.players.forEach((player) => {
-        if (game.isConnected.get(player.userId) === true) {
+        if (validator.isPlayerInGame(game.players, player.userId) && player.isAI === false) {
           connectionService.updateUserGame(player.userId, null);
         }
       });
@@ -159,7 +157,6 @@ export default function createGameStateService(app: FastifyInstance): GameStateS
     resetGameState(game.gameState);
     assignPaddleToPlayers(game);
     respond.gameStarted(game.gameId, getUserIdObjectArray(game.players));
-    // broadcastGameUpdate(respond, game.players, game.gameState); // rm ??
     gameLoopService.startCountdownSequence(game, 'Game started!', PONG_CONFIG.COUNTDOWN);
   }
 
@@ -206,11 +203,9 @@ export default function createGameStateService(app: FastifyInstance): GameStateS
     }
     const { gameId } = game;
     const pausedState = pausedGames.get(gameId) as PausedGameState;
-    const respond = app.respond as RespondService;
     validator.validateResumingGame(pausedState, game, resumeByPlayerId);
     stopAutoResume(gameId);
     updateGameToActive(game);
-    broadcastGameUpdate(respond, game.players, game.gameState);
     const gameLoopService = app.gameLoopService as GameLoopService;
     gameLoopService.startCountdownSequence(game, 'Game resumed!', PONG_CONFIG.COUNTDOWN);
   }

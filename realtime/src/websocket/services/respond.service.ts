@@ -61,7 +61,6 @@ export default function createRespondService(app: FastifyInstance): RespondServi
     players.forEach((p) => {
       if (
         p.isAI !== true &&
-        game.isConnected.get(p.userId) === true &&
         !excludeUsers.includes(p.userId)
       ) {
         userIds.push(p.userId);
@@ -78,6 +77,10 @@ export default function createRespondService(app: FastifyInstance): RespondServi
 
   function connected(userId: UserIdType): boolean {
     return send(userId, 'connected', { userId });
+  }
+
+  function gameReady(gameId: GameIdType): boolean {
+    return broadcast(gameId, GAME_EVENTS.GAME_READY, { gameId, timestamp: Date.now() });
   }
 
   function gameStarted(gameId: GameIdType, players: UserIdObject[]): boolean {
@@ -130,6 +133,7 @@ export default function createRespondService(app: FastifyInstance): RespondServi
 
   return {
     connected,
+    gameReady,
     gameStarted,
     gameUpdate,
     gameEnded,

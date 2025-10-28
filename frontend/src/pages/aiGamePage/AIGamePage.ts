@@ -16,7 +16,6 @@ export class AIGamePage extends GamePage {
     super(serviceContainer);
 
     // make initial call to backend
-    // probs put an if in here to check if we already have a game running?
     this.initializeBackend();
     this.intializeGameState();
   }
@@ -24,6 +23,11 @@ export class AIGamePage extends GamePage {
   public async initializeBackend(): Promise<void> {
     const response = await this.backend.createAiGame("medium");
     this.gameId = response.gameId;
+    console.log("backend game id", response.gameId, this.gameId);
+    // if we resolve poll function to true then we let the web socket know we are ready
+    if (await this.pollWebsocketForGameReady())
+      this.ws.messageClientReady(this.gameId);
+    else this.router.navigate("/chat");
   }
 
   public intializeGameState(): void {

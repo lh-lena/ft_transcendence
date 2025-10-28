@@ -5,6 +5,7 @@ import { protectedRoutes } from "../constants/routes";
 export class Router {
   private routes: Map<string, () => void>;
   private wasButtonNavigation: boolean = false;
+  private lastHandledPath: string = "";
 
   constructor() {
     this.routes = new Map();
@@ -49,6 +50,8 @@ export class Router {
   }
 
   private handleRoute(path: string): void {
+    if (this.lastHandledPath === path) return; // Prevent double handling
+    this.lastHandledPath = path;
     // check to make sure only users access authorized content
     if (protectedRoutes.includes(path) && !localStorage.getItem("user")) {
       this.navigate("/");

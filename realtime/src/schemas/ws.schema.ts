@@ -12,6 +12,13 @@ export const GameIdPayloadSchema = z
   })
   .meta({ $id: 'GameIdPayload' });
 
+export const ReadySchema = z
+  .object({
+    gameId: GameIdSchema,
+    timestamp: z.number().int(),
+  })
+  .meta({ $id: 'ReadyPayload' });
+
 export const GameLeavePayloadSchema = z
   .object({
     gameId: GameIdSchema,
@@ -77,6 +84,10 @@ export const ErrorPayloadSchema = z
 
 export const WsClientMessageSchema = z.discriminatedUnion('event', [
   z.object({
+    event: z.literal(GAME_EVENTS.CLIENT_READY),
+    payload: ReadySchema,
+  }),
+  z.object({
     event: z.literal(GAME_EVENTS.LEAVE),
     payload: GameIdPayloadSchema,
   }),
@@ -103,6 +114,7 @@ export const WsClientMessageSchema = z.discriminatedUnion('event', [
 ]);
 
 export interface WsServerBroadcast {
+  game_ready: z.infer<typeof ReadySchema>;
   connected: z.infer<typeof ConnectedPayloadSchema>;
   game_start: z.infer<typeof GameStartedPayloadSchema>;
   game_update: z.infer<typeof GameStateSchema>;
@@ -115,6 +127,7 @@ export interface WsServerBroadcast {
 }
 
 export const WsServerBroadcastSchemas = {
+  game_ready: ReadySchema,
   connected: ConnectedPayloadSchema,
   game_start: GameStartedPayloadSchema,
   game_update: GameStateSchema,

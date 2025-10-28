@@ -22,6 +22,7 @@ export default function createAIStateManager(app: FastifyInstance): AIStateManag
       timeAccumulator: aiInterval,
       difficulty,
       config: AIConfig[difficulty],
+      lastProcessedSequence: 0,
     };
 
     aiStates.set(gameId, aiState);

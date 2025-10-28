@@ -42,6 +42,7 @@ declare module 'fastify' {
       userId: UserIdType;
       username?: string | null;
       userAlias?: string | null;
+      isAI: boolean;
     };
     gameId?: GameIdType | null;
     lastPing: number;

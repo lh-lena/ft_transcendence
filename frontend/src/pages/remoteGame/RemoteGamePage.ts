@@ -13,7 +13,7 @@ import {
 
 export type GameType = "ai" | "vs-player" | "tournament";
 
-export class VsPlayerGamePage {
+export class VsPlayerGamePageOld {
   private main: HTMLElement;
   private game: PongGame | null = null;
   // initialize game state in create() now

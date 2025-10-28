@@ -6,7 +6,7 @@ import createGameDataService from '../game/services/game-data.service.js';
 import createGameStateService from '../game/services/game-state.service.js';
 import createGameLoopService from '../game/services/game-loop.service.js';
 import type { User } from '../schemas/user.schema.js';
-import type { ClientEventPayload, GameSession } from '../schemas/index.js';
+import type { ClientEventPayload, GameIdType, GameSession } from '../schemas/index.js';
 import { processErrorLog } from '../utils/error.handler.js';
 import { GameSessionStatus, GAME_EVENTS } from '../constants/game.constants.js';
 
@@ -24,6 +24,13 @@ const plugin: FastifyPluginCallback = (app: FastifyInstance): void => {
 
   const gameService = createGameService(app);
   app.decorate('gameService', gameService);
+
+  app.eventBus.on(
+    GAME_EVENTS.CLIENT_READY,
+    ({ user, payload }: { user: User; payload: ClientEventPayload<GAME_EVENTS.CLIENT_READY> }) => {
+      gameService.handleStartGame(user, payload);
+    },
+  );
 
   app.eventBus.on(
     GAME_EVENTS.UPDATE,
@@ -62,7 +69,7 @@ const plugin: FastifyPluginCallback = (app: FastifyInstance): void => {
 
   app.eventBus.on(
     GAME_EVENTS.WIN_CONDITION_MET,
-    ({ game, gameId }: { game: GameSession; gameId: string }) => {
+    ({ game, gameId }: { game: GameSession; gameId: GameIdType }) => {
       gameStateService.endGame(game, GameSessionStatus.FINISHED).catch((error: unknown) => {
         processErrorLog(
           app,
@@ -76,7 +83,7 @@ const plugin: FastifyPluginCallback = (app: FastifyInstance): void => {
 
   app.eventBus.on(
     GAME_EVENTS.SERVER_ERROR,
-    ({ game, gameId }: { game: GameSession; gameId: string }) => {
+    ({ game, gameId }: { game: GameSession; gameId: GameIdType }) => {
       gameStateService
         .endGame(game, GameSessionStatus.CANCELLED_SERVER_ERROR)
         .catch((error: unknown) => {
