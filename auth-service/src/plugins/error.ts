@@ -174,6 +174,7 @@ const errorHandlerPlugin: FastifyPluginAsync = async (server: FastifyInstance) =
 
   server.setErrorHandler((error: ProxiedError, request: FastifyRequest, reply: FastifyReply) => {
     const statusCode = extractStatusCode(error);
+    server.log.debug(`Handling error ${error}`);
 
     server.log.error(
       {

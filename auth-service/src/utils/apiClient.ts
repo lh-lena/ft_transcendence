@@ -83,11 +83,13 @@ export async function apiClientBackend<T = unknown>(config: AxiosRequestConfig):
     const response = await backendApi.request<T>(config);
 
     if (response.status >= 400) {
+      console.log(`Error caugth in apiClient: ${response}`);
       throw new Error(`Backend API error: ${response.status} - ${response.statusText}`);
     }
 
     return response.data;
   } catch (error) {
+    console.error('API request failed:', error!.toString());
     if (axios.isAxiosError(error)) {
       const axiosError = error as AxiosError;
 

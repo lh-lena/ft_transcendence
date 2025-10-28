@@ -48,6 +48,7 @@ export const authRoutesConfig = {
     skipApiCall: true,
     errorMessages: {
       invalidBody: 'Invalid registration data',
+      apiError: 'Username already exists',
     },
   },
 
