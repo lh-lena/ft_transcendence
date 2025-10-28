@@ -6,7 +6,7 @@ import {
   generateProfilePrint,
   profilePrintToString,
 } from "../../utils/profilePrintFunctions";
-import { showError, showInfo } from "../../components/toast";
+import { /*showError,*/ showInfo } from "../../components/toast";
 
 // using for dev
 const uuid = crypto.randomUUID().split("-")[0]; // First segment of UUID
@@ -41,46 +41,46 @@ export class RegisterPage {
         name: "username",
         onClick: () => this.toggleRegisterMenu(),
       },
-      {
-        name: "github auth",
-        onClick: () => this.toggleoAuth2Menu(),
-      },
+      // {
+      //   name: "github auth",
+      //   onClick: () => this.toggleoAuth2Menu(),
+      // },
     ];
     this.firstMenu = new Menu(this.router, firstMenu);
     this.main.appendChild(this.firstMenu.getMenuElement());
   }
 
-  private async toggleoAuth2Menu() {
-    try {
-      const response = await this.backend.oAuth2Login();
+  // private async toggleoAuth2Menu() {
+  //   try {
+  //     const response = await this.backend.oAuth2Login();
 
-      // console.log(response);
+  //     // console.log(response);
 
-      if (response.type === "2FA_REQUIRED") {
-        this.main.removeChild(this.firstMenu.getMenuElement());
+  //     if (response.type === "2FA_REQUIRED") {
+  //       this.main.removeChild(this.firstMenu.getMenuElement());
 
-        this.check2FA(response.userId, response.sessionId);
-        return;
-      }
+  //       this.check2FA(response.userId, response.sessionId);
+  //       return;
+  //     }
 
-      if (response.type === "OAUTH_SUCCESS") {
-        localStorage.setItem("jwt", response.data.jwt);
-        // console.log("OAuth successful, fetching user data...", response);
-        const ret = await this.backend.fetchUserById(response.userId);
-        // console.log("Fetched user data:", ret);
-        this.backend.setUser(ret.data);
-        this.router.navigate("/chat");
-        return;
-      }
+  //     if (response.type === "OAUTH_SUCCESS") {
+  //       localStorage.setItem("jwt", response.data.jwt);
+  //       // console.log("OAuth successful, fetching user data...", response);
+  //       const ret = await this.backend.fetchUserById(response.userId);
+  //       // console.log("Fetched user data:", ret);
+  //       this.backend.setUser(ret.data);
+  //       this.router.navigate("/chat");
+  //       return;
+  //     }
 
-      if (response.type === "OAUTH_ERROR") {
-        console.error("OAuth failed:", response.error);
-        return;
-      }
-    } catch (error) {
-      console.error("OAuth process failed:", error);
-    }
-  }
+  //     if (response.type === "OAUTH_ERROR") {
+  //       console.error("OAuth failed:", response.error);
+  //       return;
+  //     }
+  //   } catch (error) {
+  //     console.error("OAuth process failed:", error);
+  //   }
+  // }
 
   private async registerHook() {
     // get all input data from forms
@@ -170,63 +170,63 @@ export class RegisterPage {
     this.registerMenu.mount(this.main);
   }
 
-  private check2FA(userId: string, sessionId: string): void {
-    // check to see if user has 2FA enabled
+  //private check2FA(userId: string, sessionId: string): void {
+  //  // check to see if user has 2FA enabled
 
-    // form
-    const form = document.createElement("form");
-    form.className = "flex flex-col gap-3 w-48";
-    this.main.appendChild(form);
+  //  // form
+  //  const form = document.createElement("form");
+  //  form.className = "flex flex-col gap-3 w-48";
+  //  this.main.appendChild(form);
 
-    // code input
-    const inputCode = document.createElement("input");
-    inputCode.type = "code";
-    inputCode.id = "text_code";
-    inputCode.placeholder = "code";
-    inputCode.style.paddingLeft = "0.5em";
-    form.appendChild(inputCode);
+  //  // code input
+  //  const inputCode = document.createElement("input");
+  //  inputCode.type = "code";
+  //  inputCode.id = "text_code";
+  //  inputCode.placeholder = "code";
+  //  inputCode.style.paddingLeft = "0.5em";
+  //  form.appendChild(inputCode);
 
-    const verificationButton = document.createElement("button");
-    verificationButton.className = "btn w-36 mx-auto mt-4";
-    verificationButton.onclick = (e) => {
-      e.preventDefault();
-      const code = inputCode.value;
-      this.verify2FACode(userId, code, sessionId);
-    };
-    verificationButton.innerText = "verify";
-    form.appendChild(verificationButton);
-  }
+  //  const verificationButton = document.createElement("button");
+  //  verificationButton.className = "btn w-36 mx-auto mt-4";
+  //  verificationButton.onclick = (e) => {
+  //    e.preventDefault();
+  //    const code = inputCode.value;
+  //    this.verify2FACode(userId, code, sessionId);
+  //  };
+  //  verificationButton.innerText = "verify";
+  //  form.appendChild(verificationButton);
+  //}
 
-  private async verify2FACode(userId: string, code: string, sessionId: string) {
-    // Validate 2FA code format
-    if (!code) {
-      showInfo("please provide a 2FA code");
-      return;
-    }
-    if (code.length != 6 && code.length != 16) {
-      showInfo("please provide a valid 2fa code");
-      return;
-    }
+  //private async verify2FACode(userId: string, code: string, sessionId: string) {
+  //  // Validate 2FA code format
+  //  if (!code) {
+  //    showInfo("please provide a 2FA code");
+  //    return;
+  //  }
+  //  if (code.length != 6 && code.length != 16) {
+  //    showInfo("please provide a valid 2fa code");
+  //    return;
+  //  }
 
-    // default
-    let response;
+  //  // default
+  //  let response;
 
-    // CASE CODE LENGTH > 6 -> means recovery code
-    if (code.length == 6) {
-      response = await this.backend.verify2FARegCode(userId, sessionId, code);
-    } else if (code.length == 16) {
-      response = await this.backend.verify2FARecoveryCode(
-        userId,
-        sessionId,
-        code,
-      );
-    }
+  //  // CASE CODE LENGTH > 6 -> means recovery code
+  //  if (code.length == 6) {
+  //    response = await this.backend.verify2FARegCode(userId, sessionId, code);
+  //  } else if (code.length == 16) {
+  //    response = await this.backend.verify2FARecoveryCode(
+  //      userId,
+  //      sessionId,
+  //      code,
+  //    );
+  //  }
 
-    if (response && response.status === 200) {
-      localStorage.setItem("jwt", response.data.jwt);
-      this.router.navigate("/chat");
-    } else showError("incorrect 2fa token");
-  }
+  //  if (response && response.status === 200) {
+  //    localStorage.setItem("jwt", response.data.jwt);
+  //    this.router.navigate("/chat");
+  //  } else showError("incorrect 2fa token");
+  //}
 
   public mount(parent: HTMLElement): void {
     parent.appendChild(this.main);

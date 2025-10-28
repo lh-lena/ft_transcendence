@@ -55,10 +55,11 @@ export class LoginPage {
       }
 
       if (response.type === "OAUTH_SUCCESS") {
-        //console.log("OAuth successful, fetching user data...", response);
-        const ret = await this.backend.fetchUserById(response.userId);
-        //console.log("Fetched user data:", ret);
-        this.backend.setUser(ret.data);
+        localStorage.setItem("jwt", response.jwt);
+
+        const userResponse = await this.backend.fetchUserById(response.userId);
+        this.backend.setUser(userResponse.data);
+
         this.router.navigate("/chat");
         return;
       }
