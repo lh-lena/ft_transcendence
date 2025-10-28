@@ -14,7 +14,6 @@ import type { UserType, UserRegisterType, UserLoginType, GuestPostType } from '.
  * Handles user registration, login, logout, and guest access
  */
 export const authRoutesConfig = {
-  //TODO add rate limiting
   /**
    * User Registration
    * Creates a new user account with hashed password
@@ -213,6 +212,7 @@ export const authRoutesConfig = {
       }
 
       try {
+        server.log.debug({ token }, 'Verifying access token in authMe route');
         const jwtReturn = await server.verifyAccessToken(token);
 
         return reply.code(200).send({ userId: jwtReturn.id });
