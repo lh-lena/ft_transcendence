@@ -28,4 +28,5 @@ const apiClientPlugin = async (fastify: FastifyInstance) => {
 export default fp(apiClientPlugin, {
   name: 'api-client',
   fastify: '5.x',
+  dependencies: ['config'],
 });

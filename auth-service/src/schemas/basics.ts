@@ -14,3 +14,21 @@ export const tfaType = z.enum(['totp', 'backup']);
 
 //define game status
 export const status = z.enum(['waiting', 'ready', 'playing', 'finished']);
+
+interface NormalizedResponse {
+  status?: number;
+  statusCode?: number;
+  data?: unknown;
+}
+
+export interface NormalizedError {
+  name?: string;
+  message: string;
+  code?: string;
+  status?: number;
+  statusCode?: number;
+  response?: NormalizedResponse;
+  data?: unknown;
+  validation?: unknown;
+  stack?: string;
+}

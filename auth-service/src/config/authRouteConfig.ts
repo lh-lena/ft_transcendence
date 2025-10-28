@@ -8,6 +8,7 @@ import {
   guestPostSchema,
 } from '../schemas/user';
 import type { UserType, UserRegisterType, UserLoginType, GuestPostType } from '../schemas/user';
+import { NormalizedError } from '../schemas/basics';
 
 /**
  * Authentication route configurations
@@ -35,7 +36,18 @@ export const authRoutesConfig = {
       const password_hash = await hashPassword(parsedData.body.password);
       const newUser = userPostSchema.parse({ ...parsedData.body, password_hash });
 
-      const user = await server.user.post(newUser);
+      let user;
+      try {
+        user = await server.user.post(newUser);
+      } catch (error) {
+        const nativeError = error.data as NormalizedError;
+        server.log.debug(nativeError.status, 'Error during user registration');
+        if (nativeError.status == 409) {
+          server.log.debug(`Sending 409 because username already exists: ${newUser.username}`);
+          return reply.code(409).send({ message: 'Username already exists' });
+        }
+        throw error;
+      }
 
       reply.doSending({
         code: 201,
