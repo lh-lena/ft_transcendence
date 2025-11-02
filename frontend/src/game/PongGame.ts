@@ -37,7 +37,6 @@ export class PongGame {
     gameStateCallbackParent: () => void,
     gameMode: string,
   ) {
-    console.trace("Constructing PongGame");
     this.gameState = gameState;
     this.gameStateCallBackParent = gameStateCallbackParent;
     this.gameMode = gameMode;
