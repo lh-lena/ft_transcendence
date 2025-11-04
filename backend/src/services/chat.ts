@@ -47,7 +47,7 @@ export const createChatService = (server: FastifyInstance, blockedService: Block
      */
     async create(data: chatCreateType): Promise<chatType> {
       const { senderId, recieverId } = data;
-      if (await blockedService.isBlocked({ userId: senderId }, { userId: recieverId })) {
+      if (await blockedService.isBlocked({ userId: recieverId }, { userId: senderId })) {
         throw new BlockedError('Cannot send message: you are blocked by this user');
       }
 

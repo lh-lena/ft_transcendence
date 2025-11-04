@@ -102,6 +102,7 @@ export const createBlockedService = (server: FastifyInstance) => ({
       },
     });
 
+    server.log.info(blocked, `Block check for sender ${blockedUserId}, from user: ${userId}`);
     return Boolean(blocked);
   },
 });
