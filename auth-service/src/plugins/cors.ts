@@ -46,8 +46,7 @@ const corsPlugin = async (fastify: FastifyInstance) => {
           isAllowed: !request.headers.origin || allowedOrigins.includes(request.headers.origin),
         },
         configValues: {
-          frontendUrl: fastify.config.frontendUrl,
-          realtimeUrl: fastify.config.realtimeUrl,
+          allowedOrigins,
         },
       };
     });

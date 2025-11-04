@@ -40,6 +40,6 @@ const oAuth2Plugin = async (fastify: FastifyInstance) => {
 
 export default fp(oAuth2Plugin, {
   name: 'github-oauth',
-  dependencies: ['config'],
+  dependencies: ['cookies', 'config'],
   fastify: '5.x',
 });

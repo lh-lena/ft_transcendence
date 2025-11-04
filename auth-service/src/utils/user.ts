@@ -1,6 +1,7 @@
 import { FastifyInstance } from 'fastify';
 import * as User from '../schemas/user';
 import { AxiosRequestConfig } from 'axios';
+import { NormalizedError } from '../schemas/basics';
 
 /**
  * User Actions Utilities
@@ -68,7 +69,8 @@ export const userActions = (server: FastifyInstance) => ({
         'Failed to create user',
       );
 
-      throw new Error('Failed to create user');
+      const throwError = error as NormalizedError;
+      throw throwError;
     }
   },
 

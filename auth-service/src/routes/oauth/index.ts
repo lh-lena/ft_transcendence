@@ -22,11 +22,69 @@ const oAuth2Routes = async (server: FastifyInstance) => {
     try {
       server.log.info('Handling OAuth callback');
 
-      const token = await server.githubOAuth2.getAccessTokenFromAuthorizationCodeFlow(req);
+      const query = req.query as { code?: string; state?: string; error?: string };
 
-      server.log.debug('OAuth token received:');
+      if (query.error) {
+        server.log.warn({ error: query.error }, 'OAuth authorization denied by user');
+        return reply.type('text/html').send(
+          generateOAuthResponseHTML(frontendUrl, {
+            type: 'OAUTH_ERROR',
+            error: `Authorization denied: ${query.error}`,
+          }),
+        );
+      }
 
-      const githubUser = await fetchGithubUser(server, token.token.access_token);
+      if (!query.code) {
+        server.log.error('Missing authorization code in callback');
+        return reply.type('text/html').send(
+          generateOAuthResponseHTML(frontendUrl, {
+            type: 'OAUTH_ERROR',
+            error: 'Missing authorization code',
+          }),
+        );
+      }
+
+      const tokenResponse = await server.githubOAuth2.getAccessTokenFromAuthorizationCodeFlow(req);
+
+      server.log.debug({ tokenResponse }, 'OAuth token response received');
+
+      if (!tokenResponse.token) {
+        const errorMsg = 'Token exchange failed';
+
+        server.log.error('GitHub token exchange failed');
+
+        return reply.type('text/html').send(
+          generateOAuthResponseHTML(frontendUrl, {
+            type: 'OAUTH_ERROR',
+            error: `Authentication failed: ${errorMsg}`,
+          }),
+        );
+      }
+
+      if (!tokenResponse.token.access_token) {
+        server.log.error('Access token missing from response');
+        return reply.type('text/html').send(
+          generateOAuthResponseHTML(frontendUrl, {
+            type: 'OAUTH_ERROR',
+            error: 'Invalid token response',
+          }),
+        );
+      }
+
+      const accessToken = tokenResponse.token.access_token;
+      server.log.debug('Access token obtained successfully');
+
+      const githubUser = await fetchGithubUser(server, accessToken);
+
+      if (!githubUser) {
+        server.log.error('Failed to fetch GitHub user profile');
+        return reply.type('text/html').send(
+          generateOAuthResponseHTML(frontendUrl, {
+            type: 'OAUTH_ERROR',
+            error: 'Failed to retrieve user profile',
+          }),
+        );
+      }
 
       const user = await regOrlogUser(server, githubUser);
 
@@ -49,38 +107,6 @@ const oAuth2Routes = async (server: FastifyInstance) => {
 
         const tfaData = await server.tfa.handletfa(user);
 
-        //    return reply.type('text/html').send(`
-        //  <!DOCTYPE html>
-        //  <html>
-        //    <head><title>2FA Required</title></head>
-        //    <body>
-        //      <script>
-        //        const data = ${JSON.stringify({
-        //          type: '2FA_REQUIRED',
-        //          sessionId: tfaData.sessionId,
-        //          userId: tfaData.userId,
-        //          tfaMethod: tfaData.tfaMethod,
-        //          message: '2FA verification required',
-        //        })};
-        //
-        //        try {
-        //          if (window.opener) {
-        //            window.opener.postMessage({
-        //              type: 'OAUTH_RESULT',
-        //              data: data
-        //            }, '${frontendUrl}');
-        //          }
-        //          window.close();
-        //        } catch (error) {
-        //          console.error('Error communicating with parent window:', error);
-        //          document.body.innerHTML = '<h1>2FA verification required. Please return to the main window.</h1>';
-        //        }
-        //      </script>
-        //      <h1>2FA verification required. This window should close automatically.</h1>
-        //    </body>
-        //  </html>
-        //  `);
-        //  }
         return reply.type('text/html').send(
           generateOAuthResponseHTML(frontendUrl, {
             type: '2FA_REQUIRED',
@@ -92,81 +118,28 @@ const oAuth2Routes = async (server: FastifyInstance) => {
         );
       }
 
-      reply = await reply.setAuthCookies({ id: user.userId, role: 'user' });
-      server.log.debug({ reply }, 'reply generated after OAuth login');
+      server.log.debug({ userId: user.userId }, 'user oAuthenticated');
+
+      reply = reply.setAuthCookies({ id: user.userId, role: 'user' });
+
+      server.log.debug(reply, 'Auth cookies set successfully');
 
       const authData = reply.authData;
-      server.log.debug({ authData }, 'Auth data generated after OAuth login');
 
-      if (!authData) {
+      server.log.debug(reply.authData, 'Auth OBJECT set successfully');
+
+      if (!authData || !authData.jwt) {
         server.log.error({ userId: user.userId }, 'Failed to generate auth data');
-        throw new Error('Authentication data missing');
+        return reply.type('text/html').send(
+          generateOAuthResponseHTML(frontendUrl, {
+            type: 'OAUTH_ERROR',
+            error: 'Authentication data generation failed',
+          }),
+        );
       }
 
       server.log.info({ userId: user.userId }, 'GitHub OAuth login successful');
 
-      //    return reply.type('text/html').send(`
-      //  <!DOCTYPE html>
-      //  <html>
-      //    <head><title>OAuth Success</title></head>
-      //    <body>
-      //      <script>
-      //        const data = ${JSON.stringify({
-      //          type: 'OAUTH_SUCCESS',
-      //          userId: user.userId,
-      //          jwt: authData.jwt,
-      //          message: 'Authentication successful',
-      //        })};
-      //
-      //        try {
-      //          if (window.opener) {
-      //            window.opener.postMessage({
-      //              type: 'OAUTH_RESULT',
-      //              data: data
-      //            }, '${frontendUrl}');
-      //          }
-      //          window.close();
-      //        } catch (error) {
-      //          console.error('Error communicating with parent window:', error);
-      //          document.body.innerHTML = '<h1>Authentication successful! You can close this window.</h1>';
-      //        }
-      //      </script>
-      //      <h1>Authentication successful! This window should close automatically.</h1>
-      //    </body>
-      //  </html>
-      //  `);
-      //  } catch {
-      //    const frontendUrl = server.config.frontendUrl;
-
-      //    return reply.type('text/html').send(`
-      //  <!DOCTYPE html>
-      //  <html>
-      //    <head><title>OAuth Error</title></head>
-      //    <body>
-      //      <script>
-      //        const data = ${JSON.stringify({
-      //          type: 'OAUTH_ERROR',
-      //          error: 'Authentication failed',
-      //        })};
-      //
-      //        try {
-      //          if (window.opener) {
-      //            window.opener.postMessage({
-      //              type: 'OAUTH_RESULT',
-      //              data: data
-      //            }, '${frontendUrl}');
-      //          }
-      //          window.close();
-      //        } catch (error) {
-      //          console.error('Error communicating with parent window:', error);
-      //          document.body.innerHTML = '<h1>Authentication failed! You can close this window.</h1>';
-      //        }
-      //      </script>
-      //      <h1>Authentication failed! You can close this window.</h1>
-      //    </body>
-      //  </html>
-      //  `);
-      //  }
       return reply.type('text/html').send(
         generateOAuthResponseHTML(frontendUrl, {
           type: 'OAUTH_SUCCESS',
@@ -197,37 +170,27 @@ const oAuth2Routes = async (server: FastifyInstance) => {
  * @returns HTML string with embedded script
  */
 function generateOAuthResponseHTML(frontendUrl: string, data: Record<string, unknown>): string {
-  const safeData = JSON.stringify(data).replace(/</g, '\\u003c').replace(/>/g, '\\u003e');
+  const safeData = JSON.stringify(data)
+    .replace(/</g, '\\u003c')
+    .replace(/>/g, '\\u003e')
+    .replace(/&/g, '\\u0026');
 
-  const messageMap = {
+  const messageMap: Record<string, string> = {
     OAUTH_SUCCESS: 'Authentication successful! This window will close automatically.',
     '2FA_REQUIRED': '2FA verification required. This window will close automatically.',
     OAUTH_ERROR: 'Authentication failed. This window will close automatically.',
   };
 
-  let message: string;
-
-  switch (data.type) {
-    case 'OAUTH_SUCCESS':
-      message = messageMap.OAUTH_SUCCESS;
-      break;
-    case '2FA_REQUIRED':
-      message = messageMap['2FA_REQUIRED'];
-      break;
-    case 'OAUTH_ERROR':
-      message = messageMap.OAUTH_ERROR;
-      break;
-    default:
-      message = 'Processing...';
-      break;
-  }
+  const message = messageMap[data.type as string] || 'Processing...';
 
   return `
     <!DOCTYPE html>
-    <html>
+    <html lang="en">
       <head>
         <meta charset="UTF-8">
-        <title>OAuth ${data.type}</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'unsafe-inline'; style-src 'unsafe-inline';">
+        <title>OAuth ${String(data.type).replace(/_/g, ' ')}</title>
         <style>
           body {
             font-family: system-ui, -apple-system, sans-serif;
@@ -244,6 +207,12 @@ function generateOAuthResponseHTML(frontendUrl: string, data: Record<string, unk
             background: white;
             border-radius: 8px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            max-width: 400px;
+          }
+          .message h1 {
+            font-size: 1.25rem;
+            margin: 0;
+            color: #333;
           }
         </style>
       </head>
@@ -254,21 +223,39 @@ function generateOAuthResponseHTML(frontendUrl: string, data: Record<string, unk
         <script>
           (function() {
             const data = ${safeData};
+            const targetOrigin = '${frontendUrl}';
             
             try {
-              if (window.opener && !window.opener.closed) {
-                window.opener.postMessage({
-                  type: 'OAUTH_RESULT',
-                  data: data
-                }, '${frontendUrl}');
-                
-                // Close window after a short delay to ensure message is received
-                setTimeout(() => window.close(), 500);
-              } else {
+              if (!window.opener || window.opener.closed) {
                 console.error('Parent window not available');
+                document.querySelector('.message h1').textContent = 
+                  'Please close this window and try again.';
+                return;
               }
+
+              window.opener.postMessage({
+                source: 'oauth-callback',
+                type: 'OAUTH_RESULT',
+                data: data
+              }, targetOrigin);
+              
+              console.log('OAuth result sent to parent window');
+              
+              setTimeout(() => {
+                window.close();
+                
+                setTimeout(() => {
+                  if (!window.closed) {
+                    document.querySelector('.message h1').textContent = 
+                      'Please close this window manually.';
+                  }
+                }, 100);
+              }, 500);
+              
             } catch (error) {
               console.error('Error communicating with parent window:', error);
+              document.querySelector('.message h1').textContent = 
+                'Error: Please close this window and try again.';
             }
           })();
         </script>

@@ -42,8 +42,15 @@ export class Backend {
         if (error.response?.status === 401 && !this.refreshed) {
           try {
             this.refreshed = true;
-            await this.refreshToken();
+            const response = await this.refreshToken();
+
+            localStorage.setItem("jwt", response.data.jwt);
+
+            const userResponse = await this.fetchUserById(response.data.userId);
+            this.setUser(userResponse.data);
+
             this.refreshed = false;
+
             return await this.api(originalRequest);
           } catch {
             localStorage.removeItem("user");
@@ -116,6 +123,10 @@ export class Backend {
           Authorization: `Bearer ${token}`,
         },
       });
+      if (userId.status !== 200) return null;
+      const user = await this.fetchUserById(userId.data.userId);
+      if (user.status !== 200) return null;
+      this.setUser(user.data);
       return userId.data.userId;
     } catch {
       return null;

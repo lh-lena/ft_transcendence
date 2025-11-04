@@ -7,7 +7,7 @@ import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 
 const healthRoute = async (server: FastifyInstance) => {
   server.get('/', async (_req: FastifyRequest, reply: FastifyReply) => {
-    server.metrics.authServiceHealth.set(1);
+    server.updateServiceHealth(true);
 
     const healthInfo = {
       status: 'ok',
