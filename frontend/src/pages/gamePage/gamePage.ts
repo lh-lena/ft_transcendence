@@ -284,7 +284,7 @@ export class GamePage {
 
   // poll the web socket for being ready to start the game
   public async pollWebsocketForGameReady(): Promise<boolean> {
-    const timeout = 5000 * 3; // 5 seconds * 3 -> 15 seconds
+    const timeout = 5000 * 6; // 5 seconds * 6 -> 30 seconds
     const interval = 100; // check every 100ms
     let elapsed = 0;
 

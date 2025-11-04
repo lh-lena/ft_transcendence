@@ -22,8 +22,9 @@ export class VsPlayerGamePage extends GamePage {
   public async initializeBackend(): Promise<void> {
     const response = await this.backend.joinGame();
     this.gameId = response.gameId;
-
-    this.intializeGameState();
+    if (await this.pollWebsocketForGameReady()) {
+      this.intializeGameState();
+    }
   }
 
   public async intializeGameState(): Promise<void> {
@@ -31,7 +32,6 @@ export class VsPlayerGamePage extends GamePage {
     const response = await this.backend.getGameById(this.gameId);
     const gameData = response.data;
     // If game exists and has started, initialize it
-    // not sure if this is the right way to error handle it but could work? -> need to test
     if (!gameData && gameData.players && gameData.players.length === 2) {
       showError("couldn't fetch players. please try again");
       this.router.navigate("/chat");
@@ -64,8 +64,7 @@ export class VsPlayerGamePage extends GamePage {
       wsPaddleSequence: 0,
     };
     // needs to be at very end
-    // if we resolve poll function to true then we let the web socket know we are ready
-    if (await this.pollWebsocketForGameReady())
-      this.ws.messageClientReady(this.gameId);
+    // need to let the ws know we are ready to start playing
+    this.ws.messageClientReady(this.gameId);
   }
 }

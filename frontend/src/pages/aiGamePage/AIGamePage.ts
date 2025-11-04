@@ -17,7 +17,6 @@ export class AIGamePage extends GamePage {
 
     // make initial call to backend
     this.initializeBackend();
-    this.intializeGameState();
   }
 
   public async initializeBackend(): Promise<void> {
@@ -25,9 +24,10 @@ export class AIGamePage extends GamePage {
     this.gameId = response.gameId;
     console.log("backend game id", response.gameId, this.gameId);
     // if we resolve poll function to true then we let the web socket know we are ready
-    if (await this.pollWebsocketForGameReady())
+    if (await this.pollWebsocketForGameReady()) {
       this.ws.messageClientReady(this.gameId);
-    else this.router.navigate("/chat");
+      this.intializeGameState();
+    } else this.router.navigate("/chat");
   }
 
   public intializeGameState(): void {
