@@ -56,7 +56,7 @@ export class GamePage {
   private boundWsGamePauseHandler = this.wsGamePauseHandler.bind(this);
   private boundWsGameEndedHandler = this.wsGameEndedHandler.bind(this);
   private boundWsStartGameHandler = this.wsStartGameHandler.bind(this);
-  private boundWsGameReadyHandler = this.wsGameReadyHandler.bind(this);
+  public boundWsGameReadyHandler = this.wsGameReadyHandler.bind(this);
 
   constructor(serviceContainer: ServiceContainer) {
     console.log("GamePage instance created");
@@ -257,7 +257,8 @@ export class GamePage {
     this.showEndGameOverlay(winnerUser);
   }
 
-  public async wsGameReadyHandler() {
+  public async wsGameReadyHandler(payload: WsServerBroadcast["game_ready"]) {
+    console.log(payload);
     this.wsGameReady = true;
     console.log("Game ready!");
   }
