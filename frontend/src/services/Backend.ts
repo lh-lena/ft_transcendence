@@ -490,21 +490,20 @@ export class Backend {
 
   async logout() {
     //this.stopPeriodicRefreshToken();
-
-    //TODO cut ws connection
-    try {
-      await this.api.post("/api/logout");
-      // console.log("Logged out:", response.data);
-    } catch {
-      console.error("Logout failed, but local data is cleared anyway");
-    }
-
+    // need to do this before we await smt
     localStorage.removeItem("user");
     localStorage.removeItem("jwt");
 
     this.user.userId = "";
 
-    await new Promise((resolve) => setTimeout(resolve, 1000)); // <-- block for 1 second
+    //TODO cut ws connection
+    try {
+      await this.api.post("/api/logout");
+    } catch {
+      console.error("Logout failed, but local data is cleared anyway");
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, 1000));
 
     return;
   }
