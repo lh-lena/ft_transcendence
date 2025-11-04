@@ -8,7 +8,7 @@ import { LoginPage } from "./pages/login";
 import { RegisterPage } from "./pages/register";
 import { SettingsPage } from "./pages/settings";
 import { ChatPage } from "./pages/chat";
-import { TournamentAliasPage } from "./pages/tournament";
+import { TournamentAliasPage } from "./pages/tournamentOld";
 import { GamePage } from "./pages/gamePage";
 import { AIGamePage } from "./pages/aiGamePage";
 import { VsPlayerGamePage } from "./pages/vsPlayerGamePage";

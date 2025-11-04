@@ -165,8 +165,6 @@ export class TournamentAliasPage {
         }
       }
     });
-
-    // this.router.navigate("/vs-player");
   }
 
   // MOVE

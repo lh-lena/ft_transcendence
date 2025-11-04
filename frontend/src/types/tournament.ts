@@ -1,6 +1,8 @@
 export interface Player {
   userId: string;
   alias?: string;
+  color?: string;
+  colormap?: string[];
 }
 
 export interface TournamentData {
