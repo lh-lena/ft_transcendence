@@ -149,7 +149,8 @@ export class GamePage {
   }
 
   public hideLoadingOverlay() {
-    this.main.removeChild(this.loadingOverlay.getElement());
+    if (this.main.contains(this.loadingOverlay.getElement()))
+      this.main.removeChild(this.loadingOverlay.getElement());
   }
 
   // register websocket handlers
