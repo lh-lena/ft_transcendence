@@ -494,7 +494,8 @@ export class Backend {
     localStorage.removeItem("user");
     localStorage.removeItem("jwt");
 
-    this.user.userId = "";
+    // need to block here to make sure we have deleted everything
+    // await new Promise((resolve) => setTimeout(resolve, 1000));
 
     //TODO cut ws connection
     try {
@@ -502,8 +503,6 @@ export class Backend {
     } catch {
       console.error("Logout failed, but local data is cleared anyway");
     }
-
-    await new Promise((resolve) => setTimeout(resolve, 1000));
 
     return;
   }

@@ -181,7 +181,7 @@ export class GamePage {
     _payload: WsServerBroadcast["notification"],
   ) {}
 
-  private async wsGameUpdateHandler(payload: WsServerBroadcast["game_update"]) {
+  public async wsGameUpdateHandler(payload: WsServerBroadcast["game_update"]) {
     // any time we get a game update handler we need to show the game
     // console.log(payload);
 

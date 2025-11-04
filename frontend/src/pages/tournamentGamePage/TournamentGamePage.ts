@@ -18,6 +18,10 @@ import { TournamentData } from "../../types/tournament";
 import { profilePrintToArray } from "../../utils/profilePrintFunctions";
 import { showError } from "../../components/toast";
 
+// IMPORTANT TO REMEMBER
+// we receive gameID from game_update when ws also sends game ready
+// so we save it in gamePage
+
 export class TournamentGamePage extends GamePage {
   // game mode specific data
   private alias!: string;
@@ -48,6 +52,17 @@ export class TournamentGamePage extends GamePage {
     // UI inital stuff for tournament alias page (from default game page setup)
     this.hideLoadingOverlay();
     this.showAliasForm();
+  }
+
+  public async wsGameUpdateHandler(
+    payload: WsServerBroadcast["game_update"],
+  ): Promise<void> {
+    // runs on first game update thats sent with game_ready
+    if (!this.gameId) {
+      this.gameId = payload.gameId;
+      console.log("set game id in inherited class");
+    }
+    super.wsGameUpdateHandler(payload);
   }
 
   private async handlePlayButton() {
