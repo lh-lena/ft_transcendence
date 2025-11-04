@@ -33,7 +33,7 @@ export class TournamentGamePage extends GamePage {
   private form!: HTMLElement;
   private inputAlias!: HTMLInputElement;
   private menu!: Menu;
-  private bracketCol!: HTMLDivElement;
+  private tournamentStatsDiv!: HTMLDivElement;
 
   constructor(serviceContainer: ServiceContainer) {
     super(serviceContainer);
@@ -67,12 +67,6 @@ export class TournamentGamePage extends GamePage {
     // this is where we set game id and start game shit
     this.gameId = payload.game_id;
 
-    // show loading to show progress in flow
-    this.hideBrackets();
-
-    // show loading overlay
-    this.showLoadingOverlay("waiting");
-
     // same ol initialize backend
     this.initializeBackend();
   }
@@ -83,6 +77,16 @@ export class TournamentGamePage extends GamePage {
     if (await this.pollWebsocketForGameReady()) {
       this.intializeGameState();
     }
+  }
+
+  public async wsGameUpdateHandler(
+    payload: WsServerBroadcast["game_update"],
+  ): Promise<void> {
+    super.wsGameUpdateHandler(payload);
+    // hide bracket on game start
+    this.hideBracket();
+    // in case we end game and resume then for second game
+    this.hideEndGameOverlay();
   }
 
   public async intializeGameState(): Promise<void> {
@@ -205,7 +209,11 @@ export class TournamentGamePage extends GamePage {
 
   // makes a bracket
   private async showBracket(tournamentData: TournamentData) {
+    this.hideLoadingOverlay();
     console.log("show bracket called");
+
+    if (this.main.contains(this.tournamentStatsDiv))
+      this.main.removeChild(this.tournamentStatsDiv);
 
     // Ensure all player data is populated before rendering
     await Promise.all(
@@ -217,92 +225,60 @@ export class TournamentGamePage extends GamePage {
       }),
     );
 
-    console.log(tournamentData);
+    this.tournamentStatsDiv = document.createElement("div");
+    this.tournamentStatsDiv.className = "flex flex-col gap-8";
+    this.main.appendChild(this.tournamentStatsDiv);
 
-    // remove exisiting bracket
-    this.hideBrackets();
+    // Group players in pairs
+    for (let i = 0; i < tournamentData.players.length; i += 2) {
+      const gameTitle = document.createElement("h1");
+      gameTitle.className = "text-white text-2xl text-center";
+      gameTitle.innerText = `game ${i / 2 + 1}: `;
+      this.tournamentStatsDiv.appendChild(gameTitle);
 
-    // hide waiting loading thing
-    this.hideLoadingOverlay();
+      // Create a row container for the pair
+      const gameRow = document.createElement("div");
+      gameRow.className = "flex flex-row gap-4 items-center";
 
-    this.bracketCol = document.createElement("div");
-    this.bracketCol.className =
-      "tournament-bracket-container flex flex-col gap-10";
-    this.main.appendChild(this.bracketCol);
-
-    const bracketTitle = document.createElement("h1");
-    bracketTitle.textContent = "match-ups:";
-    bracketTitle.className = "text-white text-center";
-    this.bracketCol.appendChild(bracketTitle);
-
-    const bracketsRow = document.createElement("div");
-    bracketsRow.className = "flex flex-row gap-20";
-    this.bracketCol.appendChild(bracketsRow);
-
-    tournamentData.players.forEach((player, index) => {
-      // create new bracket row for every pair (even indices) or single player
-      if (index % 2 === 0) {
-        const bracket = document.createElement("div");
-        bracket.className = "flex flex-col gap-2 w-48";
-        bracketsRow.appendChild(bracket);
-
-        // Add first player
-        if (player.alias && player.color && player.colormap) {
-          const playerDiv = this.createPlayer(
-            player.alias,
-            player.color,
-            player.colormap,
-          );
-          bracket.appendChild(playerDiv);
-        }
-
-        // Check if there's a second player to pair with
-        const nextPlayer = tournamentData.players[index + 1];
-        if (nextPlayer) {
-          // Add VS separator
-          const vsText = document.createElement("p");
-          vsText.textContent = "|";
-          vsText.className = "text-white text-center";
-          bracket.appendChild(vsText);
-
-          // Add second player
-          if (nextPlayer.alias && nextPlayer.color && nextPlayer.colormap) {
-            const playerDiv = this.createPlayer(
-              nextPlayer.alias,
-              nextPlayer.color,
-              nextPlayer.colormap,
-            );
-            bracket.appendChild(playerDiv);
-          }
-        }
-
-        // Add pulse animation if current user is in this bracket
-        if (
-          player.userId === this.backend.getUser().userId ||
-          nextPlayer?.userId === this.backend.getUser().userId
-        ) {
-          bracket.classList.add("animate-pulse");
-        }
+      // Add first player
+      if (tournamentData.players[i].alias) {
+        const playerDiv = this.createPlayer(
+          tournamentData.players[i].alias!,
+          tournamentData.players[i].color!,
+          tournamentData.players[i].colormap!,
+        );
+        gameRow.appendChild(playerDiv);
       }
-    });
+
+      // Add second player
+      if (tournamentData.players[i + 1]?.alias) {
+        const vsTitle = document.createElement("h1");
+        vsTitle.className = "text-white text-xl";
+        vsTitle.innerText = "vs";
+        gameRow.appendChild(vsTitle);
+        const playerDiv = this.createPlayer(
+          tournamentData.players[i + 1].alias!,
+          tournamentData.players[i + 1].color!,
+          tournamentData.players[i + 1].colormap!,
+        );
+        gameRow.appendChild(playerDiv);
+      }
+
+      this.tournamentStatsDiv.appendChild(gameRow);
+    }
   }
 
-  private hideBrackets() {
-    console.log("hideBrackets called", this.bracketCol);
+  private hideBracket() {
+    if (this.main.contains(this.tournamentStatsDiv))
+      this.main.removeChild(this.tournamentStatsDiv);
+  }
 
-    // remove ALL bracket columns using the UNIQUE class
-    const allBrackets = this.main.querySelectorAll(
-      ".tournament-bracket-container",
-    );
-    console.log("found brackets to remove:", allBrackets.length);
-    allBrackets.forEach((bracket) => {
-      if (bracket.parentElement) {
-        bracket.parentElement.removeChild(bracket);
-      }
-    });
-
-    // Clear the reference
-    this.bracketCol = null as any;
+  public async wsGameEndedHandler(
+    payload: WsServerBroadcast["game_ended"],
+  ): Promise<void> {
+    super.wsGameEndedHandler(payload);
+    const response = await this.backend.getTournamentById(this.tournamentId);
+    console.log("tournament end data: ", response);
   }
 
   // created a player div for bracket to use
@@ -313,7 +289,7 @@ export class TournamentGamePage extends GamePage {
   ): HTMLDivElement {
     const contact = document.createElement("div");
     contact.className =
-      "flex flex-row gap-4 box standard-dialog w-full items-center";
+      "flex flex-row gap-4 box standard-dialog w-32 items-center";
     const contactName = document.createElement("h1");
     contactName.textContent = alias;
     const contactAvatar = new ProfileAvatar(

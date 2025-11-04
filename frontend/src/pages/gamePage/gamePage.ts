@@ -370,6 +370,11 @@ export class GamePage {
     }
   }
 
+  public hideEndGameOverlay() {
+    if (this.gameContainer.contains(this.menuEndDiv))
+      this.gameContainer.removeChild(this.menuEndDiv);
+  }
+
   // mount / unmount
   public mount(parent: HTMLElement): void {
     parent.appendChild(this.main);
