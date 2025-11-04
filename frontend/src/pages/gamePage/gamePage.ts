@@ -175,11 +175,10 @@ export class GamePage {
     }
   }
 
+  // use this esp in tournament
   public async wsNotificationHandler(
-    payload: WsServerBroadcast["notification"],
-  ) {
-    console.log(payload);
-  }
+    _payload: WsServerBroadcast["notification"],
+  ) {}
 
   private async wsGameUpdateHandler(payload: WsServerBroadcast["game_update"]) {
     // any time we get a game update handler we need to show the game
@@ -377,7 +376,8 @@ export class GamePage {
   public unmount() {
     // cleanup in backend or websocket depending on game state
     // cleanup during waiting screen
-    if (this.gameState.status === GameStatus.WAITING) {
+    // game state is undefined if we havent initalized yet -> still in waiting screen
+    if (!this.gameState) {
       this.backend.deleteGame(this.gameId);
     } else if (this.gameState.status !== GameStatus.GAME_OVER) {
       this.ws.messageGameLeave(this.gameId);
