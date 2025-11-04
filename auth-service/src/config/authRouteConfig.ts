@@ -228,7 +228,7 @@ export const authRoutesConfig = {
         server.log.debug({ token }, 'Verifying access token in authMe route');
         const jwtReturn = await server.verifyAccessToken(token);
 
-        return reply.code(200).send({ userId: jwtReturn.id });
+        return reply.code(200).send({ userId: jwtReturn.id, role: jwtReturn.role });
       } catch {
         return reply.code(401).send({ error: 'Token expired' });
       }

@@ -181,7 +181,7 @@ export default fp(
             `${decoded.role} user(${decoded.id} tried to access protected Route`,
           );
 
-          return reply.code(401).send({
+          return reply.code(403).send({
             error: 'Authentication required',
             message: 'Guest users are not allowed to access this route',
           });
