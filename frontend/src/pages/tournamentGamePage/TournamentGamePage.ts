@@ -83,6 +83,9 @@ export class TournamentGamePage extends GamePage {
     this.tournamentId = response.data.tournamentId;
     console.log(this.tournamentId);
     // Axios responses contain the server payload under `data`
+
+    // show initial bracket
+    this.showBracket(response.data);
   }
 
   private showAliasForm() {

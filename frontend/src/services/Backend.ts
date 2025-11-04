@@ -113,7 +113,7 @@ export class Backend {
   }
 
   //-------------Check Auth----------------
-  async checkAuth(): Promise<string | null> {
+  async checkAuth(): Promise<{ userId: string; role: string } | null> {
     try {
       const token = localStorage.getItem("jwt");
       console.log(token);
@@ -127,7 +127,7 @@ export class Backend {
       const user = await this.fetchUserById(userId.data.userId);
       if (user.status !== 200) return null;
       this.setUser(user.data);
-      return userId.data.userId;
+      return userId.data;
     } catch {
       return null;
     }

@@ -3,8 +3,6 @@ export interface Player {
   alias?: string;
   color?: string;
   colormap?: string[];
-
-  
 }
 
 export interface TournamentData {

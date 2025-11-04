@@ -57,7 +57,7 @@ export class HomePage {
     try {
       const response = await this.backend.checkAuth();
 
-      if (response) return true;
+      if (response && response.role !== "guest") return true;
       return false;
     } catch {
       return false;
