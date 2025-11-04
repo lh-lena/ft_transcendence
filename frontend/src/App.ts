@@ -12,6 +12,7 @@ import { TournamentAliasPage } from "./pages/tournament";
 import { GamePage } from "./pages/gamePage";
 import { AIGamePage } from "./pages/aiGamePage";
 import { VsPlayerGamePage } from "./pages/vsPlayerGamePage";
+import { TournamentGamePage } from "./pages/tournamentGamePage";
 
 // routes
 import { protectedRoutes } from "./constants/routes";
@@ -31,6 +32,7 @@ const PAGE_ROUTES = {
   "/tournament-start": TournamentAliasPage,
   "/game-page": GamePage,
   "/ai-game": AIGamePage,
+  "/tournament-game": TournamentGamePage,
 } as const;
 
 // type magic

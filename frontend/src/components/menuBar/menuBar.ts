@@ -52,9 +52,7 @@ export class MenuBar {
   }
 
   private async joinTournamentFlow() {
-    this.router.navigate("/tournament-start", {
-      userType: "registered",
-    });
+    this.router.navigate("/tournament-game");
   }
 
   private async joinGameFlow() {

@@ -491,6 +491,8 @@ export class Backend {
     localStorage.removeItem("user");
     localStorage.removeItem("jwt");
 
+    this.user.userId = "";
+
     await new Promise((resolve) => setTimeout(resolve, 1000)); // <-- block for 1 second
 
     return;

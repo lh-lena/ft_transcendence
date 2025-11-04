@@ -28,11 +28,7 @@ export class HomePage {
       // obv will be changing this to /loginAuth for logins
       { name: "log in", link: "/login" },
       { name: "register", link: "/register" },
-      {
-        name: "guest",
-        onClick: () =>
-          this.router.navigate("/tournament-start", { userType: "guest" }),
-      },
+      { name: "guest", link: "/tournament-game" },
     ];
     this.menu = new Menu(this.router, notLoggedInMenu);
   }
