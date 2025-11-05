@@ -123,7 +123,7 @@ dist
 # DynamoDB Local files
 .dynamodb/
 
-db.sqlite
+database.sqlite
 backend/public/*
 
 # TernJS port file
