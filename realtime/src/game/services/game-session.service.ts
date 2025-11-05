@@ -32,7 +32,7 @@ export default function createGameSessionService(app: FastifyInstance): GameSess
 
     const newGame: GameSession = {
       ...gameData,
-      // isConnected: new Map(), // rm
+      isConnected: new Map(),
       playersReady: [],
       gameState: initializeGameState(gameId),
       status: GameSessionStatus.PENDING,
@@ -62,27 +62,21 @@ export default function createGameSessionService(app: FastifyInstance): GameSess
     return removed;
   }
 
-  // TDDO: rm
-  // function setPlayerConnectionStatus(
-  //   userId: UserIdType,
-  //   gameId: GameIdType,
-  //   connected: boolean,
-  // ): void {
-  //   const gameSession = gameSessions.get(gameId);
-  //   if (gameSession === undefined || gameSession === null) {
-  //     throw new Error(`Game session ${gameId} not found`);
-  //   }
-  //   if (connected) {
-  //     gameSession.isConnected.set(userId, connected);
-  //   } else {
-  //     gameSession.isConnected.delete(userId);
-  //   }
-  //   processDebugLog(
-  //     app,
-  //     'game-session',
-  //     `Player ${userId} in the game ${gameId} is ${connected ? 'connected' : 'disconnected'}`,
-  //   );
-  // }
+  function setPlayerConnectionStatus(
+    userId: UserIdType,
+    gameId: GameIdType,
+    connected: boolean,
+  ): void {
+    const gameSession = gameSessions.get(gameId);
+    if (gameSession === undefined || gameSession === null) {
+      throw new Error(`Game session ${gameId} not found`);
+    }
+    if (connected) {
+      gameSession.isConnected.set(userId, connected);
+    } else {
+      gameSession.isConnected.delete(userId);
+    }
+  }
 
   function setPlayerReadyStatus(userId: UserIdType, gameId: GameIdType, ready: boolean): void {
     const gameSession = gameSessions.get(gameId);
@@ -139,7 +133,7 @@ export default function createGameSessionService(app: FastifyInstance): GameSess
     createGameSession,
     removeGameSession,
     storeGameSession,
-    // setPlayerConnectionStatus,
+    setPlayerConnectionStatus,
     setPlayerReadyStatus,
     updateGameSession,
     shutdown,

@@ -2,6 +2,7 @@ import { WebSocket } from 'ws';
 import type { FastifyInstance, WSConnection } from 'fastify';
 import type { EnvironmentConfig } from '../../config/config.js';
 import type { RespondService, ConnectionService } from '../types/ws.types.js';
+import type { GameSessionService } from '../../game/types/game.types.js';
 import createConnectionRegistry from './connection.registry.js';
 import createReconnectionService from './reconnection.service.js';
 import createHeartbeatService from './heartbeat.service.js';
@@ -77,7 +78,6 @@ export default function createConnectionService(app: FastifyInstance): Connectio
     if (existingConn !== undefined) {
       replaceExistingConnection(conn, existingConn);
     }
-
     userConnections.set(userId, conn);
     heartbeatService.startHeartbeat(userId, HEARTBEAT_INTERVAL);
     metricsService.wsConnectionsGauge.set(userConnections.size());
@@ -143,7 +143,7 @@ export default function createConnectionService(app: FastifyInstance): Connectio
   }
 
   function reconnectPlayer(userId: UserIdType): void {
-    // const gameSessionService = app.gameSessionService as GameSessionService;
+    const gameSessionService = app.gameSessionService as GameSessionService;
     const disconnectInfo = reconnectionService.handlePlayerReconnection(userId);
     if (disconnectInfo === undefined) {
       log.warn(`[connection-service] No disconnect info found for user ${userId}`);
@@ -152,7 +152,7 @@ export default function createConnectionService(app: FastifyInstance): Connectio
 
     const { gameId } = disconnectInfo as { gameId: GameIdType };
     updateUserGame(userId, gameId);
-    // gameSessionService.setPlayerConnectionStatus(userId, gameId, true); // rm
+    gameSessionService.setPlayerConnectionStatus(userId, gameId, true);
 
     const respond = app.respond as RespondService;
     respond.connected(userId);
@@ -167,18 +167,6 @@ export default function createConnectionService(app: FastifyInstance): Connectio
     );
 
     log.info(`[connection-service] User ${userId} reconnected to game ${gameId}`);
-    // try {
-    //   const gameStateService = app.gameStateService as GameStateService;
-    //   const gameSession = validator.getValidGameCheckPlayer(gameId, userId);
-    //   gameStateService.resumeGame(gameSession);
-    // } catch (error: unknown) {
-    //   processDebugLog(
-    //     app,
-    //     'connection-service',
-    //     `Failed to resume game ${gameId} for user ${userId}: `,
-    //     error,
-    //   );
-    // }
   }
 
   function getConnection(userId: UserIdType): WSConnection | undefined {
