@@ -164,6 +164,7 @@ export default function createGameLoopService(app: FastifyInstance): GameLoopSer
 
   return {
     startGameLoop,
+    unregisterGame,
     stopGameLoop,
     startCountdownSequence,
     stopCountdownSequence,

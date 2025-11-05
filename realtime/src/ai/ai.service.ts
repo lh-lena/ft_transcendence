@@ -90,10 +90,7 @@ export default function createAIService(app: FastifyInstance): AIService {
   }
 
   function startAI(gameId: GameIdType, difficulty: AIDifficulty): void {
-    if (aiStateManager.hasAIState(gameId)) {
-      log.warn(`[ai-service] AI is already running for game ${gameId}`);
-      return;
-    }
+    if (aiStateManager.hasAIState(gameId)) return;
 
     if (difficulty === undefined || difficulty === null) {
       difficulty = AIDifficulty.MEDIUM;
