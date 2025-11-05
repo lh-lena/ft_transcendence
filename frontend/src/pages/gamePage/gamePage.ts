@@ -380,9 +380,7 @@ export class GamePage {
   // mount / unmount
   public async mount(parent: HTMLElement): Promise<void> {
     const inGame = await this.backend.getGameByUser();
-
-    console.log(`Mounting GamePage, got inGame ${inGame}`);
-
+    console.log("inGame", inGame);
     parent.appendChild(this.main);
   }
 

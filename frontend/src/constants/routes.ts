@@ -3,7 +3,7 @@ export const protectedRoutes = [
   "/chat",
   "/settings",
   "/local",
-  "/vs-player",
-  "/aiGamePage",
+  "/vs-player-game",
+  "/ai-game",
   // "/tournament-start",
 ];
