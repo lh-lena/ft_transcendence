@@ -358,7 +358,7 @@ export class GamePage {
       );
       this.menuEndDiv.appendChild(avatar.getElement());
       this.endResultText = document.createElement("h1");
-      this.endResultText.textContent = `${winningUser.username} wins`;
+      this.endResultText.textContent = `${winningUser.username} wins this round`;
       this.endResultText.className = "text-white text text-center";
       this.menuEndDiv.appendChild(this.endResultText);
       menuEnd.mount(this.menuEndDiv);
@@ -378,7 +378,9 @@ export class GamePage {
   }
 
   // mount / unmount
-  public mount(parent: HTMLElement): void {
+  public async mount(parent: HTMLElement): Promise<void> {
+    const inGame = await this.backend.getGameByUser();
+    console.log("inGame", inGame);
     parent.appendChild(this.main);
   }
 

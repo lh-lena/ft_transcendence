@@ -53,6 +53,7 @@ export interface GameDataService {
 
 export interface GameLoopService {
   startGameLoop: (game: GameSession) => void;
+  unregisterGame: (gameId: GameIdType) => void;
   stopGameLoop: (game: GameSession) => void;
   startCountdownSequence: (game: GameSession, infoMsg: string, count?: number) => void;
   stopCountdownSequence: (game: GameSession) => void;

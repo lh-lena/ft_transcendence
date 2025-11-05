@@ -193,7 +193,7 @@ export default function createGameStateService(app: FastifyInstance): GameStateS
       return false;
     }
     const gameLoopService = app.gameLoopService as GameLoopService;
-    gameLoopService.stopGameLoop(game);
+    gameLoopService.unregisterGame(game.gameId);
     updateGameToPaused(game);
     storePausedGameInfo(game, pausedByPlayerId);
     setAutoResume(game);
@@ -232,7 +232,7 @@ export default function createGameStateService(app: FastifyInstance): GameStateS
     const gameLoopService = app.gameLoopService as GameLoopService;
     gameLoopService.stopCountdownSequence(game);
     gameLoopService.stopGameLoop(game);
-    app.log.fatal(JSON.stringify(game));
+    app.log.fatal(JSON.stringify(game)); //rm
     updateGameToEnded(game, status);
     removePausedGameInfo(gameId);
     const result = createGameResult(game, status, leftPlayerId);
