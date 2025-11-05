@@ -60,8 +60,8 @@ export class MenuBar {
     this.router.navigate("/vs-player-game");
   }
 
-  private logoutFlow() {
-    this.backend.logout();
+  private async logoutFlow() {
+    await this.backend.logout(); // <- NEED to await this
     this.websocket.close();
     this.router.navigate("/");
   }

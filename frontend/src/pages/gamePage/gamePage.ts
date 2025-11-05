@@ -56,7 +56,7 @@ export class GamePage {
   private boundWsGamePauseHandler = this.wsGamePauseHandler.bind(this);
   private boundWsGameEndedHandler = this.wsGameEndedHandler.bind(this);
   private boundWsStartGameHandler = this.wsStartGameHandler.bind(this);
-  private boundWsGameReadyHandler = this.wsGameReadyHandler.bind(this);
+  public boundWsGameReadyHandler = this.wsGameReadyHandler.bind(this);
 
   constructor(serviceContainer: ServiceContainer) {
     console.log("GamePage instance created");
@@ -181,7 +181,36 @@ export class GamePage {
     _payload: WsServerBroadcast["notification"],
   ) {}
 
-  private async wsGameUpdateHandler(payload: WsServerBroadcast["game_update"]) {
+  public async wsGameUpdateHandler(payload: WsServerBroadcast["game_update"]) {
+    // set active paddle (side we are on) -> runs first time we get an update
+    // then set up the score bar knowing which side we are on
+    // then set up game knowing which side we are on
+    if (!this.gameState.activePaddle) {
+      this.gameState.activePaddle = payload.activePaddle;
+      if (this.gameState.activePaddle != "paddleA") {
+        [this.gameState.playerA, this.gameState.playerB] = [
+          this.gameState.playerB,
+          this.gameState.playerA,
+        ];
+      }
+
+      // here we create a new game -> should only run once on start
+      // initialize game component
+      this.game = new PongGame(
+        this.gameState,
+        () => this.gameStateCallback(),
+        "remote",
+      );
+
+      // initalize scoreBar component
+      this.scoreBar = new ScoreBar(
+        this.gameState,
+        () => this.gameStateCallback(),
+        () => this.ws.messageGamePause(this.gameId),
+        () => this.ws.messageGameResume(this.gameId),
+      );
+    }
+
     // any time we get a game update handler we need to show the game
     // console.log(payload);
 
@@ -193,17 +222,6 @@ export class GamePage {
 
     // make sure we are always showing the icon as a play icon
     this.scoreBar.pausePlay.toggleIsPlaying(true);
-
-    // set active paddle (side we are on) -> runs first time we get an update
-    if (!this.gameState.activePaddle) {
-      this.gameState.activePaddle = payload.activePaddle;
-      if (this.gameState.activePaddle != "paddleA") {
-        [this.gameState.playerA, this.gameState.playerB] = [
-          this.gameState.playerB,
-          this.gameState.playerA,
-        ];
-      }
-    }
 
     // always need to hide loading screen when we receive game update (if it exists in main)
     if (this.main.contains(this.loadingOverlay.getElement()))
@@ -240,13 +258,13 @@ export class GamePage {
     // AI is the only case where we use have null as a winner ID
     let winnerUser;
     console.log(payload);
-    if (payload.winnerId) {
+    if (payload.winnerId && !payload.winnerId.startsWith("AI")) {
       winnerUser = await this.backend.getUserById(payload.winnerId);
       winnerUser.username = winnerUser.alias
         ? winnerUser.alias
         : winnerUser.username;
       winnerUser.colormap = profilePrintToArray(winnerUser.colormap);
-    } else {
+    } else if (payload.winnerId?.startsWith("AI")) {
       // AI case
       winnerUser =
         this.gameState.playerA.username === "AI"
@@ -257,29 +275,14 @@ export class GamePage {
     this.showEndGameOverlay(winnerUser);
   }
 
-  public async wsGameReadyHandler() {
+  public async wsGameReadyHandler(payload: WsServerBroadcast["game_ready"]) {
+    console.log(payload);
     this.wsGameReady = true;
     console.log("Game ready!");
   }
 
   public async wsStartGameHandler(payload: WsServerBroadcast["game_start"]) {
     console.log(payload);
-
-    // here we create a new game -> should only run once on start
-    // initialize game component
-    this.game = new PongGame(
-      this.gameState,
-      () => this.gameStateCallback(),
-      "remote",
-    );
-
-    // initalize scoreBar component
-    this.scoreBar = new ScoreBar(
-      this.gameState,
-      () => this.gameStateCallback(),
-      () => this.ws.messageGamePause(this.gameId),
-      () => this.ws.messageGameResume(this.gameId),
-    );
   }
 
   // poll the web socket for being ready to start the game
@@ -369,22 +372,18 @@ export class GamePage {
     }
   }
 
+  public hideEndGameOverlay() {
+    if (this.gameContainer.contains(this.menuEndDiv))
+      this.gameContainer.removeChild(this.menuEndDiv);
+  }
+
   // mount / unmount
   public mount(parent: HTMLElement): void {
     parent.appendChild(this.main);
   }
 
-  public unmount() {
-    // cleanup in backend or websocket depending on game state
-    // cleanup during waiting screen
-    // game state is undefined if we havent initalized yet -> still in waiting screen
-    if (!this.gameState) {
-      this.backend.deleteGame(this.gameId);
-    } else if (this.gameState.status !== GameStatus.GAME_OVER) {
-      this.ws.messageGameLeave(this.gameId);
-    }
-
-    // Unregister WebSocket handlers (example, depends on your ws API)
+  protected cleanupWebsocket(): void {
+    // unregister WebSocket handlers (example, depends on your ws API)
     this.ws.offMessage("countdown_update", this.boundWsCountdownHandler);
     this.ws.offMessage("notification", this.boundWsNotificationHandler);
     this.ws.offMessage("game_update", this.boundWsGameUpdateHandler);
@@ -392,6 +391,22 @@ export class GamePage {
     this.ws.offMessage("game_ended", this.boundWsGameEndedHandler);
     this.ws.offMessage("game_start", this.boundWsStartGameHandler);
     this.ws.offMessage("game_ready", this.boundWsGameReadyHandler);
+  }
+
+  protected cleanupBackend(): void {
+    if (!this.gameState) {
+      this.backend.deleteGame(this.gameId);
+    } else if (this.gameState.status !== GameStatus.GAME_OVER) {
+      this.ws.messageGameLeave(this.gameId);
+    }
+  }
+
+  public unmount() {
+    // Cleanup backend (can be overridden by subclasses)
+    this.cleanupBackend();
+
+    // Cleanup WebSocket
+    this.cleanupWebsocket();
 
     // Remove DOM
     this.main.remove();
