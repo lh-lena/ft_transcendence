@@ -182,6 +182,35 @@ export class GamePage {
   ) {}
 
   public async wsGameUpdateHandler(payload: WsServerBroadcast["game_update"]) {
+    // set active paddle (side we are on) -> runs first time we get an update
+    // then set up the score bar knowing which side we are on
+    // then set up game knowing which side we are on
+    if (!this.gameState.activePaddle) {
+      this.gameState.activePaddle = payload.activePaddle;
+      if (this.gameState.activePaddle != "paddleA") {
+        [this.gameState.playerA, this.gameState.playerB] = [
+          this.gameState.playerB,
+          this.gameState.playerA,
+        ];
+      }
+
+      // here we create a new game -> should only run once on start
+      // initialize game component
+      this.game = new PongGame(
+        this.gameState,
+        () => this.gameStateCallback(),
+        "remote",
+      );
+
+      // initalize scoreBar component
+      this.scoreBar = new ScoreBar(
+        this.gameState,
+        () => this.gameStateCallback(),
+        () => this.ws.messageGamePause(this.gameId),
+        () => this.ws.messageGameResume(this.gameId),
+      );
+    }
+
     // any time we get a game update handler we need to show the game
     // console.log(payload);
 
@@ -193,17 +222,6 @@ export class GamePage {
 
     // make sure we are always showing the icon as a play icon
     this.scoreBar.pausePlay.toggleIsPlaying(true);
-
-    // set active paddle (side we are on) -> runs first time we get an update
-    if (!this.gameState.activePaddle) {
-      this.gameState.activePaddle = payload.activePaddle;
-      if (this.gameState.activePaddle != "paddleA") {
-        [this.gameState.playerA, this.gameState.playerB] = [
-          this.gameState.playerB,
-          this.gameState.playerA,
-        ];
-      }
-    }
 
     // always need to hide loading screen when we receive game update (if it exists in main)
     if (this.main.contains(this.loadingOverlay.getElement()))
@@ -265,22 +283,6 @@ export class GamePage {
 
   public async wsStartGameHandler(payload: WsServerBroadcast["game_start"]) {
     console.log(payload);
-
-    // here we create a new game -> should only run once on start
-    // initialize game component
-    this.game = new PongGame(
-      this.gameState,
-      () => this.gameStateCallback(),
-      "remote",
-    );
-
-    // initalize scoreBar component
-    this.scoreBar = new ScoreBar(
-      this.gameState,
-      () => this.gameStateCallback(),
-      () => this.ws.messageGamePause(this.gameId),
-      () => this.ws.messageGameResume(this.gameId),
-    );
   }
 
   // poll the web socket for being ready to start the game
