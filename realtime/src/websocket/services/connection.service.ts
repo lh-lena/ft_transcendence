@@ -2,7 +2,7 @@ import { WebSocket } from 'ws';
 import type { FastifyInstance, WSConnection } from 'fastify';
 import type { EnvironmentConfig } from '../../config/config.js';
 import type { RespondService, ConnectionService } from '../types/ws.types.js';
-import type { GameSessionService } from '../../game/types/game.types.js';
+import type { GameSessionService, GameStateService } from '../../game/types/game.types.js';
 import createConnectionRegistry from './connection.registry.js';
 import createReconnectionService from './reconnection.service.js';
 import createHeartbeatService from './heartbeat.service.js';
@@ -12,6 +12,7 @@ import { WSStatusCode } from '../../constants/status.constants.js';
 import { processErrorLog, processDebugLog } from '../../utils/error.handler.js';
 import type { UserIdType, GameIdType } from '../../schemas/index.js';
 import { metricsService } from '../../metrics/metrics.service.js';
+import createGameValidator from '../../game/utils/game.validation.js';
 
 export default function createConnectionService(app: FastifyInstance): ConnectionService {
   const { log } = app;
@@ -26,6 +27,7 @@ export default function createConnectionService(app: FastifyInstance): Connectio
   );
   const HEARTBEAT_INTERVAL = config.websocket.heartbeatInterval;
   const MAX_CONNECTIONS = config.websocket.maxConnections;
+  const validator = createGameValidator(app);
 
   function handleHeartbeatTimeout(userId: UserIdType): void {
     log.info(`[connection-service] Handling heartbeat timeout for client ${userId}`);
@@ -168,6 +170,18 @@ export default function createConnectionService(app: FastifyInstance): Connectio
     );
 
     log.info(`[connection-service] User ${userId} reconnected to game ${gameId}`);
+    try {
+      const gameStateService = app.gameStateService as GameStateService;
+      const gameSession = validator.getValidGameCheckPlayer(gameId, userId);
+      gameStateService.resumeGame(gameSession);
+    } catch (error: unknown) {
+      processDebugLog(
+        app,
+        'connection-service',
+        `Failed to resume game ${gameId} for user ${userId}: `,
+        error,
+      );
+    }
   }
 
   function getConnection(userId: UserIdType): WSConnection | undefined {
