@@ -9,7 +9,7 @@ export const configSchema = z.object({
   WS_CONNECTION_TIMEOUT: z.coerce.number().int().positive().default(60_000),
   WS_HEARTBEAT_INTERVAL: z.coerce.number().int().positive().default(30_000),
   WS_PAUSE_TIMEOUT: z.coerce.number().int().positive().default(60_000),
-  WS_MAX_CONNECTIONS: z.coerce.number().int().positive().default(100),
+  WS_MAX_CONNECTIONS: z.coerce.number().int().positive().default(1000),
 
   BACKEND_URL: z.string(),
   AUTH_URL: z.string(),

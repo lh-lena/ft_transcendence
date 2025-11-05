@@ -9,7 +9,6 @@ export const PaddleNameSchema = z.enum(PaddleName);
 
 export const PlayerSchema = UserSchema.extend({
   sequence: z.number().default(0).optional(),
-  // isAI: z.boolean().optional().default(false),
   aiDifficulty: z.enum(AIDifficulty).optional(),
   paddle: PaddleNameSchema.optional(),
 });
@@ -86,7 +85,7 @@ export const GameSessionSchema = z.object({
   gameId: GameIdSchema,
   mode: z.enum(GameMode),
   players: z.array(PlayerSchema),
-  // isConnected: z.map(UserIdSchema, z.boolean()), // rm
+  isConnected: z.map(UserIdSchema, z.boolean()),
   playersReady: z.array(UserIdSchema),
   status: z.enum(GameSessionStatus),
   startedAt: z.string().optional(),

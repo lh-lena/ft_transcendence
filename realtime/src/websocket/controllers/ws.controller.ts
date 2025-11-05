@@ -7,8 +7,7 @@ import { WSStatusCode } from '../../constants/status.constants.js';
 import { NETWORK_QUALITY } from '../../constants/network.constants.js';
 import { getRemoteAddress } from '../../utils/common.utils.js';
 import { processDebugLog, handleWebSocketError } from '../../utils/error.handler.js';
-import type { WsClientMessage } from '../../schemas/ws.schema.js';
-import { WsClientMessageSchema } from '../../schemas/ws.schema.js';
+import { type WsClientMessage, WsClientMessageSchema } from '../../schemas/ws.schema.js';
 
 export const handleWSConnection = (
   connection: WebSocket,

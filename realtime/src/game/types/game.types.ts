@@ -40,7 +40,7 @@ export interface GameSessionService {
   storeGameSession: (game: GameSession) => void;
   updateGameSession: (gameId: GameIdType, updates: Partial<GameSession>) => boolean;
   removeGameSession: (gameId: GameIdType) => void;
-  // setPlayerConnectionStatus: (userId: UserIdType, gameId: GameIdType, connected: boolean) => void; // rm
+  setPlayerConnectionStatus: (userId: UserIdType, gameId: GameIdType, connected: boolean) => void;
   setPlayerReadyStatus: (userId: UserIdType, gameId: GameIdType, ready: boolean) => void;
   shutdown: () => Promise<void>;
 }

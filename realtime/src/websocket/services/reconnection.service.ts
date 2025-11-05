@@ -37,6 +37,7 @@ export default function createReconnectionService(app: FastifyInstance): Reconne
     const gameStateService = app.gameStateService as GameStateService;
     setPlayerDisconnectInfo(userId, userAlias ?? '', gameId);
     gameSessionService.setPlayerReadyStatus(userId, gameId, false);
+    gameSessionService.setPlayerConnectionStatus(userId, gameId, false);
     respond.notificationToGame(
       gameId,
       NotificationType.WARN,

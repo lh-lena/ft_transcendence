@@ -70,13 +70,13 @@ export default function createGameService(app: FastifyInstance): GameService {
 
   function syncUserConnectionStatus(players: Player[], gameId: GameIdType): void {
     const connectionService = app.connectionService as ConnectionService;
-    // const gameSessionService = app.gameSessionService as GameSessionService;
+    const gameSessionService = app.gameSessionService as GameSessionService;
 
     for (const player of players) {
       if (player.isAI) continue;
       const connection = connectionService.getConnection(player.userId);
       if (connection === undefined) continue;
-      // gameSessionService.setPlayerConnectionStatus(player.userId, gameId, true);
+      gameSessionService.setPlayerConnectionStatus(player.userId, gameId, true);
       connectionService.updateUserGame(player.userId, gameId);
     }
   }
@@ -103,6 +103,7 @@ export default function createGameService(app: FastifyInstance): GameService {
     const { gameId } = payload;
     const gameSessionService = app.gameSessionService as GameSessionService;
     gameSessionService.setPlayerReadyStatus(user.userId, gameId, true);
+    gameSessionService.setPlayerConnectionStatus(user.userId, gameId, true);
     const gameSession = gameSessionService.getGameSession(gameId) as GameSession;
     const gameStateService = app.gameStateService as GameStateService;
     if (gameSession.status === GameSessionStatus.PENDING) {

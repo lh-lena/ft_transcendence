@@ -32,8 +32,8 @@ const docsPlugin: FastifyPluginCallback = async (app: FastifyInstance) => {
         },
       ],
       servers: [
-        { url: 'ws://localhost:8081', description: 'WebSocket Server' },
-        { url: 'http://localhost:8081', description: 'REST API Server' },
+        { url: 'ws://localhost:<WS_PORT>', description: 'WebSocket Server' },
+        { url: 'http://localhost:<WS_PORT>', description: 'REST API Server' },
       ],
       components: {
         schemas: {
