@@ -153,6 +153,7 @@ export default function createConnectionService(app: FastifyInstance): Connectio
     const { gameId } = disconnectInfo as { gameId: GameIdType };
     updateUserGame(userId, gameId);
     gameSessionService.setPlayerConnectionStatus(userId, gameId, true);
+    gameSessionService.setPlayerReadyStatus(userId, gameId, true); //added
 
     const respond = app.respond as RespondService;
     respond.connected(userId);
