@@ -222,6 +222,8 @@ export class TournamentGamePage extends GamePage {
         player.alias = user.alias;
         player.color = user.color;
         player.colormap = profilePrintToArray(user.colormap);
+        player.avatar = user.avatar;
+        player.userId = user.userId;
       }),
     );
 
@@ -246,6 +248,8 @@ export class TournamentGamePage extends GamePage {
           tournamentData.players[i].alias!,
           tournamentData.players[i].color!,
           tournamentData.players[i].colormap!,
+          tournamentData.players[i].avatar!,
+          tournamentData.players[i].userId!,
         );
         gameRow.appendChild(playerDiv);
       }
@@ -260,6 +264,8 @@ export class TournamentGamePage extends GamePage {
           tournamentData.players[i + 1].alias!,
           tournamentData.players[i + 1].color!,
           tournamentData.players[i + 1].colormap!,
+          tournamentData.players[i + 1].avatar!,
+          tournamentData.players[i + 1].userId!,
         );
         gameRow.appendChild(playerDiv);
       }
@@ -286,6 +292,8 @@ export class TournamentGamePage extends GamePage {
     alias: string,
     color: string,
     colormap: string[],
+    avatar: string | undefined,
+    userId: string,
   ): HTMLDivElement {
     const contact = document.createElement("div");
     contact.className =
@@ -298,7 +306,8 @@ export class TournamentGamePage extends GamePage {
       30,
       30,
       2,
-      // TODO need to allow pics to used here too
+      avatar ? "image" : undefined,
+      userId,
     ).getElement();
     contact.appendChild(contactAvatar);
     contact.appendChild(contactName);

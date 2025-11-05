@@ -358,7 +358,7 @@ export class GamePage {
       );
       this.menuEndDiv.appendChild(avatar.getElement());
       this.endResultText = document.createElement("h1");
-      this.endResultText.textContent = `${winningUser.username} wins`;
+      this.endResultText.textContent = `${winningUser.username} wins this round`;
       this.endResultText.className = "text-white text text-center";
       this.menuEndDiv.appendChild(this.endResultText);
       menuEnd.mount(this.menuEndDiv);
