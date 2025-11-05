@@ -12,6 +12,8 @@ import crudRoutes from '../../utils/crudRoutes';
 
 import type { gameCreateType, gameJoinType, gameIdType } from '../../schemas/game';
 
+import type { userIdType } from '../../schemas/user';
+
 /**
  * Game Routes Plugin
  *
@@ -44,6 +46,27 @@ const gameRoutes = async (server: FastifyInstance) => {
     handler: async (request: FastifyRequest, reply: FastifyReply) => {
       const body = request.body as gameJoinType;
       const result = await server.services.game.join(body);
+
+      return reply.code(200).send(result);
+    },
+  });
+
+  server.get('/user/:userId', {
+    schema: {
+      summary: 'get games by userId',
+      description: 'Get Game the user is joined in',
+      tags: ['game'],
+      params: { $ref: 'userId' },
+      response: {
+        200: { $ref: 'gameResponse' },
+        400: { $ref: 'BadRequest' },
+        404: { $ref: 'NotFound' },
+        500: { $ref: 'InternalError' },
+      },
+    },
+    handler: async (request: FastifyRequest, reply: FastifyReply) => {
+      const params = request.params as userIdType;
+      const result = await server.services.game.getByUser(params);
 
       return reply.code(200).send(result);
     },

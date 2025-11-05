@@ -154,6 +154,12 @@ export const createGameService = (server: FastifyInstance) => {
       }
     },
 
+    async getByUser(userId: userIdType): Promise<gameType | undefined> {
+      const game = await gameManager.getByUser(userId);
+
+      return game;
+    },
+
     /**
      * Get game manager instance
      *

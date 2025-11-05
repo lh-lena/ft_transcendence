@@ -36,6 +36,10 @@ const gameRoutes = async (server: FastifyInstance) => {
     return server.routeHandler(req, reply, gameRoutesConfig.getGame, server);
   });
 
+  server.get('/game/user/:userId', async (req: FastifyRequest, reply: FastifyReply) => {
+    return server.routeHandler(req, reply, gameRoutesConfig.getGameByUser, server);
+  });
+
   /**
    * POST /api/game
    * Creates a new game lobby

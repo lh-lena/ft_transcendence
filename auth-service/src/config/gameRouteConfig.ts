@@ -5,6 +5,9 @@ import { gameIdSchema, gamePostSchema, gameJoinSchema, gameResponseSchema } from
 
 import type { GameType, GameIdType, GamePostType, GameJoinType } from '../schemas/game';
 
+import { userIdSchema } from '../schemas/user';
+import type { UserIdType } from '../schemas/user';
+
 /**
  * Game Route Configuration
  * Manages game lobbies and matchmaking
@@ -25,6 +28,16 @@ export const gameRoutesConfig = {
     successCode: 200,
     errorMessages: {
       invalidParams: 'Invalid game ID',
+    },
+  },
+
+  getGameByUser: {
+    method: 'get' as const,
+    url: (params: UserIdType) => `/game/user/${params.userId}`,
+    paramsSchema: userIdSchema,
+    successCode: 200,
+    errorMessages: {
+      invalidParams: 'Invalid user ID',
     },
   },
 
