@@ -41,7 +41,7 @@ export default function createReconnectionService(app: FastifyInstance): Reconne
     respond.notificationToGame(
       gameId,
       NotificationType.WARN,
-      `${userAlias} disconnected. Waiting for reconnection...`,
+      `${userAlias} disconnected. Waiting for reconnection ${config.websocket.connectionTimeout / 1000}s...`,
       [userId],
     );
     setReconnectionTimer(userId, gameId);
