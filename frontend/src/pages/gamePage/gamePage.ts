@@ -240,13 +240,13 @@ export class GamePage {
     // AI is the only case where we use have null as a winner ID
     let winnerUser;
     console.log(payload);
-    if (payload.winnerId) {
+    if (payload.winnerId && !payload.winnerId.startsWith("AI")) {
       winnerUser = await this.backend.getUserById(payload.winnerId);
       winnerUser.username = winnerUser.alias
         ? winnerUser.alias
         : winnerUser.username;
       winnerUser.colormap = profilePrintToArray(winnerUser.colormap);
-    } else {
+    } else if (payload.winnerId?.startsWith("AI")) {
       // AI case
       winnerUser =
         this.gameState.playerA.username === "AI"
@@ -380,17 +380,8 @@ export class GamePage {
     parent.appendChild(this.main);
   }
 
-  public unmount() {
-    // cleanup in backend or websocket depending on game state
-    // cleanup during waiting screen
-    // game state is undefined if we havent initalized yet -> still in waiting screen
-    if (!this.gameState) {
-      this.backend.deleteGame(this.gameId);
-    } else if (this.gameState.status !== GameStatus.GAME_OVER) {
-      this.ws.messageGameLeave(this.gameId);
-    }
-
-    // Unregister WebSocket handlers (example, depends on your ws API)
+  protected cleanupWebsocket(): void {
+    // unregister WebSocket handlers (example, depends on your ws API)
     this.ws.offMessage("countdown_update", this.boundWsCountdownHandler);
     this.ws.offMessage("notification", this.boundWsNotificationHandler);
     this.ws.offMessage("game_update", this.boundWsGameUpdateHandler);
@@ -398,6 +389,22 @@ export class GamePage {
     this.ws.offMessage("game_ended", this.boundWsGameEndedHandler);
     this.ws.offMessage("game_start", this.boundWsStartGameHandler);
     this.ws.offMessage("game_ready", this.boundWsGameReadyHandler);
+  }
+
+  protected cleanupBackend(): void {
+    if (!this.gameState) {
+      this.backend.deleteGame(this.gameId);
+    } else if (this.gameState.status !== GameStatus.GAME_OVER) {
+      this.ws.messageGameLeave(this.gameId);
+    }
+  }
+
+  public unmount() {
+    // Cleanup backend (can be overridden by subclasses)
+    this.cleanupBackend();
+
+    // Cleanup WebSocket
+    this.cleanupWebsocket();
 
     // Remove DOM
     this.main.remove();

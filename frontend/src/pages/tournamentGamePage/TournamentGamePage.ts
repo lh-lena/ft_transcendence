@@ -304,4 +304,13 @@ export class TournamentGamePage extends GamePage {
     contact.appendChild(contactName);
     return contact;
   }
+
+  // custom cleanup backend in tournament page for leaving a tournament
+  protected cleanupBackend(): void {
+    if (!this.gameState) {
+      this.backend.leaveTournament();
+    } else if (this.gameState.status !== GameStatus.GAME_OVER) {
+      this.ws.messageGameLeave(this.gameId);
+    }
+  }
 }
