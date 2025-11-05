@@ -108,11 +108,7 @@ export class App {
 
     // handle ChatPage's async initialization
     // else create new page
-    if (PageClass === ChatPage) {
-      this.currentPage = await ChatPage.create(this.serviceContainer);
-    } else {
-      this.currentPage = new PageClass(this.serviceContainer);
-    }
+    this.currentPage = new PageClass(this.serviceContainer);
 
     this.currentPage.mount(this.container);
   }
