@@ -122,8 +122,8 @@ export class SettingsPage {
     this.main.appendChild(this.window.getElement());
   }
 
-  private deleteAccount() {
-    this.backend.deleteAcc();
+  private async deleteAccount() {
+    await this.backend.deleteAcc();
     this.router.navigate("/");
   }
 
