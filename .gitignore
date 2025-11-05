@@ -124,7 +124,7 @@ dist
 .dynamodb/
 
 database.sqlite
-backend/public/*
+backend/public/avatars/*
 
 # TernJS port file
 .tern-port
