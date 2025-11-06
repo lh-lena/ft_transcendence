@@ -17,7 +17,7 @@ import { GameStatus, GameState, User } from "../../types";
 
 // functions
 import { profilePrintToArray } from "../../utils/profilePrintFunctions";
-import { showError, showInfo } from "../../components/toast";
+import { showError } from "../../components/toast";
 
 // IMPORTANT TO REMEMBER
 // we receive gameID from game_update when ws also sends game ready

@@ -272,7 +272,7 @@ export class GamePage {
 
   public async wsGameEndedHandler(payload: WsServerBroadcast["game_ended"]) {
     this.gameState.status = GameStatus.GAME_OVER;
-    console.log(payload);
+    console.log("game end payload", payload);
 
     // old logic from remote game -> would handle individually in each page type but i think makes sense act to keep it here
     // AI is the only case where we use have null as a winner ID
