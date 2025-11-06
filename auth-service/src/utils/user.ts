@@ -1,7 +1,6 @@
 import { FastifyInstance } from 'fastify';
 import * as User from '../schemas/user';
 import { AxiosRequestConfig } from 'axios';
-import { NormalizedError } from '../schemas/basics';
 
 /**
  * User Actions Utilities
@@ -35,7 +34,6 @@ export const userActions = (server: FastifyInstance) => ({
    * });
    */
   async post(newUser: User.UserType): Promise<User.UserType> {
-    //    try {
     const config: AxiosRequestConfig = {
       method: 'POST',
       url: '/user',
@@ -60,17 +58,6 @@ export const userActions = (server: FastifyInstance) => ({
     );
 
     return user;
-    //   } catch (error) {
-    //     server.log.error(
-    //       {
-    //         username: newUser.username,
-    //         error,
-    //       },
-    //       'Failed to create user',
-    //     );
-
-    //     const throwError = error as NormalizedError;
-    //   },
   },
 
   /**
@@ -84,22 +71,16 @@ export const userActions = (server: FastifyInstance) => ({
    * const user = await fastify.user.getById('123e4567-e89b-12d3-a456-426614174000');
    */
   async getById(userId: string): Promise<User.UserType> {
-    try {
-      const config: AxiosRequestConfig = {
-        method: 'GET',
-        url: `/user/${userId}`,
-      };
+    const config: AxiosRequestConfig = {
+      method: 'GET',
+      url: `/user/${userId}`,
+    };
 
-      server.log.debug({ userId }, 'Fetching user by ID');
+    server.log.debug({ userId }, 'Fetching user by ID');
 
-      const user: User.UserType = await server.api(config);
+    const user: User.UserType = await server.api(config);
 
-      return user;
-    } catch (error) {
-      server.log.error({ userId, error }, 'Failed to fetch user by ID');
-
-      throw new Error(`User not found: ${userId}`);
-    }
+    return user;
   },
 
   /**

@@ -27,7 +27,7 @@ export class TournamentGamePage extends GamePage {
   // game mode specific data
   private alias!: string;
   private tournamentId!: string;
-  private isGuest: boolean;
+  private isGuest: boolean = true;
 
   // dom (UI) elements
   private form!: HTMLElement;
@@ -148,6 +148,9 @@ export class TournamentGamePage extends GamePage {
     if (this.isGuest) {
       const response = await this.backend.registerGuest(this.alias);
       console.log("alias guest: ", response);
+    } else {
+      // patch alias for registered user
+      await this.backend.patchAlias(this.alias);
     }
 
     this.initializeTournament();
@@ -156,9 +159,7 @@ export class TournamentGamePage extends GamePage {
   public async initializeTournament(): Promise<void> {
     // two diff kinds of calls for join tournament depending on user type
     // for registered we need to still patch the alias so extra arg
-    const response = this.isGuest
-      ? await this.backend.joinTournament(this.alias)
-      : await this.backend.joinTournament(this.alias, "registered");
+    const response = await this.backend.joinTournament();
     this.tournamentId = response.data.tournamentId;
     console.log(this.tournamentId);
     // Axios responses contain the server payload under `data`
