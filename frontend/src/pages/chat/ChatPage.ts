@@ -65,16 +65,12 @@ export class ChatPage {
     this.router = this.serviceContainer.get<Router>("router");
   }
 
-  public static async create(
-    serviceContainer: ServiceContainer,
-  ): Promise<ChatPage> {
-    const instance = new ChatPage(serviceContainer);
-
+  public async fetchBackend() {
     // handle async operations
 
     // all users fetch
-    instance.allUserData = (await instance.backend.fetchAllUsers()).data;
-    for (const element of instance.allUserData) {
+    this.allUserData = (await this.backend.fetchAllUsers()).data;
+    for (const element of this.allUserData) {
       element.colormap =
         typeof element.colormap === "string"
           ? profilePrintToArray(element.colormap)
@@ -82,27 +78,26 @@ export class ChatPage {
     }
     // leaderboard fetch
     const initLeaderboardData: Leaderboard =
-      await instance.backend.getLeaderboard();
+      await this.backend.getLeaderboard();
     for (const element of initLeaderboardData) {
-      const userResponse = await instance.backend.fetchUserById(element.userId);
+      const userResponse = await this.backend.fetchUserById(element.userId);
       element.username = userResponse.data.username;
       element.colormap = profilePrintToArray(userResponse.data.colormap);
       element.color = userResponse.data.color;
       element.avatar = userResponse.data.avatar;
     }
-    instance.leaderboardData = initLeaderboardData;
+    this.leaderboardData = initLeaderboardData;
     // fetch match results data
-    instance.matchHistoryData = await instance.backend.getMatchHistory(
-      instance.backend.getUser().userId,
+    this.matchHistoryData = await this.backend.getMatchHistory(
+      this.backend.getUser().userId,
     );
 
     // friends fetch
-    const initFriendsList: FriendsList =
-      await instance.backend.fetchFriendsById(
-        instance.backend.getUser().userId,
-      );
+    const initFriendsList: FriendsList = await this.backend.fetchFriendsById(
+      this.backend.getUser().userId,
+    );
     for (const element of initFriendsList) {
-      const userResponse = await instance.backend.fetchUserById(
+      const userResponse = await this.backend.fetchUserById(
         element.friendUserId,
       );
       element.username = userResponse.data.username;
@@ -111,21 +106,19 @@ export class ChatPage {
       element.avatar = userResponse.data.avatar;
       element.online = userResponse.data.online;
     }
-    instance.friendsList = initFriendsList;
+    this.friendsList = initFriendsList;
     // blocked list fetch
-    instance.blockedList = await instance.backend.getBlockedListById(
-      instance.backend.getUser().userId,
+    this.blockedList = await this.backend.getBlockedListById(
+      this.backend.getUser().userId,
     );
 
     // // register WebSocket handlers after connection is established
-    instance.websocket.onMessage("chat_message", (payload) => {
-      instance.handleChatIncomingMessage(payload);
+    this.websocket.onMessage("chat_message", (payload: any) => {
+      this.handleChatIncomingMessage(payload);
     });
 
     // Complete the UI setup
-    instance.setupUI();
-
-    return instance;
+    this.setupUI();
   }
 
   private async setupUI() {
@@ -927,7 +920,8 @@ export class ChatPage {
 
   // standard mount unmount:
 
-  public mount(parent: HTMLElement): void {
+  public async mount(parent: HTMLElement) {
+    await this.fetchBackend();
     parent.appendChild(this.container);
   }
 
