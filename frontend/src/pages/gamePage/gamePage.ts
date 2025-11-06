@@ -345,7 +345,8 @@ export class GamePage {
     }
   }
 
-  private async showEndGameOverlay(winningUser: User) {
+  public async showEndGameOverlay(winningUser: User) {
+    // style can be "tournament" or nothing
     this.game?.hideGamePieces();
     this.scoreBar.clear();
     if (this.gameContainer && !this.menuPauseDiv) {

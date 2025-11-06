@@ -5,7 +5,7 @@ import { ServiceContainer } from "../../services";
 import { GamePage } from "../gamePage";
 
 // components
-import { Menu } from "../../components/menu";
+import { Menu, MenuItem } from "../../components/menu";
 import { ProfileAvatar } from "../../components/profileAvatar";
 
 // web socket import for notitification handler
@@ -13,7 +13,7 @@ import { WsServerBroadcast } from "../../types/websocket";
 
 // types
 import { TournamentData } from "../../types/tournament";
-import { GameStatus, GameState } from "../../types";
+import { GameStatus, GameState, User } from "../../types";
 
 // functions
 import { profilePrintToArray } from "../../utils/profilePrintFunctions";
@@ -288,12 +288,53 @@ export class TournamentGamePage extends GamePage {
       this.main.removeChild(this.tournamentStatsDiv);
   }
 
-  public async wsGameEndedHandler(
-    payload: WsServerBroadcast["game_ended"],
-  ): Promise<void> {
-    super.wsGameEndedHandler(payload);
-    const response = await this.backend.getTournamentById(this.tournamentId);
-    console.log("tournament end data: ", response);
+  // need to rewrite this here because it is referinging a custom function here in tournament page
+  public async showEndGameOverlay(winningUser: User): Promise<void> {
+    console.log("this end game overlay");
+    this.game?.hideGamePieces();
+    this.scoreBar.clear();
+    if (this.gameContainer && !this.menuPauseDiv) {
+      this.menuEndDiv = document.createElement("div");
+      this.menuEndDiv.className = "flex flex-col gap-5 items-center";
+      // Create and mount menu to game container instead of main element
+      let menuItems: MenuItem[] = [{ name: "back", link: "/chat" }];
+      if (winningUser.userId === this.backend.getUser().userId)
+        menuItems = [
+          { name: "next round", onClick: () => this.nextRoundHandler() },
+        ];
+      console.log(
+        "this end: ",
+        winningUser.userId,
+        this.backend.getUser().userId,
+      );
+      const menuEnd = new Menu(this.router, menuItems);
+      let avatar = new ProfileAvatar(
+        winningUser.color,
+        winningUser.colormap,
+        40,
+        40,
+        2,
+      );
+      this.menuEndDiv.appendChild(avatar.getElement());
+      this.endResultText = document.createElement("h1");
+      this.endResultText.textContent = `${winningUser.username} wins`;
+      this.endResultText.className = "text-white text text-center";
+      this.menuEndDiv.appendChild(this.endResultText);
+      menuEnd.mount(this.menuEndDiv);
+      this.gameContainer.appendChild(this.menuEndDiv);
+      // Add overlay styling to menu element
+      this.menuEndDiv.style.position = "absolute";
+      this.menuEndDiv.style.top = "50%";
+      this.menuEndDiv.style.left = "50%";
+      this.menuEndDiv.style.transform = "translate(-50%, -50%)";
+      this.menuEndDiv.style.zIndex = "1000";
+    }
+  }
+
+  private nextRoundHandler() {
+    this.hideGame();
+    this.showLoadingOverlay("waiting");
+    this.scoreBar.unmount();
   }
 
   // created a player div for bracket to use
