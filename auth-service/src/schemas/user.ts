@@ -62,7 +62,8 @@ export const userRegisterSchema = userSchema
     colormap: true,
   })
   .extend({
-    password: z.string().min(8),
+    password: z.string().min(8).max(32),
+    username: z.string().min(1).max(6),
   });
 
 export const userPostSchema = userSchema.pick({

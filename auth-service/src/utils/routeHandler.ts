@@ -288,7 +288,7 @@ export async function routeHandler<
       if (!userId) {
         server.log.warn({ requestId, url: req.url }, 'Ownership check failed: no user ID');
         return reply.status(401).send({
-          message: 'Authentication required',
+          message: 'AUTHENTICATION_FAILED',
         });
       }
 

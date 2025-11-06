@@ -35,43 +35,42 @@ export const userActions = (server: FastifyInstance) => ({
    * });
    */
   async post(newUser: User.UserType): Promise<User.UserType> {
-    try {
-      const config: AxiosRequestConfig = {
-        method: 'POST',
-        url: '/user',
-        data: newUser,
-      };
+    //    try {
+    const config: AxiosRequestConfig = {
+      method: 'POST',
+      url: '/user',
+      data: newUser,
+    };
 
-      server.log.info(
-        {
-          username: newUser.username,
-        },
-        'Creating new user',
-      );
+    server.log.info(
+      {
+        username: newUser.username,
+      },
+      'Creating new user',
+    );
 
-      const user: User.UserType = await server.api(config);
+    const user: User.UserType = await server.api(config);
 
-      server.log.info(
-        {
-          userId: user.userId,
-          username: user.username,
-        },
-        'User created successfully',
-      );
+    server.log.info(
+      {
+        userId: user.userId,
+        username: user.username,
+      },
+      'User created successfully',
+    );
 
-      return user;
-    } catch (error) {
-      server.log.error(
-        {
-          username: newUser.username,
-          error,
-        },
-        'Failed to create user',
-      );
+    return user;
+    //   } catch (error) {
+    //     server.log.error(
+    //       {
+    //         username: newUser.username,
+    //         error,
+    //       },
+    //       'Failed to create user',
+    //     );
 
-      const throwError = error as NormalizedError;
-      throw throwError;
-    }
+    //     const throwError = error as NormalizedError;
+    //   },
   },
 
   /**

@@ -29,7 +29,7 @@ export const tfaRoutesConfig = {
 
       if (await isBlacklistedToken(refreshToken)) {
         server.log.warn({ token: refreshToken }, 'Attempted use of blacklisted refresh token');
-        return reply.status(401).send({ message: 'Refresh token has been revoked' });
+        return reply.status(401).send({ message: 'TOKEN_REVOKED' });
       }
 
       try {
@@ -46,7 +46,7 @@ export const tfaRoutesConfig = {
         });
       } catch (error) {
         server.log.warn({ error }, 'Refresh token verification failed');
-        return reply.status(401).send({ message: 'Invalid or expired refresh token' });
+        return reply.status(401).send({ message: 'TOKEN_INAVLID_OR_EXPIRED' });
       }
     },
     skipApiCall: true,
