@@ -143,4 +143,4 @@ backend/public/avatars/*
 **/.DS_Store
 
 # database
-data/
+data/database.sqlite
