@@ -12,7 +12,7 @@ import { User } from "../../types";
 // services
 import { Backend, Router, ServiceContainer, Websocket } from "../../services";
 import { PongGame } from "../../game";
-import { showError, showInfo } from "../../components/toast";
+import { showInfo } from "../../components/toast";
 
 // functions
 import { profilePrintToArray } from "../../utils/profilePrintFunctions";
