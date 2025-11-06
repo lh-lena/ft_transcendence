@@ -5,7 +5,7 @@ import { GamePage } from "../gamePage";
 import { ServiceContainer } from "../../services";
 
 // types
-import { GameStatus, GameState } from "../../types";
+import { GameStatus } from "../../types";
 
 // functions
 import { profilePrintToArray } from "../../utils/profilePrintFunctions";
@@ -28,7 +28,7 @@ export class VsPlayerGamePage extends GamePage {
     }
   }
 
-  public async intializeGameState(): Promise<GameState> {
+  public async intializeGameState(): Promise<void> {
     // get game data from backend
     const response = await this.backend.getGameById(this.gameId);
     const gameData = response.data;
@@ -67,6 +67,5 @@ export class VsPlayerGamePage extends GamePage {
     // needs to be at very end
     // need to let the ws know we are ready to start playing
     this.ws.messageClientReady(this.gameId);
-    return this.gameState;
   }
 }

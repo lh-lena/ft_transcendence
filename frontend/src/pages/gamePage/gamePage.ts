@@ -48,6 +48,7 @@ export class GamePage {
   // web socket config
   // set once we recieve gameReady from ws
   protected wsGameReady: boolean = false;
+  private gameRuns: boolean = true;
 
   // web socket handlers
   private boundWsCountdownHandler = this.wsCountdownHandler.bind(this);
@@ -167,6 +168,15 @@ export class GamePage {
   public async wsCountdownHandler(
     payload: WsServerBroadcast["countdown_update"],
   ) {
+    if (!this.gameState) {
+      showInfo("Game ended due to page refresh");
+      this.gameRuns = false;
+      this.unmount();
+    }
+    if (this.gameRuns === false) {
+      return;
+    }
+
     if (payload.countdown) {
       // any time we see a countdown payload we change loading text to show it
       this.loadingOverlay.changeText(payload.countdown.toString());
@@ -184,7 +194,11 @@ export class GamePage {
   public async wsGameUpdateHandler(payload: WsServerBroadcast["game_update"]) {
     if (!this.gameState) {
       showInfo("Game ended due to page refresh");
+      this.gameRuns = false;
       this.unmount();
+    }
+    if (this.gameRuns === false) {
+      return;
     }
 
     // set active paddle (side we are on) -> runs first time we get an update
@@ -400,15 +414,20 @@ export class GamePage {
   }
 
   protected cleanupBackendorWebsocket(): void {
-    if (!this.gameState) {
+    if (!this.gameState && this.gameRuns === true) {
       this.backend.deleteGame(this.gameId);
-    } else if (this.gameState.status !== GameStatus.GAME_OVER) {
+    } else if (
+      this.gameState &&
+      this.gameState.status !== GameStatus.GAME_OVER
+    ) {
       this.ws.messageGameLeave(this.gameId);
     }
   }
 
   public unmount() {
     this.ws.messageGameLeave(this.gameId);
+    this.ws.close();
+
     // Cleanup backend (can be overridden by subclasses)
     this.cleanupBackendorWebsocket();
 
@@ -417,5 +436,6 @@ export class GamePage {
 
     // Remove DOM
     this.main.remove();
+    this.router.navigate("/chat");
   }
 }

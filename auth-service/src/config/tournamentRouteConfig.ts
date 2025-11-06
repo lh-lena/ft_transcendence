@@ -51,7 +51,7 @@ export const tournamentRoutesConfig = {
    * @returns 200 - Successfully left tournament
    */
   leaveTournament: {
-    method: 'post' as const,
+    method: 'delete' as const,
     url: (params: UserIdType) => `/tournament/leave/${params.userId}`,
     paramsSchema: userIdSchema,
     checkOwnership: async (data: { params?: UserIdType }, userId: string) => {
