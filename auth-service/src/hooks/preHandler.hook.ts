@@ -161,7 +161,7 @@ export default fp(
 
         return reply.code(401).send({
           error: 'Authentication required',
-          message: 'Missing access token',
+          message: 'TOKEN_INVALID_OR_EXPIRED',
         });
       }
 
@@ -213,7 +213,7 @@ export default fp(
 
         return reply.code(401).send({
           error: 'Authentication failed',
-          message: 'Invalid or expired access token',
+          message: 'TOKEN_INVALID_OR_EXPIRED',
         });
       }
     });

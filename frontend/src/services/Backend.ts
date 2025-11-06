@@ -1,7 +1,6 @@
 import axios from "axios";
 import { EventBus } from "./EventBus";
 import { User, UserLogin, UserRegistration } from "../types";
-import { getReasonPhrase } from "http-status-codes";
 
 // utils
 import {
@@ -39,8 +38,13 @@ export class Backend {
         const originalRequest = error.config;
 
         //if 401 try retry
-        if (error.response?.status === 401 && !this.refreshed) {
+        if (
+          error.response?.status === 401 &&
+          !this.refreshed &&
+          error.response.data.message === "TOKEN_INVALID_OR_EXPIRED"
+        ) {
           try {
+            console.log("Refresh try for tokens");
             this.refreshed = true;
             const response = await this.refreshToken();
 
@@ -75,7 +79,7 @@ export class Backend {
           "With request: ",
           error.config,
         );
-        showError(getReasonPhrase(error.response?.status).toLowerCase());
+        showError(error.response.data.message.toLowerCase());
         return;
       },
     );
@@ -316,6 +320,9 @@ export class Backend {
     const response = await this.api.patch(`/api/user/${userId}`, {
       password: newPassword,
     });
+    if (response.status === 200 || response.status === 201) {
+      showSuccess("Password Changed Successfully");
+    }
     return response;
   }
 
@@ -323,11 +330,15 @@ export class Backend {
     const response = await this.api.patch(`/api/user/${userId}`, {
       username: newUsername,
     });
+    if (response.status === 200 || response.status === 201) {
+      showSuccess("Username Changed Successfully");
+    }
     return response;
   }
 
   async deleteAcc() {
     await this.api.delete(`/api/user/${this.getUser().userId}`);
+    showSuccess("Account Deleted");
     this.logout();
   }
 
@@ -349,9 +360,7 @@ export class Backend {
     );
 
     if (response2.status === 200 || response2.status === 201)
-      showSuccess(
-        "profile picture updated! please log out and back in to see changes",
-      );
+      showSuccess("Avatar Uploaded");
 
     return response2.data;
   }

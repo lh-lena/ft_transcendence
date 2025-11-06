@@ -40,6 +40,7 @@ export class ChatPage {
   private leftPanel!: HTMLDivElement;
   // keeps track of what panel is on right
   private rightPanel!: HTMLElement;
+  private user!: User;
   private leaderboardData!: Leaderboard;
   private allUserData!: UsersAll;
   private searchInput!: HTMLInputElement;
@@ -67,6 +68,12 @@ export class ChatPage {
 
   public async fetchBackend() {
     // handle async operations
+    await this.backend.refreshUser();
+    this.user = this.backend.getUser();
+    this.user.colormap =
+      typeof this.user.colormap === "string"
+        ? profilePrintToArray(this.user.colormap)
+        : this.user.colormap;
 
     // all users fetch
     this.allUserData = (await this.backend.fetchAllUsers()).data;
@@ -122,8 +129,6 @@ export class ChatPage {
   }
 
   private async setupUI() {
-    const user: User = this.backend.getUser();
-
     // main container
     this.container = document.createElement("div");
     this.container.className =
@@ -152,21 +157,22 @@ export class ChatPage {
     clickableYoubutton.className = "w-full";
     addYouButton.className =
       "standard-dialog flex flex-row w-full gap-3 mb-2 justify-center items-center";
+    console.log("User avatar:", this.user.avatar);
     const youButtonAvatar = new ProfileAvatar(
-      user.color,
-      user.colormap,
+      this.user.color,
+      this.user.colormap,
       30,
       30,
       2,
-      user.avatar ? "image" : undefined,
-      user.userId,
+      this.user.avatar ? "image" : undefined,
+      this.user.userId,
     ).getElement();
     addYouButton.appendChild(youButtonAvatar);
     const addYouButtonText = document.createElement("h1");
-    addYouButtonText.textContent = user.username;
+    addYouButtonText.textContent = this.user.username;
     addYouButton.appendChild(addYouButtonText);
     clickableYoubutton.appendChild(addYouButton);
-    clickableYoubutton.onclick = () => this.toggleProfilePopUp(user);
+    clickableYoubutton.onclick = () => this.toggleProfilePopUp(this.user);
     this.contacts.appendChild(clickableYoubutton);
 
     // LEADERBOARD BUTTON
@@ -328,7 +334,7 @@ export class ChatPage {
     this.chatPanel = document.createElement("div");
     this.chatPanel.className =
       "flex-1 w-4/5 h-96 standard-dialog flex flex-col";
-    this.populateChatPanel(user);
+    this.populateChatPanel(this.user);
 
     // add friends panel (toggles on add friend)
     this.addFriendsPanel = document.createElement("div");
@@ -360,14 +366,14 @@ export class ChatPage {
 
     // get user stats from backend
     const userStats: userWinsLosses = await this.backend.fetchUserStatsById(
-      user.userId,
+      this.user.userId,
     );
     console.log(userStats);
 
     // default profile pop up that shows our own profile at start
     this.profilePopUp = new ProfilePopUp(
-      () => this.toggleProfilePopUp(user),
-      user,
+      () => this.toggleProfilePopUp(this.user),
+      this.user,
       undefined,
       undefined,
       undefined,

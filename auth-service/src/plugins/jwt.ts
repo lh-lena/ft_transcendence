@@ -21,7 +21,7 @@ const jwtPlugin = async (fastify: FastifyInstance) => {
   await fastify.register(jwt, {
     secret: fastify.config.ACCESS_SECRET,
     namespace: 'access',
-    sign: { expiresIn: '1h' },
+    sign: { expiresIn: '15m' },
   });
 
   // Register refresh token namespace with 7-day expiration

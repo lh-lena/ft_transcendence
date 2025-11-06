@@ -29,24 +29,15 @@ export const authRoutesConfig = {
       server: FastifyInstance,
       parsedData: { body?: UserRegisterType },
     ) => {
-      if (!parsedData.body) {
-        return reply.status(400).send({ message: 'Invalid registration data' });
-      }
-
-      const password_hash = await hashPassword(parsedData.body.password);
+      const password_hash = await hashPassword(parsedData.body!.password);
       const newUser = userPostSchema.parse({ ...parsedData.body, password_hash });
 
       let user;
       try {
         user = await server.user.post(newUser);
       } catch (error) {
-        const nativeError = error.data as NormalizedError;
-        server.log.debug(nativeError.status, 'Error during user registration');
-        if (nativeError.status == 409) {
-          server.log.debug(`Sending 409 because username already exists: ${newUser.username}`);
-          return reply.code(409).send({ message: 'Username already exists' });
-        }
-        throw error;
+        server.log.error(error, 'Error during user registration:');
+        return reply.code(409).send({ message: 'Username already exists' });
       }
 
       reply.doSending({
@@ -59,7 +50,10 @@ export const authRoutesConfig = {
     },
     skipApiCall: true,
     errorMessages: {
-      invalidBody: 'Invalid registration data',
+      invalidBody:
+        'Invalid registration data! ' +
+        'username: 1 - 6 characters ' +
+        'password: 8 - 32 characters',
       apiError: 'Username already exists',
     },
   },
@@ -92,7 +86,7 @@ export const authRoutesConfig = {
       const valid = await verifyPassword(password_hash, parsedData.body.password);
 
       if (!user || !user.password_hash || !valid) {
-        return reply.status(401).send({ message: 'Invalid credentials' });
+        return reply.status(401).send({ message: 'INVALID_CREDANTIALS' });
       }
 
       if (user.online) {
@@ -215,13 +209,13 @@ export const authRoutesConfig = {
       const authHeader = req.headers.authorization;
 
       if (!authHeader) {
-        return reply.code(401).send({ error: 'Authorization header missing' });
+        return reply.code(401).send({ error: 'AUTH_HEADER_MISSING' });
       }
 
       const token = authHeader.replace('Bearer ', '');
 
       if (!token) {
-        return reply.code(401).send({ error: 'Token missing' });
+        return reply.code(401).send({ error: 'TOKEN_INVALID' });
       }
 
       try {
@@ -230,7 +224,7 @@ export const authRoutesConfig = {
 
         return reply.code(200).send({ userId: jwtReturn.id, role: jwtReturn.role });
       } catch {
-        return reply.code(401).send({ error: 'Token expired' });
+        return reply.code(401).send({ error: 'TOKEN_EXPIRED' });
       }
     },
     skipApiCall: true,
