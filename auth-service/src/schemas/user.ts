@@ -94,7 +94,6 @@ export const userUpdateSchema = userSchema.partial();
 export const userResponseSchema = userSchema.omit({
   password_hash: true,
   githubId: true,
-  tfaEnabled: true,
   tfaSecret: true,
   tfaMethod: true,
   tfaTempCode: true,

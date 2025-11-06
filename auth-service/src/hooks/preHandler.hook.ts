@@ -34,6 +34,7 @@ const publicRoutes = {
 const guestRoutes = {
   tournament: ['/api/tournament', '/api/tournament/:tournamentId', '/api/tournament/leave/:userId'],
   user: ['/api/user/:userId'],
+  game: ['/api/game/:gameId'],
 };
 
 const publicRoutesOne = Object.values(publicRoutes).flat();
