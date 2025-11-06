@@ -359,9 +359,6 @@ export class TournamentGamePage extends GamePage {
       return;
     }
 
-    // case second round
-    this.showBracket(tournamentData);
-
     // case winning
     const menuItems = [
       {
@@ -382,6 +379,14 @@ export class TournamentGamePage extends GamePage {
           const response = await this.backend.getTournamentById(
             this.tournamentId,
           );
+
+          // Check if we got a 502 in the response
+          if (!response) {
+            clearInterval(checkInterval);
+            resolve(null);
+            return;
+          }
+
           const tournamentData: TournamentData = response.data;
 
           if (tournamentData.round === 2) {
@@ -389,12 +394,8 @@ export class TournamentGamePage extends GamePage {
             resolve(tournamentData);
           }
         } catch (error: any) {
-          // Check if the error is a 502 status (tournament ended)
-          if (error?.response?.status === 502) {
-            clearInterval(checkInterval);
-            resolve(null);
-          }
-          // For any other error, continue polling
+          console.log("Caught error, continuing polling", error);
+          // For any error, continue polling
         }
       }, 2000); // check every 2 seconds
     });
@@ -404,9 +405,7 @@ export class TournamentGamePage extends GamePage {
     this.hideGame();
     this.scoreBar.unmount();
 
-    // // wait for round 2
-    // const tournamentData = await this.pollForRound2();
-
+    // case second round
     this.showBracket(tournamentData);
   }
 
