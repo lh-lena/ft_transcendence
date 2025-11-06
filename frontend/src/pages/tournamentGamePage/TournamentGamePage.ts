@@ -90,6 +90,7 @@ export class TournamentGamePage extends GamePage {
   }
 
   public async intializeGameState(): Promise<GameState> {
+    console.log("intialize game state");
     // get game data from backend
     const response = await this.backend.getGameById(this.gameId);
     const gameData = response.data;
@@ -125,9 +126,6 @@ export class TournamentGamePage extends GamePage {
       activePaddle: undefined,
       wsPaddleSequence: 0,
     };
-    // needs to be at very end
-    // need to let the ws know we are ready to start playing
-    this.ws.messageClientReady(this.gameId);
     return this.gameState;
   }
 
@@ -273,6 +271,16 @@ export class TournamentGamePage extends GamePage {
 
       this.tournamentStatsDiv.appendChild(gameRow);
     }
+
+    const playButton = document.createElement("h1");
+    playButton.innerText = "play";
+    playButton.className = "btn w-32 mx-auto";
+    playButton.onclick = () => {
+      this.ws.messageClientReady(this.gameId);
+      this.hideBracket();
+      this.showLoadingOverlay("waiting");
+    };
+    this.tournamentStatsDiv.appendChild(playButton);
   }
 
   private hideBracket() {
@@ -316,7 +324,7 @@ export class TournamentGamePage extends GamePage {
   }
 
   // custom cleanup backend in tournament page for leaving a tournament
-  protected cleanupBackend(): void {
+  protected cleanupBackendorWebsocket(): void {
     if (!this.gameState) {
       this.backend.leaveTournament();
     } else if (this.gameState.status !== GameStatus.GAME_OVER) {

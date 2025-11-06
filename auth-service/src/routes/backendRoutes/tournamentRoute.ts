@@ -55,7 +55,7 @@ const tournamentRoutes = async (server: FastifyInstance) => {
    * @returns 200 - Successfully left tournament
    * @returns 409 - Tournament already started
    */
-  server.post('/tournament/leave/:userId', async (req: FastifyRequest, reply: FastifyReply) => {
+  server.delete('/tournament/leave/:userId', async (req: FastifyRequest, reply: FastifyReply) => {
     return server.routeHandler(req, reply, tournamentRoutesConfig.leaveTournament, server);
   });
 };

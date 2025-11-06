@@ -377,7 +377,7 @@ export class GamePage {
       );
       this.menuEndDiv.appendChild(avatar.getElement());
       this.endResultText = document.createElement("h1");
-      this.endResultText.textContent = `${winningUser.username} wins this round`;
+      this.endResultText.textContent = `${winningUser.username} wins`;
       this.endResultText.className = "text-white text text-center";
       this.menuEndDiv.appendChild(this.endResultText);
       menuEnd.mount(this.menuEndDiv);
@@ -401,7 +401,7 @@ export class GamePage {
     parent.appendChild(this.main);
   }
 
-  protected cleanupWebsocket(): void {
+  protected cleanupWebsocketHandlers(): void {
     // unregister WebSocket handlers (example, depends on your ws API)
     this.ws.offMessage("countdown_update", this.boundWsCountdownHandler);
     this.ws.offMessage("notification", this.boundWsNotificationHandler);
@@ -412,7 +412,7 @@ export class GamePage {
     this.ws.offMessage("game_ready", this.boundWsGameReadyHandler);
   }
 
-  protected cleanupBackend(): void {
+  protected cleanupBackendorWebsocket(): void {
     if (!this.gameState && this.gameRuns === true) {
       this.backend.deleteGame(this.gameId);
     } else if (
@@ -428,10 +428,10 @@ export class GamePage {
     this.ws.close();
 
     // Cleanup backend (can be overridden by subclasses)
-    this.cleanupBackend();
+    this.cleanupBackendorWebsocket();
 
     // Cleanup WebSocket
-    this.cleanupWebsocket();
+    this.cleanupWebsocketHandlers();
 
     // Remove DOM
     this.main.remove();

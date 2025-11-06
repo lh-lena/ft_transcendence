@@ -81,33 +81,11 @@ export class Backend {
     );
   }
 
-  //private startPeriodicRefreshToken() {
-  //  this.stopPeriodicRefreshToken();
-
-  //  this.refreshInterval = setInterval(
-  //    async () => {
-  //      try {
-  //        await this.refreshToken();
-  //      } catch {
-  //        console.log("Periodic refresh failed, logging out!");
-  //        this.logout();
-  //      }
-  //    },
-  //    14 * 60 * 1000,
-  //  );
-  //}
-
-  //////TODO call this on logout -> done and call this on websocket connection loss
-  //private stopPeriodicRefreshToken() {
-  //  if (this.refreshInterval) {
-  //    clearInterval(this.refreshInterval);
-  //    this.refreshInterval = undefined;
-  //  }
-  //}
-
   async refreshToken() {
     const response = await this.api.post("/api/refresh");
+    console.log("Refreshed token:", response.data.jwt);
     localStorage.setItem("jwt", response.data.jwt);
+    console.log("Token refreshed successfully", localStorage.getItem("jwt"));
 
     return response;
   }
@@ -467,7 +445,9 @@ export class Backend {
 
   //leave tournament -> user gets deleted from the tournament
   async leaveTournament() {
-    await this.api.post(`/api/tournament/leave/${this.getUser().userId}`);
+    const userId = this.getUser().userId;
+    console.log("Leaving tournament for user:", userId);
+    await this.api.delete(`/api/tournament/leave/${userId}`);
   }
 
   async getGameHistory(userId: string) {
