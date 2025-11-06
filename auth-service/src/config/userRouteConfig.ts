@@ -103,6 +103,7 @@ export const userRoutesConfig = {
       invalidParams: 'Invalid user ID',
       invalidBody: 'Invalid update Data',
       forbidden: 'Forbidden: You can only update your own profile',
+      apiError: 'username already taken',
     },
   },
 
