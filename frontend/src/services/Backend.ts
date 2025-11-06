@@ -320,6 +320,9 @@ export class Backend {
     const response = await this.api.patch(`/api/user/${userId}`, {
       password: newPassword,
     });
+    if (response.status === 200 || response.status === 201) {
+      showSuccess("Password Changed Successfully");
+    }
     return response;
   }
 
@@ -327,11 +330,15 @@ export class Backend {
     const response = await this.api.patch(`/api/user/${userId}`, {
       username: newUsername,
     });
+    if (response.status === 200 || response.status === 201) {
+      showSuccess("Username Changed Successfully");
+    }
     return response;
   }
 
   async deleteAcc() {
     await this.api.delete(`/api/user/${this.getUser().userId}`);
+    showSuccess("Account Deleted");
     this.logout();
   }
 
@@ -353,9 +360,7 @@ export class Backend {
     );
 
     if (response2.status === 200 || response2.status === 201)
-      showSuccess(
-        "profile picture updated! please log out and back in to see changes",
-      );
+      showSuccess("Avatar Uploaded");
 
     return response2.data;
   }
