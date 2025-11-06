@@ -34,6 +34,7 @@ const publicRoutes = {
 const guestRoutes = {
   tournament: ['/api/tournament', '/api/tournament/:tournamentId', '/api/tournament/leave/:userId'],
   user: ['/api/user/:userId'],
+  game: ['/api/game/:gameId'],
 };
 
 const publicRoutesOne = Object.values(publicRoutes).flat();
@@ -141,6 +142,7 @@ export default fp(
       }
 
       if (isPublicRoute(routePath)) {
+        recordFailedAttempt(req.ip);
         server.log.debug({ route: routePath }, 'Public route, skipping authentication');
         return;
       }
