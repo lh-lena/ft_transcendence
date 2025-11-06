@@ -370,6 +370,8 @@ export class GamePage {
         40,
         40,
         2,
+        winningUser.avatar ? "image" : undefined,
+        winningUser.userId,
       );
       this.menuEndDiv.appendChild(avatar.getElement());
       this.endResultText = document.createElement("h1");
