@@ -399,6 +399,8 @@ export class Backend {
       payload.gameId = gameId;
     }
 
+    console.log("payload", payload);
+
     const response = await this.api.post(`/api/game/join`, payload);
 
     return response.data;
