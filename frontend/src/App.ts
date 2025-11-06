@@ -8,7 +8,6 @@ import { LoginPage } from "./pages/login";
 import { RegisterPage } from "./pages/register";
 import { SettingsPage } from "./pages/settings";
 import { ChatPage } from "./pages/chat";
-import { TournamentAliasPage } from "./pages/tournamentOld";
 import { GamePage } from "./pages/gamePage";
 import { AIGamePage } from "./pages/aiGamePage";
 import { VsPlayerGamePage } from "./pages/vsPlayerGamePage";
@@ -29,7 +28,6 @@ const PAGE_ROUTES = {
   "/settings": SettingsPage,
   "/chat": ChatPage, // -> main page now (home when logged in)
   "/vs-player-game": VsPlayerGamePage,
-  "/tournament-start": TournamentAliasPage,
   "/game-page": GamePage,
   "/ai-game": AIGamePage,
   "/tournament-game": TournamentGamePage,
@@ -102,7 +100,10 @@ export class App {
     let currentRoute = this.router.getCurrentRoute();
 
     // we always connect back to web socket before we load a page
-    if (protectedRoutes.includes(currentRoute)) {
+    if (
+      protectedRoutes.includes(currentRoute) ||
+      PageClass === TournamentGamePage
+    ) {
       await this.websocket.initializeWebSocket();
     }
 

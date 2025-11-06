@@ -74,7 +74,7 @@ export class TournamentGamePage extends GamePage {
   }
 
   public async initializeBackend(): Promise<void> {
-    await this.backend.joinGame(this.gameId);
+    // await this.backend.joinGame(this.gameId);
     // usually poll for game ready but in tournament we are calling it from the game ready handler
     this.intializeGameState();
   }
