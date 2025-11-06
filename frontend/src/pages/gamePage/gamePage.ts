@@ -111,6 +111,7 @@ export class GamePage {
   }
 
   public hideGame() {
+    this.game.unmount();
     this.main.removeChild(this.gameContainer);
   }
 
@@ -271,7 +272,7 @@ export class GamePage {
 
   public async wsGameEndedHandler(payload: WsServerBroadcast["game_ended"]) {
     this.gameState.status = GameStatus.GAME_OVER;
-    console.log(payload);
+    console.log("game end payload", payload);
 
     // old logic from remote game -> would handle individually in each page type but i think makes sense act to keep it here
     // AI is the only case where we use have null as a winner ID
@@ -359,7 +360,8 @@ export class GamePage {
     }
   }
 
-  private async showEndGameOverlay(winningUser: User) {
+  public async showEndGameOverlay(winningUser: User) {
+    // style can be "tournament" or nothing
     this.game?.hideGamePieces();
     this.scoreBar.clear();
     if (this.gameContainer && !this.menuPauseDiv) {

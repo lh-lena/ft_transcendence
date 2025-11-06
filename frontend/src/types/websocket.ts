@@ -125,7 +125,7 @@ export interface WsServerBroadcast {
   chat_message: ReceivedChatMessage;
   notification: NotificationPayload;
   error: { message: string };
-  game_ready: { game_id: string };
+  game_ready: { gameId: string };
 }
 
 // Add this generic interface after WsEventPayload
