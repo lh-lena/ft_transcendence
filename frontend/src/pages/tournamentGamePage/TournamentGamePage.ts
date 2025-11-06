@@ -17,7 +17,7 @@ import { GameStatus, GameState, User } from "../../types";
 
 // functions
 import { profilePrintToArray } from "../../utils/profilePrintFunctions";
-import { showError } from "../../components/toast";
+import { showError, showInfo } from "../../components/toast";
 
 // IMPORTANT TO REMEMBER
 // we receive gameID from game_update when ws also sends game ready
@@ -272,15 +272,20 @@ export class TournamentGamePage extends GamePage {
       this.tournamentStatsDiv.appendChild(gameRow);
     }
 
-    const playButton = document.createElement("h1");
-    playButton.innerText = "play";
-    playButton.className = "btn w-32 mx-auto";
-    playButton.onclick = () => {
-      this.ws.messageClientReady(this.gameId);
-      this.hideBracket();
-      this.showLoadingOverlay("waiting");
-    };
-    this.tournamentStatsDiv.appendChild(playButton);
+    if (
+      (tournamentData.round === 1 && tournamentData.players.length === 4) ||
+      (tournamentData.round === 2 && tournamentData.players.length === 2)
+    ) {
+      const playButton = document.createElement("h1");
+      playButton.innerText = "play";
+      playButton.className = "btn w-32 mx-auto";
+      playButton.onclick = () => {
+        this.ws.messageClientReady(this.gameId);
+        this.hideBracket();
+        this.showLoadingOverlay("waiting");
+      };
+      this.tournamentStatsDiv.appendChild(playButton);
+    }
   }
 
   private hideBracket() {
@@ -331,10 +336,31 @@ export class TournamentGamePage extends GamePage {
     }
   }
 
-  private nextRoundHandler() {
+  private async pollForRound2(): Promise<TournamentData> {
+    return new Promise((resolve) => {
+      const checkInterval = setInterval(async () => {
+        const response = await this.backend.getTournamentById(
+          this.tournamentId,
+        );
+        const tournamentData: TournamentData = response.data;
+
+        if (tournamentData.round === 2) {
+          clearInterval(checkInterval);
+          resolve(tournamentData);
+        }
+      }, 2000); // check every 2 seconds
+    });
+  }
+
+  private async nextRoundHandler() {
     this.hideGame();
     this.showLoadingOverlay("waiting");
     this.scoreBar.unmount();
+
+    // wait for round 2
+    const tournamentData = await this.pollForRound2();
+
+    this.showBracket(tournamentData);
   }
 
   // created a player div for bracket to use

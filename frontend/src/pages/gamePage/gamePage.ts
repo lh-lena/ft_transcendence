@@ -111,6 +111,7 @@ export class GamePage {
   }
 
   public hideGame() {
+    this.game.unmount();
     this.main.removeChild(this.gameContainer);
   }
 
