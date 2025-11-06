@@ -102,15 +102,13 @@ export default function createGameLoopService(app: FastifyInstance): GameLoopSer
     stopAIGame(game);
   }
 
-  function startCountdownSequence(game: GameSession, infoMsg: string, count: number = 3): void {
+  function startCountdownSequence(game: GameSession, infoMsg: string, count: number = 4): void {
     const respond = app.respond as RespondService;
     if (game !== undefined && game.countdownInterval !== undefined) {
       clearInterval(game.countdownInterval);
     }
 
     game.gameState.countdown = count;
-    respond.countdownUpdate(game.gameId, count, count === 0 ? 'GO!' : count.toString());
-
     game.countdownInterval = setInterval(() => {
       if (game.status !== GameSessionStatus.ACTIVE) {
         clearInterval(game.countdownInterval);

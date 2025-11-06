@@ -162,12 +162,6 @@ export default function createConnectionService(app: FastifyInstance): Connectio
     processUserOnline(userId, true).catch((error: unknown) => {
       processErrorLog(app, 'connection-service', 'Error processing user status:', error);
     });
-    respond.notificationToGame(
-      gameId,
-      NotificationType.INFO,
-      `player ${disconnectInfo.username} reconnected`,
-      [userId],
-    );
 
     log.info(`[connection-service] User ${userId} reconnected to game ${gameId}`);
     try {
