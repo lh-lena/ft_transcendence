@@ -28,7 +28,7 @@ const tournamentRoutes = async (server: FastifyInstance) => {
   /**
    * Leave Tournament Endpoint
    */
-  server.post('/leave/:userId', {
+  server.delete('/leave/:userId', {
     schema: {
       summary: 'Leave a tournament',
       description: 'Allows a user to leave a tournament they have joined.',
