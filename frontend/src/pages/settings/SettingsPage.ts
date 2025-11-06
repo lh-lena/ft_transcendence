@@ -12,42 +12,19 @@ interface settingItem {
   onClick?: () => void;
 }
 
+type SettingCategory = {
+  label: string;
+  settingsList: settingList;
+};
+
 // type of settings array (collection of settings)
 type settingList = settingItem[];
 
-// decided to put this here for now to make it easier to migrate later
-let securitySettings: settingList = [
-  { label: "2FA", value: "on", type: "button" },
-  {
-    label: "password",
-    value: "change",
-    type: "button",
-    // define on click in constructor
-  },
-  {
-    label: "username",
-    value: "change",
-    type: "button",
-    // define on click in constructor
-  },
-];
-
-const profileSettings: settingList = [
-  // { label: "other", value: "off" },
-  { label: "avatar", value: "upload", type: "file" },
-  { label: "delete", value: "X", type: "button" },
-];
-
-const settingCategories = [
-  { label: "security", settingsList: securitySettings },
-  { label: "profile", settingsList: profileSettings },
-];
-
 export class SettingsPage {
-  private main: HTMLElement;
-  private window: Window;
-  private settingsPanel: HTMLDivElement;
-  private buttonRow: HTMLDivElement;
+  private main!: HTMLElement;
+  private window!: Window;
+  private settingsPanel!: HTMLDivElement;
+  private buttonRow!: HTMLDivElement;
   private activeButton!: HTMLElement;
   private inputPasswordDiv!: HTMLDivElement;
   private twoFAMenu!: HTMLDivElement;
@@ -55,6 +32,9 @@ export class SettingsPage {
   private router: Router;
   private backend: Backend;
   private inputUsernameDiv!: HTMLDivElement;
+  private securitySettings!: settingList;
+  private settingCategories!: SettingCategory[];
+  private profileSettings!: settingList;
 
   constructor(serviceContainer: ServiceContainer) {
     // router / services container
@@ -63,69 +43,6 @@ export class SettingsPage {
     this.backend = this.serviceContainer.get<Backend>("backend");
 
     // fetch user from backend
-
-    // change 2FA settings from user data
-    const twoFASetting = securitySettings.find((s) => s.label === "2FA");
-    if (twoFASetting) {
-      const tfaEnabled = this.backend.getUser().tfaEnabled;
-      twoFASetting.value = tfaEnabled ? "on" : "off";
-
-      if (!tfaEnabled) {
-        twoFASetting.onClick = () => this.toggle2FASettings();
-      } else {
-        twoFASetting.onClick = undefined;
-      }
-    }
-
-    // Full page background
-    this.main = document.createElement("div");
-    this.main.className =
-      "w-full min-h-screen flex items-center justify-center bg-brandBlue";
-
-    // Window content
-    this.buttonRow = document.createElement("div");
-    this.buttonRow.className = "flex flex-row gap-3";
-
-    settingCategories.forEach((item, idx) => {
-      const button = document.createElement("button");
-      button.className = "btn flex items-center justify-center w-24";
-      if (idx === 0) {
-        button.classList.add("btn-default");
-        this.activeButton = button;
-      }
-      button.textContent = item.label;
-      button.onclick = () => this.toggleButton(button, item.settingsList);
-      this.buttonRow.appendChild(button);
-    });
-
-    const menuBar = new MenuBar(serviceContainer, "settings");
-
-    // settings main
-    this.settingsPanel = document.createElement("div");
-    this.settingsPanel.className = "flex flex-col w-64 gap-2";
-
-    // ON CLICKS link functions to settings
-    // needed this object to link functions
-    // using optional chaining (!) because we are sure it exists other wise we would write more defensively
-    securitySettings.find((setting) => setting.label === "password")!.onClick =
-      () => this.changePassword();
-    securitySettings.find((setting) => setting.label === "username")!.onClick =
-      () => this.changeUsername();
-    profileSettings.find((setting) => setting.label === "delete")!.onClick =
-      () => this.deleteAccount();
-
-    // use security settings as default for page
-    this.populateSettingsPanel(securitySettings);
-
-    this.window = new Window({
-      title: "settings",
-      width: CANVAS_DEFAULTS.width,
-      height: CANVAS_DEFAULTS.height,
-      className: "",
-      children: [menuBar.render(), this.buttonRow, this.settingsPanel],
-    });
-
-    this.main.appendChild(this.window.getElement());
   }
 
   private async deleteAccount() {
@@ -400,37 +317,111 @@ export class SettingsPage {
     URL.revokeObjectURL(url);
   }
 
-  // private toggleTOTPVerifyCode(): void {
-  //   // hide old 2fa settings
-  //   this.twoFAMenu.remove();
+  private async fetchSettings() {
+    const userData = await this.backend.getUserById(
+      this.backend.getUser().userId,
+    );
+    const tfaEnabled = userData.tfaEnabled ? "on" : "off";
+    console.log(tfaEnabled);
+    // decided to put this here for now to make it easier to migrate later
+    this.securitySettings = [
+      { label: "2FA", value: tfaEnabled, type: "button" },
+      {
+        label: "password",
+        value: "change",
+        type: "button",
+        // define on click in constructor
+      },
+      {
+        label: "username",
+        value: "change",
+        type: "button",
+        // define on click in constructor
+      },
+    ];
 
-  //   this.twoFAMenu = document.createElement("div");
-  //   this.twoFAMenu.className = "flex h-full pt-4 flex-col gap-5 w-36";
-  //   this.window.getPane().appendChild(this.twoFAMenu);
-  //   const twoFATitle = document.createElement("p");
-  //   twoFATitle.textContent = "TOTP 2FA:";
-  //   twoFATitle.className = "font-bold text-center";
-  //   this.twoFAMenu.appendChild(twoFATitle);
-  //   // input email code
-  //   const inputEmailCode = document.createElement("input");
-  //   inputEmailCode.type = "code";
-  //   inputEmailCode.id = "text_password";
-  //   inputEmailCode.placeholder = "code";
-  //   inputEmailCode.style.paddingLeft = "0.5em";
-  //   this.twoFAMenu.appendChild(inputEmailCode);
-  //   const email2FAButton = document.createElement("button");
-  //   email2FAButton.className = "btn";
-  //   email2FAButton.onclick = () => this.verififyTOTPCode();
-  //   email2FAButton.innerText = "verify";
-  //   this.twoFAMenu.appendChild(email2FAButton);
-  // }
+    this.profileSettings = [
+      // { label: "other", value: "off" },
+      { label: "avatar", value: "upload", type: "file" },
+      { label: "delete", value: "X", type: "button" },
+    ];
 
-  // private verififyTOTPCode(): void {
-  //   // console.log("yo");
-  // }
+    this.settingCategories = [
+      { label: "security", settingsList: this.securitySettings },
+      { label: "profile", settingsList: this.profileSettings },
+    ];
+  }
 
-  public mount(parent: HTMLElement): void {
+  public async mount(parent: HTMLElement) {
+    await this.fetchSettings();
+    this.createUI();
     parent.appendChild(this.main);
+  }
+
+  private createUI() {
+    // change 2FA settings from user data
+    const twoFASetting = this.securitySettings.find((s) => s.label === "2FA");
+    if (twoFASetting) {
+      const tfaEnabled = twoFASetting.value === "on";
+      if (!tfaEnabled) {
+        twoFASetting.onClick = () => this.toggle2FASettings();
+      } else {
+        twoFASetting.onClick = undefined;
+      }
+    }
+
+    // Full page background
+    this.main = document.createElement("div");
+    this.main.className =
+      "w-full min-h-screen flex items-center justify-center bg-brandBlue";
+
+    // Window content
+    this.buttonRow = document.createElement("div");
+    this.buttonRow.className = "flex flex-row gap-3";
+
+    this.settingCategories.forEach((item, idx) => {
+      const button = document.createElement("button");
+      button.className = "btn flex items-center justify-center w-24";
+      if (idx === 0) {
+        button.classList.add("btn-default");
+        this.activeButton = button;
+      }
+      button.textContent = item.label;
+      button.onclick = () => this.toggleButton(button, item.settingsList);
+      this.buttonRow.appendChild(button);
+    });
+
+    const menuBar = new MenuBar(this.serviceContainer, "settings");
+
+    // settings main
+    this.settingsPanel = document.createElement("div");
+    this.settingsPanel.className = "flex flex-col w-64 gap-2";
+
+    // ON CLICKS link functions to settings
+    // needed this object to link functions
+    // using optional chaining (!) because we are sure it exists other wise we would write more defensively
+    this.securitySettings.find(
+      (setting) => setting.label === "password",
+    )!.onClick = () => this.changePassword();
+    this.securitySettings.find(
+      (setting) => setting.label === "username",
+    )!.onClick = () => this.changeUsername();
+    this.profileSettings.find(
+      (setting) => setting.label === "delete",
+    )!.onClick = () => this.deleteAccount();
+
+    // use security settings as default for page
+    this.populateSettingsPanel(this.securitySettings);
+
+    this.window = new Window({
+      title: "settings",
+      width: CANVAS_DEFAULTS.width,
+      height: CANVAS_DEFAULTS.height,
+      className: "",
+      children: [menuBar.render(), this.buttonRow, this.settingsPanel],
+    });
+
+    this.main.appendChild(this.window.getElement());
   }
 
   public unmount(): void {

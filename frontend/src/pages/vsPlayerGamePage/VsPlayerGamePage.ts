@@ -20,9 +20,18 @@ export class VsPlayerGamePage extends GamePage {
   }
 
   public async initializeBackend(): Promise<void> {
-    const response = await this.backend.joinGame();
-    this.gameId = response.gameId;
-    console.log("this gameId", this.gameId);
+    const params = this.router.getQueryParams();
+    console.log(params);
+    if (params && params.get("source") === "invite" && params.has("gameId")) {
+      // case invite game
+      this.gameId = params.get("gameId")!;
+      await this.backend.joinGame(this.gameId);
+    } else {
+      // case regular vs player game
+      const response = await this.backend.joinGame();
+      this.gameId = response.gameId;
+      console.log("this gameId", this.gameId);
+    }
     if (await this.pollWebsocketForGameReady()) {
       await this.intializeGameState();
     }

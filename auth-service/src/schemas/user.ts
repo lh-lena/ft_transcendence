@@ -8,7 +8,7 @@ export const userSchema = z.object({
   createdAt: dtString.optional(),
   updatedAt: dtString.optional(),
 
-  username: z.string(),
+  username: z.string().nullable(),
   alias: z.string().nullable().optional(),
 
   online: z.boolean().optional(),
@@ -124,3 +124,4 @@ export type UserQueryType = z.infer<typeof userQuerySchema>;
 export type UserPatchType = z.infer<typeof userPatchSchema>;
 export type UserUpdateType = z.infer<typeof userUpdateSchema>;
 export type GuestPostType = z.infer<typeof guestPostSchema>;
+export type GuestType = z.infer<typeof guestSchema>;

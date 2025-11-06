@@ -38,12 +38,6 @@ export default function createReconnectionService(app: FastifyInstance): Reconne
     setPlayerDisconnectInfo(userId, userAlias ?? '', gameId);
     gameSessionService.setPlayerReadyStatus(userId, gameId, false);
     gameSessionService.setPlayerConnectionStatus(userId, gameId, false);
-    respond.notificationToGame(
-      gameId,
-      NotificationType.WARN,
-      `${userAlias} disconnected. Waiting for reconnection ${config.websocket.connectionTimeout / 1000}s...`,
-      [userId],
-    );
     setReconnectionTimer(userId, gameId);
     const game = gameSessionService.getGameSession(gameId) as GameSession;
     gameStateService.pauseGame(game, userId);
@@ -77,12 +71,6 @@ export default function createReconnectionService(app: FastifyInstance): Reconne
       game.status !== GameSessionStatus.CANCELLED &&
       game.status !== GameSessionStatus.CANCELLED_SERVER_ERROR
     ) {
-      respond.notificationToGame(
-        info.gameId,
-        NotificationType.WARN,
-        `game over: ${info.username} failed to reconnect`,
-        [userId],
-      );
       await gameStateService
         .endGame(game, GameSessionStatus.CANCELLED, userId)
         .catch((error: Error | GameError) => {

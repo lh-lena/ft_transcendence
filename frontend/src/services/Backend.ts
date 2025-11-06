@@ -336,6 +336,12 @@ export class Backend {
     return response;
   }
 
+  async patchAlias(alias: string) {
+    await this.api.patch(`/api/user/${this.getUser().userId}`, {
+      alias: alias,
+    });
+  }
+
   async deleteAcc() {
     await this.api.delete(`/api/user/${this.getUser().userId}`);
     showSuccess("Account Deleted");
@@ -393,6 +399,8 @@ export class Backend {
       payload.gameId = gameId;
     }
 
+    console.log("payload", payload);
+
     const response = await this.api.post(`/api/game/join`, payload);
 
     return response.data;
@@ -431,13 +439,8 @@ export class Backend {
 
   //join a tournament --> if user is loged in alias gets updated and if guest, guest account gets created. returns -> tournamentId: uuid, round: number, playerAmount: number, players: [userId: uuid], status: string(waiting, ready, finished), games: [gameSchema]
 
-  async joinTournament(alias: string, userType?: string) {
-    if (userType === "registered") {
-      await this.api.patch(`/api/user/${this.getUser().userId}`, {
-        alias: alias,
-      });
-    }
-
+  async joinTournament() {
+    console.log("Joining tournament for user:", this.getUser().userId);
     const userId = this.getUser().userId;
     const response = await this.api.post("/api/tournament", {
       playerAmount: 4,

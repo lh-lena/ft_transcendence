@@ -102,7 +102,6 @@ export default function createAIService(app: FastifyInstance): AIService {
   function stopAI(gameId: GameIdType): void {
     const aiState = aiStateManager.getAIState(gameId);
     if (aiState === undefined) {
-      log.warn(`[ai-service] AI is not running for game ${gameId}`);
       return;
     }
     aiStateManager.removeAIState(gameId);

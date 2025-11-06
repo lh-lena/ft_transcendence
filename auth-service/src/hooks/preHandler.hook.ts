@@ -142,6 +142,7 @@ export default fp(
       }
 
       if (isPublicRoute(routePath)) {
+        recordFailedAttempt(req.ip);
         server.log.debug({ route: routePath }, 'Public route, skipping authentication');
         return;
       }
