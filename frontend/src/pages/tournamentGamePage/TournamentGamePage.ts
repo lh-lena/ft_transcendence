@@ -65,18 +65,18 @@ export class TournamentGamePage extends GamePage {
     // call to base class
     super.wsGameReadyHandler(payload);
     // this is where we set game id and start game shit
-    this.gameId = payload.game_id;
+    this.gameId = payload.gameId;
+
+    console.log("game ready: ", this.gameId);
 
     // same ol initialize backend
     this.initializeBackend();
   }
 
   public async initializeBackend(): Promise<void> {
-    const response = await this.backend.joinGame();
-    this.gameId = response.gameId;
-    if (await this.pollWebsocketForGameReady()) {
-      this.intializeGameState();
-    }
+    await this.backend.joinGame(this.gameId);
+    // usually poll for game ready but in tournament we are calling it from the game ready handler
+    this.intializeGameState();
   }
 
   public async wsGameUpdateHandler(
@@ -302,17 +302,11 @@ export class TournamentGamePage extends GamePage {
       this.menuEndDiv = document.createElement("div");
       this.menuEndDiv.className = "flex flex-col gap-5 items-center";
       // Create and mount menu to game container instead of main element
-      let menuItems: MenuItem[] = [{ name: "back", link: "/chat" }];
-      if (winningUser.userId === this.backend.getUser().userId)
-        menuItems = [
-          { name: "next round", onClick: () => this.nextRoundHandler() },
-        ];
       console.log(
         "this end: ",
         winningUser.userId,
         this.backend.getUser().userId,
       );
-      const menuEnd = new Menu(this.router, menuItems);
       let avatar = new ProfileAvatar(
         winningUser.color,
         winningUser.colormap,
@@ -325,7 +319,6 @@ export class TournamentGamePage extends GamePage {
       this.endResultText.textContent = `${winningUser.username} wins`;
       this.endResultText.className = "text-white text text-center";
       this.menuEndDiv.appendChild(this.endResultText);
-      menuEnd.mount(this.menuEndDiv);
       this.gameContainer.appendChild(this.menuEndDiv);
       // Add overlay styling to menu element
       this.menuEndDiv.style.position = "absolute";
@@ -334,31 +327,85 @@ export class TournamentGamePage extends GamePage {
       this.menuEndDiv.style.transform = "translate(-50%, -50%)";
       this.menuEndDiv.style.zIndex = "1000";
     }
+
+    // case loser from tournament round 1
+    if (winningUser.userId !== this.backend.getUser().userId) {
+      const menuItems: MenuItem[] = [{ name: "back", link: "/chat" }];
+      const menuEnd = new Menu(this.router, menuItems);
+      menuEnd.mount(this.menuEndDiv);
+      return;
+    }
+
+    const waitingForRoundText = document.createElement("h1");
+    waitingForRoundText.innerText = "waiting for tournament results";
+    waitingForRoundText.className = "text-white text text-center";
+    this.menuEndDiv.appendChild(waitingForRoundText);
+
+    // case winner
+    // wait for round 2
+    const tournamentData = await this.pollForRoundStatus();
+
+    // tournament ended (502 error)
+    if (!tournamentData) {
+      this.menuEndDiv.removeChild(waitingForRoundText);
+      const finalWinnerText = document.createElement("h1");
+      finalWinnerText.innerText = "you won the tournament!";
+      finalWinnerText.className = "text-white text text-center";
+      this.menuEndDiv.appendChild(finalWinnerText);
+
+      const menuItems: MenuItem[] = [{ name: "back", link: "/chat" }];
+      const menuEnd = new Menu(this.router, menuItems);
+      menuEnd.mount(this.menuEndDiv);
+      return;
+    }
+
+    // case second round
+    this.showBracket(tournamentData);
+
+    // case winning
+    const menuItems = [
+      {
+        name: "next round",
+        onClick: () => this.nextRoundHandler(tournamentData),
+      },
+    ];
+    const menuEnd = new Menu(this.router, menuItems);
+    menuEnd.mount(this.menuEndDiv);
+
+    this.menuEndDiv.removeChild(waitingForRoundText);
   }
 
-  private async pollForRound2(): Promise<TournamentData> {
+  private async pollForRoundStatus(): Promise<TournamentData | null> {
     return new Promise((resolve) => {
       const checkInterval = setInterval(async () => {
-        const response = await this.backend.getTournamentById(
-          this.tournamentId,
-        );
-        const tournamentData: TournamentData = response.data;
+        try {
+          const response = await this.backend.getTournamentById(
+            this.tournamentId,
+          );
+          const tournamentData: TournamentData = response.data;
 
-        if (tournamentData.round === 2) {
-          clearInterval(checkInterval);
-          resolve(tournamentData);
+          if (tournamentData.round === 2) {
+            clearInterval(checkInterval);
+            resolve(tournamentData);
+          }
+        } catch (error: any) {
+          // Check if the error is a 502 status (tournament ended)
+          if (error?.response?.status === 502) {
+            clearInterval(checkInterval);
+            resolve(null);
+          }
+          // For any other error, continue polling
         }
       }, 2000); // check every 2 seconds
     });
   }
 
-  private async nextRoundHandler() {
+  private async nextRoundHandler(tournamentData: TournamentData) {
     this.hideGame();
-    this.showLoadingOverlay("waiting");
     this.scoreBar.unmount();
 
-    // wait for round 2
-    const tournamentData = await this.pollForRound2();
+    // // wait for round 2
+    // const tournamentData = await this.pollForRound2();
 
     this.showBracket(tournamentData);
   }
