@@ -10,7 +10,6 @@ export class HomePage {
   private serviceContainer: ServiceContainer;
   private router: Router;
   private backend: Backend;
-  private isCheckingAuth: boolean = false;
 
   constructor(serviceContainer: ServiceContainer) {
     // router / services container
@@ -28,11 +27,13 @@ export class HomePage {
 
     this.pongButton = new PongButton();
     this.pongButton.mount(this.main);
+
+    this.buildMenu();
   }
 
   public async mount(parent: HTMLElement): Promise<void> {
     //show loading
-    this.showLoading();
+    // this.pongButton.setLoading();
     parent.appendChild(this.main);
 
     try {
@@ -40,49 +41,26 @@ export class HomePage {
 
       if (isAuth) {
         this.router.navigate("/chat");
-      } else {
-        this.unAuthMenu();
       }
-    } catch (err) {
-      console.error("Error checking auth status:", err);
-      this.unAuthMenu();
+    } catch (error) {
+      console.log(error);
     }
   }
 
   private async checkAuth(): Promise<boolean> {
-    if (this.isCheckingAuth) return true;
-
-    this.isCheckingAuth = true;
-
     try {
       const response = await this.backend.checkAuth();
 
       if (response && response.role !== "guest") return true;
       return false;
     } catch {
+      // catch any error
       return false;
     }
   }
 
-  private showLoading(): void {
-    const existingMenu = this.main.querySelector(".menu-container");
-    if (existingMenu) {
-      existingMenu.remove();
-    }
-
-    const loader = document.createElement("div");
-    loader.className = "loading-spinner";
-    loader.innerHTML = `
-      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
-    `;
-    this.main.appendChild(loader);
-  }
-
-  private unAuthMenu(): void {
-    const loader = this.main.querySelector(".loading-spinner");
-    if (loader) {
-      loader.remove();
-    }
+  private buildMenu(): void {
+    this.pongButton.unsetLoading();
 
     const notLoggedInMenu = [
       { name: "log in", link: "/login" },
