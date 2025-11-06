@@ -22,8 +22,9 @@ export class VsPlayerGamePage extends GamePage {
   public async initializeBackend(): Promise<void> {
     const response = await this.backend.joinGame();
     this.gameId = response.gameId;
+    console.log("this gameId", this.gameId);
     if (await this.pollWebsocketForGameReady()) {
-      this.intializeGameState();
+      await this.intializeGameState();
     }
   }
 
