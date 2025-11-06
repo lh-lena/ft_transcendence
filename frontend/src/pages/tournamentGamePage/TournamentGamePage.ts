@@ -90,6 +90,7 @@ export class TournamentGamePage extends GamePage {
   }
 
   public async intializeGameState(): Promise<GameState> {
+    console.log("intialize game state");
     // get game data from backend
     const response = await this.backend.getGameById(this.gameId);
     const gameData = response.data;
@@ -323,7 +324,7 @@ export class TournamentGamePage extends GamePage {
   }
 
   // custom cleanup backend in tournament page for leaving a tournament
-  protected cleanupBackend(): void {
+  protected cleanupBackendorWebsocket(): void {
     if (!this.gameState) {
       this.backend.leaveTournament();
     } else if (this.gameState.status !== GameStatus.GAME_OVER) {
