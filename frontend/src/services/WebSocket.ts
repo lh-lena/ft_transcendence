@@ -1,5 +1,5 @@
 //web socket
-import { showError, showInfo } from "../components/toast";
+import { showInfo } from "../components/toast";
 import { User } from "../types";
 import {
   WsServerBroadcast,
@@ -45,8 +45,8 @@ export class Websocket {
 
     // very very simple reconnection logic
     this.ws.onerror = (error) => {
-      // console.error("WebSocket error:", error);
-      showError(JSON.stringify(error));
+      console.error("WebSocket error:", JSON.stringify(error));
+      //showError(JSON.stringify(error));
       if (this.ws) {
         this.ws.close();
         this.ws = null;

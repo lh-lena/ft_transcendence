@@ -1,7 +1,6 @@
 import axios from "axios";
 import { EventBus } from "./EventBus";
 import { User, UserLogin, UserRegistration } from "../types";
-import { getReasonPhrase } from "http-status-codes";
 
 // utils
 import {
@@ -39,8 +38,13 @@ export class Backend {
         const originalRequest = error.config;
 
         //if 401 try retry
-        if (error.response?.status === 401 && !this.refreshed) {
+        if (
+          error.response?.status === 401 &&
+          !this.refreshed &&
+          error.response.data.message === "TOKEN_INVALID_OR_EXPIRED"
+        ) {
           try {
+            console.log("Refresh try for tokens");
             this.refreshed = true;
             const response = await this.refreshToken();
 
@@ -75,7 +79,7 @@ export class Backend {
           "With request: ",
           error.config,
         );
-        showError(getReasonPhrase(error.response?.status).toLowerCase());
+        showError(error.response.data.message.toLowerCase());
         return;
       },
     );

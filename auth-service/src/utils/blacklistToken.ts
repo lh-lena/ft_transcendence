@@ -29,7 +29,7 @@ type BlacklistResponse = z.infer<typeof BlacklistResponseSchema>;
  * @example
  * const isBlacklisted = await isBlacklistedToken(userToken);
  * if (isBlacklisted) {
- *   return reply.status(401).send({ message: 'Token has been revoked' });
+ *   return reply.status(401).send({ message: 'TOKEN_REVOKED' });
  * }
  */
 export async function isBlacklistedToken(token: string): Promise<boolean> {

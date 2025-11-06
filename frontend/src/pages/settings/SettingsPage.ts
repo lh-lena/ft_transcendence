@@ -66,8 +66,16 @@ export class SettingsPage {
 
     // change 2FA settings from user data
     const twoFASetting = securitySettings.find((s) => s.label === "2FA");
-    if (twoFASetting)
-      twoFASetting.value = this.backend.getUser().tfaEnabled ? "on" : "off";
+    if (twoFASetting) {
+      const tfaEnabled = this.backend.getUser().tfaEnabled;
+      twoFASetting.value = tfaEnabled ? "on" : "off";
+
+      if (!tfaEnabled) {
+        twoFASetting.onClick = () => this.toggle2FASettings();
+      } else {
+        twoFASetting.onClick = undefined;
+      }
+    }
 
     // Full page background
     this.main = document.createElement("div");
@@ -103,8 +111,6 @@ export class SettingsPage {
       () => this.changePassword();
     securitySettings.find((setting) => setting.label === "username")!.onClick =
       () => this.changeUsername();
-    securitySettings.find((setting) => setting.label === "2FA")!.onClick = () =>
-      this.toggle2FASettings();
     profileSettings.find((setting) => setting.label === "delete")!.onClick =
       () => this.deleteAccount();
 
@@ -394,34 +400,34 @@ export class SettingsPage {
     URL.revokeObjectURL(url);
   }
 
-  private toggleTOTPVerifyCode(): void {
-    // hide old 2fa settings
-    this.twoFAMenu.remove();
+  // private toggleTOTPVerifyCode(): void {
+  //   // hide old 2fa settings
+  //   this.twoFAMenu.remove();
 
-    this.twoFAMenu = document.createElement("div");
-    this.twoFAMenu.className = "flex h-full pt-4 flex-col gap-5 w-36";
-    this.window.getPane().appendChild(this.twoFAMenu);
-    const twoFATitle = document.createElement("p");
-    twoFATitle.textContent = "TOTP 2FA:";
-    twoFATitle.className = "font-bold text-center";
-    this.twoFAMenu.appendChild(twoFATitle);
-    // input email code
-    const inputEmailCode = document.createElement("input");
-    inputEmailCode.type = "code";
-    inputEmailCode.id = "text_password";
-    inputEmailCode.placeholder = "code";
-    inputEmailCode.style.paddingLeft = "0.5em";
-    this.twoFAMenu.appendChild(inputEmailCode);
-    const email2FAButton = document.createElement("button");
-    email2FAButton.className = "btn";
-    email2FAButton.onclick = () => this.verififyTOTPCode();
-    email2FAButton.innerText = "verify";
-    this.twoFAMenu.appendChild(email2FAButton);
-  }
+  //   this.twoFAMenu = document.createElement("div");
+  //   this.twoFAMenu.className = "flex h-full pt-4 flex-col gap-5 w-36";
+  //   this.window.getPane().appendChild(this.twoFAMenu);
+  //   const twoFATitle = document.createElement("p");
+  //   twoFATitle.textContent = "TOTP 2FA:";
+  //   twoFATitle.className = "font-bold text-center";
+  //   this.twoFAMenu.appendChild(twoFATitle);
+  //   // input email code
+  //   const inputEmailCode = document.createElement("input");
+  //   inputEmailCode.type = "code";
+  //   inputEmailCode.id = "text_password";
+  //   inputEmailCode.placeholder = "code";
+  //   inputEmailCode.style.paddingLeft = "0.5em";
+  //   this.twoFAMenu.appendChild(inputEmailCode);
+  //   const email2FAButton = document.createElement("button");
+  //   email2FAButton.className = "btn";
+  //   email2FAButton.onclick = () => this.verififyTOTPCode();
+  //   email2FAButton.innerText = "verify";
+  //   this.twoFAMenu.appendChild(email2FAButton);
+  // }
 
-  private verififyTOTPCode(): void {
-    // console.log("yo");
-  }
+  // private verififyTOTPCode(): void {
+  //   // console.log("yo");
+  // }
 
   public mount(parent: HTMLElement): void {
     parent.appendChild(this.main);
