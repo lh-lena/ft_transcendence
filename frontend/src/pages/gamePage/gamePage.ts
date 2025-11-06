@@ -307,19 +307,13 @@ export class GamePage {
 
   // poll the web socket for being ready to start the game
   public async pollWebsocketForGameReady(): Promise<boolean> {
-    const timeout = 5000 * 6; // 5 seconds * 6 -> 30 seconds
     const interval = 100; // check every 100ms
-    let elapsed = 0;
 
     return new Promise((resolve) => {
       const poll = () => {
         if (this.wsGameReady) {
           resolve(true);
-        } else if (elapsed >= timeout) {
-          showError("dropping connection. timed out");
-          resolve(false);
         } else {
-          elapsed += interval;
           setTimeout(poll, interval);
         }
       };

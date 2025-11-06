@@ -486,8 +486,7 @@ export class ChatPage {
   }
 
   private async joinGameButton(gameId: string) {
-    await this.backend.joinGame(gameId);
-    this.router.navigate("/vs-player", {
+    this.router.navigate("/vs-player-game", {
       source: "invite",
       gameId: gameId,
     });
@@ -866,7 +865,7 @@ export class ChatPage {
       };
       message = JSON.stringify(inviteMessage);
       await this.websocket.sendChatMessage(user, message);
-      this.router.navigate("/vs-player", {
+      this.router.navigate("/vs-player-game", {
         gameType: "remote",
         source: "invite",
         gameId: response.gameId,
