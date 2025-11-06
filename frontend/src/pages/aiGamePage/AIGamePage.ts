@@ -5,7 +5,7 @@ import { GamePage } from "../gamePage";
 import { ServiceContainer } from "../../services";
 
 // types
-import { GameStatus, GameState } from "../../types";
+import { GameStatus } from "../../types";
 
 // functions
 import { generateProfilePrint } from "../../utils/profilePrintFunctions";
@@ -30,7 +30,7 @@ export class AIGamePage extends GamePage {
     } else this.router.navigate("/chat");
   }
 
-  public async intializeGameState(): Promise<GameState> {
+  public async intializeGameState(): Promise<void> {
     // user for AI (AI user, i make up a bunch of attributes)
     const { color, colorMap } = generateProfilePrint();
     const AIUser = {
@@ -66,6 +66,5 @@ export class AIGamePage extends GamePage {
       activePaddle: undefined,
       wsPaddleSequence: 0,
     };
-    return this.gameState;
   }
 }
