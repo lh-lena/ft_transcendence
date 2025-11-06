@@ -444,4 +444,13 @@ export class TournamentGamePage extends GamePage {
       this.ws.messageGameLeave(this.gameId);
     }
   }
+
+  // for guest user
+  public unmount(): void {
+    if (this.isGuest) {
+      localStorage.removeItem("user");
+      localStorage.removeItem("jwt");
+    }
+    super.unmount();
+  }
 }
