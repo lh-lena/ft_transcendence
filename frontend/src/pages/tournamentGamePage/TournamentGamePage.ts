@@ -13,7 +13,7 @@ import { WsServerBroadcast } from "../../types/websocket";
 
 // types
 import { TournamentData } from "../../types/tournament";
-import { GameStatus } from "../../types";
+import { GameStatus, GameState } from "../../types";
 
 // functions
 import { profilePrintToArray } from "../../utils/profilePrintFunctions";
@@ -89,7 +89,7 @@ export class TournamentGamePage extends GamePage {
     this.hideEndGameOverlay();
   }
 
-  public async intializeGameState(): Promise<void> {
+  public async intializeGameState(): Promise<GameState> {
     // get game data from backend
     const response = await this.backend.getGameById(this.gameId);
     const gameData = response.data;
@@ -128,6 +128,7 @@ export class TournamentGamePage extends GamePage {
     // needs to be at very end
     // need to let the ws know we are ready to start playing
     this.ws.messageClientReady(this.gameId);
+    return this.gameState;
   }
 
   private async handlePlayButton() {

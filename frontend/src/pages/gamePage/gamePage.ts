@@ -6,11 +6,7 @@ import { ProfileAvatar } from "../../components/profileAvatar";
 
 // types
 import { GameState, GameStatus } from "../../types";
-import {
-  Direction,
-  WsServerBroadcast,
-  GameSessionStatus,
-} from "../../types/websocket";
+import { Direction, WsServerBroadcast } from "../../types/websocket";
 import { User } from "../../types";
 
 // services
@@ -20,7 +16,6 @@ import { showError, showInfo } from "../../components/toast";
 
 // functions
 import { profilePrintToArray } from "../../utils/profilePrintFunctions";
-import { generateProfilePrint } from "../../utils/profilePrintFunctions";
 
 export class GamePage {
   // HTML Elements
@@ -186,88 +181,12 @@ export class GamePage {
     _payload: WsServerBroadcast["notification"],
   ) {}
 
-  private getGameStatus(status: GameSessionStatus): GameStatus {
-    switch (status) {
-      case GameSessionStatus.PENDING:
-        return GameStatus.WAITING;
-      case GameSessionStatus.ACTIVE:
-        return GameStatus.PLAYING;
-      case GameSessionStatus.PAUSED:
-        return GameStatus.PAUSED;
-      case GameSessionStatus.FINISHED:
-        return GameStatus.GAME_OVER;
-      case GameSessionStatus.CANCELLED:
-        return GameStatus.GAME_OVER;
-      case GameSessionStatus.CANCELLED_SERVER_ERROR:
-        return GameStatus.GAME_OVER;
-      default:
-        return GameStatus.WAITING;
-    }
-  }
-
-  private async initGameStateFromGameUpdate(
-    payload: WsServerBroadcast["game_update"],
-  ) {
-    const gameId = payload.gameId;
-    this.gameId = gameId;
-    const response = await this.backend.getGameById(this.gameId);
-    const gameData = response.data;
-    //TODO how to handle error here?
-    if (!gameData) {
-      showError("couldn't fetch players. please try again");
-      this.router.navigate("/chat");
-    }
-    const userId = this.backend.getUser().userId;
-    const user = await this.backend.getUserById(userId);
-
-    const otherUserId = gameData.players.find(
-      (player: { userId: string }) =>
-        player.userId !== this.backend.getUser().userId,
-    );
-    let otherUser;
-
-    if (otherUserId) {
-      otherUser = await this.backend.getUserById(otherUserId.userId);
-      otherUser.colormap = profilePrintToArray(otherUser.colormap);
-    } else {
-      const { color, colorMap } = generateProfilePrint();
-
-      otherUser = {
-        colormap: colorMap,
-        color: color,
-        userId: "ai69",
-        username: "AI",
-        createdAt: "",
-        updatedAt: "",
-        email: "",
-        password_hash: "",
-        avatar: "",
-        tfaEnabled: false,
-        twofa_secret: "",
-        guest: false,
-      };
-    }
-
-    const status = this.getGameStatus(payload.status);
-
-    const newGameState: GameState = {
-      status: status,
-      previousStatus: status,
-      playerA: user,
-      playerB: otherUser,
-      pauseInitiatedByMe: true,
-      blockedPlayButton: false,
-      activeKey: "",
-      previousKey: "",
-      activePaddle: payload.activePaddle ? payload.activePaddle : undefined,
-      wsPaddleSequence: payload.sequence ? payload.sequence : 0,
-    };
-
-    this.gameState = newGameState;
-    console.log(newGameState);
-  }
-
   public async wsGameUpdateHandler(payload: WsServerBroadcast["game_update"]) {
+    if (!this.gameState) {
+      showInfo("Game ended due to page refresh");
+      this.unmount();
+    }
+
     // set active paddle (side we are on) -> runs first time we get an update
     // then set up the score bar knowing which side we are on
     // then set up game knowing which side we are on
@@ -465,9 +384,6 @@ export class GamePage {
 
   // mount / unmount
   public async mount(parent: HTMLElement): Promise<void> {
-    // if (!this.gameState) {
-    //   this.intializeGameState();
-    // }
     parent.appendChild(this.main);
   }
 
@@ -491,6 +407,7 @@ export class GamePage {
   }
 
   public unmount() {
+    this.ws.messageGameLeave(this.gameId);
     // Cleanup backend (can be overridden by subclasses)
     this.cleanupBackendorWebsocket();
 
