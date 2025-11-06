@@ -125,9 +125,6 @@ export class TournamentGamePage extends GamePage {
       activePaddle: undefined,
       wsPaddleSequence: 0,
     };
-    // needs to be at very end
-    // need to let the ws know we are ready to start playing
-    this.ws.messageClientReady(this.gameId);
     return this.gameState;
   }
 
@@ -273,6 +270,16 @@ export class TournamentGamePage extends GamePage {
 
       this.tournamentStatsDiv.appendChild(gameRow);
     }
+
+    const playButton = document.createElement("h1");
+    playButton.innerText = "play";
+    playButton.className = "btn w-32 mx-auto";
+    playButton.onclick = () => {
+      this.ws.messageClientReady(this.gameId);
+      this.hideBracket();
+      this.showLoadingOverlay("waiting");
+    };
+    this.tournamentStatsDiv.appendChild(playButton);
   }
 
   private hideBracket() {
