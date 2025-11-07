@@ -226,8 +226,8 @@ export class GamePage {
       this.scoreBar = new ScoreBar(
         this.gameState,
         () => this.gameStateCallback(),
-        () => this.ws.messageGamePause(this.gameId),
-        () => this.ws.messageGameResume(this.gameId),
+        // () => this.ws.messageGamePause(this.gameId),
+        // () => this.ws.messageGameResume(this.gameId),
       );
     }
 
@@ -241,7 +241,7 @@ export class GamePage {
     this.gameState.status = GameStatus.PLAYING;
 
     // make sure we are always showing the icon as a play icon
-    this.scoreBar.pausePlay.toggleIsPlaying(true);
+    // this.scoreBar.pausePlay.toggleIsPlaying(true);
 
     // always need to hide loading screen when we receive game update (if it exists in main)
     if (this.main.contains(this.loadingOverlay.getElement()))
@@ -266,7 +266,7 @@ export class GamePage {
 
   public async wsGamePauseHandler() {
     this.gameState.status = GameStatus.PAUSED;
-    this.scoreBar.pausePlay.toggleIsPlaying(false);
+    // this.scoreBar.pausePlay.toggleIsPlaying(false);
     this.showPauseOverlay();
   }
 
