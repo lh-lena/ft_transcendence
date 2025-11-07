@@ -1,4 +1,4 @@
-import { PausePlay } from "../pausePlay";
+// import { PausePlay } from "../pausePlay";
 import { GameState } from "../../types";
 import { ProfileAvatar } from "../profileAvatar";
 
@@ -8,15 +8,15 @@ export class ScoreBar {
   private playerRightContainer: HTMLElement;
   private scoreA: HTMLElement;
   private scoreB: HTMLElement;
-  public pausePlay: PausePlay;
+  // public pausePlay: PausePlay;
   private gameState: GameState;
   private gameStateCallbackParent: () => void;
 
   constructor(
     gameState: GameState,
     gameStateCallbackParent: () => void,
-    wsGamePauseCallback?: () => void,
-    wsGameResumeCallback?: () => void,
+    // wsGamePauseCallback?: () => void,
+    // wsGameResumeCallback?: () => void,
   ) {
     this.gameState = gameState;
     this.gameStateCallbackParent = gameStateCallbackParent;
@@ -44,22 +44,22 @@ export class ScoreBar {
     this.playerLeftContainer.appendChild(this.scoreA);
     this.element.appendChild(this.playerLeftContainer);
 
-    // Pause/Play button
-    // for remote game
-    if (wsGamePauseCallback && wsGameResumeCallback) {
-      this.pausePlay = new PausePlay(
-        this.gameState,
-        () => this.gameStateCallbackParent(),
-        wsGamePauseCallback,
-        wsGameResumeCallback,
-      );
-    } else {
-      // for local game
-      this.pausePlay = new PausePlay(this.gameState, () =>
-        this.gameStateCallbackParent(),
-      );
-    }
-    this.pausePlay.mount(this.element);
+    // // Pause/Play button
+    // // for remote game
+    // if (wsGamePauseCallback && wsGameResumeCallback) {
+    //   this.pausePlay = new PausePlay(
+    //     this.gameState,
+    //     () => this.gameStateCallbackParent(),
+    //     wsGamePauseCallback,
+    //     wsGameResumeCallback,
+    //   );
+    // } else {
+    //   // for local game
+    //   this.pausePlay = new PausePlay(this.gameState, () =>
+    //     this.gameStateCallbackParent(),
+    //   );
+    // }
+    // this.pausePlay.mount(this.element);
 
     // Player B profile and score
     this.playerRightContainer = document.createElement("div");
@@ -87,7 +87,7 @@ export class ScoreBar {
   }
 
   public clear() {
-    this.pausePlay.unmount();
+    // this.pausePlay.unmount();
   }
 
   public updateScores(scoreA: number, scoreB: number): void {

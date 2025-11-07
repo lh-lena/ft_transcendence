@@ -18,6 +18,7 @@ import { protectedRoutes } from "./constants/routes";
 
 // eventbus
 import { EventBus } from "./services/EventBus";
+import { AliasPage } from "./pages/alias";
 
 // single source of truth for pages and routes
 const PAGE_ROUTES = {
@@ -31,6 +32,7 @@ const PAGE_ROUTES = {
   "/game-page": GamePage,
   "/ai-game": AIGamePage,
   "/tournament-game": TournamentGamePage,
+  "/tournament-alias": AliasPage,
 } as const;
 
 // type magic
