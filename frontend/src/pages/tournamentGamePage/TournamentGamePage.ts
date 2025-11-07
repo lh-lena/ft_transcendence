@@ -25,13 +25,11 @@ import { showError } from "../../components/toast";
 
 export class TournamentGamePage extends GamePage {
   // game mode specific data
-  private alias!: string;
   private tournamentId!: string;
   private isGuest: boolean = true;
 
   // dom (UI) elements
   private form!: HTMLElement;
-  private inputAlias!: HTMLInputElement;
   private menu!: Menu;
   private tournamentStatsDiv!: HTMLDivElement;
 
@@ -45,11 +43,9 @@ export class TournamentGamePage extends GamePage {
     // on logout i try to clear it as ""
     // so it resolves to guest if we get a runtime error or the length of user id is 0
 
-    console.log("isGuest: ", this.isGuest);
-
     // UI inital stuff for tournament alias page (from default game page setup)
-    this.hideLoadingOverlay();
-    this.showAliasForm();
+
+    this.initializeTournament();
   }
 
   // custom game ready for tournament
@@ -123,35 +119,6 @@ export class TournamentGamePage extends GamePage {
     return this.gameState;
   }
 
-  private async handlePlayButton() {
-    // grab alias
-    this.alias = this.inputAlias.value.trim();
-
-    if (this.alias.length === 0) {
-      showError("must provide an alias");
-      return;
-    }
-
-    // hide form UI
-    this.hideAliasForm();
-
-    // show loading overlay
-    this.showLoadingOverlay("waiting");
-
-    // if we have a guest we set the guest user
-    if (this.isGuest) {
-      const response = await this.backend.registerGuest(this.alias);
-      console.log("alias guest: ", response);
-      // then also initialize web socket connection for guest user
-      this.ws.initializeWebSocket();
-    } else {
-      // patch alias for registered user
-      await this.backend.patchAlias(this.alias);
-    }
-
-    this.initializeTournament();
-  }
-
   public async initializeTournament(): Promise<void> {
     // two diff kinds of calls for join tournament depending on user type
     // for registered we need to still patch the alias so extra arg
@@ -160,33 +127,15 @@ export class TournamentGamePage extends GamePage {
     console.log(this.tournamentId);
     // Axios responses contain the server payload under `data`
 
+    // check if guest
+    const thisUser = await this.backend.getUserById(
+      this.backend.getUser().userId,
+    );
+    this.isGuest = thisUser.guest;
+    console.log("isGuest: ", this.isGuest);
+
     // show initial bracket
     this.showBracket(response.data);
-  }
-
-  private showAliasForm() {
-    this.form = document.createElement("form");
-    this.form.className = "flex flex-col gap-3 w-48 mb-5";
-    this.main.appendChild(this.form);
-
-    // email input
-    this.inputAlias = document.createElement("input");
-    this.inputAlias.type = "text";
-    this.inputAlias.id = "text_alias";
-    this.inputAlias.placeholder = "alias";
-    this.inputAlias.style.paddingLeft = "0.5em";
-    this.form.appendChild(this.inputAlias);
-
-    const aliasMenu = [
-      { name: "play", onClick: () => this.handlePlayButton() },
-    ];
-    this.menu = new Menu(this.router, aliasMenu);
-    this.main.appendChild(this.menu.getMenuElement());
-  }
-
-  private hideAliasForm() {
-    this.main.removeChild(this.form);
-    this.main.removeChild(this.menu.getMenuElement());
   }
 
   public async wsNotificationHandler(
@@ -329,7 +278,8 @@ export class TournamentGamePage extends GamePage {
 
     // case loser from tournament round 1
     if (winningUser.userId !== this.backend.getUser().userId) {
-      const menuItems: MenuItem[] = [{ name: "back", link: "/chat" }];
+      let hrefLink = this.isGuest ? "/" : "/chat";
+      const menuItems: MenuItem[] = [{ name: "back", link: hrefLink }];
       const menuEnd = new Menu(this.router, menuItems);
       menuEnd.mount(this.menuEndDiv);
       return;
@@ -352,7 +302,8 @@ export class TournamentGamePage extends GamePage {
       finalWinnerText.className = "text-white text text-center";
       this.menuEndDiv.appendChild(finalWinnerText);
 
-      const menuItems: MenuItem[] = [{ name: "back", link: "/chat" }];
+      let hrefLink = this.isGuest ? "/" : "/chat";
+      const menuItems: MenuItem[] = [{ name: "back", link: hrefLink }];
       const menuEnd = new Menu(this.router, menuItems);
       menuEnd.mount(this.menuEndDiv);
       return;

@@ -52,7 +52,7 @@ export class MenuBar {
   }
 
   private async joinTournamentFlow() {
-    this.router.navigate("/tournament-game");
+    this.router.navigate("/tournament-alias");
   }
 
   private async joinGameFlow() {
