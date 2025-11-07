@@ -433,6 +433,5 @@ export class GamePage {
 
     // Remove DOM
     this.main.remove();
-    this.router.navigate("/chat");
   }
 }

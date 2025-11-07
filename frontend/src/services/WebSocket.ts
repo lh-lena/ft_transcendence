@@ -51,9 +51,11 @@ export class Websocket {
         this.ws.close();
         this.ws = null;
       }
-      setTimeout(() => {
-        this.initializeWebSocket();
-      }, 1000);
+      // i think this reconnection BS was causing lots of error
+      // we should try this within app -> if we cant connect we try a couple times
+      // setTimeout(() => {
+      //   this.initializeWebSocket();
+      // }, 1000);
     };
 
     // web socket stuff
