@@ -13,6 +13,7 @@
  */
 
 import Fastify from 'fastify';
+import { FastifyReply, FastifyRequest } from 'fastify';
 import AutoLoad from '@fastify/autoload';
 import path from 'path';
 import { LoggerOptions } from 'pino';
@@ -118,6 +119,16 @@ const start = async () => {
       dir: path.join(__dirname, 'routes/backendRoutes'),
       options: { prefix: '/api' },
     });
+
+    server.get('/metrics', async (_request: FastifyRequest, reply: FastifyReply) => {
+      const metrics = await server.metrics.register.metrics();
+
+      return reply
+        .header('Content-Type', server.metrics.register.contentType)
+        .code(200)
+        .send(metrics);
+    });
+
     server.log.info({ routeDir: path.join(__dirname, 'routes') }, 'Routes loaded');
 
     // ------------ Log Routes ------------

@@ -11,6 +11,7 @@
  */
 
 import Fastify from 'fastify';
+import { FastifyReply, FastifyRequest } from 'fastify';
 import autoLoad from '@fastify/autoload';
 import path from 'path';
 import { LoggerOptions } from 'pino';
@@ -103,6 +104,28 @@ const start = async () => {
       dir: path.join(__dirname, 'routes'),
       dirNameRoutePrefix: true,
       options: { prefix: '/api' },
+    });
+
+    server.get('/metrics', {
+      schema: {
+        summary: 'Prometheus metrics',
+        description: 'Endpoint to retrieve Prometheus metrics.',
+        tags: ['monitoring'],
+        response: {
+          200: {
+            description: 'Prometheus metrics',
+            type: 'string',
+          },
+        },
+      },
+      handler: async (_request: FastifyRequest, reply: FastifyReply) => {
+        const metrics = await server.metrics.register.metrics();
+
+        return reply
+          .header('Content-Type', server.metrics.register.contentType)
+          .code(200)
+          .send(metrics);
+      },
     });
     server.log.info('Routes loaded');
 

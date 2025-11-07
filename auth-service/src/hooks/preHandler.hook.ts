@@ -17,7 +17,7 @@ import type { JwTReturnType } from '../schemas/jwt';
  * Organized by category for easier maintenance
  */
 const publicRoutes = {
-  health: ['/api/health', '/api/metrics'],
+  health: ['/api/health', '/metrics'],
 
   oauth: ['/api/oauth', '/api/oauth/callback'],
 

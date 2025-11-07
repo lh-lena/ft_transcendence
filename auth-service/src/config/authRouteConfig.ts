@@ -8,7 +8,6 @@ import {
   guestPostSchema,
 } from '../schemas/user';
 import type { UserType, UserRegisterType, UserLoginType, GuestPostType } from '../schemas/user';
-import { NormalizedError } from '../schemas/basics';
 
 /**
  * Authentication route configurations

@@ -352,7 +352,7 @@ export class tfaHandler {
   ): Promise<{ otpauth: string; qrCodeDataUrl: string; codes: string[] }> {
     const secret = authenticator.generateSecret();
 
-    const otpauth = authenticator.keyuri(user.username, 'ft_transcendence', secret);
+    const otpauth = authenticator.keyuri(user.username!, 'ft_transcendence', secret);
 
     const codes = Array.from({ length: 8 }, () => crypto.randomBytes(8).toString('hex'));
 
