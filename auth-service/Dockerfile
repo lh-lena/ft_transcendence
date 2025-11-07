@@ -1,20 +1,13 @@
-# Use Node.js 20 as base
-FROM node:20
+FROM node:20-alpine
 
-# Set working directory
+RUN apk add --no-cache curl
+
 WORKDIR /app
 
-# Copy package.json and package-lock.json (or yarn.lock)
-COPY package*.json ./
+COPY package.json ./
 
-# Install dependencies
-RUN npm install --fetch-timeout=60000 --cache /tmp/npm-cache
+RUN npm install
 
-# Copy the source code
 COPY . .
 
-# Expose the port your service uses
-EXPOSE 3000
-
-# Start the service
-CMD ["npm", "start"]
+CMD [  "npm", "run", "start" ]

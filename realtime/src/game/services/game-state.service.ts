@@ -9,7 +9,6 @@ import {
 } from '../../constants/index.js';
 import { processErrorLog, processDebugLog } from '../../utils/error.handler.js';
 import { resetGameState } from '../../game/engines/pong/pong.engine.js';
-import createGameValidator from '../utils/game.validation.js';
 import type { ConnectionService, RespondService } from '../../websocket/types/ws.types.js';
 import type {
   GameSessionService,
@@ -18,7 +17,12 @@ import type {
   GameLoopService,
 } from '../types/game.types.js';
 import type { EnvironmentConfig } from '../../config/config.js';
-import { createGameResult, broadcastGameUpdate, assignPaddleToPlayers } from '../utils/index.js';
+import {
+  createGameResult,
+  assignPaddleToPlayers,
+  getUserIdObjectArray,
+  createGameValidator,
+} from '../utils/index.js';
 
 export default function createGameStateService(app: FastifyInstance): GameStateService {
   const pausedGames: Map<GameIdType, PausedGameState> = new Map();
@@ -72,6 +76,7 @@ export default function createGameStateService(app: FastifyInstance): GameStateS
     if (existingPausedGame) {
       existingPausedGame.pausedAt = Date.now();
       existingPausedGame.playersWhoPaused.add(pausedByPlayerId);
+      existingPausedGame.pausedByPlayerId = pausedByPlayerId;
     } else {
       const pausedInfo: PausedGameState = {
         gameId: game.gameId,
@@ -124,7 +129,6 @@ export default function createGameStateService(app: FastifyInstance): GameStateS
       return;
     }
     const { gameId } = game;
-    processDebugLog(app, 'game-state', `Cleaning up resources for game ${gameId}`);
     try {
       const pauseTimeout = pauseTimeouts.get(gameId);
       if (pauseTimeout) {
@@ -132,7 +136,11 @@ export default function createGameStateService(app: FastifyInstance): GameStateS
         pauseTimeouts.delete(gameId);
       }
       game.players.forEach((player) => {
-        if (game.isConnected.get(player.userId) === true) {
+        if (
+          validator.isPlayerInGame(game.players, player.userId)
+          && player.isAI === false 
+          && game.isConnected.get(player.userId) === true
+        ) {
           connectionService.updateUserGame(player.userId, null);
         }
       });
@@ -145,13 +153,14 @@ export default function createGameStateService(app: FastifyInstance): GameStateS
   }
 
   function startGame(game: GameSession): void {
+    if (game === undefined || game === null || !validator.gameReadyToStart(game)) return;
     processDebugLog(app, 'game-state', `Starting the game ${game.gameId}`);
     const gameLoopService = app.gameLoopService as GameLoopService;
     const respond = app.respond as RespondService;
     updateGameToActive(game);
     resetGameState(game.gameState);
     assignPaddleToPlayers(game);
-    broadcastGameUpdate(respond, game.players, game.gameState);
+    respond.gameStarted(game.gameId, getUserIdObjectArray(game.players));
     gameLoopService.startCountdownSequence(game, 'Game started!', PONG_CONFIG.COUNTDOWN);
   }
 
@@ -184,7 +193,7 @@ export default function createGameStateService(app: FastifyInstance): GameStateS
       return false;
     }
     const gameLoopService = app.gameLoopService as GameLoopService;
-    gameLoopService.stopGameLoop(game);
+    gameLoopService.unregisterGame(game.gameId);
     updateGameToPaused(game);
     storePausedGameInfo(game, pausedByPlayerId);
     setAutoResume(game);
@@ -198,11 +207,9 @@ export default function createGameStateService(app: FastifyInstance): GameStateS
     }
     const { gameId } = game;
     const pausedState = pausedGames.get(gameId) as PausedGameState;
-    const respond = app.respond as RespondService;
     validator.validateResumingGame(pausedState, game, resumeByPlayerId);
     stopAutoResume(gameId);
     updateGameToActive(game);
-    broadcastGameUpdate(respond, game.players, game.gameState);
     const gameLoopService = app.gameLoopService as GameLoopService;
     gameLoopService.startCountdownSequence(game, 'Game resumed!', PONG_CONFIG.COUNTDOWN);
   }
@@ -225,6 +232,7 @@ export default function createGameStateService(app: FastifyInstance): GameStateS
     const gameLoopService = app.gameLoopService as GameLoopService;
     gameLoopService.stopCountdownSequence(game);
     gameLoopService.stopGameLoop(game);
+    app.log.fatal(JSON.stringify(game)); //rm
     updateGameToEnded(game, status);
     removePausedGameInfo(gameId);
     const result = createGameResult(game, status, leftPlayerId);
@@ -238,8 +246,8 @@ export default function createGameStateService(app: FastifyInstance): GameStateS
       return;
     }
     respond.gameEnded(gameId, result.value);
-    await processGameResult(result.value);
     cleanupGameResources(game);
+    await processGameResult(result.value);
     processDebugLog(app, 'game-state', `Game ${gameId} ended. Status: ${status}`);
   }
 
@@ -247,8 +255,14 @@ export default function createGameStateService(app: FastifyInstance): GameStateS
     const gameDataService = app.gameDataService as GameDataService;
     const { mode, gameId } = result;
     if (mode === GameMode.PVB_AI || result.status === GameSessionStatus.CANCELLED_SERVER_ERROR) {
+      processDebugLog(
+        app,
+        'game-state',
+        `Deleting game data from DB. Mode: ${mode}, Status: ${result.status}`,
+      );
       await gameDataService.deleteAIGame(gameId);
     } else {
+      processDebugLog(app, 'game-state', 'Sending game result to the DB');
       await gameDataService.sendGameResult(result);
     }
   }

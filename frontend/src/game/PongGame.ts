@@ -83,11 +83,13 @@ export class PongGame {
 
     // init paddleA
     this.paddleA = { ...PADDLE_A_DEFAULTS };
-    this.paddleA.color = gameState.playerA.color;
+    this.paddleA.color = this.gameState.playerA.color;
 
     // init paddleB
-    this.paddleB = { ...PADDLE_B_DEFAULTS };
-    this.paddleB.color = gameState.playerB.color;
+    if (this.gameState.playerB) {
+      this.paddleB = { ...PADDLE_B_DEFAULTS };
+      this.paddleB.color = this.gameState.playerB.color;
+    }
 
     this.attachKeyboardListeners();
     this.startGameLoop();
@@ -143,7 +145,8 @@ export class PongGame {
     [this.paddleA, this.paddleB] = [this.paddleB, this.paddleA];
     // Update colors from the swapped gameState
     this.paddleA.color = this.gameState.playerA.color;
-    this.paddleB.color = this.gameState.playerB.color;
+    if (this.gameState.playerB)
+      this.paddleB.color = this.gameState.playerB.color;
   }
 
   private startGameLoop(): void {
@@ -173,12 +176,14 @@ export class PongGame {
 
   public showGamePieces(): void {
     this.paddleA.color = this.gameState.playerA.color;
-    this.paddleB.color = this.gameState.playerB.color;
+    if (this.gameState.playerB)
+      this.paddleB.color = this.gameState.playerB.color;
     this.ball.color = BALL_DEFAULTS.color;
   }
 
   private updateGameState(dt: number): void {
     // if game is paused return
+    // commenting this out for now
     if (this.gameState.status !== GameStatus.PLAYING) {
       return;
     }
@@ -229,6 +234,7 @@ export class PongGame {
         this.gameState.activeKey !== ""
       ) {
         this.gameState.activeKey = "";
+        this.gameState.wsPaddleSequence++;
         this.gameStateCallBackParent();
         this.lastPaddleUpdateTime = now;
       }
@@ -264,7 +270,7 @@ export class PongGame {
 
       // --- Ball Collision: Left/Right Walls (Scoring) ---
       if (this.ball.x <= 0) {
-        this.gameState.playerB.score += 1;
+        if (this.gameState.playerB) this.gameState.playerB.score += 1;
         this.gameStateCallback();
         this.setInitialGameLayout();
         return;
@@ -339,6 +345,10 @@ export class PongGame {
   public mount(parent: HTMLElement): void {
     // Append the window element instead of just the canvas
     parent.appendChild(this.windowElement);
+  }
+
+  public getElement(): HTMLDivElement {
+    return this.windowElement;
   }
 
   public unmount(): void {

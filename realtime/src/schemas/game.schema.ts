@@ -9,7 +9,6 @@ export const PaddleNameSchema = z.enum(PaddleName);
 
 export const PlayerSchema = UserSchema.extend({
   sequence: z.number().default(0).optional(),
-  isAI: z.boolean().optional().default(false),
   aiDifficulty: z.enum(AIDifficulty).optional(),
   paddle: PaddleNameSchema.optional(),
 });
@@ -28,24 +27,26 @@ export const StartGameSchema = z.object({
   aiDifficulty: z.enum(AIDifficulty).optional(),
 });
 
-export const GameResultSchema = z.object({
-  gameId: GameIdSchema,
-  scorePlayer1: z.number().int().min(0),
-  scorePlayer2: z.number().int().min(0),
-  winnerId: UserIdSchema.nullable(),
-  loserId: UserIdSchema.nullable(),
-  winnerName: z.string(),
-  player1Username: z.string().nullable(),
-  player2Username: z.string().nullable(),
-  status: z.union([
-    z.literal(GameSessionStatus.FINISHED),
-    z.literal(GameSessionStatus.CANCELLED),
-    z.literal(GameSessionStatus.CANCELLED_SERVER_ERROR),
-  ]),
-  mode: z.enum(GameMode),
-  startedAt: z.string(),
-  finishedAt: z.string(),
-});
+export const GameResultSchema = z
+  .object({
+    gameId: GameIdSchema,
+    scorePlayer1: z.number().int().min(0),
+    scorePlayer2: z.number().int().min(0),
+    winnerId: UserIdSchema.nullable(),
+    loserId: UserIdSchema.nullable(),
+    winnerName: z.string(),
+    player1Username: z.string().nullable(),
+    player2Username: z.string().nullable(),
+    status: z.union([
+      z.literal(GameSessionStatus.FINISHED),
+      z.literal(GameSessionStatus.CANCELLED),
+      z.literal(GameSessionStatus.CANCELLED_SERVER_ERROR),
+    ]),
+    mode: z.enum(GameMode),
+    startedAt: z.string(),
+    finishedAt: z.string(),
+  })
+  .meta({ $id: 'GameResultPayload' });
 
 const PaddleSchema = z.object({
   x: z.number(),
@@ -56,6 +57,7 @@ const PaddleSchema = z.object({
   speed: z.number().int().positive(),
   direction: z.enum(Direction),
   isAI: z.boolean().optional().default(false),
+  userId: UserIdSchema.optional(),
 });
 
 const BallSchema = z.object({
@@ -68,21 +70,23 @@ const BallSchema = z.object({
 });
 
 export const GameStateSchema = z.object({
-  gameId: GameIdSchema,
-  ball: BallSchema,
-  paddleA: PaddleSchema,
-  paddleB: PaddleSchema,
-  countdown: z.number().int().min(0).default(0),
-  activePaddle: PaddleNameSchema,
-  status: z.enum(GameSessionStatus),
-  sequence: z.number().default(0),
-});
+    gameId: GameIdSchema,
+    ball: BallSchema,
+    paddleA: PaddleSchema,
+    paddleB: PaddleSchema,
+    countdown: z.number().int().min(0).default(0),
+    activePaddle: PaddleNameSchema,
+    status: z.enum(GameSessionStatus),
+    sequence: z.number().default(0),
+  })
+  .meta({ $id: 'GameStatePayload' });
 
 export const GameSessionSchema = z.object({
   gameId: GameIdSchema,
   mode: z.enum(GameMode),
   players: z.array(PlayerSchema),
   isConnected: z.map(UserIdSchema, z.boolean()),
+  playersReady: z.array(UserIdSchema),
   status: z.enum(GameSessionStatus),
   startedAt: z.string().optional(),
   finishedAt: z.string().optional(),
@@ -91,6 +95,32 @@ export const GameSessionSchema = z.object({
   gameState: GameStateSchema,
   aiDifficulty: z.enum(AIDifficulty).optional(),
 });
+
+export const GameStartRequestSchema = {
+  type: 'object',
+  properties: {
+    gameId: { type: 'string', format: 'uuid' },
+    players: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          userId: { type: 'string', format: 'uuid' },
+        },
+        required: ['userId'],
+      },
+    },
+    aiDifficulty: {
+      type: 'string',
+      enum: [AIDifficulty.EASY, AIDifficulty.MEDIUM, AIDifficulty.HARD],
+    },
+    mode: {
+      type: 'string',
+      enum: [GameMode.PVP_REMOTE, GameMode.PVB_AI, GameMode.PVP_LOCAL],
+    },
+  },
+  required: ['gameId', 'players', 'mode'],
+};
 
 export type StartGame = z.infer<typeof StartGameSchema>;
 export type BackendStartGame = z.infer<typeof BackendStartGameSchema>;

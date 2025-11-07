@@ -3,6 +3,7 @@ export enum GameStatus {
   PLAYING = "playing",
   PAUSED = "paused",
   GAME_OVER = "game_over",
+  WAITING = "waiting",
 }
 
 export interface Ball {
@@ -30,7 +31,9 @@ export interface Player {
   username: string;
   score: number;
   color: string;
-  colorMap: string[];
+  colormap: string[];
+  userId: string;
+  avatar: string | null;
 }
 
 export interface GameState {

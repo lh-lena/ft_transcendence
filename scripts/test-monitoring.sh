@@ -53,9 +53,9 @@ test_metrics() {
     echo ""
     
     echo "Service Health Status:"
-    backend_health=$(curl -s http://localhost:8080/metrics | grep '^backend_service_health' | awk '{print $2}')
+    backend_health=$(curl -s http://localhost:8080/api/metrics | grep '^backend_service_health' | awk '{print $2}')
     realtime_health=$(curl -s http://localhost:8081/metrics | grep '^realtime_service_health' | awk '{print $2}')
-    auth_health=$(curl -s http://localhost:8082/metrics | grep '^auth_service_health' | awk '{print $2}')
+    auth_health=$(curl -s http://localhost:8082/api/metrics | grep '^auth_service_health' | awk '{print $2}')
     
     echo "  Backend:  ${backend_health:-unavailable}"
     echo "  Realtime: ${realtime_health:-unavailable}"
@@ -63,7 +63,7 @@ test_metrics() {
     echo ""
     
     echo "Database:"
-    db_status=$(curl -s http://localhost:8080/metrics | grep '^db_connection_status' | awk '{print $2}')
+    db_status=$(curl -s http://localhost:8080/api/metrics | grep '^db_connection_status' | awk '{print $2}')
     echo "  Connection: ${db_status:-unavailable}"
     echo ""
     

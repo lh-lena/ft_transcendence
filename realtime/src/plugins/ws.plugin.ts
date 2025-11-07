@@ -2,7 +2,7 @@ import fp from 'fastify-plugin';
 import { WebSocketServer } from 'ws';
 import type { FastifyInstance, FastifyPluginCallback, VerifyClientInfo } from 'fastify';
 import type { IncomingMessage } from 'http';
-import type { AuthService } from '../auth/auth.js';
+import type { AuthService } from '../auth/auth.types.js';
 import createConnectionService from '../websocket/services/connection.service.js';
 import createRespondService from '../websocket/services/respond.service.js';
 import { handleWSConnection } from '../websocket/controllers/ws.controller.js';

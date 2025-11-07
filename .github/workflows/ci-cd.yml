@@ -168,7 +168,7 @@ jobs:
           done
           
           for i in {1..30}; do
-            curl -f http://localhost:8082/api/auth/health && break || sleep 2
+            curl -f http://localhost:8082/api/health && break || sleep 2
           done
       - name: Health checks
         run: |
@@ -177,7 +177,7 @@ jobs:
           # Backend
           curl -f http://localhost:8080/api/health || echo "Backend health check endpoint needed"
           # Auth
-          curl -f http://localhost:8082/api/auth/health || echo "Auth health check endpoint needed"
+          curl -f http://localhost:8082/api/health || echo "Auth health check endpoint needed"
           # WebSocket test would go here
           
       - name: Stop services
@@ -328,7 +328,7 @@ jobs:
           # Check if services are responding directly
           curl -f http://localhost:3000 || echo "Frontend direct access check"
           curl -f http://localhost:8080/api/health || echo "Backend direct access check"
-          curl -f http://localhost:8082/api/auth/health || echo "Auth direct access check"
+          curl -f http://localhost:8082/api/health || echo "Auth direct access check"
           
       - name: Run integration tests through nginx
         run: |
@@ -348,7 +348,7 @@ jobs:
           }
           
           # Test Auth endpoints through nginx
-          curl -f https://localhost/auth/api/auth/health --insecure -v || {
+          curl -f https://localhost/auth/api/health --insecure -v || {
             echo "Auth test failed. Checking auth-service logs..."
             docker-compose logs auth-service
             docker-compose logs nginx

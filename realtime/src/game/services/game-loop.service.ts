@@ -2,7 +2,6 @@ import type { FastifyInstance } from 'fastify';
 import type { GameSession } from '../../schemas/index.js';
 import {
   PONG_CONFIG,
-  NotificationType,
   GameSessionStatus,
   GameMode,
   AIDifficulty,
@@ -16,8 +15,8 @@ import type { AIService } from '../../ai/ai.types.js';
 import { broadcastGameUpdate } from '../utils/game.utils.js';
 
 export default function createGameLoopService(app: FastifyInstance): GameLoopService {
-  const activeGames = new Map<string, GameSession>();
-  const lastTickAt = new Map<string, number>();
+  const activeGames: Map<string, GameSession> = new Map();
+  const lastTickAt: Map<string, number> = new Map();
   let ticker: NodeJS.Timeout | undefined;
   const { log } = app;
 
@@ -103,15 +102,13 @@ export default function createGameLoopService(app: FastifyInstance): GameLoopSer
     stopAIGame(game);
   }
 
-  function startCountdownSequence(game: GameSession, infoMsg: string, count: number = 3): void {
+  function startCountdownSequence(game: GameSession, infoMsg: string, count: number = 4): void {
     const respond = app.respond as RespondService;
     if (game !== undefined && game.countdownInterval !== undefined) {
       clearInterval(game.countdownInterval);
     }
 
     game.gameState.countdown = count;
-    respond.countdownUpdate(game.gameId, count, count === 0 ? 'GO!' : count.toString());
-
     game.countdownInterval = setInterval(() => {
       if (game.status !== GameSessionStatus.ACTIVE) {
         clearInterval(game.countdownInterval);
@@ -130,7 +127,6 @@ export default function createGameLoopService(app: FastifyInstance): GameLoopSer
       if (count === 0) {
         clearInterval(game.countdownInterval);
         game.countdownInterval = undefined;
-        respond.notificationToGame(game.gameId, NotificationType.INFO, infoMsg);
         registerGame(game);
         startAIGame(game);
       }
@@ -166,6 +162,7 @@ export default function createGameLoopService(app: FastifyInstance): GameLoopSer
 
   return {
     startGameLoop,
+    unregisterGame,
     stopGameLoop,
     startCountdownSequence,
     stopCountdownSequence,

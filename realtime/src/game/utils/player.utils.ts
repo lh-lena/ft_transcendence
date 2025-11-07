@@ -1,6 +1,6 @@
 import type { Player, GameSession, Paddle, GameState } from '../../schemas/game.schema.js';
 import { AIDifficulty, GameMode, PaddleName } from '../../constants/index.js';
-import { UserIdType } from '../../schemas/user.schema.js';
+import type { User, UserIdObject, UserIdType } from '../../schemas/user.schema.js';
 
 export function isAIPlayer(player: Player): boolean {
   return player.isAI === true;
@@ -21,14 +21,26 @@ export function addAIPlayerToGame(
   if (mode !== GameMode.PVB_AI) {
     return;
   }
+  const aiId = `AI_${game.gameId}_${Date.now()}`;
   const player: Player = {
-    userId: null as unknown as UserIdType,
+    userId: aiId as unknown as UserIdType,
     userAlias: 'AI Bot',
     username: 'AI Bot',
     isAI: true,
     aiDifficulty: aiDifficulty ?? AIDifficulty.MEDIUM,
   };
   game.players.push(player);
+}
+
+export function getUserDisplayName(user: User): string {
+  let name = user.userAlias;
+  if (name === undefined || name === null) {
+    name = user.username;
+  }
+  if (name === undefined || name === null) {
+    name = 'unknown';
+  }
+  return name;
 }
 
 export function getPlayer1Username(game: GameSession): string {
@@ -55,10 +67,29 @@ export function assignPaddleToPlayers(game: GameSession): void {
   game.players.forEach((player: Player, index: number) => {
     const paddleName = index === 0 ? PaddleName.PADDLE_A : PaddleName.PADDLE_B;
     player.paddle = paddleName;
-
+    gameState[paddleName].userId = player.userId;
     if (isAIPlayer(player)) {
       const paddle = paddleName === PaddleName.PADDLE_A ? gameState.paddleA : gameState.paddleB;
       paddle.isAI = true;
     }
   });
+}
+
+export function createPlayerFromUser(user: User, aiDifficulty?: AIDifficulty): Player {
+  return {
+    ...user,
+    sequence: 0,
+    isAI: false,
+    aiDifficulty: aiDifficulty,
+  };
+}
+
+export function getUserIdObjectArray(players: Player[]): UserIdObject[] {
+  const userIdArray: UserIdObject[] = [];
+  players.forEach((player) => {
+    if (player.isAI === false) {
+      userIdArray.push({ userId: player.userId });
+    }
+  });
+  return userIdArray;
 }

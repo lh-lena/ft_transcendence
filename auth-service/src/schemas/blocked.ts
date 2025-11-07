@@ -20,5 +20,7 @@ export const blockedQuerySchema = blockedSchema;
 
 export const blockedResponseSchema = z.union([blockedSchema, blockedArraySchema, z.string()]);
 
-export type FriendType = z.infer<typeof blockedSchema>;
-export type FriendQueryType = z.infer<typeof blockedQuerySchema>;
+export type BlockedType = z.infer<typeof blockedSchema>;
+export type BlockedIdType = z.infer<typeof blockedIdSchema>;
+export type BlockedQueryType = z.infer<typeof blockedQuerySchema>;
+export type BlockedPostType = z.infer<typeof blockedPostSchema>;

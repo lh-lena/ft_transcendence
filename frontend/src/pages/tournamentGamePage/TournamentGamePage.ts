@@ -1,0 +1,406 @@
+// services
+import { ServiceContainer } from "../../services";
+
+// mother page
+import { GamePage } from "../gamePage";
+
+// components
+import { Menu, MenuItem } from "../../components/menu";
+import { ProfileAvatar } from "../../components/profileAvatar";
+
+// web socket import for notitification handler
+import { WsServerBroadcast } from "../../types/websocket";
+
+// types
+import { TournamentData } from "../../types/tournament";
+import { GameStatus, GameState, User } from "../../types";
+
+// functions
+import { profilePrintToArray } from "../../utils/profilePrintFunctions";
+import { showError } from "../../components/toast";
+
+// IMPORTANT TO REMEMBER
+// we receive gameID from game_update when ws also sends game ready
+// so we save it in gamePage
+
+export class TournamentGamePage extends GamePage {
+  // game mode specific data
+  private tournamentId!: string;
+  private isGuest: boolean = true;
+
+  // dom (UI) elements
+  private form!: HTMLElement;
+  private menu!: Menu;
+  private tournamentStatsDiv!: HTMLDivElement;
+
+  constructor(serviceContainer: ServiceContainer) {
+    super(serviceContainer);
+
+    // Re-bind the handler to ensure the subclass method is used
+    // this.boundWsGameReadyHandler = this.wsGameReadyHandler.bind(this);
+
+    // we have two elses here because sometimes there is still a stale entry for some reason
+    // on logout i try to clear it as ""
+    // so it resolves to guest if we get a runtime error or the length of user id is 0
+
+    // UI inital stuff for tournament alias page (from default game page setup)
+
+    this.initializeTournament();
+  }
+
+  // custom game ready for tournament
+  public async wsGameReadyHandler(
+    payload: WsServerBroadcast["game_ready"],
+  ): Promise<void> {
+    // call to base class
+    super.wsGameReadyHandler(payload);
+    // this is where we set game id and start game shit
+    this.gameId = payload.gameId;
+
+    console.log("game ready: ", this.gameId);
+
+    // same ol initialize backend
+    this.initializeBackend();
+  }
+
+  public async initializeBackend(): Promise<void> {
+    // await this.backend.joinGame(this.gameId);
+    // usually poll for game ready but in tournament we are calling it from the game ready handler
+    this.intializeGameState();
+  }
+
+  public async wsGameUpdateHandler(
+    payload: WsServerBroadcast["game_update"],
+  ): Promise<void> {
+    super.wsGameUpdateHandler(payload);
+    // hide bracket on game start
+    this.hideBracket();
+    // in case we end game and resume then for second game
+    this.hideEndGameOverlay();
+  }
+
+  public async intializeGameState(): Promise<GameState> {
+    console.log("intialize game state");
+    // get game data from backend
+    const response = await this.backend.getGameById(this.gameId);
+    const gameData = response.data;
+    // If game exists and has started, initialize it
+    if (!gameData && gameData.players && gameData.players.length === 2) {
+      showError("couldn't fetch players. please try again");
+      this.router.navigate("/chat");
+    }
+    // get other users id from the game data
+    const otherUserId = gameData.players.find(
+      (player: { userId: string }) =>
+        player.userId !== this.backend.getUser().userId,
+    );
+    // get other user by the ID we just found
+    const otherUser = await this.backend.getUserById(otherUserId.userId);
+    otherUser.colormap = profilePrintToArray(otherUser.colormap);
+    // Initialize gameState with both users
+    this.gameState = {
+      status: GameStatus.WAITING,
+      previousStatus: GameStatus.WAITING,
+      playerA: {
+        ...this.backend.getUser(),
+        score: 0,
+      },
+      playerB: {
+        ...otherUser,
+        score: 0,
+      },
+      pauseInitiatedByMe: false,
+      blockedPlayButton: false,
+      activeKey: "",
+      previousKey: "",
+      activePaddle: undefined,
+      wsPaddleSequence: 0,
+    };
+    return this.gameState;
+  }
+
+  public async initializeTournament(): Promise<void> {
+    // two diff kinds of calls for join tournament depending on user type
+    // for registered we need to still patch the alias so extra arg
+    const response = await this.backend.joinTournament();
+    this.tournamentId = response.data.tournamentId;
+    console.log(this.tournamentId);
+    // Axios responses contain the server payload under `data`
+
+    // check if guest
+    const thisUser = await this.backend.getUserById(
+      this.backend.getUser().userId,
+    );
+    this.isGuest = thisUser.guest;
+    console.log("isGuest: ", this.isGuest);
+
+    // show initial bracket
+    this.showBracket(response.data);
+  }
+
+  public async wsNotificationHandler(
+    _payload: WsServerBroadcast["notification"],
+  ) {
+    if (_payload.message === "INFO: New player joined the tournament") {
+      // grab new tournament data from backend with new players
+      const newTournamentData = await this.backend.getTournamentById(
+        this.tournamentId,
+      );
+      console.log(newTournamentData);
+      console.log(_payload);
+      this.showBracket(newTournamentData.data);
+    }
+  }
+
+  // makes a bracket
+  private async showBracket(tournamentData: TournamentData) {
+    this.hideLoadingOverlay();
+    console.log("show bracket called");
+
+    if (this.main.contains(this.tournamentStatsDiv))
+      this.main.removeChild(this.tournamentStatsDiv);
+
+    // Ensure all player data is populated before rendering
+    await Promise.all(
+      tournamentData.players.map(async (player) => {
+        const user = await this.backend.getUserById(player.userId);
+        player.alias = user.alias;
+        player.color = user.color;
+        player.colormap = profilePrintToArray(user.colormap);
+        player.avatar = user.avatar;
+        player.userId = user.userId;
+      }),
+    );
+
+    this.tournamentStatsDiv = document.createElement("div");
+    this.tournamentStatsDiv.className = "flex flex-col gap-8";
+    this.main.appendChild(this.tournamentStatsDiv);
+
+    // Group players in pairs
+    for (let i = 0; i < tournamentData.players.length; i += 2) {
+      const gameTitle = document.createElement("h1");
+      gameTitle.className = "text-white text-2xl text-center";
+      gameTitle.innerText = `game ${i / 2 + 1}: `;
+      this.tournamentStatsDiv.appendChild(gameTitle);
+
+      // Create a row container for the pair
+      const gameRow = document.createElement("div");
+      gameRow.className = "flex flex-row gap-4 items-center";
+
+      // Add first player
+      if (tournamentData.players[i].alias) {
+        const playerDiv = this.createPlayer(
+          tournamentData.players[i].alias!,
+          tournamentData.players[i].color!,
+          tournamentData.players[i].colormap!,
+          tournamentData.players[i].avatar!,
+          tournamentData.players[i].userId!,
+        );
+        gameRow.appendChild(playerDiv);
+      }
+
+      // Add second player
+      if (tournamentData.players[i + 1]?.alias) {
+        const vsTitle = document.createElement("h1");
+        vsTitle.className = "text-white text-xl";
+        vsTitle.innerText = "vs";
+        gameRow.appendChild(vsTitle);
+        const playerDiv = this.createPlayer(
+          tournamentData.players[i + 1].alias!,
+          tournamentData.players[i + 1].color!,
+          tournamentData.players[i + 1].colormap!,
+          tournamentData.players[i + 1].avatar!,
+          tournamentData.players[i + 1].userId!,
+        );
+        gameRow.appendChild(playerDiv);
+      }
+
+      this.tournamentStatsDiv.appendChild(gameRow);
+    }
+
+    if (
+      (tournamentData.round === 1 && tournamentData.players.length === 4) ||
+      (tournamentData.round === 2 && tournamentData.players.length === 2)
+    ) {
+      const playButton = document.createElement("h1");
+      playButton.innerText = "play";
+      playButton.className = "btn w-32 mx-auto";
+      playButton.onclick = () => {
+        this.ws.messageClientReady(this.gameId);
+        this.hideBracket();
+        this.showLoadingOverlay("waiting");
+      };
+      this.tournamentStatsDiv.appendChild(playButton);
+    }
+  }
+
+  private hideBracket() {
+    if (this.main.contains(this.tournamentStatsDiv))
+      this.main.removeChild(this.tournamentStatsDiv);
+  }
+
+  // need to rewrite this here because it is referinging a custom function here in tournament page
+  public async showEndGameOverlay(winningUser: User): Promise<void> {
+    console.log("this end game overlay");
+    this.game?.hideGamePieces();
+    this.scoreBar.clear();
+    if (this.gameContainer && !this.menuPauseDiv) {
+      this.menuEndDiv = document.createElement("div");
+      this.menuEndDiv.className = "flex flex-col gap-5 items-center";
+      // Create and mount menu to game container instead of main element
+      console.log(
+        "this end: ",
+        winningUser.userId,
+        this.backend.getUser().userId,
+      );
+      let avatar = new ProfileAvatar(
+        winningUser.color,
+        winningUser.colormap,
+        40,
+        40,
+        2,
+        winningUser.avatar ? "image" : undefined,
+        winningUser.userId,
+      );
+      this.menuEndDiv.appendChild(avatar.getElement());
+      this.endResultText = document.createElement("h1");
+      this.endResultText.textContent = `${winningUser.username} wins`;
+      this.endResultText.className = "text-white text text-center";
+      this.menuEndDiv.appendChild(this.endResultText);
+      this.gameContainer.appendChild(this.menuEndDiv);
+      // Add overlay styling to menu element
+      this.menuEndDiv.style.position = "absolute";
+      this.menuEndDiv.style.top = "50%";
+      this.menuEndDiv.style.left = "50%";
+      this.menuEndDiv.style.transform = "translate(-50%, -50%)";
+      this.menuEndDiv.style.zIndex = "1000";
+    }
+
+    // case loser from tournament round 1
+    if (winningUser.userId !== this.backend.getUser().userId) {
+      let hrefLink = this.isGuest ? "/" : "/chat";
+      const menuItems: MenuItem[] = [{ name: "back", link: hrefLink }];
+      const menuEnd = new Menu(this.router, menuItems);
+      menuEnd.mount(this.menuEndDiv);
+      return;
+    }
+
+    const waitingForRoundText = document.createElement("h1");
+    waitingForRoundText.innerText = "waiting for tournament results";
+    waitingForRoundText.className = "text-white text text-center";
+    this.menuEndDiv.appendChild(waitingForRoundText);
+
+    // case winner
+    // wait for round 2
+    const tournamentData = await this.pollForRoundStatus();
+
+    // tournament ended (502 error)
+    if (!tournamentData) {
+      this.menuEndDiv.removeChild(waitingForRoundText);
+      const finalWinnerText = document.createElement("h1");
+      finalWinnerText.innerText = "you won the tournament!";
+      finalWinnerText.className = "text-white text text-center";
+      this.menuEndDiv.appendChild(finalWinnerText);
+
+      let hrefLink = this.isGuest ? "/" : "/chat";
+      const menuItems: MenuItem[] = [{ name: "back", link: hrefLink }];
+      const menuEnd = new Menu(this.router, menuItems);
+      menuEnd.mount(this.menuEndDiv);
+      return;
+    }
+
+    // case winning
+    const menuItems = [
+      {
+        name: "next round",
+        onClick: () => this.nextRoundHandler(tournamentData),
+      },
+    ];
+    const menuEnd = new Menu(this.router, menuItems);
+    menuEnd.mount(this.menuEndDiv);
+
+    this.menuEndDiv.removeChild(waitingForRoundText);
+  }
+
+  private async pollForRoundStatus(): Promise<TournamentData | null> {
+    return new Promise((resolve) => {
+      const checkInterval = setInterval(async () => {
+        try {
+          const response = await this.backend.getTournamentById(
+            this.tournamentId,
+          );
+
+          // Check if we got a 502 in the response
+          if (!response) {
+            clearInterval(checkInterval);
+            resolve(null);
+            return;
+          }
+
+          const tournamentData: TournamentData = response.data;
+
+          if (tournamentData.round === 2) {
+            clearInterval(checkInterval);
+            resolve(tournamentData);
+          }
+        } catch (error: any) {
+          console.log("Caught error, continuing polling", error);
+          // For any error, continue polling
+        }
+      }, 2000); // check every 2 seconds
+    });
+  }
+
+  private async nextRoundHandler(tournamentData: TournamentData) {
+    this.hideGame();
+    this.scoreBar.unmount();
+
+    // case second round
+    this.showBracket(tournamentData);
+  }
+
+  // created a player div for bracket to use
+  private createPlayer(
+    alias: string,
+    color: string,
+    colormap: string[],
+    avatar: string | undefined,
+    userId: string,
+  ): HTMLDivElement {
+    const contact = document.createElement("div");
+    contact.className =
+      "flex flex-row gap-4 box standard-dialog w-32 items-center";
+    const contactName = document.createElement("h1");
+    contactName.textContent = alias;
+    const contactAvatar = new ProfileAvatar(
+      color,
+      colormap,
+      30,
+      30,
+      2,
+      avatar ? "image" : undefined,
+      userId,
+    ).getElement();
+    contact.appendChild(contactAvatar);
+    contact.appendChild(contactName);
+    return contact;
+  }
+
+  // custom cleanup backend in tournament page for leaving a tournament
+  protected cleanupBackendorWebsocket(): void {
+    if (!this.gameState) {
+      this.backend.leaveTournament();
+    } else if (this.gameState.status !== GameStatus.GAME_OVER) {
+      this.ws.messageGameLeave(this.gameId);
+    }
+  }
+
+  // for guest user
+  public unmount(): void {
+    if (this.isGuest) {
+      localStorage.removeItem("user");
+      localStorage.removeItem("jwt");
+    }
+    super.unmount();
+  }
+}

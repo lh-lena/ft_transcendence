@@ -1,266 +1,240 @@
-import Fastify from 'fastify';
-import cors from '@fastify/cors';
-import jwt from '@fastify/jwt';
-import fastifyCookie from '@fastify/cookie';
-import fastifyCsrf from '@fastify/csrf-protection';
-import fastifyOauth2 from '@fastify/oauth2';
-import fastifyHttpProxy from '@fastify/http-proxy';
-import * as client from 'prom-client';
+/**
+ * Auth Service - Main Server Entry Point
+ *
+ * Initializes and starts the Fastify server with:
+ * - Production-grade logging (pino with pretty-print in dev)
+ * - Auto-loaded plugins, routes, and hooks
+ * - Prometheus metrics for monitoring
+ * - CSRF protection
+ * - Graceful shutdown handling
+ * - Reverse proxy for file uploads
+ *
+ * @module server
+ */
 
-import cronPlugin from './plugins/000_cron';
+import Fastify from 'fastify';
+import { FastifyReply, FastifyRequest } from 'fastify';
 import AutoLoad from '@fastify/autoload';
 import path from 'path';
+import { LoggerOptions } from 'pino';
+import { fileURLToPath } from 'url';
 
-import { config } from './config/index';
+// ESM dirname compatibility
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-// Initialize Prometheus registry
-export const register = new client.Registry();
+const isProduction = process.env.NODE_ENV === 'production';
+const isDevelopment = process.env.NODE_ENV === 'development';
 
-// collect default metrics (CPU, memory, etc.)
-client.collectDefaultMetrics({ register });
+const loggerConfig: LoggerOptions = isProduction
+  ? {
+      level: 'info',
+      redact: {
+        paths: ['req.headers.authorization', 'req.headers.cookie', 'res.headers["set-cookie"]'],
+        remove: true,
+      },
+      serializers: {
+        req: (req) => ({
+          method: req.method,
+          url: req.url,
+          remoteAddress: req.ip,
+        }),
+        res: (res) => ({
+          statusCode: res.statusCode,
+        }),
+        err: (err) => ({
+          type: err.type,
+          message: err.message?.replace(/\\n/g, '\n').replace(/\\t/g, '\t'),
+          stack: err.stack,
+          target: err.meta?.target,
+        }),
+      },
+    }
+  : {
+      level: isDevelopment ? 'debug' : 'info',
+      transport: {
+        target: 'pino-pretty',
+        options: {
+          colorize: true,
+          translateTime: 'HH:MM:ss Z',
+          ignore: 'pid,hostname',
+          singleLine: false,
+        },
+      },
+      serializers: {
+        err: (err) => ({
+          type: err.type,
+          message: err.message?.replace(/\\n/g, '\n').replace(/\\t/g, '\t'),
+          stack: err.stack,
+          target: err.meta?.target,
+        }),
+      },
+    };
 
-// create custom metrics for auth service
-export const authServiceHealth = new client.Gauge({
-  name: 'auth_service_health',
-  help: 'Auth service health status (1 = up, 0 = down)',
-  registers: [register],
+/**
+ * Initialize Fastify server instance
+ */
+export const server = Fastify({
+  logger: loggerConfig,
+  requestIdLogLabel: 'requestId',
+  disableRequestLogging: false,
+  genReqId: (req) => req.headers['x-request-id']?.toString() || crypto.randomUUID(),
+  requestIdHeader: 'x-request-id',
+  trustProxy: isProduction,
+  bodyLimit: 1048576,
+  connectionTimeout: 10000,
+  keepAliveTimeout: 5000,
 });
 
-export const loginAttempts = new client.Counter({
-  name: 'auth_login_attempts_total',
-  help: 'Total number of login attempts',
-  labelNames: ['status'],
-  registers: [register],
-});
-
-export const registrationCounter = new client.Counter({
-  name: 'auth_user_registrations_total',
-  help: 'Total number of user registrations',
-  labelNames: ['status'],
-  registers: [register],
-});
-
-export const server = Fastify({ logger: true });
-
-//// Health check endpoint with metrics update
-//server.get('/api/auth/health', async (request, reply) => {
-//  let dbStatus = 'down';
-//  let dbStatusCode = 0;
-//
-//  try {
-//    // test database connection
-//    db.prepare('SELECT 1').get();
-//    dbStatus = 'up';
-//    dbStatusCode = 1;
-//  } catch (err) {
-//    server.log.error('Database health check failed:', err);
-//    dbStatus = 'down';
-//    dbStatusCode = 0;
-//  }
-//
-//  // update metrics
-//  authServiceStatus.set(1); // service is up if this endpoint responds
-//  dbConnectionStatus.set(dbStatusCode);
-//
-//  return {
-//    status: 'ok',
-//    service: 'auth-service',
-//    message: 'Auth service running on port 8082',
-//    dbStatus: dbStatus,
-//    timestamp: new Date().toISOString(),
-//  };
-//});
-//
-//// prometheus metrics endpoint
-//server.get('/metrics', async (request, reply) => {
-//  try {
-//    const metrics = await register.metrics();
-//    reply.header('Content-Type', register.contentType).code(200).send(metrics);
-//  } catch (err) {
-//    server.log.error('Error generating metrics:', err);
-//    reply.code(500).send({ error: 'Failed to generate metrics' });
-//  }
-//});
-//
-//// registration endpoint with metrics
-//server.post('/api/auth/register', async (request, reply) => {
-//  const { email, username, password, alias } = request.body as {
-//    email?: string;
-//    username?: string;
-//    password?: string;
-//    alias?: string;
-//  };
-//
-//  if (!email || !username || !password) {
-//    registrationCounter.inc({ status: 'failed' });
-//    return reply.status(400).send({ error: 'Email, username, and password are required.' });
-//  }
-//  if (!/^[\w.-]+@[\w.-]+\.\w+$/.test(email)) {
-//    registrationCounter.inc({ status: 'failed' });
-//    return reply.status(400).send({ error: 'Invalid email format.' });
-//  }
-//  if (username.length < 3 || username.length > 32) {
-//    registrationCounter.inc({ status: 'failed' });
-//    return reply.status(400).send({ error: 'Username must be 3-32 characters.' });
-//  }
-//  if (password.length < 6) {
-//    registrationCounter.inc({ status: 'failed' });
-//    return reply.status(400).send({ error: 'Password must be at least 6 characters.' });
-//  }
-//
-//  // 2. Check if email or username already exists
-//  const exists = db
-//    .prepare('SELECT id FROM user WHERE email = ? OR username = ?')
-//    .get(email, username);
-//  if (exists) {
-//    registrationCounter.inc({ status: 'failed' });
-//    return reply.status(409).send({ error: 'Email or username already in use.' });
-//  }
-//
-//  let password_hash: string;
-//  try {
-//    password_hash = await hashPassword(password);
-//  } catch (err) {
-//    server.log.error(err);
-//    registrationCounter.inc({ status: 'failed' });
-//    return reply.status(500).send({ error: 'Failed to hash password.' });
-//  }
-//
-//  try {
-//    db.prepare('INSERT INTO user (email, username, password_hash) VALUES (?, ?, ?)').run(
-//      email,
-//      username,
-//      password_hash,
-//    );
-//    registrationCounter.inc({ status: 'success' });
-//  } catch (err) {
-//    server.log.error(err);
-//    registrationCounter.inc({ status: 'failed' });
-//    return reply.status(500).send({ error: 'Failed to create user.' });
-//  }
-//
-//  return reply.status(201).send({ message: 'User registered successfully.' });
-//});
-//
-//// Login endpoint with metrics
-//server.post('/api/auth/login', async (request, reply) => {
-//  const { email, password } = request.body as { email?: string; password?: string };
-//
-//  if (!email || !password) {
-//    loginAttempts.inc({ status: 'failed' });
-//    return reply.status(400).send({ error: 'Email and password are required.' });
-//  }
-//
-//  const user = db.prepare('SELECT * FROM user WHERE email = ?').get(email) as User | undefined;
-//  if (!user) {
-//    loginAttempts.inc({ status: 'failed' });
-//    return reply.status(401).send({ error: 'Invalid credentials.' });
-//  }
-//
-//  const valid = await verifyPassword(user.password_hash, password);
-//  if (!valid) {
-//    loginAttempts.inc({ status: 'failed' });
-//    return reply.status(401).send({ error: 'Invalid credentials.' });
-//  }
-//
-//  loginAttempts.inc({ status: 'success' });
-//
-//  const token = generateJWT({
-//    sub: user.id,
-//    username: user.username,
-//    email: user.email,
-//    alias: user.alias,
-//    is_2fa_enabled: user.is_2fa_enabled,
-//  });
-//
-//  return reply.send({ token });
-//});
-
-// ------------ Start Server ------------
+/**
+ * Server lifecycle and plugin registration
+ * Loads plugins and routes in correct order
+ */
 const start = async () => {
-  // ------------ Plugins ------------
-
-  await server.register(fastifyCookie);
-  await server.register(fastifyCsrf);
-  await server.register(cronPlugin);
-
-  //set secrets in docker-compose.yml
-  const accessSecret = process.env.ACCESS_TOKEN_SECRET;
-  const refreshSecret = process.env.REFRESH_TOKEN_SECRET;
-
-  if (!accessSecret || !refreshSecret) {
-    throw new Error('JWT secrets are not defined in environment variables');
-  }
-
-  await server.register(jwt, {
-    secret: accessSecret,
-    namespace: 'access',
-    sign: { expiresIn: '15m' },
-  });
-
-  await server.register(jwt, {
-    secret: refreshSecret,
-    namespace: 'refresh',
-    sign: { expiresIn: '7d' },
-  });
-
-  //----------Loader--------------------
-  await server.register(AutoLoad, {
-    dir: path.join(__dirname, '/plugins'),
-  });
-
-  await server.register(AutoLoad, {
-    dir: path.join(__dirname, '/routes'),
-  });
-
-  await server.register(AutoLoad, {
-    dir: path.join(__dirname, '/hooks'),
-  });
-
-  await server.register(cors, {
-    //TODO set to frontend
-    origin: true,
-    credentials: true,
-    methods: ['GET', 'POST', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-  });
-
-  server.register(fastifyHttpProxy, {
-    upstream: 'http://127.0.0.1:8080/api/upload',
-    prefix: '/api/upload',
-    http2: false,
-  });
-
-  // ------------ Google OAuth2 ------------
-  await server.register(fastifyOauth2, {
-    name: 'googleOAuth2',
-    scope: ['profile', 'email'],
-    credentials: {
-      client: { id: config.googleClientId, secret: config.googleClientSecret },
-      auth: fastifyOauth2.GOOGLE_CONFIGURATION,
-    },
-    startRedirectPath: '/api/auth/google',
-    callbackUri: 'http://localhost:8082/api/auth/google/callback',
-  });
-
   try {
-    await server.listen({ port: config.port, host: config.host });
-    server.log.info(`Server listening on ${config.host}:${config.port}`);
-    //await server.listen({ port: 8082, host: '0.0.0.0' });
-    // set service status to up when server starts successfully
-    //  authServiceStatus.set(1);
+    server.log.info('Starting auth service...');
+
+    // ------------ Auto-load Plugins ------------
+
+    await server.register(AutoLoad, { dir: path.join(__dirname, 'plugins') });
+    server.log.info({ pluginDir: path.join(__dirname, 'plugins') }, 'Plugins loaded');
+
+    // ------------ Auto-load Hooks ------------
+
+    await server.register(AutoLoad, {
+      dir: path.join(__dirname, 'hooks'),
+    });
+    server.log.info({ hookDir: path.join(__dirname, 'hooks') }, 'Hooks loaded');
+
+    // ------------ Auto-load Routes ------------
+
+    await server.register(AutoLoad, {
+      dir: path.join(__dirname, 'routes'),
+      dirNameRoutePrefix: true,
+      options: { prefix: '/api' },
+      ignorePattern: /backendRoutes/,
+    });
+
+    await server.register(AutoLoad, {
+      dir: path.join(__dirname, 'routes/backendRoutes'),
+      options: { prefix: '/api' },
+    });
+
+    server.get('/metrics', async (_request: FastifyRequest, reply: FastifyReply) => {
+      const metrics = await server.metrics.register.metrics();
+
+      return reply
+        .header('Content-Type', server.metrics.register.contentType)
+        .code(200)
+        .send(metrics);
+    });
+
+    server.log.info({ routeDir: path.join(__dirname, 'routes') }, 'Routes loaded');
+
+    // ------------ Log Routes ------------
+
+    if (server.config.NODE_ENV !== 'production') {
+      server.log.info('Registered routes:');
+      server.log.info(
+        server.printRoutes({
+          commonPrefix: false,
+          includeHooks: false,
+        }),
+      );
+    }
+
+    // ------------ Start Listening ------------
+
+    await server.listen({
+      port: server.config.PORT,
+      host: server.config.HOST,
+    });
+
+    server.updateServiceHealth(true);
+
+    server.log.info(
+      {
+        port: server.config.PORT,
+        host: server.config.HOST,
+        environment: process.env.NODE_ENV,
+      },
+      'Auth service started successfully',
+    );
   } catch (err) {
-    server.log.error(err);
-    // authServiceStatus.set(0);
+    server.log.fatal({ err }, 'Failed to start auth service');
+
+    if (server.updateServiceHealth) {
+      server.updateServiceHealth(false);
+    }
+
     process.exit(1);
   }
 };
 
-// graceful shutdown
-process.on('SIGTERM', async () => {
-  // authServiceStatus.set(0);
-  await server.close();
-  process.exit(0);
+// ------------ Graceful Shutdown Handlers ------------
+
+/**
+ * Graceful shutdown helper
+ *
+ * Closes server and waits for in-flight requests with timeout.
+ *
+ * @param signal - Signal name (SIGTERM, SIGINT, etc.)
+ * @returns Promise that resolves when shutdown complete
+ */
+async function gracefulShutdown(signal: string): Promise<void> {
+  server.log.info({ signal }, 'Shutdown signal received, starting shutdown...');
+
+  const shutdownTimer = setTimeout(() => {
+    server.log.error(
+      { timeout: server.config.SHUTDOWN_TIMEOUT },
+      'Graceful shutdown timeout exceeded, forcing exit',
+    );
+    process.exit(1);
+  }, server.config.SHUTDOWN_TIMEOUT);
+
+  try {
+    await server.close();
+    clearTimeout(shutdownTimer);
+    server.log.info('Server closed successfully');
+    process.exit(0);
+  } catch (err) {
+    clearTimeout(shutdownTimer);
+    server.log.error({ err }, 'Error during shutdown');
+    process.exit(1);
+  }
+}
+// ------------ Gracefull Shutdown ------------
+
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+
+// ------------ Handle uncaught Errors ------------
+
+process.on('uncaughtException', (err) => {
+  server.log.fatal({ err }, 'Uncaught exception - forcing shutdown');
+  process.exit(1);
 });
+
+process.on('unhandledRejection', (reason, promise) => {
+  server.log.error({ reason, promise }, 'Unhandled rejection');
+
+  if (server.config.NODE_ENV === 'production') {
+    server.log.fatal('Exiting due to unhandled rejection in production');
+    process.exit(1);
+  }
+});
+
+process.on('warning', (warning) => {
+  server.log.warn(
+    {
+      name: warning.name,
+      message: warning.message,
+      stack: warning.stack,
+    },
+    'Process warning',
+  );
+});
+
+// ------------ START ------------
 
 start();

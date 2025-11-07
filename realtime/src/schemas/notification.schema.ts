@@ -4,7 +4,7 @@ import type { UserIdType } from './user.schema.js';
 export const NotificationRequestSchema = {
   type: 'object',
   properties: {
-    reciver: { type: 'string', format: 'uuid' },
+    reciever: { type: 'string', format: 'uuid' },
     sender: { type: 'string', format: 'uuid' },
     payload: {
       type: 'object',
@@ -19,26 +19,12 @@ export const NotificationRequestSchema = {
       default: NotificationType.INFO,
     },
   },
-  required: ['reciver', 'sender', 'payload'],
-};
-
-export const NotificationResponseSchema = {
-  type: 'object',
-  properties: {
-    success: { type: 'boolean' },
-    message: { type: 'string' },
-  },
-  required: ['success'],
+  required: ['reciever', 'sender', 'payload'],
 };
 
 export type NotificationRequest = {
   event: NotificationType;
-  reciver: UserIdType;
+  reciever: UserIdType;
   sender: UserIdType;
   payload: { message: string };
-};
-
-export type NotificationResponse = {
-  success: boolean;
-  message: string;
 };

@@ -3,14 +3,14 @@ import { dtString } from './basics';
 
 export const chatSchema = z.object({
   senderId: z.uuid().optional(),
-  reciverId: z.uuid().optional(),
+  recieverId: z.uuid().optional(),
   message: z.string(),
   createdAt: dtString,
 });
 
 export const chatQuerySchema = chatSchema.pick({
   senderId: true,
-  reciverId: true,
+  recieverId: true,
 });
 
 export const chatPostSchema = chatSchema.omit({

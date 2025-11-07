@@ -16,9 +16,9 @@ datasource db {
 // add string string map and avatar
 model User {
   userId         String       @id @default(uuid())
+  githubId       String?
 
-  email          String?       @unique
-  username       String       @unique
+  username       String?       @unique
   alias          String?     
   guest          Boolean      @default(false)
 
@@ -46,7 +46,7 @@ model User {
   blockedBy      Blocked[]     @relation("blocked")
 
   chatSent       ChatMessage[] @relation("sender")
-  chatRecived    ChatMessage[] @relation("reciver")
+  chatRecived    ChatMessage[] @relation("reciever")
 
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
@@ -61,7 +61,7 @@ model Friendship {
 
   createdAt DateTime @default(now())
 
-  @@unique([userId, friendId])
+  @@unique([userId, friendUserId])
 }
 
 model Blocked {
@@ -72,7 +72,7 @@ model Blocked {
   blockedUserId  String
   createdAt  DateTime @default(now())
 
-  @@unique([userId, blockedId])
+  @@unique([userId, blockedUserId])
   }
 
 model Result {
@@ -88,8 +88,8 @@ model ChatMessage {
   id         Int     @id @default(autoincrement())
   sender     User     @relation("sender", fields: [senderId], references: [userId], onDelete: Cascade)
   senderId   String
-  reciver    User     @relation("reciver", fields: [reciverId], references: [userId], onDelete: Cascade)
-  reciverId  String
+  reciever    User     @relation("reciever", fields: [recieverId], references: [userId], onDelete: Cascade)
+  recieverId  String
   message    String
   createdAt  DateTime @default(now())
   }
@@ -111,8 +111,8 @@ model BlackList {
 
 enum GameStatus {
   finished
-  cancled
-  cancled_server_error
+  cancelled
+  cancelled_server_error
 }
 
 enum GameMode {

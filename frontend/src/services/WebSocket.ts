@@ -1,4 +1,6 @@
 //web socket
+import { showInfo } from "../components/toast";
+import { User } from "../types";
 import {
   WsServerBroadcast,
   ClientMessageInterface,
@@ -11,14 +13,21 @@ type MessageHandler<T extends keyof WsServerBroadcast> = (
   _payload: WsServerBroadcast[T],
 ) => void;
 
+export type wsGameStatus = "playing" | "not_playing";
+
 export class Websocket {
   private ws!: WebSocket | null;
   private messageHandlers: Map<string, MessageHandler<any>[]> = new Map();
+  private gameStatus!: wsGameStatus;
+  private cleanupHandler?: () => void;
 
   // web socket (init on profile load?)
-  public initializeWebSocket(): void {
+  public async initializeWebSocket() {
     const wsUrl = import.meta.env.VITE_WEBSOCKET_URL;
+    //TODO is not stored there no more? is this esential??
     const token = localStorage.getItem("jwt");
+
+    this.gameStatus = "not_playing";
 
     // Append token as query parameter if provided
     const urlWithToken = token
@@ -26,6 +35,7 @@ export class Websocket {
       : wsUrl;
 
     // connect to ws with token
+    // console.log(urlWithToken);
     this.ws = new WebSocket(urlWithToken);
 
     this.ws.onclose = (event) => {
@@ -33,27 +43,56 @@ export class Websocket {
       // TODO reconnection logic
     };
 
+    // very very simple reconnection logic
     this.ws.onerror = (error) => {
-      console.error("WebSocket error:", error);
+      console.error("WebSocket error:", JSON.stringify(error));
+      //showError(JSON.stringify(error));
+      if (this.ws) {
+        this.ws.close();
+        this.ws = null;
+      }
+      // i think this reconnection BS was causing lots of error
+      // we should try this within app -> if we cant connect we try a couple times
+      // setTimeout(() => {
+      //   this.initializeWebSocket();
+      // }, 1000);
     };
 
     // web socket stuff
     this.ws.onopen = () => {
       console.log("opened web socket");
+      // this.onConnectionReady?.();
     };
 
     this.ws.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
         this.handleWebSocketMessage(data);
+        if (data.event === "notification") showInfo(data.payload.message);
+        if (data.event !== "game_update") {
+          console.log(`${data.event}: `, data.payload.message);
+          console.log(`${JSON.stringify(data.payload)}`);
+        }
+        // console.log("RECEIVED FROM WS: ", data);
       } catch (error) {
         console.error("Error parsing WebSocket message:", error);
       }
     };
+
+    // define behavior when user closes window
+    this.cleanupHandler = this.handleWindowClose.bind(this);
+    window.addEventListener("beforeunload", this.cleanupHandler);
+  }
+
+  private handleWindowClose() {
+    if (this.cleanupHandler) {
+      window.removeEventListener("beforeunload", this.cleanupHandler);
+    }
+    this.ws?.close();
+    this.ws = null;
   }
 
   private handleWebSocketMessage(data: any): void {
-    console.log(data);
     const { event, payload } = data;
     const handlers = this.messageHandlers.get(event);
     if (handlers && handlers.length > 0) {
@@ -109,22 +148,57 @@ export class Websocket {
     }
   }
 
+  public setGameStatusPlaying() {
+    this.gameStatus = "playing";
+  }
+
+  public setGameStatusNotPlaying() {
+    this.gameStatus = "not_playing";
+  }
+
+  public getGameStatus(): wsGameStatus {
+    return this.gameStatus;
+  }
+
   // send message functions (pre defined)
-  public messageGameStart(): void {
+  public messageGameStart(gameID: string): void {
     const gameStartMessage: ClientMessageInterface<"game_start"> = {
       event: "game_start",
-      payload: { gameId: import.meta.env.DEV_GAMEID },
+      payload: { gameId: gameID },
     };
     this.sendMessage(gameStartMessage);
+  }
+
+  public messageClientReady(gameID: string): void {
+    const clientReadyMessage: ClientMessageInterface<"client_ready"> = {
+      event: "client_ready",
+      payload: { gameId: gameID, timestamp: Date.now() },
+    };
+    this.sendMessage(clientReadyMessage);
+  }
+
+  public async sendChatMessage(user: User, message: string) {
+    console.log("WebSocket state:", this.ws?.readyState);
+    const chatMessage: ClientMessageInterface<"chat_message"> = {
+      event: "chat_message",
+      payload: {
+        recieverId: user.userId,
+        message: message,
+        timestamp: new Date().toString(),
+      },
+    };
+    this.sendMessage(chatMessage);
   }
 
   public messageGameUpdateDirection(
     direction: Direction,
     sequence: number,
+    gameId: string,
   ): void {
     const game_update: ClientMessageInterface<"game_update"> = {
       event: "game_update",
       payload: {
+        gameId: gameId,
         direction: direction,
         sequence: sequence,
       },
@@ -132,19 +206,33 @@ export class Websocket {
     this.sendMessage(game_update);
   }
 
-  public messageGameResume(): void {
+  public messageGameResume(gameId: string): void {
     const game_resume: ClientMessageInterface<"game_resume"> = {
       event: "game_resume",
-      payload: { gameId: import.meta.env.DEV_GAMEID },
+      payload: { gameId: gameId },
     };
     this.sendMessage(game_resume);
   }
 
-  public messageGamePause(): void {
+  public messageGameLeave(gameId: string): void {
+    const game_leave: ClientMessageInterface<"game_leave"> = {
+      event: "game_leave",
+      payload: { gameId: gameId },
+    };
+    this.sendMessage(game_leave);
+    console.log("sent game leave");
+  }
+
+  public messageGamePause(gameId: string): void {
+    console.log("sending game pause");
     const game_pause: ClientMessageInterface<"game_pause"> = {
       event: "game_pause",
-      payload: { gameId: import.meta.env.DEV_GAMEID },
+      payload: { gameId: gameId },
     };
     this.sendMessage(game_pause);
+  }
+
+  public close(): void {
+    this.ws?.close();
   }
 }

@@ -1,4 +1,4 @@
-import { Router, ServiceContainer, Backend } from "../../services";
+import { Router, ServiceContainer, Backend, Websocket } from "../../services";
 import { HomeIcon } from "../homeIcon/HomeIcon";
 
 export interface MenuBarItem {
@@ -18,6 +18,7 @@ export interface MenuBarItem {
 export class MenuBar {
   router: Router;
   backend: Backend;
+  websocket: Websocket;
   menuBarItems: MenuBarItem[];
   skipThis: string | undefined;
 
@@ -27,9 +28,9 @@ export class MenuBar {
         label: "start Game",
         items: [
           { label: "Local Game", href: "/local" },
-          { label: "Vs AI", href: "/vs-player" },
-          { label: "Vs Player", href: "/vs-player" },
-          { label: "Tournament", href: "/tournament-start" },
+          { label: "Vs AI", onclick: () => this.aiGameFlow() },
+          { label: "Vs Player", onclick: () => this.joinGameFlow() },
+          { label: "Tournament", onclick: () => this.joinTournamentFlow() },
         ],
       },
       // { label: "profile", href: "/profile" },
@@ -40,12 +41,28 @@ export class MenuBar {
     ];
     this.router = serviceContainer.get<Router>("router");
     this.backend = serviceContainer.get<Backend>("backend");
+    this.websocket = serviceContainer.get<Websocket>("websocket");
     this.skipThis = skipThis;
     this.menuBarItems = defaultMenuBarItems.slice();
   }
 
-  private logoutFlow() {
-    this.backend.logout();
+  private aiGameFlow() {
+    // navigate with game type parameter
+    this.router.navigate("/ai-game");
+  }
+
+  private async joinTournamentFlow() {
+    this.router.navigate("/tournament-alias");
+  }
+
+  private async joinGameFlow() {
+    // navigate with game type parameter
+    this.router.navigate("/vs-player-game");
+  }
+
+  private async logoutFlow() {
+    await this.backend.logout(); // <- NEED to await this
+    this.websocket.close();
     this.router.navigate("/");
   }
 

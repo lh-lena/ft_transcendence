@@ -1,4 +1,0 @@
-curl -X POST http://localhost:8082/api/login \
-  -H "Content-Type: application/json" \
-  -d '{"email":"momo@momo.momo","password":"momomomo"}' \
-  -c cookies.txt

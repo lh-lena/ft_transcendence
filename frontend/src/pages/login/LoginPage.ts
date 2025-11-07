@@ -1,8 +1,8 @@
-import { ServiceContainer, Router, Backend, Websocket } from "../../services";
+import { ServiceContainer, Router, Backend } from "../../services";
 import { Menu } from "../../components/menu";
 import { PongButton } from "../../components/pongButton";
 import { UserLogin } from "../../types";
-import validator from "validator";
+import { showError, showInfo } from "../../components/toast";
 
 export class LoginPage {
   private main: HTMLElement;
@@ -13,14 +13,12 @@ export class LoginPage {
   private router: Router;
   private loginForm!: HTMLElement;
   private backend: Backend;
-  private websocket: Websocket;
 
   constructor(serviceContainer: ServiceContainer) {
     // router / services container
     this.serviceContainer = serviceContainer;
     this.router = this.serviceContainer.get<Router>("router");
     this.backend = this.serviceContainer.get<Backend>("backend");
-    this.websocket = this.serviceContainer.get<Websocket>("websocket");
 
     this.main = document.createElement("div");
     this.main.className =
@@ -31,16 +29,49 @@ export class LoginPage {
 
     const firstMenu = [
       {
-        name: "email",
+        name: "username",
         onClick: () => this.toggleLoginMenu(),
       },
       {
-        name: "google auth",
-        // onClick: () => this.//;
+        name: "github auth",
+        onClick: () => this.toggleoAuth2Menu(),
       },
     ];
     this.firstMenu = new Menu(this.router, firstMenu);
     this.firstMenu.mount(this.main);
+  }
+
+  private async toggleoAuth2Menu() {
+    try {
+      const response = await this.backend.oAuth2Login();
+
+      //console.log(response);
+
+      if (response.type === "2FA_REQUIRED") {
+        this.main.removeChild(this.firstMenu.getMenuElement());
+
+        this.check2FA(response.userId, response.sessionId);
+        return;
+      }
+
+      if (response.type === "OAUTH_SUCCESS") {
+        localStorage.setItem("jwt", response.jwt);
+
+        const userResponse = await this.backend.fetchUserById(response.userId);
+        this.backend.setUser(userResponse.data);
+
+        this.router.navigate("/chat");
+        return;
+      }
+
+      if (response.type === "OAUTH_ERROR") {
+        console.error("OAuth failed:", response.error);
+        showError("oauth error");
+        return;
+      }
+    } catch (error) {
+      console.error("OAuth process failed:", error);
+    }
   }
 
   private toggleLoginMenu(): void {
@@ -52,12 +83,12 @@ export class LoginPage {
     this.main.appendChild(this.loginForm);
 
     // email input
-    const inputEmail = document.createElement("input");
-    inputEmail.type = "email";
-    inputEmail.id = "text_email";
-    inputEmail.placeholder = "email";
-    inputEmail.style.paddingLeft = "0.5em";
-    this.loginForm.appendChild(inputEmail);
+    const inputUsername = document.createElement("input");
+    inputUsername.type = "email";
+    inputUsername.id = "text_username";
+    inputUsername.placeholder = "username";
+    inputUsername.style.paddingLeft = "0.5em";
+    this.loginForm.appendChild(inputUsername);
 
     // password input
     const inputPassword = document.createElement("input");
@@ -78,52 +109,45 @@ export class LoginPage {
   }
 
   private async attemptLogin() {
-    const emailInput = document.getElementById(
-      "text_email",
+    const usernameInput = document.getElementById(
+      "text_username",
     ) as HTMLInputElement;
     const passwordInput = document.getElementById(
       "text_password",
     ) as HTMLInputElement;
 
-    const email = emailInput?.value;
+    const username = usernameInput?.value;
     const password = passwordInput?.value;
 
     // Basic validation
-    if (!email) {
-      alert("please provide an email");
-      return;
-    }
-    if (!validator.isEmail(email)) {
-      alert("please provide a valid email");
+    if (!username) {
+      showError("please provide a username");
       return;
     }
     if (!password) {
-      alert("please provide a password");
+      showInfo("please provide a password");
       return;
     }
 
     const userLoginData: UserLogin = {
-      email: email,
+      username: username,
       password: password,
     };
 
     const response = await this.backend.loginUser(userLoginData);
+
     if (response?.data.status === "2FA_REQUIRED") {
+      this.loginMenu.unmount();
+      this.loginForm.remove();
+
       this.check2FA(response.data.userId, response.data.sessionId);
       return;
     }
-    // this should only happen if we get the user (but i think try catch interceptor handles this)
-    // TODO CONNECT TO WEB SOCKET HERE
-    this.websocket.initializeWebSocket();
     this.router.navigate("/chat");
   }
 
   private check2FA(userId: string, sessionId: string): void {
     // check to see if user has 2FA enabled
-
-    // get rid of
-    this.loginMenu.unmount();
-    this.loginForm.remove();
 
     // form
     const form = document.createElement("form");
@@ -150,17 +174,34 @@ export class LoginPage {
   }
 
   private async verify2FACode(userId: string, code: string, sessionId: string) {
-    console.log(code);
-    const response = await this.backend.verify2FARegCode(
-      userId,
-      sessionId,
-      code,
-    );
-    if (response.status === 200) {
-      // TODO connect to web socket here
-      this.websocket.initializeWebSocket();
+    // Validate 2FA code format
+    if (!code) {
+      showInfo("please provide a 2FA code");
+      return;
+    }
+    if (code.length != 6 && code.length != 16) {
+      showInfo("please provide a valid 2fa code");
+      return;
+    }
+
+    // default
+    let response;
+
+    // CASE CODE LENGTH > 6 -> means recovery code
+    if (code.length == 6) {
+      response = await this.backend.verify2FARegCode(userId, sessionId, code);
+    } else if (code.length == 16) {
+      response = await this.backend.verify2FARecoveryCode(
+        userId,
+        sessionId,
+        code,
+      );
+    }
+
+    if (response && response.status === 200) {
+      localStorage.setItem("jwt", response.data.jwt);
       this.router.navigate("/chat");
-    } else alert("incorrect 2fa token");
+    } else showError("incorrect 2fa token");
   }
 
   public mount(parent: HTMLElement): void {

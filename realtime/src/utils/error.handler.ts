@@ -6,22 +6,14 @@ import type { User, UserIdType } from '../schemas/user.schema.js';
 import { z } from 'zod';
 import { GAME_EVENTS, GameEventType } from '../constants/game.constants.js';
 
-function formatLogDetails(details?: string): string {
-  return details !== undefined && details !== null && details.trim() !== '' ? `: ${details}` : '';
-}
-
 function logMessage(
   app: FastifyInstance,
-  level: 'error' | 'debug' | 'info',
+  level: 'error' | 'debug' | 'info' | 'warn',
   service: string,
   message: string,
-  details?: string,
+  details: string = '',
 ): void {
-  let detailsText = formatLogDetails(details);
-  if (detailsText === undefined) {
-    detailsText = '';
-  }
-  app.log[level](`[${service}] ${message} ${detailsText}`);
+  app.log[level](`[${service}] ${message} ${details}`);
 }
 
 export function processErrorLog(
@@ -46,7 +38,14 @@ export function processInfoLog(app: FastifyInstance, service: string, message: s
   logMessage(app, 'info', service, message);
 }
 
-export function safeErrorToString(error: unknown): string {
+export function processWarnLog(app: FastifyInstance, service: string, message: string = ''): void {
+  logMessage(app, 'warn', service, message);
+}
+
+export function safeErrorToString(error?: unknown): string {
+  if (error === undefined || error === null) {
+    return '';
+  }
   if (error instanceof z.ZodError) {
     return error.errors.map((err) => err.message).join(', ');
   }
@@ -115,12 +114,6 @@ export function handleWebSocketError(
       `Error processing message from user ${userId}`,
       error.message,
     );
-    sendErrorResponse(
-      respond,
-      userId,
-      GAME_EVENTS.ERROR,
-      `Error processing message: ${error.message}`,
-    );
   } else {
     logMessage(app, 'error', 'websocket-service', `Unknown error for user ${userId}`, errorMsg);
     sendErrorResponse(respond, userId, GAME_EVENTS.ERROR, 'Unknown error occurred');
@@ -138,7 +131,7 @@ export function processGameError(
 
   const respond = app.respond as RespondService;
   const { userId } = user;
-  let errorMsg = safeErrorToString(error);
+  const errorMsg = safeErrorToString(error);
 
   if (error instanceof GameError) {
     sendErrorResponse(respond, userId, GAME_EVENTS.NOTIFICATION, errorMsg, NotificationType.WARN);
@@ -146,7 +139,6 @@ export function processGameError(
       logMessage(app, 'debug', service, message, errorMsg);
       return;
     }
-    errorMsg += `: ${error.error}`;
     logMessage(app, 'error', service, message, errorMsg);
   } else if (error instanceof Error) {
     sendErrorResponse(respond, userId, GAME_EVENTS.ERROR, errorMsg);

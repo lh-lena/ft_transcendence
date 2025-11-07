@@ -1,9 +1,7 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import type { RespondService } from '../../websocket/types/ws.types.js';
-import {
-  NotificationRequestSchema,
-  NotificationResponseSchema,
-} from '../../schemas/notification.schema.js';
+import { NotificationRequestSchema } from '../../schemas/notification.schema.js';
+import { ResponseSchema } from '../../schemas/response.schema.js';
 import type { NotificationRequest } from '../../schemas/notification.schema.js';
 import { processErrorLog } from '../../utils/error.handler.js';
 
@@ -12,16 +10,18 @@ export const setupNotificationRoutes = (server: FastifyInstance): void => {
 
   server.post('/notify', {
     schema: {
+      tags: ['Notification'],
+      description: 'Notify a user with a message',
       body: NotificationRequestSchema,
       response: {
-        200: NotificationResponseSchema,
-        500: NotificationResponseSchema,
+        200: ResponseSchema,
+        500: ResponseSchema,
       },
     },
     handler: (request: FastifyRequest, reply: FastifyReply) => {
       try {
-        const { reciver, payload, event } = request.body as NotificationRequest;
-        const res = respond.notification(reciver, event, payload.message);
+        const { reciever, payload, event } = request.body as NotificationRequest;
+        const res = respond.notification(reciever, event, payload.message);
         return reply.code(200).send({ success: res });
       } catch (error: unknown) {
         processErrorLog(

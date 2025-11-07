@@ -1,14 +1,14 @@
 import { z } from 'zod/v4';
-import { dtString, tfaType } from './basics';
+import { dtString } from './basics';
 
 export const userBase = z.object({
   userId: z.uuid(),
+  githubId: z.string().optional().nullable(),
 
   createdAt: dtString,
   updatedAt: dtString,
 
-  email: z.email().optional().nullable(),
-  username: z.string(),
+  username: z.string().optional().nullable(),
   alias: z.string().nullable().optional(),
 
   online: z.boolean().optional(),
@@ -17,7 +17,7 @@ export const userBase = z.object({
 
   tfaEnabled: z.boolean().optional(),
   tfaSecret: z.string().nullable().optional(),
-  tfaMethod: tfaType.nullable().optional(),
+  tfaMethod: z.string().nullable().optional(),
   tfaTempCode: z.string().nullable().optional(),
   tfaCodeExpires: dtString.nullable().optional(),
   backupCodes: z.string().nullable().optional(),

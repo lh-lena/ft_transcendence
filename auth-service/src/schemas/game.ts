@@ -17,7 +17,7 @@ export const gameSchema = z.object({
 });
 
 export const gameIdSchema = gameSchema.pick({ gameId: true });
-export const gameCreateSchema = gameSchema
+export const gamePostSchema = gameSchema
   .omit({ gameId: true, players: true, createdAt: true, status: true })
   .extend({ userId: z.uuid() });
 
@@ -25,7 +25,7 @@ export const gameResponseSchema = gameSchema;
 export const gameResponseArraychema = z.array(gameResponseSchema);
 
 export type GameType = z.infer<typeof gameSchema>;
-export type GameCreateType = z.infer<typeof gameCreateSchema>;
+export type GamePostType = z.infer<typeof gamePostSchema>;
 export type GameJoinType = z.infer<typeof gameJoinSchema>;
 export type GameIdType = z.infer<typeof gameIdSchema>;
 export type GameResponseType = z.infer<typeof gameResponseSchema>;

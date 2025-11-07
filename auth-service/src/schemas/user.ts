@@ -3,15 +3,17 @@ import { dtString, tfaType } from './basics';
 
 export const userSchema = z.object({
   userId: z.uuid(),
+  githubId: z.string().nullable().optional(),
 
   createdAt: dtString.optional(),
   updatedAt: dtString.optional(),
 
-  email: z.email(),
-  username: z.string().min(1).max(6),
+  username: z.string().nullable(),
   alias: z.string().nullable().optional(),
 
-  password_hash: z.string(),
+  online: z.boolean().optional(),
+
+  password_hash: z.string().nullable(),
 
   tfaEnabled: z.boolean().default(false),
   tfaSecret: z.string().nullable().default(null),
@@ -27,6 +29,14 @@ export const userSchema = z.object({
   avatar: z.string().nullable().optional(),
 });
 
+export const guestSchema = userSchema.pick({
+  userId: true,
+  alias: true,
+  guest: true,
+  color: true,
+  colormap: true,
+});
+
 export const userIdSchema = userSchema.pick({
   userId: true,
 });
@@ -38,7 +48,6 @@ export const userQuerySchema = userSchema
     createdAt: true,
     updatedAt: true,
 
-    email: true,
     username: true,
     alias: true,
   })
@@ -46,7 +55,6 @@ export const userQuerySchema = userSchema
 
 export const userRegisterSchema = userSchema
   .pick({
-    email: true,
     username: true,
     alias: true,
     guest: true,
@@ -54,11 +62,11 @@ export const userRegisterSchema = userSchema
     colormap: true,
   })
   .extend({
-    password: z.string().min(8),
+    password: z.string().min(8).max(32),
+    username: z.string().min(1).max(6),
   });
 
 export const userPostSchema = userSchema.pick({
-  email: true,
   username: true,
   alias: true,
   password_hash: true,
@@ -69,13 +77,14 @@ export const userPostSchema = userSchema.pick({
 });
 
 export const userLoginSchema = userSchema
-  .pick({ email: true })
+  .pick({
+    username: true,
+  })
   .extend({ password: z.string().min(8) });
 
 export const userPatchSchema = z.object({
   username: z.string().min(1).max(6).optional(),
   alias: z.string().nullable().optional(),
-  email: z.email().optional(),
   password: z.string().min(8).optional(),
   avatar: z.string().nullable().optional(),
 });
@@ -84,7 +93,7 @@ export const userUpdateSchema = userSchema.partial();
 
 export const userResponseSchema = userSchema.omit({
   password_hash: true,
-  tfaEnabled: true,
+  githubId: true,
   tfaSecret: true,
   tfaMethod: true,
   tfaTempCode: true,
@@ -95,14 +104,12 @@ export const userResponseSchema = userSchema.omit({
 export const userInfoResponseSchema = userResponseSchema.omit({
   createdAt: true,
   updatedAt: true,
-  email: true,
   guest: true,
 });
 export const userInfoResponseArraySchema = z.array(userInfoResponseSchema);
 
-export const guestSchema = z.object({
+export const guestPostSchema = z.object({
   alias: z.string(),
-  username: z.string().optional(),
   color: z.string(),
   colormap: z.string(),
   guest: z.boolean().default(true),
@@ -110,8 +117,11 @@ export const guestSchema = z.object({
 
 //typed
 export type UserType = z.infer<typeof userSchema>;
+export type UserRegisterType = z.infer<typeof userRegisterSchema>;
+export type UserLoginType = z.infer<typeof userLoginSchema>;
 export type UserIdType = z.infer<typeof userIdSchema>;
 export type UserQueryType = z.infer<typeof userQuerySchema>;
 export type UserPatchType = z.infer<typeof userPatchSchema>;
 export type UserUpdateType = z.infer<typeof userUpdateSchema>;
+export type GuestPostType = z.infer<typeof guestPostSchema>;
 export type GuestType = z.infer<typeof guestSchema>;
