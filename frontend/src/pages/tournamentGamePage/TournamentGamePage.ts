@@ -17,7 +17,7 @@ import { GameStatus, GameState, User } from "../../types";
 
 // functions
 import { profilePrintToArray } from "../../utils/profilePrintFunctions";
-import { showError } from "../../components/toast";
+import { showError, showInfo } from "../../components/toast";
 
 // IMPORTANT TO REMEMBER
 // we receive gameID from game_update when ws also sends game ready
@@ -29,8 +29,6 @@ export class TournamentGamePage extends GamePage {
   private isGuest: boolean = true;
 
   // dom (UI) elements
-  private form!: HTMLElement;
-  private menu!: Menu;
   private tournamentStatsDiv!: HTMLDivElement;
 
   constructor(serviceContainer: ServiceContainer) {
@@ -44,6 +42,8 @@ export class TournamentGamePage extends GamePage {
     // so it resolves to guest if we get a runtime error or the length of user id is 0
 
     // UI inital stuff for tournament alias page (from default game page setup)
+
+    console.log("guest user: tournament: ", this.backend.getUser());
 
     this.initializeTournament();
   }
@@ -131,6 +131,16 @@ export class TournamentGamePage extends GamePage {
     const thisUser = await this.backend.getUserById(
       this.backend.getUser().userId,
     );
+
+    // if guest refreshes catch
+    if (!thisUser) {
+      showInfo(
+        "refresh detected for guest, please rejoin with different alias",
+      );
+      // this.ws.messageGameLeave(this.gameId);
+      // this.router.navigate("/");
+    }
+
     this.isGuest = thisUser.guest;
     console.log("isGuest: ", this.isGuest);
 
@@ -171,6 +181,8 @@ export class TournamentGamePage extends GamePage {
         player.userId = user.userId;
       }),
     );
+
+    console.log("turnament data: ", tournamentData.players.length);
 
     this.tournamentStatsDiv = document.createElement("div");
     this.tournamentStatsDiv.className = "flex flex-col gap-8";
@@ -233,9 +245,24 @@ export class TournamentGamePage extends GamePage {
       this.tournamentStatsDiv.appendChild(playButton);
     }
 
+    // SET GAME ID
     // just makes sure we have the correct game id in round 2 -> game id is usually set by gameReady but sometimes that doesnt work
     console.log("tournamentData: ", tournamentData);
-    if (tournamentData.round === 2 && tournamentData.games.length > 0) {
+    // extract game id from games in tournament data for round 1
+    if (tournamentData.round === 1 && tournamentData.players.length === 4) {
+      const myGame = tournamentData.games.find((game: any) =>
+        game.players?.some(
+          (player: any) => player.userId === this.backend.getUser().userId,
+        ),
+      );
+
+      if (myGame) {
+        this.gameId = myGame.gameId;
+        console.log("Set gameId from tournament data (round 1):", this.gameId);
+      }
+    }
+    // extract game id from games in tournament data for round 2
+    if (tournamentData.round === 2 && tournamentData.players.length === 2) {
       this.gameId = tournamentData.games[0].gameId;
       console.log("Set gameId from tournament data:", this.gameId);
     }
@@ -395,11 +422,7 @@ export class TournamentGamePage extends GamePage {
 
   // custom cleanup backend in tournament page for leaving a tournament
   protected cleanupBackendorWebsocket(): void {
-    if (!this.gameState) {
-      this.backend.leaveTournament();
-    } else if (this.gameState.status !== GameStatus.GAME_OVER) {
-      this.ws.messageGameLeave(this.gameId);
-    }
+    this.backend.leaveTournament();
   }
 
   // for guest user
@@ -407,6 +430,7 @@ export class TournamentGamePage extends GamePage {
     if (this.isGuest) {
       localStorage.removeItem("user");
       localStorage.removeItem("jwt");
+      console.log("removing jwt etc");
     }
     super.unmount();
   }
