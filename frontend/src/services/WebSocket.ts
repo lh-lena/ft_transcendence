@@ -142,14 +142,17 @@ export class Websocket {
   }
 
   // main send message function for ws
-  private sendMessage<T extends keyof WsClientMessage>(
+  private async sendMessage<T extends keyof WsClientMessage>(
     message: ClientMessageInterface<T>,
-  ): void {
+  ) {
     if (this.ws && this.ws.readyState === WebSocket.OPEN) {
       this.ws.send(JSON.stringify(message));
       console.log("SENT: ", message.payload);
     } else {
       console.warn("WebSocket is not open. Message not sent:", { message });
+      // try again i guess
+      await this.initializeWebSocket();
+      await this.sendMessage(message);
     }
   }
 

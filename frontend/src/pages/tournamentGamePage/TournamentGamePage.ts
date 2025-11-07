@@ -29,9 +29,9 @@ export class TournamentGamePage extends GamePage {
   private isGuest: boolean = true;
 
   // dom (UI) elements
-  private form!: HTMLElement;
-  private menu!: Menu;
   private tournamentStatsDiv!: HTMLDivElement;
+
+  // private boundBeforeUnloadHandler: (e: BeforeUnloadEvent) => void;
 
   constructor(serviceContainer: ServiceContainer) {
     super(serviceContainer);
@@ -45,8 +45,44 @@ export class TournamentGamePage extends GamePage {
 
     // UI inital stuff for tournament alias page (from default game page setup)
 
+    // const tempUserTest = this.backend.getUser();
+    // console.log("tempuser: ", tempUserTest);
+    // if (!tempUserTest) {
+    //   showError("refresh detected");
+    //   this.router.navigate("/");
+    //   return;
+    // }
+
+    // this.boundBeforeUnloadHandler = this.handleBeforeUnload.bind(this);
+    // window.addEventListener("beforeunload", this.boundBeforeUnloadHandler);
+
     this.initializeTournament();
   }
+
+  // // Add this method
+  // private handleBeforeUnload(e: BeforeUnloadEvent): void {
+  //   console.log(e);
+
+  //   // Leave tournament if not playing
+  //   if (this.gameState?.status !== GameStatus.PLAYING) {
+  //     this.backend.leaveTournament();
+  //   }
+
+  //   // Leave game if playing
+  //   if (this.gameState?.status === GameStatus.PLAYING) {
+  //     this.ws.messageGameLeave(this.gameId);
+  //   }
+
+  //   // Clean up guest user data
+  //   if (this.isGuest) {
+  //     localStorage.removeItem("user");
+  //     localStorage.removeItem("jwt");
+  //   }
+
+  //   // Optional: Show warning dialog
+  //   // e.preventDefault();
+  //   // e.returnValue = '';
+  // }
 
   // custom game ready for tournament
   public async wsGameReadyHandler(
@@ -131,6 +167,7 @@ export class TournamentGamePage extends GamePage {
     const thisUser = await this.backend.getUserById(
       this.backend.getUser().userId,
     );
+
     this.isGuest = thisUser.guest;
     console.log("isGuest: ", this.isGuest);
 
@@ -171,6 +208,8 @@ export class TournamentGamePage extends GamePage {
         player.userId = user.userId;
       }),
     );
+
+    console.log("turnament data: ", tournamentData.players.length);
 
     this.tournamentStatsDiv = document.createElement("div");
     this.tournamentStatsDiv.className = "flex flex-col gap-8";
@@ -233,9 +272,24 @@ export class TournamentGamePage extends GamePage {
       this.tournamentStatsDiv.appendChild(playButton);
     }
 
+    // SET GAME ID
     // just makes sure we have the correct game id in round 2 -> game id is usually set by gameReady but sometimes that doesnt work
     console.log("tournamentData: ", tournamentData);
-    if (tournamentData.round === 2 && tournamentData.games.length > 0) {
+    // extract game id from games in tournament data for round 1
+    if (tournamentData.round === 1 && tournamentData.players.length === 4) {
+      const myGame = tournamentData.games.find((game: any) =>
+        game.players?.some(
+          (player: any) => player.userId === this.backend.getUser().userId,
+        ),
+      );
+
+      if (myGame) {
+        this.gameId = myGame.gameId;
+        console.log("Set gameId from tournament data (round 1):", this.gameId);
+      }
+    }
+    // extract game id from games in tournament data for round 2
+    if (tournamentData.round === 2 && tournamentData.players.length === 2) {
       this.gameId = tournamentData.games[0].gameId;
       console.log("Set gameId from tournament data:", this.gameId);
     }
@@ -393,21 +447,21 @@ export class TournamentGamePage extends GamePage {
     return contact;
   }
 
-  // custom cleanup backend in tournament page for leaving a tournament
-  protected cleanupBackendorWebsocket(): void {
-    if (!this.gameState) {
-      this.backend.leaveTournament();
-    } else if (this.gameState.status !== GameStatus.GAME_OVER) {
-      this.ws.messageGameLeave(this.gameId);
-    }
-  }
-
   // for guest user
   public unmount(): void {
+    if (this.gameState.status !== GameStatus.PLAYING)
+      this.backend.leaveTournament();
+
+    if (this.gameState.status === GameStatus.PLAYING) {
+      this.ws.messageGameLeave(this.gameId);
+      this.ws.close();
+    }
+
     if (this.isGuest) {
       localStorage.removeItem("user");
       localStorage.removeItem("jwt");
     }
-    super.unmount();
+
+    this.main.remove();
   }
 }
