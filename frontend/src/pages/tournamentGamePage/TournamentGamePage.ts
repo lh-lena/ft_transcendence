@@ -17,7 +17,7 @@ import { GameStatus, GameState, User } from "../../types";
 
 // functions
 import { profilePrintToArray } from "../../utils/profilePrintFunctions";
-import { showError, showInfo } from "../../components/toast";
+import { showError } from "../../components/toast";
 
 // IMPORTANT TO REMEMBER
 // we receive gameID from game_update when ws also sends game ready
@@ -31,6 +31,8 @@ export class TournamentGamePage extends GamePage {
   // dom (UI) elements
   private tournamentStatsDiv!: HTMLDivElement;
 
+  // private boundBeforeUnloadHandler: (e: BeforeUnloadEvent) => void;
+
   constructor(serviceContainer: ServiceContainer) {
     super(serviceContainer);
 
@@ -43,10 +45,44 @@ export class TournamentGamePage extends GamePage {
 
     // UI inital stuff for tournament alias page (from default game page setup)
 
-    console.log("guest user: tournament: ", this.backend.getUser());
+    // const tempUserTest = this.backend.getUser();
+    // console.log("tempuser: ", tempUserTest);
+    // if (!tempUserTest) {
+    //   showError("refresh detected");
+    //   this.router.navigate("/");
+    //   return;
+    // }
+
+    // this.boundBeforeUnloadHandler = this.handleBeforeUnload.bind(this);
+    // window.addEventListener("beforeunload", this.boundBeforeUnloadHandler);
 
     this.initializeTournament();
   }
+
+  // // Add this method
+  // private handleBeforeUnload(e: BeforeUnloadEvent): void {
+  //   console.log(e);
+
+  //   // Leave tournament if not playing
+  //   if (this.gameState?.status !== GameStatus.PLAYING) {
+  //     this.backend.leaveTournament();
+  //   }
+
+  //   // Leave game if playing
+  //   if (this.gameState?.status === GameStatus.PLAYING) {
+  //     this.ws.messageGameLeave(this.gameId);
+  //   }
+
+  //   // Clean up guest user data
+  //   if (this.isGuest) {
+  //     localStorage.removeItem("user");
+  //     localStorage.removeItem("jwt");
+  //   }
+
+  //   // Optional: Show warning dialog
+  //   // e.preventDefault();
+  //   // e.returnValue = '';
+  // }
 
   // custom game ready for tournament
   public async wsGameReadyHandler(
@@ -131,15 +167,6 @@ export class TournamentGamePage extends GamePage {
     const thisUser = await this.backend.getUserById(
       this.backend.getUser().userId,
     );
-
-    // if guest refreshes catch
-    if (!thisUser) {
-      showInfo(
-        "refresh detected for guest, please rejoin with different alias",
-      );
-      // this.ws.messageGameLeave(this.gameId);
-      // this.router.navigate("/");
-    }
 
     this.isGuest = thisUser.guest;
     console.log("isGuest: ", this.isGuest);
@@ -420,18 +447,21 @@ export class TournamentGamePage extends GamePage {
     return contact;
   }
 
-  // custom cleanup backend in tournament page for leaving a tournament
-  protected cleanupBackendorWebsocket(): void {
-    this.backend.leaveTournament();
-  }
-
   // for guest user
   public unmount(): void {
+    if (this.gameState.status !== GameStatus.PLAYING)
+      this.backend.leaveTournament();
+
+    if (this.gameState.status === GameStatus.PLAYING) {
+      this.ws.messageGameLeave(this.gameId);
+      this.ws.close();
+    }
+
     if (this.isGuest) {
       localStorage.removeItem("user");
       localStorage.removeItem("jwt");
-      console.log("removing jwt etc");
     }
-    super.unmount();
+
+    this.main.remove();
   }
 }
