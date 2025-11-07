@@ -44,14 +44,8 @@ export class TournamentGamePage extends GamePage {
     // we have two elses here because sometimes there is still a stale entry for some reason
     // on logout i try to clear it as ""
     // so it resolves to guest if we get a runtime error or the length of user id is 0
-    try {
-      const tempUserId = this.backend.getUser()?.userId;
-      if (tempUserId) this.isGuest = false;
-      else this.isGuest = true;
-    } catch (error) {
-      this.isGuest = true;
-      console.log(error);
-    }
+
+    console.log("isGuest: ", this.isGuest);
 
     // UI inital stuff for tournament alias page (from default game page setup)
     this.hideLoadingOverlay();
@@ -148,6 +142,8 @@ export class TournamentGamePage extends GamePage {
     if (this.isGuest) {
       const response = await this.backend.registerGuest(this.alias);
       console.log("alias guest: ", response);
+      // then also initialize web socket connection for guest user
+      this.ws.initializeWebSocket();
     } else {
       // patch alias for registered user
       await this.backend.patchAlias(this.alias);
