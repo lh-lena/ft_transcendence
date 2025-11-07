@@ -68,7 +68,12 @@ export class Websocket {
       try {
         const data = JSON.parse(event.data);
         this.handleWebSocketMessage(data);
-        if (data.event === "notification") showInfo(data.payload.message);
+        if (data.event === "notification") {
+          // custom for guest leaving
+          if (data.payload.message === "unknown left the game")
+            showInfo("guest left the tournament");
+          else showInfo(data.payload.message);
+        }
         if (data.event !== "game_update") {
           console.log(`${data.event}: `, data.payload.message);
           console.log(`${JSON.stringify(data.payload)}`);

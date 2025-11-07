@@ -232,6 +232,13 @@ export class TournamentGamePage extends GamePage {
       };
       this.tournamentStatsDiv.appendChild(playButton);
     }
+
+    // just makes sure we have the correct game id in round 2 -> game id is usually set by gameReady but sometimes that doesnt work
+    console.log("tournamentData: ", tournamentData);
+    if (tournamentData.round === 2 && tournamentData.games.length > 0) {
+      this.gameId = tournamentData.games[0].gameId;
+      console.log("Set gameId from tournament data:", this.gameId);
+    }
   }
 
   private hideBracket() {
