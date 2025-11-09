@@ -1,0 +1,42 @@
+
+global:
+  scrape_interval: 15s
+
+rule_files:
+  - '/etc/prometheus/alerts.yml'
+
+scrape_configs:
+  # monitor Prometheus itself
+  - job_name: 'prometheus'
+    static_configs:
+    - targets: ['prometheus:9090']
+    metrics_path: '/prometheus/metrics'
+  
+  # Only monitor services that actually expose metrics
+  # Backend - if it has metrics endpoint
+  - job_name: 'backend'
+    static_configs:
+    - targets: ['backend:8080']
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+    
+  # Auth service - if it has metrics endpoint  
+  - job_name: 'auth-service'
+    static_configs:
+    - targets: ['auth-service:8082']
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+    
+  # Realtime service - if it has metrics endpoint
+  - job_name: 'realtime'
+    static_configs:
+    - targets: ['realtime:8081']
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+    
+  # Nginx monitoring via exporter (this works)
+  - job_name: 'nginx'
+    static_configs:
+      - targets: ['nginx-exporter:9113']
+    metrics_path: '/metrics'
+    scrape_interval: 30s

@@ -1,0 +1,4 @@
+TODO:
+-check required for user creation
+-make guest login possible 
+-add cors for realtime and auth(nginx proxy)

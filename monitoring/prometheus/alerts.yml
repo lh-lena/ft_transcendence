@@ -1,0 +1,73 @@
+groups:
+  - name: ft_transcendence_alerts
+    interval: 30s
+    rules:
+      # Service Down Alerts
+      - alert: ServiceDown
+        expr: up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Service {{ $labels.job }} is down"
+          description: "{{ $labels.job }} has been down for more than 2 minutes."
+
+      # High CPU Usage
+      - alert: HighCpuUsage
+        expr: rate(process_cpu_seconds_total[5m]) * 100 > 60
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High CPU usage on {{ $labels.job }}"
+          description: "{{ $labels.job }} CPU usage is above 60% (current value: {{ $value }}%)"
+
+      # High Memory Usage
+      - alert: HighMemoryUsage
+        expr: process_resident_memory_bytes > 200000000
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High memory usage on {{ $labels.job }}"
+          description: "{{ $labels.job }} is using more than 200MB of memory (current value: {{ $value }} bytes)"
+
+      # Database Connection Failed
+      - alert: DatabaseConnectionFailed
+        expr: db_connection_status == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Database connection failed"
+          description: "Backend service cannot connect to the database"
+
+      # High WebSocket Connections
+      - alert: HighWebSocketConnections
+        expr: websocket_connections_active > 50
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High number of WebSocket connections"
+          description: "More than 50 active WebSocket connections (current: {{ $value }})"
+
+      # Nginx High Request Rate
+      - alert: NginxHighRequestRate
+        expr: sum(rate(nginx_http_requests_total[2m])) * 60 > 1000
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High HTTP request rate"
+          description: "Nginx is handling more than 1000 requests per minute (current: {{ $value }})"
+
+      # Service Health Check Failed
+      - alert: HealthCheckFailed
+        expr: realtime_service_health == 0 or backend_service_health == 0 or auth_service_health == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Health check failed for {{ $labels.job }}"
+          description: "{{ $labels.job }} health check has been failing for 2 minutes"

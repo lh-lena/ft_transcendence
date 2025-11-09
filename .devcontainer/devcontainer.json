@@ -1,0 +1,9 @@
+{
+  "name": "ft_transcendence",
+  "image": "mcr.microsoft.com/devcontainers/universal:2",
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+  },
+  "postCreateCommand": "mkdir -p nginx/ssl && openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout nginx/ssl/selfsigned.key -out nginx/ssl/selfsigned.crt -subj '/C=US/ST=State/L=City/O=42/CN=localhost' && docker-compose up -d",
+  "forwardPorts": [443, 3001, 9090]
+}
