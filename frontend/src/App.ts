@@ -99,12 +99,19 @@ export class App {
 
     let currentRoute = this.router.getCurrentRoute();
 
-    // we always connect back to web socket before we load a page
+    // initialize WebSocket ONCE when entering protected routes
+    // Don't reinitialize on every page change
     if (
-      protectedRoutes.includes(currentRoute) ||
-      PageClass === TournamentGamePage
+      (protectedRoutes.includes(currentRoute) ||
+        PageClass === TournamentGamePage) &&
+      !this.websocket.isConnected() // Add this helper method
     ) {
-      await this.websocket.initializeWebSocket();
+      try {
+        await this.websocket.initializeWebSocket();
+      } catch (error) {
+        console.error("Failed to establish WebSocket connection:", error);
+        // Optionally redirect to error page or show notification
+      }
     }
 
     // handle ChatPage's async initialization

@@ -61,6 +61,13 @@ export class GamePage {
 
   constructor(serviceContainer: ServiceContainer) {
     console.log("GamePage instance created");
+    console.log("=== NEW GAMEPAGE INSTANCE ===");
+    console.log("Current window.location:", window.location.href);
+    console.log("localStorage user:", localStorage.getItem("user"));
+    const instanceId = Math.random().toString(36).substring(7);
+    console.log(`[Instance ${instanceId}] GamePage constructor called`);
+    console.trace(`[Instance ${instanceId}] Creation stack trace`);
+
     // services init
     this.ws = serviceContainer.get<Websocket>("websocket");
     this.router = serviceContainer.get<Router>("router");
@@ -118,7 +125,7 @@ export class GamePage {
   // gameState handler (callback function)
   public gameStateCallback() {
     const currentKey = this.gameState.activeKey;
-    console.log("game id on send", this.gameId);
+
     if (currentKey != this.gameState.previousKey) {
       // key event handling
       if (currentKey == "KEY_UP") {
@@ -422,14 +429,16 @@ export class GamePage {
   }
 
   public unmount() {
-    this.ws.messageGameLeave(this.gameId);
-    this.ws.close();
-
-    // Cleanup backend (can be overridden by subclasses)
-    this.cleanupBackendorWebsocket();
+    // stop game loop first
+    if (this.game) {
+      this.game.unmount();
+    }
 
     // Cleanup WebSocket
     this.cleanupWebsocketHandlers();
+
+    // Cleanup backend (can be overridden by subclasses)
+    this.cleanupBackendorWebsocket();
 
     // Remove DOM
     this.main.remove();
