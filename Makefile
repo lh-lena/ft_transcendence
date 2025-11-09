@@ -75,7 +75,9 @@ clean: down
 	@echo "🧹 Cleaning up Docker resources..."
 	$(DOCKER_COMPOSE) down -v --remove-orphans 2>/dev/null || true
 	$(DOCKER_COMPOSE) -f docker-compose.prod.yml down -v --remove-orphans 2>/dev/null || true
-	docker system prune -af --volumes
+	# WARNING: The following command removes ALL Docker images and volumes system-wide!
+	# If you really want to prune everything, uncomment the next line:
+	# docker system prune -af --volumes
 	@echo "✅ Cleanup completed"
 
 # deep clean including cache and symlinks
