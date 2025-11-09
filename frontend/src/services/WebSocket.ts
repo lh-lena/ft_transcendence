@@ -68,7 +68,12 @@ export class Websocket {
       try {
         const data = JSON.parse(event.data);
         this.handleWebSocketMessage(data);
-        if (data.event === "notification") showInfo(data.payload.message);
+        if (data.event === "notification") {
+          // custom for guest leaving
+          if (data.payload.message === "unknown left the game")
+            showInfo("guest left the tournament");
+          else showInfo(data.payload.message);
+        }
         if (data.event !== "game_update") {
           console.log(`${data.event}: `, data.payload.message);
           console.log(`${JSON.stringify(data.payload)}`);
@@ -137,14 +142,17 @@ export class Websocket {
   }
 
   // main send message function for ws
-  private sendMessage<T extends keyof WsClientMessage>(
+  private async sendMessage<T extends keyof WsClientMessage>(
     message: ClientMessageInterface<T>,
-  ): void {
+  ) {
     if (this.ws && this.ws.readyState === WebSocket.OPEN) {
       this.ws.send(JSON.stringify(message));
       console.log("SENT: ", message.payload);
     } else {
       console.warn("WebSocket is not open. Message not sent:", { message });
+      // try again i guess
+      await this.initializeWebSocket();
+      await this.sendMessage(message);
     }
   }
 

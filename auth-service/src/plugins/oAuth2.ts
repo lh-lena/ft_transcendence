@@ -12,9 +12,10 @@ import oauthPlugin from '@fastify/oauth2';
  * @decorates {object} githubOAuth2 - OAuth2 client for GitHub authentication
  */
 const oAuth2Plugin = async (fastify: FastifyInstance) => {
-  const { OAUTH_CLIENT_ID, OAUTH_SECRET, AUTH_URL } = fastify.config;
+  //, AUTH_URL
+  const { OAUTH_CLIENT_ID, OAUTH_SECRET } = fastify.config;
 
-  const callbackUrl = `${AUTH_URL}/api/oauth/callback`;
+  const callbackUrl = `https://localhost/api/oauth/callback`;
   fastify.log.info(`Registering OAuth with callback: ${callbackUrl}`);
 
   try {
