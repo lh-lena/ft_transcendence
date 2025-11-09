@@ -20,4 +20,6 @@ export const friendQuerySchema = friendSchema;
 export const friendResponseSchema = z.union([friendSchema, friendArraySchema, z.string()]);
 
 export type FriendType = z.infer<typeof friendSchema>;
+export type FriendIdType = z.infer<typeof friendIdSchema>;
 export type FriendQueryType = z.infer<typeof friendQuerySchema>;
+export type FriendPostType = z.infer<typeof friendPostSchema>;

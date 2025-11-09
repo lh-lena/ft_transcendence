@@ -19,12 +19,12 @@ export default function createGameValidator(app: FastifyInstance): GameValidator
       throw new GameError(`game ${gameId} is not paused or does not exist`);
     }
     validateGameStatus(status, [GameSessionStatus.PAUSED]);
-    const areAllPlayersConnected = allPlayersConnected(game);
-    if (!areAllPlayersConnected) {
-      throw new GameError(`not all players are connected to the game ${gameId}`);
+    const areAllPlayersReady = allPlayersReady(game);
+    if (!areAllPlayersReady) {
+      throw new GameError(`not all players are ready to play game ${gameId}`);
     }
     if (resumeByPlayerId != undefined && pausedState.pausedByPlayerId !== resumeByPlayerId) {
-      throw new GameError(`game ${gameId} can be resumed only by player who paused it`);
+      throw new GameError(`game can be resumed only by player who paused it`);
     }
   }
 
@@ -58,18 +58,16 @@ export default function createGameValidator(app: FastifyInstance): GameValidator
       throw new GameError(`game ${gameId} not found`);
     }
     if (!isExpectedPlayer(game.players, userId)) {
-      throw new GameError(`you are not in game ${gameId}`);
+      throw new GameError(`not in the game ${gameId}`);
     }
     return game;
   }
 
-  function allPlayersConnected(game: GameSession): boolean {
-    const { gameId } = game;
-    app.log.debug(`[game-service] Checking players' connection status in game ${gameId}`);
+  function allPlayersReady(game: GameSession): boolean {
     if (game.mode === GameMode.PVB_AI) {
-      return game.isConnected.size === 1;
+      return game.playersReady.length === 1;
     }
-    return game.isConnected.size === game.players.length;
+    return game.playersReady.length === game.players.length;
   }
 
   function isPlayerInGame(players: Player[], userId: UserIdType): boolean {
@@ -98,8 +96,8 @@ export default function createGameValidator(app: FastifyInstance): GameValidator
       );
       return false;
     }
-    if (!allPlayersConnected(game)) {
-      log.debug(`[game-service] Cannot start game ${game.gameId} - players are not connected`);
+    if (!allPlayersReady(game)) {
+      log.debug(`[game-service] Cannot start game ${game.gameId} - players are not ready`);
       return false;
     }
 
@@ -113,7 +111,7 @@ export default function createGameValidator(app: FastifyInstance): GameValidator
     isExpectedPlayer,
     isExpectedUserId,
     isPlayerInGame,
-    allPlayersConnected,
+    allPlayersReady,
     gameReadyToStart,
     isGameFull,
   };

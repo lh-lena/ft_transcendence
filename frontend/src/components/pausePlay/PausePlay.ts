@@ -5,7 +5,12 @@ export class PausePlay {
   private gameState: GameState;
   private gameStateCallbackParent: () => void;
 
-  constructor(gameState: GameState, gameStateCallbackParent: () => void) {
+  constructor(
+    gameState: GameState,
+    gameStateCallbackParent: () => void,
+    wsGamePauseCallback?: () => void,
+    wsGameResumeCallback?: () => void,
+  ) {
     this.gameStateCallbackParent = gameStateCallbackParent;
     this.gameState = gameState;
     this.button = document.createElement("button");
@@ -13,6 +18,14 @@ export class PausePlay {
       "btn flex items-center justify-center w-8 h-8 bg-white duration-150";
     this.renderIcon();
     this.button.addEventListener("click", () => {
+      if (wsGamePauseCallback && gameState.status == GameStatus.PLAYING) {
+        wsGamePauseCallback();
+        return;
+      }
+      if (wsGameResumeCallback && gameState.status == GameStatus.PAUSED) {
+        wsGameResumeCallback();
+        return;
+      }
       if (
         this.gameState.blockedPlayButton == true ||
         this.gameState.status == GameStatus.GAME_OVER

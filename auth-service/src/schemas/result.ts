@@ -4,6 +4,7 @@ export const leaderboardSchema = z.object({
   userID: z.uuid(),
   wins: z.number(),
 });
+export const leaderboardArraySchema = z.array(leaderboardSchema);
 
 export const resultPostSchema = z.object({
   gameId: z.uuid(),
@@ -31,10 +32,19 @@ export const resultResponseSchema = z.object({
 });
 export const resultResponseArraySchema = z.array(resultResponseSchema);
 
-export const resultQuerySchema = resultResponseSchema.partial();
+export const resultStatsResponseSchema = z.object({
+  userId: z.uuid(),
+  wins: z.number(),
+  losses: z.number(),
+});
+export const resultStatsResponseArraySchema = z.array(resultStatsResponseSchema);
+
+export const resultQuerySchema = resultResponseSchema.partial().extend({ userId: z.uuid() });
 
 export type LeaderboardType = z.infer<typeof leaderboardSchema>;
 export type ResultPostType = z.infer<typeof resultPostSchema>;
 export type ResultResponseType = z.infer<typeof resultResponseSchema>;
 export type ResultResponseArrayType = z.infer<typeof resultResponseArraySchema>;
 export type ResultQueryType = z.infer<typeof resultQuerySchema>;
+export type ResultStatsResponseType = z.infer<typeof resultStatsResponseSchema>;
+export type ResultStatsResponseArrayType = z.infer<typeof resultStatsResponseArraySchema>;

@@ -2,9 +2,10 @@ import { WebSocket } from 'ws';
 import type { FastifyInstance, WSConnection } from 'fastify';
 import type { WsServerBroadcast } from '../../schemas/ws.schema.js';
 import type { GameResult, GameState, GameSession, GameIdType } from '../../schemas/game.schema.js';
-import type { UserIdType } from '../../schemas/user.schema.js';
+import type { UserIdType, UserIdObject } from '../../schemas/user.schema.js';
 import type { NotificationType } from '../../constants/game.constants.js';
 import { GAME_EVENTS } from '../../constants/game.constants.js';
+import { CHAT_EVENTS } from '../../constants/chat.constants.js';
 import { processErrorLog } from '../../utils/error.handler.js';
 import type { RespondService, ConnectionService } from '../types/ws.types.js';
 import type { GameSessionService } from '../../game/types/game.types.js';
@@ -27,6 +28,10 @@ export default function createRespondService(app: FastifyInstance): RespondServi
       return false;
     }
     const message = { event, payload };
+    if (event !== 'game_update') {
+      // TODO: remove after testing
+      log.fatal(`WS: ${event}`);
+    }
     try {
       const messageStr = JSON.stringify(message);
       conn.send(messageStr);
@@ -61,11 +66,10 @@ export default function createRespondService(app: FastifyInstance): RespondServi
       ) {
         userIds.push(p.userId);
       }
-    }); // changed from map to forEach to avoid creating a new array
+    });
 
     const results: boolean[] = [];
     userIds.forEach((id) => {
-      log.debug(`[ws-service] Sending to user ID ${id} event ${event}`); // rm
       const res = send(id, event, payload);
       results.push(res);
     });
@@ -74,6 +78,14 @@ export default function createRespondService(app: FastifyInstance): RespondServi
 
   function connected(userId: UserIdType): boolean {
     return send(userId, 'connected', { userId });
+  }
+
+  function gameReady(gameId: GameIdType): boolean {
+    return broadcast(gameId, GAME_EVENTS.GAME_READY, { gameId, timestamp: Date.now() });
+  }
+
+  function gameStarted(gameId: GameIdType, players: UserIdObject[]): boolean {
+    return broadcast(gameId, GAME_EVENTS.START, { gameId, players });
   }
 
   function gameUpdate(userId: UserIdType, gameState: GameState): boolean {
@@ -89,7 +101,7 @@ export default function createRespondService(app: FastifyInstance): RespondServi
   }
 
   function chatMessage(userId: UserIdType, payload: ChatMessageBroadcast): boolean {
-    return send(userId, 'chat_message', {
+    return send(userId, CHAT_EVENTS.MESSAGE, {
       ...payload,
     });
   }
@@ -122,6 +134,8 @@ export default function createRespondService(app: FastifyInstance): RespondServi
 
   return {
     connected,
+    gameReady,
+    gameStarted,
     gameUpdate,
     gameEnded,
     gamePaused,

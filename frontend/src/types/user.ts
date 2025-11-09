@@ -1,11 +1,11 @@
 export interface UserProfile {
   username: string;
   color: string;
-  colorMap: string[];
+  colormap: string[];
 }
 
 export type UserRegistration = {
-  email: string;
+  email?: string;
   username: string;
   password: string;
   tfaEnabled?: string;
@@ -17,7 +17,7 @@ export type UserRegistration = {
 };
 
 export type UserLogin = {
-  email: string;
+  username: string;
   password: string;
 };
 
@@ -28,6 +28,7 @@ export type User = {
   updatedAt: string;
   email: string;
   username: string;
+  alias: string;
   password_hash: string;
   tfaEnabled: boolean;
   twofa_secret: string;
@@ -37,6 +38,7 @@ export type User = {
   avatar: string | null;
   online?: string;
   friendId?: number;
+  winsAndLosses?: Map<string, number>;
 };
 
 export type UsersAll = User[];

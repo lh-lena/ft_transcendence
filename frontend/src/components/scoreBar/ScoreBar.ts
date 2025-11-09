@@ -1,4 +1,4 @@
-import { PausePlay } from "../pausePlay";
+// import { PausePlay } from "../pausePlay";
 import { GameState } from "../../types";
 import { ProfileAvatar } from "../profileAvatar";
 
@@ -8,11 +8,16 @@ export class ScoreBar {
   private playerRightContainer: HTMLElement;
   private scoreA: HTMLElement;
   private scoreB: HTMLElement;
-  public pausePlay: PausePlay;
+  // public pausePlay: PausePlay;
   private gameState: GameState;
   private gameStateCallbackParent: () => void;
 
-  constructor(gameState: GameState, gameStateCallbackParent: () => void) {
+  constructor(
+    gameState: GameState,
+    gameStateCallbackParent: () => void,
+    // wsGamePauseCallback?: () => void,
+    // wsGameResumeCallback?: () => void,
+  ) {
     this.gameState = gameState;
     this.gameStateCallbackParent = gameStateCallbackParent;
     this.element = document.createElement("div");
@@ -24,7 +29,12 @@ export class ScoreBar {
     this.playerLeftContainer.className = "flex flex-row items-center gap-4";
     const profileA = new ProfileAvatar(
       this.gameState.playerA.color,
-      this.gameState.playerA.colorMap,
+      this.gameState.playerA.colormap,
+      undefined,
+      undefined,
+      undefined,
+      gameState.playerA.avatar ? "image" : undefined,
+      gameState.playerA.userId,
     ).getElement();
     this.playerLeftContainer.appendChild(profileA);
     this.scoreA = document.createElement("h1");
@@ -34,26 +44,50 @@ export class ScoreBar {
     this.playerLeftContainer.appendChild(this.scoreA);
     this.element.appendChild(this.playerLeftContainer);
 
-    // Pause/Play button
-    this.pausePlay = new PausePlay(this.gameState, () =>
-      this.gameStateCallbackParent(),
-    );
-    this.pausePlay.mount(this.element);
+    // // Pause/Play button
+    // // for remote game
+    // if (wsGamePauseCallback && wsGameResumeCallback) {
+    //   this.pausePlay = new PausePlay(
+    //     this.gameState,
+    //     () => this.gameStateCallbackParent(),
+    //     wsGamePauseCallback,
+    //     wsGameResumeCallback,
+    //   );
+    // } else {
+    //   // for local game
+    //   this.pausePlay = new PausePlay(this.gameState, () =>
+    //     this.gameStateCallbackParent(),
+    //   );
+    // }
+    // this.pausePlay.mount(this.element);
 
     // Player B profile and score
     this.playerRightContainer = document.createElement("div");
     this.playerRightContainer.className = "flex flex-row items-center gap-4";
     this.scoreB = document.createElement("h1");
     this.scoreB.id = "score-b";
-    this.scoreB.textContent = `${this.gameState.playerB.score}`;
+    if (this.gameState.playerB)
+      this.scoreB.textContent = `${this.gameState.playerB.score}`;
     this.scoreB.className = "text-white";
     this.playerRightContainer.appendChild(this.scoreB);
-    const profileB = new ProfileAvatar(
-      this.gameState.playerB.color,
-      this.gameState.playerB.colorMap,
-    ).getElement();
-    this.playerRightContainer.appendChild(profileB);
+    if (this.gameState.playerB) {
+      const playerB = this.gameState.playerB;
+      const profileB = new ProfileAvatar(
+        playerB.color,
+        playerB.colormap,
+        undefined,
+        undefined,
+        undefined,
+        playerB.avatar ? "image" : undefined,
+        playerB.userId,
+      ).getElement();
+      this.playerRightContainer.appendChild(profileB);
+    }
     this.element.appendChild(this.playerRightContainer);
+  }
+
+  public clear() {
+    // this.pausePlay.unmount();
   }
 
   public updateScores(scoreA: number, scoreB: number): void {

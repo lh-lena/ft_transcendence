@@ -16,7 +16,6 @@ export interface WebsocketConfig {
   pauseTimeout: number;
   backendUrl: string;
   authUrl: string;
-  allowedOrigins: string[];
   maxConnections: number;
 }
 

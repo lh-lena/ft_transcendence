@@ -26,12 +26,14 @@ export default function createGameSessionService(app: FastifyInstance): GameSess
 
   function createGameSession(gameId: GameIdType, gameData: StartGame): GameSession | null {
     if (gameSessions.has(gameId)) {
-      processDebugLog(app, 'game-session', `Game session ${gameId} already exists. Replacing it`);
+      processDebugLog(app, 'game-session', `Game session ${gameId} already exists. Returning it`);
+      return gameSessions.get(gameId) as GameSession;
     }
 
     const newGame: GameSession = {
       ...gameData,
       isConnected: new Map(),
+      playersReady: [],
       gameState: initializeGameState(gameId),
       status: GameSessionStatus.PENDING,
       gameLoopInterval: undefined,
@@ -74,11 +76,19 @@ export default function createGameSessionService(app: FastifyInstance): GameSess
     } else {
       gameSession.isConnected.delete(userId);
     }
-    processDebugLog(
-      app,
-      'game-session',
-      `Player ${userId} in the game ${gameId} is ${connected ? 'connected' : 'disconnected'}`,
-    );
+  }
+
+  function setPlayerReadyStatus(userId: UserIdType, gameId: GameIdType, ready: boolean): void {
+    const gameSession = gameSessions.get(gameId);
+    if (gameSession === undefined || gameSession === null) {
+      throw new Error(`Game session ${gameId} not found`);
+    }
+    if (ready) {
+      gameSession.playersReady.push(userId);
+    } else {
+      gameSession.playersReady.splice(gameSession.playersReady.indexOf(userId), 1);
+    }
+    processDebugLog(app, 'game-session', `Player is ready: ID ${userId}, Game ID ${gameId}`);
   }
 
   function updateGameSession(gameId: GameIdType, updates: Partial<GameSession>): boolean {
@@ -124,6 +134,7 @@ export default function createGameSessionService(app: FastifyInstance): GameSess
     removeGameSession,
     storeGameSession,
     setPlayerConnectionStatus,
+    setPlayerReadyStatus,
     updateGameSession,
     shutdown,
   };

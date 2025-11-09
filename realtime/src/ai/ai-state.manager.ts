@@ -22,6 +22,7 @@ export default function createAIStateManager(app: FastifyInstance): AIStateManag
       timeAccumulator: aiInterval,
       difficulty,
       config: AIConfig[difficulty],
+      lastProcessedSequence: 0,
     };
 
     aiStates.set(gameId, aiState);
@@ -30,7 +31,6 @@ export default function createAIStateManager(app: FastifyInstance): AIStateManag
 
   function getAIState(gameId: GameIdType): aiState | undefined {
     if (!aiStates.has(gameId)) {
-      log.warn(`[ai-state-manager] No AI state found for game ${gameId}`);
       return undefined;
     }
     const state = aiStates.get(gameId);

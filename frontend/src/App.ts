@@ -1,7 +1,5 @@
 // services
-import { ServiceContainer, Router, Websocket, Backend, Auth } from "./services";
-
-import { Loading } from "./components/loading";
+import { ServiceContainer, Router, Websocket, Backend } from "./services";
 
 // pages
 import { HomePage } from "./pages/home";
@@ -10,21 +8,31 @@ import { LoginPage } from "./pages/login";
 import { RegisterPage } from "./pages/register";
 import { SettingsPage } from "./pages/settings";
 import { ChatPage } from "./pages/chat";
-import { VsPlayerGamePage } from "./pages/remoteGame";
-import { TournamentAliasPage } from "./pages/tournament";
+import { GamePage } from "./pages/gamePage";
+import { AIGamePage } from "./pages/aiGamePage";
+import { VsPlayerGamePage } from "./pages/vsPlayerGamePage";
+import { TournamentGamePage } from "./pages/tournamentGamePage";
+
+// routes
+import { protectedRoutes } from "./constants/routes";
+
+// eventbus
+import { EventBus } from "./services/EventBus";
+import { AliasPage } from "./pages/alias";
 
 // single source of truth for pages and routes
 const PAGE_ROUTES = {
   "/": HomePage,
   "/local": LocalGamePage,
-  // "/profile": ProfilePage,
   "/login": LoginPage,
   "/register": RegisterPage,
   "/settings": SettingsPage,
-  // "/leaderboard": LeaderboardPage,
   "/chat": ChatPage, // -> main page now (home when logged in)
-  "/vs-player": VsPlayerGamePage,
-  "/tournament-start": TournamentAliasPage,
+  "/vs-player-game": VsPlayerGamePage,
+  "/game-page": GamePage,
+  "/ai-game": AIGamePage,
+  "/tournament-game": TournamentGamePage,
+  "/tournament-alias": AliasPage,
 } as const;
 
 // type magic
@@ -36,11 +44,15 @@ export class App {
   private router: Router;
   private container: HTMLElement;
   private currentPage: PageInstance;
+  private websocket: Websocket;
+  private eventBus: EventBus;
 
   constructor() {
     // full screen div for app
     this.container = document.createElement("div");
     this.container.className = "w-full h-screen";
+
+    this.eventBus = new EventBus();
 
     // init state needs to be null
     this.currentPage = null;
@@ -49,8 +61,16 @@ export class App {
     this.serviceContainer = ServiceContainer.getInstance();
     this.serviceContainer.register("router", new Router());
     this.serviceContainer.register("websocket", new Websocket());
-    this.serviceContainer.register("backend", new Backend());
-    this.serviceContainer.register("auth", new Auth());
+    this.serviceContainer.register("backend", new Backend(this.eventBus));
+
+    // save web socket
+    this.websocket = this.serviceContainer.get<Websocket>("websocket");
+
+    // event bus
+    // listen for logout events
+    this.eventBus.on("auth:logout", () => {
+      this.router.navigate("/");
+    });
 
     // grab route from service container
     this.router = this.serviceContainer.get<Router>("router");
@@ -69,22 +89,27 @@ export class App {
   }
 
   private async showPage(PageClass: PageConstructor) {
+    // unmount current page
     if (this.currentPage) {
       this.currentPage.unmount();
     }
-    // show loading for a second
-    const loading = new Loading("pong");
-    loading.mount(this.container);
-    // show loading screen
-    // random range between 400 and 800
-    loading.hide();
 
-    // Handle ChatPage's async initialization
-    if (PageClass === ChatPage) {
-      this.currentPage = await ChatPage.create(this.serviceContainer);
-    } else {
-      this.currentPage = new PageClass(this.serviceContainer);
+    // create a new web socket connection across each page reload
+    // only if in logged in area
+
+    let currentRoute = this.router.getCurrentRoute();
+
+    // we always connect back to web socket before we load a page
+    if (
+      protectedRoutes.includes(currentRoute) ||
+      PageClass === TournamentGamePage
+    ) {
+      await this.websocket.initializeWebSocket();
     }
+
+    // handle ChatPage's async initialization
+    // else create new page
+    this.currentPage = new PageClass(this.serviceContainer);
 
     this.currentPage.mount(this.container);
   }

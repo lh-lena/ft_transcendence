@@ -5,7 +5,7 @@ const { faker } = require('@faker-js/faker');
 const prisma = new PrismaClient();
 
 const COLORMAPS = ['warm', 'cool', 'neutral'];
-const GAME_STATUS = ['finished', 'cancled', 'cancled_server_error'];
+const GAME_STATUS = ['finished', 'cancelled', 'cancelled_server_error'];
 const GAME_MODES = ['pvp_remote', 'pvp_ai', 'tournamnet'];
 
 async function main() {
@@ -22,7 +22,6 @@ async function main() {
     users.push(
       await prisma.user.create({
         data: {
-          email: faker.internet.email(),
           username,
           alias: username,
           guest: faker.datatype.boolean(),
@@ -121,7 +120,7 @@ async function main() {
     await prisma.chatMessage.create({
       data: {
         senderId: users[senderIdx].userId,
-        reciverId: users[receiverIdx].userId,
+        recieverId: users[receiverIdx].userId,
         message: faker.lorem.sentence(),
       },
     });

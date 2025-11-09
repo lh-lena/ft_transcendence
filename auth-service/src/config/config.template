@@ -1,0 +1,22 @@
+export const TMPRoutesConfig = {
+  getTMP: {
+  method: '' as const,
+  url: (params: TYPE) => `/`,
+  paramsSchema:
+  querySchema:
+  bodySchema:
+  responseSchema:
+  selectResponseSchema: (response: unkown, data: {}, userId: string) => {},
+  checkOwnership: async (data: { params: , query: , body: , }, userId: string) => {},
+  transformRequest: (data: body:, server) => {},
+  transformResponse: (response: unknown, request) => {},
+  successCode: ,
+  errorMessages: {
+  invalidParams: '',
+  invalidQuery: '',
+  invalidBody: '',
+  forbidden: '',
+  }
+  }
+  }
+

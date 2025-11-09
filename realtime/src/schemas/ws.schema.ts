@@ -1,59 +1,91 @@
 import { z } from 'zod/v4';
 import { Direction, NotificationType, GAME_EVENTS } from '../constants/game.constants.js';
-import type { GameStateSchema, GameResultSchema } from './game.schema.js';
+import { GameStateSchema, GameResultSchema } from './game.schema.js';
 import { GameIdSchema } from './game.schema.js';
 import { ChatMessagePayloadSchema, ChatMessageBroadcastSchema } from './chat.schema.js';
-import { UserIdSchema } from './user.schema.js';
+import { UserIdObjectSchema, UserIdSchema } from './user.schema.js';
 import { CHAT_EVENTS } from '../constants/chat.constants.js';
 
-export const GameIdPayloadSchema = z.object({
-  gameId: GameIdSchema,
-});
+export const GameIdPayloadSchema = z
+  .object({
+    gameId: GameIdSchema,
+  })
+  .meta({ $id: 'GameIdPayload' });
 
-export const GameLeavePayloadSchema = z.object({
-  gameId: GameIdSchema,
-});
+export const ReadySchema = z
+  .object({
+    gameId: GameIdSchema,
+    timestamp: z.number().int(),
+  })
+  .meta({ $id: 'ReadyPayload' });
 
-export const PlayerInputSchema = z.object({
-  gameId: GameIdSchema,
-  direction: z.enum(Direction),
-  sequence: z.number().default(0),
-});
+export const GameLeavePayloadSchema = z
+  .object({
+    gameId: GameIdSchema,
+  })
+  .meta({ $id: 'GameLeavePayload' });
 
-export const GamePausePayloadSchema = z.object({
-  gameId: GameIdSchema,
-  reason: z.string(),
-});
+export const PlayerInputSchema = z
+  .object({
+    gameId: GameIdSchema,
+    direction: z.enum(Direction),
+    sequence: z.number().min(0),
+  })
+  .meta({ $id: 'PlayerInputPayload' });
 
-export const NotificationPayloadSchema = z.object({
-  type: z.enum(NotificationType),
-  message: z.string(),
-  timestamp: z.number().int(),
-});
+export const GamePausePayloadSchema = z
+  .object({
+    gameId: GameIdSchema,
+    reason: z.string(),
+  })
+  .meta({ $id: 'GamePausePayload' });
 
-export const ConnectedPayloadSchema = z.object({
-  userId: UserIdSchema,
-});
+export const NotificationPayloadSchema = z
+  .object({
+    type: z.enum(NotificationType),
+    message: z.string(),
+    timestamp: z.number().int(),
+  })
+  .meta({ $id: 'NotificationPayload' });
 
-export const GamePauseBroadcastSchema = z.object({
-  gameId: GameIdSchema,
-  reason: z.string(),
-});
+export const ConnectedPayloadSchema = z
+  .object({
+    userId: UserIdSchema,
+  })
+  .meta({ $id: 'ConnectedPayload' });
 
-export const CountdownUpdateSchema = z.object({
-  gameId: GameIdSchema,
-  countdown: z.number().min(0),
-  message: z.string(),
-});
+export const GameStartedPayloadSchema = z
+  .object({
+    gameId: GameIdSchema,
+    players: z.array(UserIdObjectSchema),
+  })
+  .meta({ $id: 'GameStartedPayload' });
 
-export const ErrorPayloadSchema = z.object({
-  message: z.string(),
-});
+export const GamePauseBroadcastSchema = z
+  .object({
+    gameId: GameIdSchema,
+    reason: z.string(),
+  })
+  .meta({ $id: 'GamePausePayload' });
+
+export const CountdownUpdateSchema = z
+  .object({
+    gameId: GameIdSchema,
+    countdown: z.number().min(0),
+    message: z.string(),
+  })
+  .meta({ $id: 'CountdownUpdatePayload' });
+
+export const ErrorPayloadSchema = z
+  .object({
+    message: z.string(),
+  })
+  .meta({ $id: 'ErrorPayload' });
 
 export const WsClientMessageSchema = z.discriminatedUnion('event', [
   z.object({
-    event: z.literal(GAME_EVENTS.START),
-    payload: GameIdPayloadSchema,
+    event: z.literal(GAME_EVENTS.CLIENT_READY),
+    payload: ReadySchema,
   }),
   z.object({
     event: z.literal(GAME_EVENTS.LEAVE),
@@ -82,7 +114,9 @@ export const WsClientMessageSchema = z.discriminatedUnion('event', [
 ]);
 
 export interface WsServerBroadcast {
+  game_ready: z.infer<typeof ReadySchema>;
   connected: z.infer<typeof ConnectedPayloadSchema>;
+  game_start: z.infer<typeof GameStartedPayloadSchema>;
   game_update: z.infer<typeof GameStateSchema>;
   game_ended: z.infer<typeof GameResultSchema>;
   game_pause: z.infer<typeof GamePauseBroadcastSchema>;
@@ -91,6 +125,19 @@ export interface WsServerBroadcast {
   error: z.infer<typeof ErrorPayloadSchema>;
   chat_message: z.infer<typeof ChatMessageBroadcastSchema>;
 }
+
+export const WsServerBroadcastSchemas = {
+  game_ready: ReadySchema,
+  connected: ConnectedPayloadSchema,
+  game_start: GameStartedPayloadSchema,
+  game_update: GameStateSchema,
+  game_ended: GameResultSchema,
+  game_pause: GamePauseBroadcastSchema,
+  countdown_update: CountdownUpdateSchema,
+  notification: NotificationPayloadSchema,
+  error: ErrorPayloadSchema,
+  chat_message: ChatMessageBroadcastSchema,
+} as const;
 
 export type ClientEventPayload<T extends WsClientMessage['event']> = Extract<
   WsClientMessage,

@@ -26,4 +26,12 @@ export class PongButton {
   setBounce(): void {
     this.element.className = "animate-bounce-slow";
   }
+
+  setLoading() {
+    this.element.classList.add("animate-pulse");
+  }
+
+  unsetLoading() {
+    this.element.classList.remove("animate-pulse");
+  }
 }

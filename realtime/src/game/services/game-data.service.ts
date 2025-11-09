@@ -43,11 +43,17 @@ export default function createGameDataService(app: FastifyInstance): GameDataSer
       });
       if (response.status !== 201) {
         const errorDetails = await response.text();
-        throw new GameError(`failed to send game result for ${result.gameId}`, errorDetails);
+        throw new Error(errorDetails);
       }
       return true;
     } catch (error: unknown) {
-      processErrorLog(app, 'game-data', `Failed to send game result. ID ${result.gameId}`, error);
+      app.log.debug(`${JSON.stringify(result)}`);
+      processErrorLog(
+        app,
+        'game-data',
+        `Failed to send game result. Game ID ${result.gameId}`,
+        error,
+      );
       return false;
     }
   }

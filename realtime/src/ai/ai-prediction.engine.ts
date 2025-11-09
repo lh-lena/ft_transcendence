@@ -1,45 +1,28 @@
-import type { FastifyInstance } from 'fastify';
 import type { Paddle, BallType } from '../schemas/game.schema.js';
-import type { aiConfigType, aiState } from '../schemas/ai.schema.js';
-import { BALL_DEFAULTS, BOARD_DEFAULTS, PADDLE_DEFAULTS } from '../constants/game.constants.js';
+import { BALL_DEFAULTS, BOARD_DEFAULTS } from '../constants/game.constants.js';
 import type { AIPredictionEngine } from './ai.types.js';
+import { randomizeBallDirection } from '../game/engines/pong/pong.engine.js';
+import { PREDICTION_CONFIG } from '../constants/ai.constants.js';
+import type { aiConfigType } from '../schemas/ai.schema.js';
 
-export default function createAIPredictionEngine(app: FastifyInstance): AIPredictionEngine {
-  const { log } = app;
-  const centerPosition = BOARD_DEFAULTS.height / 2;
-
+export default function createAIPredictionEngine(): AIPredictionEngine {
   function calculateTargetPosition(ball: BallType, aiPaddle: Paddle, config: aiConfigType): number {
-    const movingTowardAI = isBallMovingTowardAI(ball, aiPaddle);
-    if (!movingTowardAI) {
-      return randomizeCenterPosition(config);
-    }
     const { x, dx, v } = ball;
     const timeToPaddle = calculateTimeToPaddle(aiPaddle.x, x, dx, v);
-    const predictionTime = Math.min(timeToPaddle, config.predictionTime);
-    const prediction = ballTrajectoryPrediction(ball, aiPaddle, predictionTime, config);
-    const predictedY = prediction.y;
-    const randomError = (Math.random() - 0.5) * config.predictionError;
-    prediction.y += randomError;
-    logAIState(predictedY, ball, aiPaddle);
-    return prediction.y;
-  }
-
-  function randomizeCenterPosition(config: aiConfigType): number {
-    let range: number;
-    range = config.predictionError * 2;
-
-    const position = centerPosition + (Math.random() - 0.5) * range;
-    return position;
+    const prediction = ballTrajectoryPrediction(ball, aiPaddle, timeToPaddle);
+    const distance = Math.abs(aiPaddle.x - ball.x);
+    const closeness = 1 - distance / BOARD_DEFAULTS.width;
+    const targetY = applyPredictionError(prediction.y, closeness, config);
+    return targetY;
   }
 
   function ballTrajectoryPrediction(
     ball: BallType,
     aiPaddle: Paddle,
     timeAhead: number,
-    config: aiConfigType,
   ): { x: number; y: number } {
-    const maxIterations = 100;
-    const precision = config.precision;
+    const maxIterations = PREDICTION_CONFIG.MAX_ITERATIONS;
+    const precision = PREDICTION_CONFIG.PRECISION;
 
     let predictedY = ball.y;
     let predictedX = ball.x;
@@ -70,52 +53,12 @@ export default function createAIPredictionEngine(app: FastifyInstance): AIPredic
         if (Math.abs(nextCollision - timeToAIPaddle) < precision) {
           currentDx = -currentDx;
         } else {
-          currentDy = -currentDy;
+          currentDy = randomizeBallDirection(currentDy);
         }
       }
     }
 
     return { x: predictedX, y: predictedY };
-  }
-
-  // function ballTrajectoryPrediction(ball: BallType, timeAhead: number): { x: number; y: number } {
-  //   const bounceTime = calculateTimeToWall(ball.y, ball.dy, ball.v);
-  //   if (bounceTime < timeAhead) {
-  //     return simulateBounce(ball, timeAhead);
-  //   }
-
-  //   return linearBallPrediction(ball, timeAhead);
-  // }
-
-  function simulateBounce(ball: BallType, timeAhead: number): { x: number; y: number } {
-    const { y, dy, v } = ball;
-    let predictedY = y;
-    let predictedDy = dy;
-    let remainTime = timeAhead;
-    while (remainTime > 0) {
-      const timeToWall = calculateTimeToWall(predictedY, predictedDy, v);
-      if (timeToWall >= remainTime) {
-        predictedY += predictedDy * v * remainTime;
-        break;
-      } else {
-        predictedY += predictedDy * v * timeToWall;
-        predictedDy *= -1;
-        remainTime -= timeToWall;
-      }
-    }
-
-    return { x: ball.x, y: predictedY };
-  }
-
-  function isBallMovingTowardAI(ball: BallType, aiPaddle: Paddle): boolean {
-    return (ball.dx > 0 && aiPaddle.x > ball.x) || (ball.dx < 0 && aiPaddle.x < ball.x);
-  }
-
-  function linearBallPrediction(ball: BallType, timeAhead: number): { x: number; y: number } {
-    const { dy, v } = ball;
-    const x = ball.x + ball.dx * v * timeAhead;
-    const y = ball.y + dy * v * timeAhead;
-    return { x, y };
   }
 
   function calculateTimeToWall(currentY: number, dy: number, velocity: number): number {
@@ -135,10 +78,6 @@ export default function createAIPredictionEngine(app: FastifyInstance): AIPredic
     return Infinity;
   }
 
-  function calculateCloseness(ball: BallType, paddle: Paddle): number {
-    return (ball.dx < 0 ? ball.x - paddle.x : paddle.x - ball.x) / BOARD_DEFAULTS.width;
-  }
-
   function calculateTimeToPaddle(
     paddleX: number,
     ballX: number,
@@ -152,25 +91,29 @@ export default function createAIPredictionEngine(app: FastifyInstance): AIPredic
     return Math.abs(distance / speed);
   }
 
-  function logAIState(predictedBallY: number, ball: BallType, aiPaddle: Paddle): void {
-    const timeToPaddle = calculateTimeToPaddle(aiPaddle.x, ball.x, ball.dx, ball.v);
-
-    log.info(`
-      ball.x: ${ball.x}
-      ball.y: ${ball.y}
-      ball.dx: ${ball.dx}
-      ball.dy: ${ball.dy}
-      ball.v: ${ball.v}
-      aiPaddle.x: ${aiPaddle.x}
-      aiPaddle.y: ${aiPaddle.y}
-      aiPaddle.height: ${aiPaddle.height}
-      predictedBallY: ${predictedBallY}
-      timeToPaddle: ${timeToPaddle}
-      `);
+  function applyPredictionError(preciseY: number, closeness: number, config: aiConfigType): number {
+    const reactionQuality = closeness * config.predictionAccuracy;
+    const errorMultiplier = 1 - reactionQuality;
+    const maxError = config.predictionError;
+    const randomFactor = (Math.random() - 0.5) * 2;
+    const biasedRandom =
+      Math.sign(randomFactor) * Math.pow(Math.abs(randomFactor), config.errorBias);
+    const error = biasedRandom * maxError * errorMultiplier;
+    let targetY = preciseY + error;
+    if (Math.random() > config.focusLevel) {
+      const hesitationError = (Math.random() - 0.5) * config.hesitationRange;
+      targetY += hesitationError;
+    }
+    targetY = Math.max(
+      BALL_DEFAULTS.size,
+      Math.min(BOARD_DEFAULTS.height - BALL_DEFAULTS.size, targetY),
+    );
+    return targetY;
   }
 
   return {
     calculateTargetPosition,
     ballTrajectoryPrediction,
+    calculateTimeToPaddle,
   };
 }

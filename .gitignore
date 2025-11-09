@@ -123,8 +123,7 @@ dist
 # DynamoDB Local files
 .dynamodb/
 
-data/*
-public/*
+backend/public/avatars/*
 
 # TernJS port file
 .tern-port
@@ -144,4 +143,4 @@ public/*
 **/.DS_Store
 
 # database
-./data/*
+data/database.sqlite

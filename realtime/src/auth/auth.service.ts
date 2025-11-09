@@ -1,10 +1,8 @@
 import type { FastifyInstance, VerifyClientInfo } from 'fastify';
-import { parse as parseCookie } from 'cookie';
 import type { EnvironmentConfig } from '../config/config.js';
-import type { User } from '../schemas/user.schema.js';
-import { UserSchema, UserIdType } from '../schemas/user.schema.js';
-import { processDebugLog, processErrorLog } from '../utils/error.handler.js';
-import type { AuthService } from './auth.js';
+import { User, UserSchema, UserIdType, UserIdObjectSchema } from '../schemas/user.schema.js';
+import { processDebugLog, processErrorLog, processInfoLog } from '../utils/error.handler.js';
+import type { AuthService } from './auth.types.js';
 
 export default function createAuthService(app: FastifyInstance): AuthService {
   const config = app.config as EnvironmentConfig;
@@ -18,7 +16,7 @@ export default function createAuthService(app: FastifyInstance): AuthService {
 
     const res = await fetch(`${backendUrl}/api/user/${id}`);
     if (res.status !== 200) {
-      processErrorLog(
+      processInfoLog(
         app,
         'auth-service',
         `Failed to get user info: ${res.status} ${res.statusText}`,
@@ -49,6 +47,11 @@ export default function createAuthService(app: FastifyInstance): AuthService {
       }
       const authUrl = `${AUTH_URL}/api/auth/me`;
 
+      processDebugLog(
+        app,
+        'auth-service',
+        `Token found in validateUser, ${token} starting validation`,
+      );
       const res = await fetch(authUrl, {
         method: 'GET',
         headers: {
@@ -56,7 +59,7 @@ export default function createAuthService(app: FastifyInstance): AuthService {
         },
       });
       if (res.status !== 200) {
-        processErrorLog(
+        processDebugLog(
           app,
           'auth-service',
           `Token validation failed: ${res.status} ${res.statusText}`,
@@ -64,10 +67,10 @@ export default function createAuthService(app: FastifyInstance): AuthService {
         return null;
       }
       const rawUserData = await res.json();
-      const validationResult = UserSchema.safeParse(rawUserData);
+      const validationResult = UserIdObjectSchema.safeParse(rawUserData);
       if (!validationResult.success) {
         const errorMessages = validationResult.error.issues.map((err) => err.message).join(', ');
-        processErrorLog(app, 'auth-service', `Invalid user data received from auth service`);
+        processDebugLog(app, 'auth-service', `Invalid user data received from auth service`);
         processDebugLog(
           app,
           'auth-service',
@@ -75,7 +78,8 @@ export default function createAuthService(app: FastifyInstance): AuthService {
         );
         return null;
       }
-      const user = validationResult.data;
+      const userId = validationResult.data.userId as UserIdType;
+      const user = await getUserInfo(userId);
       return user;
     } catch (error: unknown) {
       processDebugLog(app, 'auth-service', 'Error validating user: ', error);
@@ -92,19 +96,20 @@ export default function createAuthService(app: FastifyInstance): AuthService {
     try {
       const token = extractTokenFromRequest(info);
       if (token === null) {
-        processErrorLog(
+        processDebugLog(
           app,
           'auth-service',
           `Connection rejected - No authentication token provided`,
         );
         return false;
       }
+      processDebugLog(app, 'auth-service', `Token found, ${token} starting validation`);
       const user = await validateUser(token);
       if (!user) {
-        processErrorLog(
+        processDebugLog(
           app,
           'auth-service',
-          `Connection rejected - Invalid token or expired authentication credentials: ${user}`,
+          `Connection rejected - Invalid token or expired authentication credentials`,
         );
         return false;
       }
@@ -118,30 +123,6 @@ export default function createAuthService(app: FastifyInstance): AuthService {
   }
 
   function extractTokenFromRequest(info: VerifyClientInfo): string | null {
-    const cookieToken = extractTokenFromCookie(info);
-    if (cookieToken !== null) {
-      return cookieToken;
-    }
-    return extractTokenFromQuery(info);
-  }
-
-  function extractTokenFromCookie(info: VerifyClientInfo): string | null {
-    const cookieHeader = info.req.headers.cookie;
-    if (cookieHeader === undefined) {
-      return null;
-    }
-
-    const cookies = parseCookie(cookieHeader);
-    const token = cookies['token'] as string | null;
-
-    if (token === null || token === '') {
-      return null;
-    }
-    processDebugLog(app, 'auth-service', `Token extracted from cookies successfully`);
-    return token;
-  }
-
-  function extractTokenFromQuery(info: VerifyClientInfo): string | null {
     const urlPath = info.req.url !== undefined ? info.req.url : '';
     const url = new URL(urlPath, `http://${info.req.headers.host}`);
     const searchParams = url.searchParams;
