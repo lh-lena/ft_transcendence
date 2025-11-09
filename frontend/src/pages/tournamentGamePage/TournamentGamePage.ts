@@ -179,13 +179,22 @@ export class TournamentGamePage extends GamePage {
     _payload: WsServerBroadcast["notification"],
   ) {
     if (_payload.message === "INFO: New player joined the tournament") {
-      // grab new tournament data from backend with new players
-      const newTournamentData = await this.backend.getTournamentById(
-        this.tournamentId,
+      setTimeout(
+        async () =>
+          this.showBracket(
+            (await this.backend.getTournamentById(this.tournamentId)).data,
+          ),
+        500,
       );
-      console.log(newTournamentData);
-      console.log(_payload);
-      this.showBracket(newTournamentData.data);
+      // } else if (_payload.message === "info: player left the tournament") {
+      //   setTimeout(
+      //     async () =>
+      //       this.showBracket(
+      //         (await this.backend.getTournamentById(this.tournamentId)).data,
+      //       ),
+      //     2000,
+      //   );
+      // }
     }
   }
 
@@ -449,10 +458,12 @@ export class TournamentGamePage extends GamePage {
 
   // for guest user
   public unmount(): void {
-    if (this.gameState.status !== GameStatus.PLAYING)
+    // if we are still in the waiting screen for example
+    if (!this.gameId) this.backend.leaveTournament();
+    else if (this.gameState.status === GameStatus.GAME_OVER)
       this.backend.leaveTournament();
-
-    if (this.gameState.status === GameStatus.PLAYING) {
+    // if we are playing the game
+    else if (this.gameState.status === GameStatus.PLAYING) {
       this.ws.messageGameLeave(this.gameId);
       this.ws.close();
     }
