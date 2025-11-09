@@ -43,7 +43,7 @@ export class GamePage {
   protected gameId!: string;
 
   // params
-  protected params: URLSearchParams;
+  protected params!: URLSearchParams;
 
   // web socket config
   // set once we recieve gameReady from ws
@@ -60,18 +60,21 @@ export class GamePage {
   public boundWsGameReadyHandler = this.wsGameReadyHandler.bind(this);
 
   constructor(serviceContainer: ServiceContainer) {
-    console.log("GamePage instance created");
-    console.log("=== NEW GAMEPAGE INSTANCE ===");
-    console.log("Current window.location:", window.location.href);
-    console.log("localStorage user:", localStorage.getItem("user"));
-    const instanceId = Math.random().toString(36).substring(7);
-    console.log(`[Instance ${instanceId}] GamePage constructor called`);
-    console.trace(`[Instance ${instanceId}] Creation stack trace`);
-
     // services init
     this.ws = serviceContainer.get<Websocket>("websocket");
     this.router = serviceContainer.get<Router>("router");
     this.backend = serviceContainer.get<Backend>("backend");
+
+    // approach to refresh: load in game Id on recieve and unset in unmount
+    // that way if there is still a game id in local storage we know a refresh was triggered
+    const oldGameId = localStorage.getItem("gameId");
+    if (oldGameId) {
+      showInfo("Game ended due to page refresh");
+      this.ws.messageGameLeave(oldGameId);
+      this.router.navigate("/chat");
+      localStorage.removeItem("gameId");
+      return;
+    }
 
     // register ws handlers
     this.registerWebsocketHandlers();
@@ -176,14 +179,14 @@ export class GamePage {
   public async wsCountdownHandler(
     payload: WsServerBroadcast["countdown_update"],
   ) {
-    if (!this.gameState) {
-      showInfo("Game ended due to page refresh");
-      this.gameRuns = false;
-      this.unmount();
-    }
-    if (this.gameRuns === false) {
-      return;
-    }
+    // if (!this.gameState) {
+    //   showInfo("Game ended due to page refresh");
+    //   this.gameRuns = false;
+    //   this.router.navigate("/chat");
+    // }
+    // if (this.gameRuns === false) {
+    //   return;
+    // }
 
     if (payload.countdown) {
       // any time we see a countdown payload we change loading text to show it
@@ -200,13 +203,9 @@ export class GamePage {
   ) {}
 
   public async wsGameUpdateHandler(payload: WsServerBroadcast["game_update"]) {
-    if (!this.gameState) {
-      showInfo("Game ended due to page refresh");
-      this.gameRuns = false;
-      this.unmount();
-    }
-    if (this.gameRuns === false) {
-      return;
+    const gameId = localStorage.getItem("gameId");
+    if (!gameId) {
+      localStorage.setItem("gameId", this.gameId);
     }
 
     // set active paddle (side we are on) -> runs first time we get an update
@@ -433,6 +432,9 @@ export class GamePage {
     if (this.game) {
       this.game.unmount();
     }
+
+    // remove game id from local storage
+    localStorage.removeItem("gameId");
 
     // Cleanup WebSocket
     this.cleanupWebsocketHandlers();
