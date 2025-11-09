@@ -45,7 +45,6 @@ export class App {
   private container: HTMLElement;
   private currentPage: PageInstance;
   private websocket: Websocket;
-  private backend: Backend;
   private eventBus: EventBus;
 
   constructor() {
@@ -66,7 +65,6 @@ export class App {
 
     // save web socket
     this.websocket = this.serviceContainer.get<Websocket>("websocket");
-    this.backend = this.serviceContainer.get<Backend>("backend");
 
     // event bus
     // listen for logout events

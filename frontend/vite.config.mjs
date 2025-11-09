@@ -5,7 +5,6 @@ export default defineConfig({
     host: "0.0.0.0",
     port: 3000,
     // TODO change back to true
-    strictPort: false,
   },
   assetsInclude: ["**/*.webp"],
   css: {
