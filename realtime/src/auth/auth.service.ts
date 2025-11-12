@@ -46,12 +46,6 @@ export default function createAuthService(app: FastifyInstance): AuthService {
         return null;
       }
       const authUrl = `${AUTH_URL}/api/auth/me`;
-
-      processDebugLog(
-        app,
-        'auth-service',
-        `Token found in validateUser, ${token} starting validation`,
-      );
       const res = await fetch(authUrl, {
         method: 'GET',
         headers: {
@@ -70,7 +64,6 @@ export default function createAuthService(app: FastifyInstance): AuthService {
       const validationResult = UserIdObjectSchema.safeParse(rawUserData);
       if (!validationResult.success) {
         const errorMessages = validationResult.error.issues.map((err) => err.message).join(', ');
-        processDebugLog(app, 'auth-service', `Invalid user data received from auth service`);
         processDebugLog(
           app,
           'auth-service',
@@ -88,15 +81,14 @@ export default function createAuthService(app: FastifyInstance): AuthService {
   }
 
   async function verifyClient(info: VerifyClientInfo): Promise<boolean> {
-    processDebugLog(
-      app,
-      'auth-service',
-      `Attempting client verification for origin: ${info.origin}, secure: ${info.secure}`,
-    );
     try {
+      if (info.req === undefined) {
+        processErrorLog(app, 'auth-service', `Connection rejected - No request information`);
+        return false;
+      }
       const token = extractTokenFromRequest(info);
       if (token === null) {
-        processDebugLog(
+        processErrorLog(
           app,
           'auth-service',
           `Connection rejected - No authentication token provided`,
