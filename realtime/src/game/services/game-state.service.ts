@@ -137,9 +137,9 @@ export default function createGameStateService(app: FastifyInstance): GameStateS
       }
       game.players.forEach((player) => {
         if (
-          validator.isPlayerInGame(game.players, player.userId)
-          && player.isAI === false 
-          && game.isConnected.get(player.userId) === true
+          validator.isPlayerInGame(game.players, player.userId) &&
+          player.isAI === false &&
+          game.isConnected.get(player.userId) === true
         ) {
           connectionService.updateUserGame(player.userId, null);
         }

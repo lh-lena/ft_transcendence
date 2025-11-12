@@ -9,7 +9,7 @@ import type { GameSession, GameIdType } from '../../schemas/game.schema.js';
 import type { DisconnectInfo } from '../types/network.types.js';
 import { processErrorLog, processDebugLog, processInfoLog } from '../../utils/error.handler.js';
 import { getPlayerName } from '../../game/utils/index.js';
-import { NotificationType, GameSessionStatus } from '../../constants/game.constants.js';
+import { GameSessionStatus } from '../../constants/game.constants.js';
 
 export default function createReconnectionService(app: FastifyInstance): ReconnectionService {
   const disconnectedPlayers: Map<UserIdType, DisconnectInfo> = new Map();
@@ -32,7 +32,6 @@ export default function createReconnectionService(app: FastifyInstance): Reconne
     if (user === undefined || user.userId === undefined) return;
     const { userId } = user;
     const userAlias = getPlayerName(user);
-    const respond = app.respond as RespondService;
     const gameSessionService = app.gameSessionService as GameSessionService;
     const gameStateService = app.gameStateService as GameStateService;
     setPlayerDisconnectInfo(userId, userAlias ?? '', gameId);
@@ -63,7 +62,6 @@ export default function createReconnectionService(app: FastifyInstance): Reconne
     cleanup(userId);
     const gameSessionService = app.gameSessionService as GameSessionService;
     const game = gameSessionService.getGameSession(info.gameId) as GameSession;
-    const respond = app.respond as RespondService;
     const gameStateService = app.gameStateService as GameStateService;
     if (
       game !== undefined &&
