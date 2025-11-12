@@ -232,7 +232,6 @@ export default function createGameStateService(app: FastifyInstance): GameStateS
     const gameLoopService = app.gameLoopService as GameLoopService;
     gameLoopService.stopCountdownSequence(game);
     gameLoopService.stopGameLoop(game);
-    app.log.fatal(JSON.stringify(game)); //rm
     updateGameToEnded(game, status);
     removePausedGameInfo(gameId);
     const result = createGameResult(game, status, leftPlayerId);

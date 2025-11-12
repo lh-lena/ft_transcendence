@@ -21,7 +21,6 @@ export const handleWSConnection = (
   }
   const ws = connection as WSConnection;
   initializeConnection(ws, user);
-
   const { userId } = ws.user;
   const remoteAddress = getRemoteAddress(req);
   processDebugLog(app, 'websocket-service', `User ${userId} connected from ${remoteAddress}`);
@@ -58,10 +57,6 @@ function setupEventListeners(ws: WSConnection, app: FastifyInstance): void {
         throw new Error(validationResult.error.issues.map((issue) => issue.message).join(', '));
       }
       const { event, payload } = validationResult.data;
-      if (event !== 'game_update') {
-        // TODO: remove after testing
-        log.fatal(`USER: ${event}`);
-      }
       app.eventBus.emit(event, { user, payload });
     } catch (error: unknown) {
       handleWebSocketError(error, userId, message, app);
