@@ -8,7 +8,6 @@ import { LoginPage } from "./pages/login";
 import { RegisterPage } from "./pages/register";
 import { SettingsPage } from "./pages/settings";
 import { ChatPage } from "./pages/chat";
-import { GamePage } from "./pages/gamePage";
 import { AIGamePage } from "./pages/aiGamePage";
 import { VsPlayerGamePage } from "./pages/vsPlayerGamePage";
 import { TournamentGamePage } from "./pages/tournamentGamePage";
@@ -29,7 +28,6 @@ const PAGE_ROUTES = {
   "/settings": SettingsPage,
   "/chat": ChatPage, // -> main page now (home when logged in)
   "/vs-player-game": VsPlayerGamePage,
-  "/game-page": GamePage,
   "/ai-game": AIGamePage,
   "/tournament-game": TournamentGamePage,
   "/tournament-alias": AliasPage,
