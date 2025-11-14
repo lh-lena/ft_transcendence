@@ -79,7 +79,10 @@ export class Backend {
           "With request: ",
           error.config,
         );
-        showError(error.response.data.message.toLowerCase());
+        const errorMessage = error.response.data.message.toLowerCase();
+        // supress specific errors
+        if (!(errorMessage === "backend service error"))
+          showError(error.response.data.message.toLowerCase());
         return;
       },
     );
