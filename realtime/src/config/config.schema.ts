@@ -11,8 +11,8 @@ export const configSchema = z.object({
   WS_PAUSE_TIMEOUT: z.coerce.number().int().positive().default(60_000),
   WS_MAX_CONNECTIONS: z.coerce.number().int().positive().default(1000),
 
-  BACKEND_URL: z.string(),
-  AUTH_URL: z.string(),
+  BACKEND_URL: z.string().url(),
+  AUTH_URL: z.string().url(),
 
   AI_INTERVAL: z.coerce.number().int().positive().default(1000),
 });

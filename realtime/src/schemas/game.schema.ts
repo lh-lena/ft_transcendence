@@ -69,7 +69,8 @@ const BallSchema = z.object({
   size: z.number().int().positive(),
 });
 
-export const GameStateSchema = z.object({
+export const GameStateSchema = z
+  .object({
     gameId: GameIdSchema,
     ball: BallSchema,
     paddleA: PaddleSchema,
