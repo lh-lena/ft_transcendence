@@ -809,7 +809,16 @@ export class ChatPage {
 
   // HOOKS:
 
-  private searchButtonHook(): void {
+  private async searchButtonHook() {
+    // fetch new all user data
+    this.allUserData = (await this.backend.fetchAllUsers()).data;
+    // convert profile pics to right format
+    for (const element of this.allUserData) {
+      element.colormap =
+        typeof element.colormap === "string"
+          ? profilePrintToArray(element.colormap)
+          : element.colormap;
+    }
     // release toggle
     const searchValue = this.searchInput.value.toLowerCase().trim();
     this.searchResults.innerHTML = "";
