@@ -160,7 +160,7 @@ export class TournamentGamePage extends GamePage {
       }),
     );
 
-    console.log("turnament data: ", tournamentData.players.length);
+    console.log("tournament data: ", tournamentData.players.length);
 
     this.tournamentStatsDiv = document.createElement("div");
     this.tournamentStatsDiv.className = "flex flex-col gap-8";
@@ -176,6 +176,15 @@ export class TournamentGamePage extends GamePage {
       // Create a row container for the pair
       const gameRow = document.createElement("div");
       gameRow.className = "flex flex-row gap-4 items-center";
+
+      // // blinking effect for our row
+      // const myUsername = this.backend.getUser().username;
+      // if (
+      //   tournamentData.players[i].username === myUsername ||
+      //   tournamentData.players[i + 1].username === myUsername
+      // ) {
+      //   gameRow.classList.add("animate-pulse");
+      // }
 
       // Add first player
       if (tournamentData.players[i]) {
@@ -399,16 +408,27 @@ export class TournamentGamePage extends GamePage {
   }
 
   public unmount(): void {
+    // stop game loop first
+    if (this.game) {
+      this.game.unmount();
+    }
+
     // if we are still in the waiting screen for example
     if (!this.gameId) this.backend.leaveTournament();
     else if (this.gameState.status === GameStatus.GAME_OVER)
       this.backend.leaveTournament();
     // if we are playing the game
     else if (this.gameState.status === GameStatus.PLAYING) {
+      console.log("sending game leave for game id: ", this.gameId);
       this.ws.messageGameLeave(this.gameId);
       this.ws.close();
     }
 
-    this.main.remove();
+    // remove game id from local storage
+    localStorage.removeItem("gameId");
+
+    this.cleanupWebsocketHandlers();
+
+    if (this.main) this.main.remove();
   }
 }
