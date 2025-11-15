@@ -93,6 +93,8 @@ services:
     container_name: ft_transcendence_auth
     volumes:
       - auth_node_modules:/app/node_modules
+    env_file:
+      - ./auth-service/.env
     networks:
       - pong-network
     restart: unless-stopped

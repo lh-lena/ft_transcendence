@@ -77,11 +77,21 @@ const schema = {
 };
 
 const configPlugin: FastifyPluginAsync = async (server) => {
+  // debug by alec
+  server.log.info({
+    ACCESS_SECRET: process.env.ACCESS_SECRET ? 'SET' : 'MISSING',
+    REFRESH_SECRET: process.env.REFRESH_SECRET ? 'SET' : 'MISSING',
+    OAUTH_CLIENT_ID: process.env.OAUTH_CLIENT_ID ? 'SET' : 'MISSING',
+    OAUTH_SECRET: process.env.OAUTH_SECRET ? 'SET' : 'MISSING',
+  }, 'Environment variables before @fastify/env');
+
+
   await server.register(fastifyEnv, {
     confKey: 'config',
     schema: schema,
-    dotenv: true,
-    data: process.env,
+    // changed by alec -> dont need since docker alr sets this
+    dotenv: false,
+    // data: process.env,
   });
   server.log.info('Configuration loaded successfully');
 };
