@@ -21,79 +21,126 @@ export class Websocket {
   private gameStatus!: wsGameStatus;
   private cleanupHandler?: () => void;
 
+  // Reconnection state
+  private reconnectAttempts = 0;
+  private maxReconnectAttempts = 5;
+  private reconnectDelay = 1000; // Start with 1 second
+  private reconnectTimeout?: number;
+  private isIntentionallyClosed = false;
+
   // web socket (init on profile load?)
-  public async initializeWebSocket() {
+  public async initializeWebSocket(): Promise<void> {
+    // Prevent multiple simultaneous connection attempts
+    if (this.ws?.readyState === WebSocket.CONNECTING) {
+      console.log("WebSocket connection already in progress");
+      return;
+    }
+
+    // Don't reconnect if already connected
+    if (this.ws?.readyState === WebSocket.OPEN) {
+      console.log("WebSocket already connected");
+      return;
+    }
+
     const wsUrl = import.meta.env.VITE_WEBSOCKET_URL;
-    //TODO is not stored there no more? is this esential??
     const token = localStorage.getItem("jwt");
 
     this.gameStatus = "not_playing";
+    this.isIntentionallyClosed = false;
 
     // Append token as query parameter if provided
     const urlWithToken = token
       ? `${wsUrl}?token=${encodeURIComponent(token)}`
       : wsUrl;
 
-    // connect to ws with token
-    // console.log(urlWithToken);
-    this.ws = new WebSocket(urlWithToken);
+    try {
+      this.ws = new WebSocket(urlWithToken);
 
-    this.ws.onclose = (event) => {
-      console.log("WebSocket connection closed:", event.code, event.reason);
-      // TODO reconnection logic
-    };
+      this.ws.onopen = () => {
+        console.log("WebSocket connected successfully");
+        this.reconnectAttempts = 0; // Reset on successful connection
+        this.reconnectDelay = 1000;
+      };
 
-    // very very simple reconnection logic
-    this.ws.onerror = (error) => {
-      console.error("WebSocket error:", JSON.stringify(error));
-      //showError(JSON.stringify(error));
-      if (this.ws) {
-        this.ws.close();
-        this.ws = null;
-      }
-      // i think this reconnection BS was causing lots of error
-      // we should try this within app -> if we cant connect we try a couple times
-      // setTimeout(() => {
-      //   this.initializeWebSocket();
-      // }, 1000);
-    };
+      this.ws.onclose = (event) => {
+        console.log("WebSocket closed:", event.code, event.reason);
 
-    // web socket stuff
-    this.ws.onopen = () => {
-      console.log("opened web socket");
-      // this.onConnectionReady?.();
-    };
-
-    this.ws.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        this.handleWebSocketMessage(data);
-        if (data.event === "notification") {
-          // custom for guest leaving
-          if (data.payload.message === "unknown left the game")
-            showInfo("guest left the tournament");
-          else showInfo(data.payload.message);
+        // Don't reconnect if intentionally closed or auth failed (4401)
+        if (this.isIntentionallyClosed || event.code === 4401) {
+          console.log("Connection closed intentionally or auth failed");
+          return;
         }
-        if (data.event !== "game_update") {
-          console.log(`${data.event}: `, data.payload.message);
-          console.log(`${JSON.stringify(data.payload)}`);
-        }
-        // console.log("RECEIVED FROM WS: ", data);
-      } catch (error) {
-        console.error("Error parsing WebSocket message:", error);
-      }
-    };
 
-    // define behavior when user closes window
-    this.cleanupHandler = this.handleWindowClose.bind(this);
-    window.addEventListener("beforeunload", this.cleanupHandler);
+        this.attemptReconnect();
+      };
+
+      this.ws.onerror = (error) => {
+        console.error("WebSocket error:", error);
+        // onclose will handle reconnection
+      };
+
+      this.ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          this.handleWebSocketMessage(data);
+          if (data.event === "notification") {
+            // custom for guest leaving
+            if (data.payload.message === "unknown left the game")
+              showInfo("guest left the tournament");
+            else showInfo(data.payload.message);
+          }
+          if (data.event !== "game_update") {
+            console.log(`${data.event}: `, data.payload.message);
+            console.log(`${JSON.stringify(data.payload)}`);
+          }
+          // console.log("RECEIVED FROM WS: ", data);
+        } catch (error) {
+          console.error("Error parsing WebSocket message:", error);
+        }
+      };
+
+      // define behavior when user closes window
+      this.cleanupHandler = this.handleWindowClose.bind(this);
+      window.addEventListener("beforeunload", this.cleanupHandler);
+    } catch (error) {
+      console.error("Failed to create WebSocket:", error);
+      this.attemptReconnect();
+    }
+  }
+
+  private attemptReconnect(): void {
+    if (this.reconnectAttempts >= this.maxReconnectAttempts) {
+      console.error("Max reconnection attempts reached");
+      showInfo("Unable to connect to server. Please refresh the page.");
+      return;
+    }
+
+    this.reconnectAttempts++;
+
+    // Exponential backoff: 1s, 2s, 4s, 8s, 16s, max 30s
+    const delay = Math.min(
+      this.reconnectDelay * Math.pow(2, this.reconnectAttempts - 1),
+      30000,
+    );
+
+    console.log(
+      `Reconnecting in ${delay}ms (attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts})`,
+    );
+
+    this.reconnectTimeout = window.setTimeout(() => {
+      this.initializeWebSocket();
+    }, delay);
   }
 
   private handleWindowClose() {
+    this.isIntentionallyClosed = true;
+    if (this.reconnectTimeout) {
+      clearTimeout(this.reconnectTimeout);
+    }
     if (this.cleanupHandler) {
       window.removeEventListener("beforeunload", this.cleanupHandler);
     }
-    this.ws?.close();
+    this.ws?.close(1000, "Client closing");
     this.ws = null;
   }
 
@@ -145,15 +192,36 @@ export class Websocket {
   private async sendMessage<T extends keyof WsClientMessage>(
     message: ClientMessageInterface<T>,
   ) {
-    if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+    // Wait for connection if it's in CONNECTING state
+    if (this.ws?.readyState === WebSocket.CONNECTING) {
+      await this.waitForConnection();
+    }
+
+    if (this.ws?.readyState === WebSocket.OPEN) {
       this.ws.send(JSON.stringify(message));
       console.log("SENT: ", message.payload);
     } else {
-      console.warn("WebSocket is not open. Message not sent:", { message });
-      // try again i guess
-      await this.initializeWebSocket();
-      await this.sendMessage(message);
+      console.warn("WebSocket not ready. Message not sent:", { message });
+      throw new Error("WebSocket not connected");
     }
+  }
+
+  private waitForConnection(timeout = 5000): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const checkInterval = 100;
+      let elapsed = 0;
+
+      const interval = setInterval(() => {
+        if (this.ws?.readyState === WebSocket.OPEN) {
+          clearInterval(interval);
+          resolve();
+        } else if (elapsed >= timeout) {
+          clearInterval(interval);
+          reject(new Error("Connection timeout"));
+        }
+        elapsed += checkInterval;
+      }, checkInterval);
+    });
   }
 
   public setGameStatusPlaying() {
@@ -166,6 +234,28 @@ export class Websocket {
 
   public getGameStatus(): wsGameStatus {
     return this.gameStatus;
+  }
+
+  public isConnected(): boolean {
+    return this.ws?.readyState === WebSocket.OPEN;
+  }
+
+  public isConnecting(): boolean {
+    return this.ws?.readyState === WebSocket.CONNECTING;
+  }
+
+  public async ensureConnection(): Promise<void> {
+    if (this.ws?.readyState === WebSocket.OPEN) {
+      return;
+    }
+
+    if (this.ws?.readyState === WebSocket.CONNECTING) {
+      await this.waitForConnection();
+      return;
+    }
+
+    await this.initializeWebSocket();
+    await this.waitForConnection();
   }
 
   // send message functions (pre defined)
@@ -241,6 +331,11 @@ export class Websocket {
   }
 
   public close(): void {
-    this.ws?.close();
+    this.isIntentionallyClosed = true;
+    if (this.reconnectTimeout) {
+      clearTimeout(this.reconnectTimeout);
+    }
+    this.ws?.close(1000, "Client closing");
+    this.ws = null;
   }
 }

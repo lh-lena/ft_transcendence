@@ -809,7 +809,16 @@ export class ChatPage {
 
   // HOOKS:
 
-  private searchButtonHook(): void {
+  private async searchButtonHook() {
+    // fetch new all user data
+    this.allUserData = (await this.backend.fetchAllUsers()).data;
+    // convert profile pics to right format
+    for (const element of this.allUserData) {
+      element.colormap =
+        typeof element.colormap === "string"
+          ? profilePrintToArray(element.colormap)
+          : element.colormap;
+    }
     // release toggle
     const searchValue = this.searchInput.value.toLowerCase().trim();
     this.searchResults.innerHTML = "";
@@ -870,6 +879,7 @@ export class ChatPage {
         source: "invite",
         gameId: response.gameId,
       });
+      return;
     }
 
     if (message.trim() === "") return; // don't send empty messages
@@ -909,6 +919,24 @@ export class ChatPage {
   }
 
   private async handleChatIncomingMessage(payload: ReceivedChatMessage) {
+    // repopulate friends list on side to make sure we've added new friend and sync it
+    // friends fetch
+    const initFriendsList: FriendsList = await this.backend.fetchFriendsById(
+      this.backend.getUser().userId,
+    );
+    for (const element of initFriendsList) {
+      const userResponse = await this.backend.fetchUserById(
+        element.friendUserId,
+      );
+      element.username = userResponse.data.username;
+      element.colormap = profilePrintToArray(userResponse.data.colormap);
+      element.color = userResponse.data.color;
+      element.avatar = userResponse.data.avatar;
+      element.online = userResponse.data.online;
+    }
+    this.friendsList = initFriendsList;
+    await this.populateFriends();
+
     const userResponse = await this.backend.fetchUserById(payload.senderId);
     const user: User = userResponse.data;
     // clear existing timeout and set a new one

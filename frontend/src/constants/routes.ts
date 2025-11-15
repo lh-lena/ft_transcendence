@@ -5,5 +5,6 @@ export const protectedRoutes = [
   "/local",
   "/vs-player-game",
   "/ai-game",
-  // "/tournament-start",
+  "/tournament-game",
+  "/tournament-alias",
 ];

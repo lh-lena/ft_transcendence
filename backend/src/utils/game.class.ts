@@ -207,6 +207,14 @@ export class gameClass {
           'Failed to send game start notification',
         );
       });
+      this.server.log.info(
+        {
+          gameId: game.gameId,
+          mode: game.mode,
+          playerCount: game.players.length,
+        },
+        'DEFENITELY SEND THIS SHIT',
+      );
     }
   }
 

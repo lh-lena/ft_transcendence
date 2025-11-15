@@ -4,6 +4,7 @@ export interface Player {
   color?: string;
   colormap?: string[];
   avatar?: string | undefined;
+  username?: string | undefined;
 }
 
 export interface TournamentData {

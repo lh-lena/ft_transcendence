@@ -345,6 +345,8 @@ export class tournamentClass {
       return;
     }
 
+    if (this.gameService) await this.gameService.deleteOne(gameId);
+
     tournament.games = tournament.games.filter((g) => g.gameId !== gameId.gameId);
 
     tournament.players = tournament.players.filter((p) => p.userId !== loserId.userId);

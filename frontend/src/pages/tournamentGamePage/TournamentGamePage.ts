@@ -19,14 +19,9 @@ import { GameStatus, GameState, User } from "../../types";
 import { profilePrintToArray } from "../../utils/profilePrintFunctions";
 import { showError } from "../../components/toast";
 
-// IMPORTANT TO REMEMBER
-// we receive gameID from game_update when ws also sends game ready
-// so we save it in gamePage
-
 export class TournamentGamePage extends GamePage {
   // game mode specific data
   private tournamentId!: string;
-  private isGuest: boolean = true;
 
   // dom (UI) elements
   private tournamentStatsDiv!: HTMLDivElement;
@@ -36,53 +31,8 @@ export class TournamentGamePage extends GamePage {
   constructor(serviceContainer: ServiceContainer) {
     super(serviceContainer);
 
-    // Re-bind the handler to ensure the subclass method is used
-    // this.boundWsGameReadyHandler = this.wsGameReadyHandler.bind(this);
-
-    // we have two elses here because sometimes there is still a stale entry for some reason
-    // on logout i try to clear it as ""
-    // so it resolves to guest if we get a runtime error or the length of user id is 0
-
-    // UI inital stuff for tournament alias page (from default game page setup)
-
-    // const tempUserTest = this.backend.getUser();
-    // console.log("tempuser: ", tempUserTest);
-    // if (!tempUserTest) {
-    //   showError("refresh detected");
-    //   this.router.navigate("/");
-    //   return;
-    // }
-
-    // this.boundBeforeUnloadHandler = this.handleBeforeUnload.bind(this);
-    // window.addEventListener("beforeunload", this.boundBeforeUnloadHandler);
-
     this.initializeTournament();
   }
-
-  // // Add this method
-  // private handleBeforeUnload(e: BeforeUnloadEvent): void {
-  //   console.log(e);
-
-  //   // Leave tournament if not playing
-  //   if (this.gameState?.status !== GameStatus.PLAYING) {
-  //     this.backend.leaveTournament();
-  //   }
-
-  //   // Leave game if playing
-  //   if (this.gameState?.status === GameStatus.PLAYING) {
-  //     this.ws.messageGameLeave(this.gameId);
-  //   }
-
-  //   // Clean up guest user data
-  //   if (this.isGuest) {
-  //     localStorage.removeItem("user");
-  //     localStorage.removeItem("jwt");
-  //   }
-
-  //   // Optional: Show warning dialog
-  //   // e.preventDefault();
-  //   // e.returnValue = '';
-  // }
 
   // custom game ready for tournament
   public async wsGameReadyHandler(
@@ -163,14 +113,6 @@ export class TournamentGamePage extends GamePage {
     console.log(this.tournamentId);
     // Axios responses contain the server payload under `data`
 
-    // check if guest
-    const thisUser = await this.backend.getUserById(
-      this.backend.getUser().userId,
-    );
-
-    this.isGuest = thisUser.guest;
-    console.log("isGuest: ", this.isGuest);
-
     // show initial bracket
     this.showBracket(response.data);
   }
@@ -179,13 +121,21 @@ export class TournamentGamePage extends GamePage {
     _payload: WsServerBroadcast["notification"],
   ) {
     if (_payload.message === "INFO: New player joined the tournament") {
-      // grab new tournament data from backend with new players
-      const newTournamentData = await this.backend.getTournamentById(
-        this.tournamentId,
+      setTimeout(
+        async () =>
+          this.showBracket(
+            (await this.backend.getTournamentById(this.tournamentId)).data,
+          ),
+        500,
       );
-      console.log(newTournamentData);
-      console.log(_payload);
-      this.showBracket(newTournamentData.data);
+    } else if (_payload.message === "INFO: Player left the tournament") {
+      setTimeout(
+        async () =>
+          this.showBracket(
+            (await this.backend.getTournamentById(this.tournamentId)).data,
+          ),
+        500,
+      );
     }
   }
 
@@ -206,10 +156,11 @@ export class TournamentGamePage extends GamePage {
         player.colormap = profilePrintToArray(user.colormap);
         player.avatar = user.avatar;
         player.userId = user.userId;
+        player.username = user.username;
       }),
     );
 
-    console.log("turnament data: ", tournamentData.players.length);
+    console.log("tournament data: ", tournamentData.players.length);
 
     this.tournamentStatsDiv = document.createElement("div");
     this.tournamentStatsDiv.className = "flex flex-col gap-8";
@@ -226,10 +177,20 @@ export class TournamentGamePage extends GamePage {
       const gameRow = document.createElement("div");
       gameRow.className = "flex flex-row gap-4 items-center";
 
+      // // blinking effect for our row
+      // const myUsername = this.backend.getUser().username;
+      // if (
+      //   tournamentData.players[i].username === myUsername ||
+      //   tournamentData.players[i + 1].username === myUsername
+      // ) {
+      //   gameRow.classList.add("animate-pulse");
+      // }
+
       // Add first player
-      if (tournamentData.players[i].alias) {
+      if (tournamentData.players[i]) {
         const playerDiv = this.createPlayer(
-          tournamentData.players[i].alias!,
+          tournamentData.players[i].alias ??
+            tournamentData.players[i].username!,
           tournamentData.players[i].color!,
           tournamentData.players[i].colormap!,
           tournamentData.players[i].avatar!,
@@ -239,13 +200,14 @@ export class TournamentGamePage extends GamePage {
       }
 
       // Add second player
-      if (tournamentData.players[i + 1]?.alias) {
+      if (tournamentData.players[i + 1]) {
         const vsTitle = document.createElement("h1");
         vsTitle.className = "text-white text-xl";
         vsTitle.innerText = "vs";
         gameRow.appendChild(vsTitle);
         const playerDiv = this.createPlayer(
-          tournamentData.players[i + 1].alias!,
+          tournamentData.players[i + 1].alias ??
+            tournamentData.players[i + 1].username!,
           tournamentData.players[i + 1].color!,
           tournamentData.players[i + 1].colormap!,
           tournamentData.players[i + 1].avatar!,
@@ -339,8 +301,7 @@ export class TournamentGamePage extends GamePage {
 
     // case loser from tournament round 1
     if (winningUser.userId !== this.backend.getUser().userId) {
-      let hrefLink = this.isGuest ? "/" : "/chat";
-      const menuItems: MenuItem[] = [{ name: "back", link: hrefLink }];
+      const menuItems: MenuItem[] = [{ name: "back", link: "/chat" }];
       const menuEnd = new Menu(this.router, menuItems);
       menuEnd.mount(this.menuEndDiv);
       return;
@@ -363,8 +324,7 @@ export class TournamentGamePage extends GamePage {
       finalWinnerText.className = "text-white text text-center";
       this.menuEndDiv.appendChild(finalWinnerText);
 
-      let hrefLink = this.isGuest ? "/" : "/chat";
-      const menuItems: MenuItem[] = [{ name: "back", link: hrefLink }];
+      const menuItems: MenuItem[] = [{ name: "back", link: "/chat" }];
       const menuEnd = new Menu(this.router, menuItems);
       menuEnd.mount(this.menuEndDiv);
       return;
@@ -447,21 +407,28 @@ export class TournamentGamePage extends GamePage {
     return contact;
   }
 
-  // for guest user
   public unmount(): void {
-    if (this.gameState.status !== GameStatus.PLAYING)
-      this.backend.leaveTournament();
+    // stop game loop first
+    if (this.game) {
+      this.game.unmount();
+    }
 
-    if (this.gameState.status === GameStatus.PLAYING) {
+    // if we are still in the waiting screen for example
+    if (!this.gameId) this.backend.leaveTournament();
+    else if (this.gameState.status === GameStatus.GAME_OVER)
+      this.backend.leaveTournament();
+    // if we are playing the game
+    else if (this.gameState.status === GameStatus.PLAYING) {
+      console.log("sending game leave for game id: ", this.gameId);
       this.ws.messageGameLeave(this.gameId);
       this.ws.close();
     }
 
-    if (this.isGuest) {
-      localStorage.removeItem("user");
-      localStorage.removeItem("jwt");
-    }
+    // remove game id from local storage
+    localStorage.removeItem("gameId");
 
-    this.main.remove();
+    this.cleanupWebsocketHandlers();
+
+    if (this.main) this.main.remove();
   }
 }

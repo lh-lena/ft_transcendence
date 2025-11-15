@@ -16,6 +16,7 @@ export function createChatService(app: FastifyInstance): ChatService {
     const respond = app.respond as RespondService;
     const { recieverId, message } = payload;
     const senderId = user.userId;
+    let rc: boolean;
     log.debug(`[chat-service] Handling chat message from ${senderId} to ${recieverId}`);
     const toSave = {
       senderId,
@@ -27,10 +28,10 @@ export function createChatService(app: FastifyInstance): ChatService {
       message,
       timestamp: new Date().toString(),
     };
-    if (connectionService.getConnection(recieverId) !== undefined) {
+    rc = await saveChatMessage(toSave);
+    if (connectionService.getConnection(recieverId) !== undefined && rc) {
       respond.chatMessage(recieverId, broadcastMessage);
     }
-    await saveChatMessage(toSave);
   }
 
   async function saveChatMessage(message: ChatMessage): Promise<boolean> {

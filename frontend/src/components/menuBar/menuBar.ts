@@ -48,15 +48,19 @@ export class MenuBar {
 
   private aiGameFlow() {
     // navigate with game type parameter
+    if (localStorage.getItem("gameId")) localStorage.removeItem("gameId");
     this.router.navigate("/ai-game");
   }
 
   private async joinTournamentFlow() {
+    // make sure there isnt a rogue gameId in local -> mostly for testing rn
+    if (localStorage.getItem("gameId")) localStorage.removeItem("gameId");
     this.router.navigate("/tournament-alias");
   }
 
   private async joinGameFlow() {
     // navigate with game type parameter
+    if (localStorage.getItem("gameId")) localStorage.removeItem("gameId");
     this.router.navigate("/vs-player-game");
   }
 

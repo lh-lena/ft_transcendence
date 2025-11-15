@@ -65,7 +65,7 @@ export class HomePage {
     const notLoggedInMenu = [
       { name: "log in", link: "/login" },
       { name: "register", link: "/register" },
-      { name: "guest", link: "/tournament-alias" },
+      // { name: "guest", link: "/tournament-alias" },
     ];
 
     this.menu = new Menu(this.router, notLoggedInMenu);
