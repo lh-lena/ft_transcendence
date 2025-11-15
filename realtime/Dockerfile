@@ -9,11 +9,17 @@ RUN apk add --no-cache \
 
 WORKDIR /app
 
-# Copy dependency files
+# Copy package files (wildcards are safer here)
 COPY package*.json ./
 
-# Install ALL dependencies (including devDependencies for build)
-RUN npm ci --prefer-offline --no-audit --progress=false
+# Install dependencies - works with or without lock file
+RUN if [ -f package-lock.json ]; then \
+        echo "📦 Using package-lock.json"; \
+        npm ci --prefer-offline --no-audit --progress=false; \
+    else \
+        echo "📦 No lock file found, using npm install"; \
+        npm install --prefer-offline --no-audit --progress=false; \
+    fi
 
 # Copy source and config
 COPY tsconfig.json ./
@@ -34,12 +40,17 @@ RUN apk add --no-cache curl \
 
 WORKDIR /app
 
-# Copy dependency files
+# Copy package files
 COPY package*.json ./
 
-# Install only production dependencies
-RUN npm ci --only=production --prefer-offline --no-audit --progress=false \
-    && npm cache clean --force
+# Install production dependencies - works with or without lock file
+RUN if [ -f package-lock.json ]; then \
+        echo "📦 Using package-lock.json for production"; \
+        npm ci --omit=dev --prefer-offline --no-audit --progress=false; \
+    else \
+        echo "📦 No lock file found, using npm install for production"; \
+        npm install --omit=dev --prefer-offline --no-audit --progress=false; \
+    fi && npm cache clean --force
 
 # Copy built application from builder
 COPY --from=builder /app/dist ./dist
@@ -49,5 +60,4 @@ EXPOSE 8081
 HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
     CMD curl -f http://localhost:8081/health || exit 1
 
-# Run as root (required for 42 compatibility with bind mounts)
 CMD ["node", "dist/server.js"]

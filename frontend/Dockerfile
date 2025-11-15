@@ -11,7 +11,7 @@ RUN apk add --no-cache \
 WORKDIR /app
 
 # Copy dependency files
-COPY package*.json ./
+COPY package.json package-lock.json ./
 
 # Install dependencies with clean install
 RUN npm ci --prefer-offline --no-audit --progress=false \

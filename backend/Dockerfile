@@ -12,7 +12,7 @@ RUN apk add --no-cache \
 WORKDIR /app
 
 # Copy dependency files first
-COPY package*.json ./
+COPY package.json package-lock.json ./
 COPY prisma ./prisma/
 
 # Install dependencies
