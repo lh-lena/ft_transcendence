@@ -7,3 +7,14 @@ Dockerfile
 
 package-lock.json
 __test__
+
+node_modules
+npm-debug.log
+.env
+.env.local
+.git
+.gitignore
+dist
+coverage
+.DS_Store
+*.md
