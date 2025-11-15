@@ -137,9 +137,9 @@ export default function createGameStateService(app: FastifyInstance): GameStateS
       }
       game.players.forEach((player) => {
         if (
-          validator.isPlayerInGame(game.players, player.userId)
-          && player.isAI === false 
-          && game.isConnected.get(player.userId) === true
+          validator.isPlayerInGame(game.players, player.userId) &&
+          player.isAI === false &&
+          game.isConnected.get(player.userId) === true
         ) {
           connectionService.updateUserGame(player.userId, null);
         }
@@ -232,7 +232,6 @@ export default function createGameStateService(app: FastifyInstance): GameStateS
     const gameLoopService = app.gameLoopService as GameLoopService;
     gameLoopService.stopCountdownSequence(game);
     gameLoopService.stopGameLoop(game);
-    app.log.fatal(JSON.stringify(game)); //rm
     updateGameToEnded(game, status);
     removePausedGameInfo(gameId);
     const result = createGameResult(game, status, leftPlayerId);

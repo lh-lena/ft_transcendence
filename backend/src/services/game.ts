@@ -39,7 +39,7 @@ export const createGameService = (server: FastifyInstance) => {
      * @returns Game state
      * @throws NotFoundError if game doesn't exist
      */
-    async getById(gameId: gameType): Promise<gameType> {
+    async getById(gameId: gameIdType): Promise<gameType> {
       const game = await gameManager.getById(gameId);
 
       if (!game) {

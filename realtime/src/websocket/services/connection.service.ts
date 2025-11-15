@@ -186,7 +186,9 @@ export default function createConnectionService(app: FastifyInstance): Connectio
   function updateUserGame(userId: UserIdType, gameId: GameIdType | null): void {
     const conn = userConnections.get(userId);
     if (conn === undefined) {
-      log.warn(`[connection-service] Cannot update game ID for user ${userId} - connection not found`);
+      log.warn(
+        `[connection-service] Cannot update game ID for user ${userId} - connection not found`,
+      );
       return;
     }
     conn.gameId = gameId;
