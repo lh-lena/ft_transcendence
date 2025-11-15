@@ -20,6 +20,14 @@ RUN npm ci --prefer-offline --no-audit --progress=false \
 # Verify critical dependencies are installed
 RUN node -e "require('vite')" || (echo "❌ Vite not installed!" && exit 1)
 
+# Accept build arguments
+ARG VITE_WEBSOCKET_URL
+ARG VITE_AUTH_URL
+
+# Set them as environment variables so Vite can use them during build
+ENV VITE_WEBSOCKET_URL=$VITE_WEBSOCKET_URL
+ENV VITE_AUTH_URL=$VITE_AUTH_URL
+
 # Copy source files
 COPY . .
 
