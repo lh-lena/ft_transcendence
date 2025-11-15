@@ -31,7 +31,6 @@ services:
     networks:
       - pong-network
 
-services:
   frontend:
     build:
       context: ./frontend
