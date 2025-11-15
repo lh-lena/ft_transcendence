@@ -29,7 +29,6 @@
     "eslint": "^8.57.1",
     "eslint-config-prettier": "^9.1.2",
     "eslint-plugin-prettier": "^5.5.4",
-    "fastify": "^5.4.0",
     "nodemon": "^3.1.10",
     "prettier": "^3.6.2",
     "typescript": "^5.8.3"
@@ -37,6 +36,7 @@
   "dependencies": {
     "@fastify/swagger": "^9.5.1",
     "@fastify/swagger-ui": "^5.2.3",
+    "fastify": "^5.4.0",
     "fastify-plugin": "^5.0.1",
     "neverthrow": "^8.2.0",
     "node-fetch": "^2.7.0",
