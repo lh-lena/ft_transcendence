@@ -1,5 +1,0 @@
-TODO:
--test user already logged in -> set everyone offline on shutdown?
--add correcr error messages on errors -> talk to alec
--game still runs after one disconnect
--check in frontend backend interceptor message for inavlid token -> 
