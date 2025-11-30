@@ -160,33 +160,6 @@ ft_transcendence/
 Issue: #XX
 ```
 
-## 📅 Current Sprint: Week 1-2 (Foundation)
-
-### Sprint Goals
-Establish the foundational architecture and core functionality for the project.
-
-### Sprint Tasks
-
-**DevOps:**
-- [ ] #7 Setup Docker development environment
-- [ ] #13 Configure HTTPS and WSS
-
-**Frontend:**
-- [ ] #8 Initialize TypeScript SPA project
-- [ ] #10 Implement basic Pong game mechanics
-- [ ] #15 Create basic UI layout
-
-**Backend:**
-- [ ] #9 Initialize backend project structure
-- [ ] #12 Setup database with SQLite
-- [ ] #16 Implement Fastify framework
-
-**Security:**
-- [ ] #11 Design authentication architecture
-
-**Realtime:**
-- [ ] #14 Research WebSocket implementation
-
 ## 🛠️ Tech Stack
 
 - **Frontend:** TypeScript, Tailwind CSS, Canvas API
